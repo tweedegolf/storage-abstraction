@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "allowJs": true,
+    "types": [
+      "node",
+      "express",
+      "react",
+      "router5"
+    ],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "lib": [
+      "dom",
+      "es6",
+      "es2017"
+    ],
+    "outDir": "build"
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "public"
+  ]
+}

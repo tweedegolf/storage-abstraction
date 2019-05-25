@@ -1,0 +1,5 @@
+  "browser": {
+    "typeorm": "./shim/typeorm.js",
+    "@tsed/common": "./shim/tsed.js"
+  },
+  

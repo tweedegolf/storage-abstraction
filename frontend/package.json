@@ -1,0 +1,46 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "frontend-watch": "parcel --no-autoinstall --https --hmr-port 8080 --out-dir public/ --public-url / --cert ../docker/certificates/server.pem --key ../docker/certificates/server.key ./src/index.html",
+    "frontend-build": "parcel build --no-source-maps --out-dir public/ --public-url / ./src/index.html",
+    "clean": "rm -rf .cache/* && rm -rf public/*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "browser": {
+    "typeorm": "./shim/typeorm.js",
+    "@tsed/common": "./shim/tsed.js"
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/bootstrap": "^4.3.0",
+    "@types/react": "^16.8.15",
+    "@types/react-dom": "^16.8.4",
+    "@types/react-redux": "^7.0.8",
+    "@types/reactstrap": "^8.0.1",
+    "@types/redux": "^3.6.0",
+    "@types/redux-logger": "^3.0.7",
+    "axios": "^0.18.0",
+    "bootstrap": "^4.3.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-redux": "^7.0.3",
+    "reactstrap": "^8.0.0",
+    "redux": "^4.0.1",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.3.0",
+    "router5-plugin-browser": "^7.0.2",
+    "router5-transition-path": "^7.0.1"
+  },
+  "devDependencies": {
+    "eslint-plugin-react-hooks": "^1.6.0",
+    "parcel": "^1.12.3",
+    "parcel-bundler": "^1.12.3",
+    "sass": "^1.19.0",
+    "typescript": "^3.4.5"
+  }
+}
