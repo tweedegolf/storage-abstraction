@@ -13,7 +13,12 @@ import {
   getGoogleCloudKeystorePath,
 } from "../env";
 
-import { MediaStorageMethod } from "../types";
+export enum MediaStorageMethod {
+  Local = 'local',
+  GoogleCloud = 'google-cloud',
+}
+
+// import { MediaStorageMethod } from "../types";
 import { Readable } from 'stream';
 import { fileExists, isSubfolder, mkdir, unlink, stat } from "../util/file";
 

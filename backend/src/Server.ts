@@ -36,8 +36,10 @@ const rootDir = __dirname;
     entities: [
       `${rootDir}/entities/*.ts`,
     ]
-  }]
-})
+  }],
+  componentsScan: [
+    `${rootDir}/services/**/**.ts`
+],})
 export class Server extends ServerLoader {
   /**
    * @returns {Server}
