@@ -1,4 +1,6 @@
 node_modules
 frontend/.cache/
 frontend/public/
+backend/.env
+backend/da2719acad70.json
 *.pdf
