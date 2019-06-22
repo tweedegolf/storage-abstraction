@@ -2,6 +2,7 @@ import S3 from 'aws-sdk/clients/s3';
 import fs from 'fs';
 import { Storage } from './Storage';
 import { StorageConfigS3, File } from './types';
+import slugify from 'slugify';
 
 // export default class StorageS3 implements Storage {
 export default class StorageS3 extends Storage {
@@ -24,11 +25,20 @@ export default class StorageS3 extends Storage {
       accessKeyId,
       secretAccessKey,
     })
-    this.bucketName = bucketName
+    this.bucketName = slugify(bucketName);
   }
 
-  async deleteFile(file: File): Promise<boolean> {
-    return true;
+  async removeFile(fileName: string): Promise<boolean> {
+    const params = {
+      Bucket: this.bucketName,
+      Key: fileName
+    };
+    return this.storage.deleteObject(params).promise()
+      .then(() => true)
+      .catch(e => {
+        console.error(e);
+        return false;
+      });
   }
 
 
@@ -54,16 +64,6 @@ export default class StorageS3 extends Storage {
       this.storage.upload(params).promise()
         .then(data => { console.log(data); resolve(true); })
         .catch(err => { console.error(err); reject(false); })
-
-      // const writeStream = this.storage.bucket(this.bucketName).file(targetFileName).createWriteStream();
-      // readStream.on('end', () => {
-      //   resolve(true);
-      // });
-      // readStream.on('error', (e: Error) => {
-      //   console.log(e);
-      //   reject(false);
-      // });
-      // readStream.pipe(writeStream);
     });
   }
 

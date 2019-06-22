@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { Storage } from './Storage'
-import fs from 'fs';
+import fs, { ReadStream } from 'fs';
 import path from 'path';
 import slugify from 'slugify';
 import { StorageConfigGoogle } from './types';
 import { stat, unlink } from './utils';
+import { Readable } from 'stream';
 
 // export default class StorageGoogle implements Storage {
 export default class StorageGoogle extends Storage {
@@ -28,36 +29,54 @@ export default class StorageGoogle extends Storage {
     this.bucketName = slugify(bucketName);
   }
 
-  async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
+  async getFileAsReadable(fileName: string): Promise<Readable | null> {
     const file = this.storage.bucket(this.bucketName).file(fileName)
-    const localFilename = path.join(downloadPath, fileName);
+    if (!file.exists()) {
+      return null;
+    }
+    return file.createReadStream();
+  }
+
+  async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      file.createReadStream()
+      const file = this.storage.bucket(this.bucketName).file(fileName)
+      if (!file) {
+        reject(false);
+        return;
+      }
+      console.log(file);
+      const localFilename = path.join(downloadPath, fileName);
+      const ws = file.createReadStream()
         .on('error', (err) => {
           console.error(err);
-          resolve(false);
         })
         .on('response', (response) => { })
         .on('end', () => { })
-        .pipe(fs.createWriteStream(localFilename));
-      resolve(true);
-    });
+        .pipe(fs.createWriteStream(localFilename))
+
+      ws.on('finish', () => {
+        resolve(true);
+      })
+      ws.on('error', () => {
+        reject(false);
+      })
+    })
   }
 
-  async getFile(fileName: string) {
-    const file = this.storage.bucket(this.bucketName).file(fileName)
-    file.get().then(async (data) => {
-      const apiResponse: any = data[1];
-      const bin = axios.request({
-        url: apiResponse.selfLink,
-        headers: {
-          'x-goog-project-id': '',
-        }
-      })
-        .then(data => console.log(data))
-        .catch(e => console.error(e));
-    });
-  }
+  // async getFile(fileName: string) {
+  //   const file = this.storage.bucket(this.bucketName).file(fileName)
+  //   file.get().then(async (data) => {
+  //     const apiResponse: any = data[1];
+  //     const bin = axios.request({
+  //       url: apiResponse.selfLink,
+  //       headers: {
+  //         'x-goog-project-id': '',
+  //       }
+  //     })
+  //       .then(data => console.log(data))
+  //       .catch(e => console.error(e));
+  //   });
+  // }
 
   async removeFile(fileName: string): Promise<boolean> {
     return this.storage.bucket(this.bucketName).file(fileName).delete()
