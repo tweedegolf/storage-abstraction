@@ -1,19 +1,18 @@
-import { Storage, File } from '@google-cloud/storage';
-import { StorageConfigGoogle } from './types';
+import { StorageConfigLocal } from './types';
+
+/*
+  copy file
+  delete file
+
+*/
 
 // export default class StorageGoogle implements Storage {
-export default class StorageGoogle {
-  private storage: Storage
+export default class StorageLocal {
 
-  constructor(config: StorageConfigGoogle) {
+  constructor(config: StorageConfigLocal) {
     const {
-      projectId,
-      keyFilename,
+      directory,
     } = config;
-    this.storage = new Storage({
-      projectId,
-      keyFilename,
-    });
   }
 
   async createBucket(name: string): Promise<boolean> {

@@ -18,11 +18,17 @@ export type File = {
 }
 
 export type StorageConfigS3 = {
+  bucketName: string,
   accessKeyId: string,
   secretAccessKey: string
 }
 
 export type StorageConfigGoogle = {
+  bucketName: string,
   projectId: string,
   keyFilename: string
+}
+
+export type StorageConfigLocal = {
+  directory: string,
 }
