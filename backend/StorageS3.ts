@@ -1,12 +1,18 @@
 import S3 from 'aws-sdk/clients/s3';
-import { Storage, StorageConfigS3, File } from './types';
+import fs from 'fs';
+import { Storage } from './Storage';
+import { StorageConfigS3, File } from './types';
 
 // export default class StorageS3 implements Storage {
-export default class StorageS3 {
+export default class StorageS3 extends Storage {
   private storage: S3;
+  protected bucketName: string
+  protected bucketExists: boolean = false
 
   constructor(config: StorageConfigS3) {
+    super(config)
     const {
+      bucketName,
       accessKeyId,
       secretAccessKey,
     } = config;
@@ -18,19 +24,47 @@ export default class StorageS3 {
       accessKeyId,
       secretAccessKey,
     })
-  }
-
-  async createBucket(name: string): Promise<Object | Error> {
-    return this.storage.createBucket({ Bucket: name }).promise()
-  }
-
-  async storeFile(file: File): Promise<boolean> {
-
-    return true;
+    this.bucketName = bucketName
   }
 
   async deleteFile(file: File): Promise<boolean> {
     return true;
+  }
+
+
+  // util members
+
+  async createBucket(name: string): Promise<boolean> {
+    return this.storage.createBucket({ Bucket: name }).promise()
+      .then(() => true)
+      .catch(e => {
+        console.error(e);
+        return false;
+      })
+  }
+
+  protected async store(filePath: string, targetFileName: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const readStream = fs.createReadStream(filePath);
+      const params = {
+        Bucket: this.bucketName,
+        Key: targetFileName,
+        Body: readStream
+      };
+      this.storage.upload(params).promise()
+        .then(data => { console.log(data); resolve(true); })
+        .catch(err => { console.error(err); reject(false); })
+
+      // const writeStream = this.storage.bucket(this.bucketName).file(targetFileName).createWriteStream();
+      // readStream.on('end', () => {
+      //   resolve(true);
+      // });
+      // readStream.on('error', (e: Error) => {
+      //   console.log(e);
+      //   reject(false);
+      // });
+      // readStream.pipe(writeStream);
+    });
   }
 
   async getFilesInBucket(name: string, maxFiles: number = 1000) {

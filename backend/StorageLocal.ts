@@ -15,17 +15,6 @@ export default class StorageLocal {
     } = config;
   }
 
-  async createBucket(name: string): Promise<boolean> {
-    return this.storage.createBucket(name)
-      .then(data => {
-        // console.log(data)
-        return true;
-      })
-      .catch(err => {
-        console.log(err);
-        return false;
-      })
-  }
 
   async getFilesInBucket(name: string, numFiles: number = 1000) {
     const files = await this.storage.bucket(name).getFiles()

@@ -1,38 +1,79 @@
-import { Storage, File } from '@google-cloud/storage';
+import axios from 'axios';
+import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
+import { Storage } from './Storage'
 import fs from 'fs';
 import path from 'path';
 import slugify from 'slugify';
 import { StorageConfigGoogle } from './types';
+import { stat, unlink } from './utils';
 
 // export default class StorageGoogle implements Storage {
-export default class StorageGoogle {
-  private storage: Storage
-  private bucketName: string
-  private bucketExists: boolean = false
+export default class StorageGoogle extends Storage {
+  private storage: GoogleCloudStorage
+  protected bucketName: string
+  protected bucketExists: boolean = false
 
   constructor(config: StorageConfigGoogle) {
+    super(config);
     const {
       bucketName,
       projectId,
       keyFilename,
     } = config;
-    this.storage = new Storage({
+    this.storage = new GoogleCloudStorage({
       projectId,
       keyFilename,
     });
 
-    this.bucketName = bucketName;
+    this.bucketName = slugify(bucketName);
   }
 
-  async addFileFromPath(filePath: string): Promise<boolean> {
-    if (this.bucketExists === false) {
-      this.bucketExists = await this.createBucket(this.bucketName)
-    }
-    const fileName = path.basename(filePath);
+  async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
+    const file = this.storage.bucket(this.bucketName).file(fileName)
+    const localFilename = path.join(downloadPath, fileName);
+    return new Promise((resolve, reject) => {
+      file.createReadStream()
+        .on('error', (err) => {
+          console.error(err);
+          resolve(false);
+        })
+        .on('response', (response) => { })
+        .on('end', () => { })
+        .pipe(fs.createWriteStream(localFilename));
+      resolve(true);
+    });
+  }
 
+  async getFile(fileName: string) {
+    const file = this.storage.bucket(this.bucketName).file(fileName)
+    file.get().then(async (data) => {
+      const apiResponse: any = data[1];
+      const bin = axios.request({
+        url: apiResponse.selfLink,
+        headers: {
+          'x-goog-project-id': '',
+        }
+      })
+        .then(data => console.log(data))
+        .catch(e => console.error(e));
+    });
+  }
+
+  async removeFile(fileName: string): Promise<boolean> {
+    return this.storage.bucket(this.bucketName).file(fileName).delete()
+      .then(() => true)
+      .catch(e => {
+        console.error(e);
+        return false;
+      });
+  }
+
+  // util members
+
+  protected async store(filePath: string, targetFileName: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const readStream = fs.createReadStream(filePath);
-      const writeStream = this.storage.bucket(this.bucketName).file(fileName).createWriteStream();
+      const writeStream = this.storage.bucket(this.bucketName).file(targetFileName).createWriteStream();
       readStream.on('end', () => {
         resolve(true);
       });
@@ -43,15 +84,6 @@ export default class StorageGoogle {
       readStream.pipe(writeStream);
     });
   }
-
-  // async addFile(file: Express.Multer.File): Promise<boolean> {
-  //   return true;
-  // }
-
-  async deleteFile(file: File): Promise<boolean> {
-    return true;
-  }
-
 
   async createBucket(name: string): Promise<boolean> {
     return this.storage.createBucket(name)
@@ -67,21 +99,23 @@ export default class StorageGoogle {
   }
 
   async getFilesInBucket(name: string, numFiles: number = 1000) {
-    const files = await this.storage.bucket(name).getFiles()
+    return this.storage.bucket(name).getFiles()
+      .then((data) => [data])
       .catch(err => {
         console.log(err);
         return [];
       });
-    return [files];
   }
 
   async listBucketNames() {
-    const buckets = await this.storage.getBuckets()
+    return this.storage.getBuckets()
+      .then(buckets => {
+        return buckets[0].map(bucket => bucket.name)
+      })
       .catch(err => {
         console.log(err)
         return []
       });
-    return buckets[0].map(bucket => bucket.name)
   }
 
   async listFileNamesInBucket(name: string) {

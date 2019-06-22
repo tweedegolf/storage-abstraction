@@ -1,3 +1,4 @@
+// export namespace TG {
 export interface Storage {
   createBucket: (name: string) => Promise<Object | Error>
   storeFile: (file: File) => Promise<Object | Error>
@@ -32,3 +33,5 @@ export type StorageConfigGoogle = {
 export type StorageConfigLocal = {
   directory: string,
 }
+// }
+

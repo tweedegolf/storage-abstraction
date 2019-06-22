@@ -26,6 +26,15 @@ const getFilesInBucket1 = async () => {
 
 
 
+const addFileFromPath1 = async (path: string, newFileName?: string) => {
+  const s3 = new StorageS3(configS3);
+  const d = await s3.addFileFromPath(path, newFileName)
+  console.log(d);
+}
+addFileFromPath1('/home/abudaan/Pictures/sun-blanket.jpg', 'aapenbeer.jpg')
+
+
+
 const createBucket = async () => {
   const gc = new StorageGoogle(configGoogle);
   const d = await gc.createBucket('aap-en-beers')
@@ -51,9 +60,23 @@ const listBucketNames = async () => {
 // listBucketNames();
 
 
-const addFileFromPath = async (path: string) => {
+const addFileFromPath = async (path: string, newFileName?: string) => {
   const gc = new StorageGoogle(configGoogle);
-  const d = await gc.addFileFromPath(path)
+  const d = await gc.addFileFromPath(path, newFileName)
   console.log(d);
 }
-addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg')
+// addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'aapenbeer.jpg')
+
+const removeFile = async (fileName: string) => {
+  const gc = new StorageGoogle(configGoogle);
+  const d = await gc.removeFile(fileName)
+  console.log(d);
+}
+// removeFile('aapenbeer.jpg')
+
+const getFile = async (fileName: string) => {
+  const gc = new StorageGoogle(configGoogle);
+  const d = await gc.getFile(fileName)
+  console.log(d);
+}
+// getFile('sun-blanket.jpg')
