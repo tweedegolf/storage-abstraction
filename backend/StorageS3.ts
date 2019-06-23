@@ -29,22 +29,16 @@ export default class StorageS3 extends Storage {
     this.bucketName = slugify(bucketName);
   }
 
-  async getFileAsReadable(fileName: string): Promise<Readable | null> {
+  async getFileAsReadable(fileName: string): Promise<Readable> {
     const params = {
       Bucket: this.bucketName,
       Key: fileName
     };
-    return new Promise<Readable | null>((resolve, reject) => {
-      this.storage.getObject(params).promise()
-        .then(() => resolve(this.storage.getObject(params).createReadStream()))
-        .catch(e => {
-          console.error(e.message);
-          reject(null);
-        })
-    })
-      .then(stream => stream)
-      .catch(e => Promise.reject(e))
-    // .catch(() => null)
+    return this.storage.getObject(params).promise()
+      .then(() => this.storage.getObject(params).createReadStream())
+      .catch(e => {
+        return Promise.reject(new Error(e.message));
+      })
   }
 
   async removeFile(fileName: string): Promise<boolean> {
