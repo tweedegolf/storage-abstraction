@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+import fs from 'fs'
+import path from 'path'
 import StorageS3 from './StorageS3';
 dotenv.config();
 
@@ -15,8 +17,41 @@ const getFiles = async () => {
   const d = await s3.getFiles()
   console.log(d);
 }
-getFiles();
+// getFiles();
 
+const getFileAsReadable = async (fileName: string) => {
+  const s3 = new StorageS3(configS3);
+  s3.getFileAsReadable(fileName)
+    .then(readStream => {
+      const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+      const writeStream = fs.createWriteStream(filePath);
+      readStream.pipe(writeStream);
+      writeStream.on('error', (e: Error) => {
+        console.log(e.message);
+      })
+      writeStream.on('finish', () => {
+        console.log('FINISH');
+      })
+    })
+    .catch(e => { console.log(e) })
+
+  /*
+    const readStream = await s3.getFileAsReadable(fileName)
+    if (readStream !== null) {
+      const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+      const writeStream = fs.createWriteStream(filePath);
+      readStream.pipe(writeStream);
+      writeStream.on('error', (e: Error) => {
+        console.log(e.message);
+      })
+      writeStream.on('finish', () => {
+        console.log('FINISH');
+      })
+    }
+  */
+}
+// getFileAsReadable('sun-blanket.jpg');
+getFileAsReadable('IMG_9643.jpg');
 
 const addFileFromPath = async (path: string, newFileName?: string) => {
   const s3 = new StorageS3(configS3);

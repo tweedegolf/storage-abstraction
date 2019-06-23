@@ -1,11 +1,10 @@
-import axios from 'axios';
+// import axios from 'axios';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { Storage } from './Storage'
-import fs, { ReadStream } from 'fs';
+import fs from 'fs';
 import path from 'path';
 import slugify from 'slugify';
 import { StorageConfigGoogle } from './types';
-import { stat, unlink } from './utils';
 import { Readable } from 'stream';
 
 // export default class StorageGoogle implements Storage {
@@ -45,27 +44,15 @@ export default class StorageGoogle extends Storage {
       console.error(`${fileName} does not exist`)
       return false
     }
-    return new Promise<void>((resolve, reject) => {
-      const localFilename = path.join(downloadPath, fileName);
-      const ws = file.createReadStream()
-        .on('error', (err) => {
-          console.error(err);
-          reject();
-        })
-        .on('response', (response) => { })
-        .on('end', () => { })
-        .pipe(fs.createWriteStream(localFilename))
-
-      ws.on('finish', () => {
-        resolve();
-      })
-      ws.on('error', (err) => {
-        console.error(err);
-        reject();
-      })
+    const localFilename = path.join(downloadPath, fileName);
+    return file.download({
+      destination: localFilename,
     })
       .then(() => true)
-      .catch(() => false)
+      .catch(e => {
+        console.error(e);
+        return false;
+      })
   }
 
   // async getFile(fileName: string) {
@@ -106,6 +93,10 @@ export default class StorageGoogle extends Storage {
         reject();
       });
       readStream.pipe(writeStream);
+      writeStream.on('error', (e) => {
+        console.log(e.message);
+        reject();
+      })
     })
       .then(() => true)
       .catch(() => false)
@@ -124,14 +115,26 @@ export default class StorageGoogle extends Storage {
       })
   }
 
-  async getFiles(numFiles: number = 1000) {
+  private async getMetaData(result: Array<[string, number?]>) {
+    for (let i = 0; i < result.length; i++) {
+      const file = this.storage.bucket(this.bucketName).file(result[i][0])
+      const [metadata] = await file.getMetadata();
+      // console.log(metadata.size);
+      result[i].push(parseInt(metadata.size, 10));
+    }
+    return result;
+  }
+
+  async getFiles(numFiles: number = 1000): Promise<Array<[string, number?]>> {
     return this.storage.bucket(this.bucketName).getFiles()
-      .then((data) => {
-        console.log(data);
+      .then(async (data) => {
+        const result: Array<[string, number?]> = data[0].map(f => [f.name]);
+        await this.getMetaData(result);
+        return result as [string, number][];
       })
       .catch(err => {
         console.log(err);
-        return [];
+        return [] as [string, number][];
       });
   }
 

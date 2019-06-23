@@ -19,20 +19,12 @@ const createBucket = async () => {
 // createBucket();
 
 
-const getFilesInBucket = async () => {
+const getFiles = async () => {
   const gc = new StorageGoogle(configGoogle);
-  const d = await gc.getFilesInBucket('aap-en-beers')
+  const d = await gc.getFiles()
   console.log(d);
 }
-// getFilesInBucket();
-
-
-const listBucketNames = async () => {
-  const gc = new StorageGoogle(configGoogle);
-  const d = await gc.listBucketNames()
-  console.log(d);
-}
-// listBucketNames();
+getFiles();
 
 
 const addFileFromPath = async (path: string, newFileName?: string) => {

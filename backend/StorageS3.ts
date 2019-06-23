@@ -1,8 +1,9 @@
 import S3 from 'aws-sdk/clients/s3';
 import fs from 'fs';
 import { Storage } from './Storage';
-import { StorageConfigS3, File } from './types';
+import { StorageConfigS3 } from './types';
 import slugify from 'slugify';
+import { Readable } from 'stream';
 
 // export default class StorageS3 implements Storage {
 export default class StorageS3 extends Storage {
@@ -26,6 +27,24 @@ export default class StorageS3 extends Storage {
       secretAccessKey,
     })
     this.bucketName = slugify(bucketName);
+  }
+
+  async getFileAsReadable(fileName: string): Promise<Readable | null> {
+    const params = {
+      Bucket: this.bucketName,
+      Key: fileName
+    };
+    return new Promise<Readable | null>((resolve, reject) => {
+      this.storage.getObject(params).promise()
+        .then(() => resolve(this.storage.getObject(params).createReadStream()))
+        .catch(e => {
+          console.error(e.message);
+          reject(null);
+        })
+    })
+      .then(stream => stream)
+      .catch(e => Promise.reject(e))
+    // .catch(() => null)
   }
 
   async removeFile(fileName: string): Promise<boolean> {
@@ -73,6 +92,7 @@ export default class StorageS3 extends Storage {
     return this.storage.listObjects(params).promise()
       .then(data => {
         const { Contents: content } = data;
+        // console.log(data);
         return content.map(o => [o.Key, o.Size]) as [string, number][]
       })
       .catch(err => {
