@@ -54,30 +54,31 @@ export default class StorageS3 extends Storage {
   }
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const readStream = fs.createReadStream(filePath);
-      const params = {
-        Bucket: this.bucketName,
-        Key: targetFileName,
-        Body: readStream
-      };
-      this.storage.upload(params).promise()
-        .then(data => { console.log(data); resolve(true); })
-        .catch(err => { console.error(err); reject(false); })
-    });
+    const readStream = fs.createReadStream(filePath);
+    const params = {
+      Bucket: this.bucketName,
+      Key: targetFileName,
+      Body: readStream
+    };
+    return this.storage.upload(params).promise()
+      .then(data => { console.log(data); return true; })
+      .catch(err => { console.error(err); return false; })
   }
 
-  async getFilesInBucket(name: string, maxFiles: number = 1000) {
+  async getFiles(maxFiles: number = 1000): Promise<Array<[string, number]>> {
     const params = {
-      Bucket: name,
+      Bucket: this.bucketName,
       MaxKeys: maxFiles
     };
-    const files = await this.storage.listObjects(params).promise()
+    return this.storage.listObjects(params).promise()
+      .then(data => {
+        const { Contents: content } = data;
+        return content.map(o => [o.Key, o.Size]) as [string, number][]
+      })
       .catch(err => {
         console.log(err);
-        return [];
+        return [] as [string, number][];
       })
-    return files;
   }
 }
 

@@ -31,36 +31,41 @@ export default class StorageGoogle extends Storage {
 
   async getFileAsReadable(fileName: string): Promise<Readable | null> {
     const file = this.storage.bucket(this.bucketName).file(fileName)
-    if (!file.exists()) {
+    const [exists] = await file.exists()
+    if (exists === false) {
       return null;
     }
     return file.createReadStream();
   }
 
   async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const file = this.storage.bucket(this.bucketName).file(fileName)
-      if (!file) {
-        reject(false);
-        return;
-      }
-      console.log(file);
+    const file = this.storage.bucket(this.bucketName).file(fileName)
+    const [exists] = await file.exists()
+    if (exists === false) {
+      console.error(`${fileName} does not exist`)
+      return false
+    }
+    return new Promise<void>((resolve, reject) => {
       const localFilename = path.join(downloadPath, fileName);
       const ws = file.createReadStream()
         .on('error', (err) => {
           console.error(err);
+          reject();
         })
         .on('response', (response) => { })
         .on('end', () => { })
         .pipe(fs.createWriteStream(localFilename))
 
       ws.on('finish', () => {
-        resolve(true);
+        resolve();
       })
-      ws.on('error', () => {
-        reject(false);
+      ws.on('error', (err) => {
+        console.error(err);
+        reject();
       })
     })
+      .then(() => true)
+      .catch(() => false)
   }
 
   // async getFile(fileName: string) {
@@ -90,18 +95,20 @@ export default class StorageGoogle extends Storage {
   // util members
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const readStream = fs.createReadStream(filePath);
       const writeStream = this.storage.bucket(this.bucketName).file(targetFileName).createWriteStream();
       readStream.on('end', () => {
-        resolve(true);
+        resolve();
       });
       readStream.on('error', (e: Error) => {
         console.log(e);
-        reject(false);
+        reject();
       });
       readStream.pipe(writeStream);
-    });
+    })
+      .then(() => true)
+      .catch(() => false)
   }
 
   async createBucket(name: string): Promise<boolean> {
@@ -117,29 +124,16 @@ export default class StorageGoogle extends Storage {
       })
   }
 
-  async getFilesInBucket(name: string, numFiles: number = 1000) {
-    return this.storage.bucket(name).getFiles()
-      .then((data) => [data])
+  async getFiles(numFiles: number = 1000) {
+    return this.storage.bucket(this.bucketName).getFiles()
+      .then((data) => {
+        console.log(data);
+      })
       .catch(err => {
         console.log(err);
         return [];
       });
   }
 
-  async listBucketNames() {
-    return this.storage.getBuckets()
-      .then(buckets => {
-        return buckets[0].map(bucket => bucket.name)
-      })
-      .catch(err => {
-        console.log(err)
-        return []
-      });
-  }
-
-  async listFileNamesInBucket(name: string) {
-    const [files] = await this.storage.bucket(name).getFiles();
-    return files.map(file => file.name);
-  }
 }
 

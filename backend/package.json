@@ -50,7 +50,8 @@
   },
   "scripts": {
     "start": "nodemon --watch '**/*.ts' --ignore 'node_modules/**/*' --exec ts-node src/Server.ts",
-    "test": "ts-node test.ts"
+    "test-s3": "ts-node test-s3.ts",
+    "test-gc": "ts-node test-gc.ts"
   },
   "keywords": [],
   "author": "",
