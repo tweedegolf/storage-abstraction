@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs'
 import path from 'path'
-import { StorageS3 } from './StorageS3';
+import { StorageS3 } from './src/storage/StorageS3';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';

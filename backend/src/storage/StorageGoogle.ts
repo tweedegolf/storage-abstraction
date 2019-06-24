@@ -4,14 +4,14 @@ import { Storage, IStorage } from './Storage'
 import fs from 'fs';
 import path from 'path';
 import slugify from 'slugify';
-import { StorageConfigGoogle } from './types';
+import { ConfigStorageGoogle } from './types';
 import { Readable } from 'stream';
 
 export class StorageGoogle extends Storage implements IStorage {
   private storage: GoogleCloudStorage
   protected bucketName: string
 
-  constructor(config: StorageConfigGoogle) {
+  constructor(config: ConfigStorageGoogle) {
     super(config);
     const {
       bucketName,

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { StorageLocal } from './StorageLocal';
+import { StorageLocal } from './src/storage/StorageLocal';
 import to from 'await-to-js';
 dotenv.config();
 

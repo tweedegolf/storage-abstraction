@@ -1,16 +1,10 @@
 import { Service } from '@tsed/di';
 import { MediaFile } from '../entities/MediaFile';
-
-import { Storage } from '@google-cloud/storage';
-import fs from 'fs';
+import { Storage } from '../storage/Storage';
 import path from 'path';
 import slugify from 'slugify';
 import {
-  getMediaStorageMethod,
   getLocalMediaStorageRoot,
-  getGoogleCloudBucket,
-  getGoogleCloudProjectId,
-  getGoogleCloudKeystorePath,
 } from "../env";
 
 export enum MediaStorageMethod {
@@ -18,9 +12,11 @@ export enum MediaStorageMethod {
   GoogleCloud = 'google-cloud',
 }
 
-// import { MediaStorageMethod } from "../types";
 import { Readable } from 'stream';
-import { fileExists, isSubfolder, mkdir, unlink, stat } from "../util/file";
+import { StorageGoogle } from '../storage/StorageGoogle';
+import { StorageS3 } from '../storage/StorageS3';
+import { StorageLocal } from '../storage/StorageLocal';
+import { ConfigStorageGoogle, ConfigStorageS3, ConfigStorageLocal } from '../storage/types';
 
 @Service()
 export class MediaFileService {
@@ -34,101 +30,39 @@ export class MediaFileService {
   private storage: Storage;
   private bucket: string;
 
-  constructor() {
-    if (getMediaStorageMethod() === MediaStorageMethod.GoogleCloud) {
-      this.storage = new Storage({
-        projectId: getGoogleCloudProjectId(),
-        keyFilename: getGoogleCloudKeystorePath(),
-      });
-
-      this.bucket = getGoogleCloudBucket();
+  constructor(config: Object) {
+    const type = Storage.TYPE_LOCAL;
+    if (type === Storage.TYPE_LOCAL) {
+      this.storage = new StorageGoogle(config as ConfigStorageGoogle);
+    } else if (type === Storage.TYPE_AMAZON_S3) {
+      this.storage = new StorageS3(config as ConfigStorageS3);
+    } else if (type === Storage.TYPE_LOCAL) {
+      this.storage = new StorageLocal(config as ConfigStorageLocal);
     }
   }
 
   public async moveUploadedFile(tempFile: Express.Multer.File, dir: string): Promise<MediaFile> {
-    const filePath = tempFile.path;
-    const fileSize = (await stat(filePath)).size;
-    const originalName = path.basename(filePath);
-
-    const newName = await this.copyFile(filePath, originalName, dir);
-    await unlink(tempFile.path);
-    return this.instanceMediaFile({ fileSize, originalName, newName });
+    try {
+      await this.storage.addFileFromUpload(tempFile);
+      return this.instanceMediaFile({})
+    } catch (e) {
+      throw new Error(e.message);
+    }
   }
 
   public async copyFixtureFile(filePath: string, dir: string): Promise<MediaFile> {
-    const fileSize = (await stat(filePath)).size;
-    const originalName = path.basename(filePath);
-
-    const newName = await this.copyFile(filePath, originalName, dir);
-    return this.instanceMediaFile({ fileSize, originalName, newName });
   }
 
   public async copyFile(filePath: string, originalName: string, dir: string) {
-    const fileName = path.basename(filePath);
-    const newName = MediaFileService.getNewFilePath(fileName, originalName, dir);
-
-    const f = () => {
-      if (getMediaStorageMethod() === MediaStorageMethod.Local) {
-        return this.storeFileLocally(filePath, newName);
-      } else if (getMediaStorageMethod() === MediaStorageMethod.GoogleCloud) {
-        return this.storeFileGoogleCloud(filePath, newName);
-      } else {
-        // TODO Error should be thrown in env.ts
-        throw new Error("Logic error");
-      }
-    };
-
-    await f();
-
-    return newName;
+    this.storage.addFileFromPath(filePath);
   }
 
-  public async getMediaFileReadStream(file: MediaFile): Promise<{ success: boolean, stream?: Readable }> {
-    return this.getFileReadStream(file.path);
+  public async getMediaFileReadStream(file: MediaFile): Promise<Readable> {
+    return this.storage.getFileAsReadable(file.path);
   }
 
-  public async getFileReadStream(filePath: string): Promise<{ success: boolean, stream?: Readable }> {
-    const uploadDir = getLocalMediaStorageRoot();
-    const downloadPath = path.join(uploadDir, filePath);
-
-    if (!isSubfolder(uploadDir, downloadPath)) {
-      throw new Error(`Can only get files from upload directory and subdirectories`);
-    }
-
-    if (getMediaStorageMethod() === MediaStorageMethod.Local) {
-      if (!await fileExists(downloadPath)) {
-        return { success: false };
-      }
-
-      return {
-        success: true,
-        stream: fs.createReadStream(downloadPath),
-      };
-    } else if (getMediaStorageMethod() === MediaStorageMethod.GoogleCloud) {
-      const bucket = this.storage.bucket(this.bucket);
-      const file = bucket.file(filePath);
-      if (!file.exists()) {
-        return { success: false };
-      }
-
-      return {
-        success: true,
-        stream: file.createReadStream(),
-
-      };
-    } else {
-      // TODO Error should be thrown in env.ts
-      throw new Error("Logic error");
-    }
-  }
-
-  public async unlinkMediaFile(file: MediaFile): Promise<void> {
-    if (getMediaStorageMethod() === MediaStorageMethod.Local) {
-      const fullPath = getLocalMediaStorageRoot() + path.sep + file.path;
-      await unlink(fullPath);
-    } else if (getMediaStorageMethod() === MediaStorageMethod.GoogleCloud) {
-      await this.storage.bucket(this.bucket).file(file.path).delete();
-    }
+  public async unlinkMediaFile(file: MediaFile): Promise<boolean> {
+    return this.storage.removeFile(file.path)
   }
 
   private instanceMediaFile(props): MediaFile {
@@ -140,34 +74,5 @@ export class MediaFileService {
     file.path = newName;
 
     return file;
-  }
-
-  private async storeFileLocally(filePath: string, newName: string): Promise<void> {
-    const uploadDir = getLocalMediaStorageRoot();
-    const newPath = path.join(uploadDir, newName);
-
-    if (!isSubfolder(uploadDir, newPath)) {
-      throw new Error(`Can only store files in upload directory and subdirectories`);
-    }
-
-    await mkdir(path.dirname(newPath), { recursive: true });
-
-    await new Promise((resolve, reject) => {
-      fs.copyFile(
-        filePath,
-        newPath,
-        (err) => err ? reject(err) : resolve());
-    });
-  }
-
-  private storeFileGoogleCloud(filePath: string, newName: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const readStream = fs.createReadStream(filePath);
-
-      const writeStream = this.storage.bucket(this.bucket).file(newName).createWriteStream();
-      readStream.on('end', resolve);
-      readStream.on('error', reject);
-      readStream.pipe(writeStream);
-    });
   }
 }

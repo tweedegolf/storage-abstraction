@@ -1,12 +1,12 @@
 import 'multer';
 import fs from 'fs';
 import path from 'path';
-import { StorageConfigGoogle, StorageConfigS3, StorageConfigLocal } from './types';
+import { ConfigStorageGoogle, ConfigStorageS3, ConfigStorageLocal } from './types';
 import { Readable } from 'stream';
 
 export interface IStorage {
   addFileFromPath(filePath: string, newFileName?: string, remove?: boolean): Promise<number>
-  addFile(file: Express.Multer.File, newFileName?: string, remove?: boolean): Promise<number>
+  addFileFromUpload(file: Express.Multer.File, newFileName?: string, remove?: boolean): Promise<number>
   createBucket(name: string): Promise<boolean>
   getFileAsReadable(name: string): Promise<Readable>
   removeFile(fileName: string): Promise<boolean>
@@ -14,9 +14,12 @@ export interface IStorage {
 }
 
 abstract class Storage implements IStorage {
+  public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD'
+  public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3'
+  public static TYPE_LOCAL: string = 'TYPE_LOCAL'
   protected bucketName: string
 
-  constructor(config: StorageConfigS3 | StorageConfigGoogle | StorageConfigLocal) {
+  constructor(config: ConfigStorageS3 | ConfigStorageGoogle | ConfigStorageLocal) {
     // TODO: perform sanity tests?
   }
 
@@ -34,7 +37,7 @@ abstract class Storage implements IStorage {
     }
   }
 
-  async addFile(file: Express.Multer.File, newFileName?: string, remove?: boolean): Promise<number> {
+  async addFileFromUpload(file: Express.Multer.File, newFileName?: string, remove?: boolean): Promise<number> {
     const filePath = file.path;
     const fileSize = (await fs.promises.stat(filePath)).size;
     const fileName = newFileName || path.basename(filePath);

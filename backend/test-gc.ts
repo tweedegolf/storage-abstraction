@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { StorageGoogle } from './StorageGoogle';
+import { StorageGoogle } from './src/storage/StorageGoogle';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';

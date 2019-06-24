@@ -1,7 +1,7 @@
 import S3 from 'aws-sdk/clients/s3';
 import fs from 'fs';
 import { Storage, IStorage } from './Storage';
-import { StorageConfigS3 } from './types';
+import { ConfigStorageS3 } from './types';
 import slugify from 'slugify';
 import { Readable } from 'stream';
 
@@ -9,7 +9,7 @@ export class StorageS3 extends Storage implements IStorage {
   private storage: S3;
   protected bucketName: string
 
-  constructor(config: StorageConfigS3) {
+  constructor(config: ConfigStorageS3) {
     super(config)
     const {
       bucketName,
