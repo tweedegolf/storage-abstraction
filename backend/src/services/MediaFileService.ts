@@ -30,8 +30,7 @@ export class MediaFileService {
   private storage: Storage;
   private bucket: string;
 
-  constructor(config: Object) {
-    const type = Storage.TYPE_LOCAL;
+  constructor(type: string, config: Object) {
     if (type === Storage.TYPE_LOCAL) {
       this.storage = new StorageGoogle(config as ConfigStorageGoogle);
     } else if (type === Storage.TYPE_AMAZON_S3) {
@@ -51,6 +50,12 @@ export class MediaFileService {
   }
 
   public async copyFixtureFile(filePath: string, dir: string): Promise<MediaFile> {
+    try {
+      this.storage.addFileFromPath(filePath);
+      return this.instanceMediaFile({})
+    } catch (e) {
+      throw new Error(e.message);
+    }
   }
 
   public async copyFile(filePath: string, originalName: string, dir: string) {

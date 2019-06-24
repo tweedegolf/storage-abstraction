@@ -23,9 +23,20 @@ export class StorageLocal extends Storage implements IStorage {
   }
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    const dest = path.join(this.storagePath, targetFileName);
-    // const dest = path.join('generate_error', targetFileName);
-    // console.log(dest);
+    // const dest = path.join(this.storagePath, ...targetFileName.split('/'));
+    // const dest = path.join(this.storagePath, targetFileName);
+    // const dest = path.join('generate_error', this.storagePath, targetFileName);
+    const dest = path.join('generate_error', targetFileName);
+    try {
+      const dir = await fs.promises.stat(path.dirname(dest));
+    } catch (e) {
+      try {
+        await fs.promises.mkdir(path.dirname(dest));
+      } catch (e) {
+        throw new Error(e.message)
+      }
+    }
+
     return fs.promises.copyFile(filePath, dest)
       .then(() => true)
       .catch(e => {
@@ -63,7 +74,8 @@ export class StorageLocal extends Storage implements IStorage {
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
         const stat = await fs.promises.stat(f)
-        result.push([path.basename(f), stat.size])
+        // result.push([path.basename(f), stat.size])
+        result.push([f.replace(`${this.storagePath}/`, ''), stat.size])
       }
       return result;
     } catch (e) {
@@ -73,7 +85,12 @@ export class StorageLocal extends Storage implements IStorage {
 
   async getFileAsReadable(name: string): Promise<Readable> {
     const p = path.join(this.storagePath, name);
-    return fs.createReadStream(p);
+    try {
+      await fs.promises.stat(p);
+      return fs.createReadStream(p);
+    } catch (e) {
+      throw new Error(e.message)
+    }
   }
 
   async removeFile(fileName: string): Promise<boolean> {

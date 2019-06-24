@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { StorageLocal } from './src/storage/StorageLocal';
+import { StorageLocal } from './StorageLocal';
 import to from 'await-to-js';
 dotenv.config();
 
@@ -21,10 +21,10 @@ const createBucket = async () => {
 // createBucket();
 
 
-// const listFiles = async () => {
-//   const d = await sl.listFiles()
-//   console.log(d);
-// }
+const listFiles = async () => {
+  const d = await sl.listFiles()
+  console.log(d);
+}
 // listFiles();
 
 // const removeFile = async (file: string) => {
@@ -34,8 +34,8 @@ const createBucket = async () => {
 // removeFile('tmp.jpg');
 
 
-const addFileFromPath = async (file: string) => {
-  const [err, result] = await to(sl.addFileFromPath(file))
+const addFileFromPath = async (file: string, newFilePath?: string) => {
+  const [err, result] = await to(sl.addFileFromPath(file, newFilePath))
   if (err) {
     console.error(err.message);
   } else {
@@ -44,6 +44,7 @@ const addFileFromPath = async (file: string) => {
 }
 // addFileFromPath('/home/abudaan/Downloads/SH-3-44.mid');
 // addFileFromPath('/home/abudaan/Downloads/surfaces-smooth.jpg');
+// addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'test/aapenbeer.jpg')
 
 
 const getFileAsReadable = (fileName: string) => {
@@ -61,7 +62,7 @@ const getFileAsReadable = (fileName: string) => {
     })
     .catch(e => { console.log(e) })
 }
-getFileAsReadable('SH-3-44.mid');
+getFileAsReadable('generate_error/SH-3-44.mid');
 // getFileAsReadable('IMG_9643.jpg');
 
 

@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs'
 import path from 'path'
-import { StorageS3 } from './src/storage/StorageS3';
+import { StorageS3 } from './StorageS3';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';
@@ -12,11 +12,11 @@ const configS3 = {
 }
 const s3 = new StorageS3(configS3);
 
-const getFiles = async () => {
+const listFiles = async () => {
   const d = await s3.listFiles()
   console.log(d);
 }
-// getFiles();
+listFiles();
 
 const getFileAsReadable = (fileName: string) => {
   s3.getFileAsReadable(fileName)
@@ -34,7 +34,7 @@ const getFileAsReadable = (fileName: string) => {
     .catch(e => { console.log(e) })
 }
 // getFileAsReadable('sun-blanket.jpg');
-// getFileAsReadable('IMG_9643.jpg');
+// getFileAsReadable('/generate_error/IMG_9643.jpg');
 
 
 const getFileAsReadable2 = async (fileName: string) => {
@@ -82,6 +82,7 @@ const addFileFromPath = async (path: string, newFileName?: string) => {
   console.log(d);
 }
 // addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'aapenbeer.jpg')
+// addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'test/aapenbeer.jpg')
 
 
 const removeFile = async (fileName: string) => {
@@ -100,7 +101,7 @@ const removeFile = async (fileName: string) => {
     })
 
 }
-removeFile('aapenbeer.jpg')
+// removeFile('aapenbeer.jpg')
 
 
 
