@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import StorageGoogle from './StorageGoogle';
+import { StorageGoogle } from './StorageGoogle';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';
@@ -13,7 +13,7 @@ const configGoogle = {
 
 const createBucket = async () => {
   const gc = new StorageGoogle(configGoogle);
-  const d = await gc.createBucket('aap-en-beers')
+  const d = await gc.createBucket()
   console.log(d);
 }
 // createBucket();

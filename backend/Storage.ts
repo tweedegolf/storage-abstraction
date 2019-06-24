@@ -1,31 +1,48 @@
 import 'multer';
+import fs from 'fs';
 import path from 'path';
-import { stat, unlink } from './utils';
-import { StorageConfigGoogle, StorageConfigS3 } from './types';
+import { StorageConfigGoogle, StorageConfigS3, StorageConfigLocal } from './types';
+import { Readable } from 'stream';
 
-class Storage {
+export interface IStorage {
+  addFileFromPath(filePath: string, newFileName?: string, remove?: boolean): Promise<number>
+  addFile(file: Express.Multer.File, newFileName?: string, remove?: boolean): Promise<number>
+  createBucket(name: string): Promise<boolean>
+  getFileAsReadable(name: string): Promise<Readable>
+  removeFile(fileName: string): Promise<boolean>
+  listFiles(): Promise<[string, number?][]>
+}
+
+abstract class Storage implements IStorage {
   protected bucketName: string
-  protected bucketExists: boolean = false
 
-  constructor(config: StorageConfigS3 | StorageConfigGoogle | StorageConfigS3) {
+  constructor(config: StorageConfigS3 | StorageConfigGoogle | StorageConfigLocal) {
     // TODO: perform sanity tests?
   }
 
-  async addFileFromPath(filePath: string, newFileName?: string): Promise<boolean> {
-    if (this.bucketExists === false) {
-      this.bucketExists = await this.createBucket(this.bucketName)
-    }
+  async addFileFromPath(filePath: string, newFileName?: string, remove?: boolean): Promise<number> {
+    const fileSize = (await fs.promises.stat(filePath)).size;
     const targetFileName = newFileName || path.basename(filePath);
-    return this.store(filePath, targetFileName);
+    try {
+      await this.store(filePath, targetFileName)
+      if (remove === true) {
+        await fs.promises.unlink(filePath)
+      }
+      return fileSize;
+    } catch (e) {
+      throw new Error(e.message);
+    } finally {
+      return fileSize;
+    }
   }
 
-  async addFile(file: Express.Multer.File, newFileName?: string): Promise<number | null> {
+  async addFile(file: Express.Multer.File, newFileName?: string, remove?: boolean): Promise<number> {
     const filePath = file.path;
-    const fileSize = (await stat(filePath)).size;
+    const fileSize = (await fs.promises.stat(filePath)).size;
     const fileName = newFileName || path.basename(filePath);
 
     await this.store(filePath, fileName);
-    return unlink(file.path)
+    return fs.promises.unlink(file.path)
       .then(() => fileSize)
       .catch(e => {
         console.error(e);
@@ -35,13 +52,15 @@ class Storage {
 
   // stubs (to be overridden by subclasses)
 
-  protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    return new Promise<boolean>(() => { });
-  }
+  protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>
 
-  async createBucket(name: string): Promise<boolean> {
-    return new Promise<boolean>(() => { });
-  }
+  abstract async createBucket(name: string): Promise<boolean>
+
+  abstract async getFileAsReadable(name: string): Promise<Readable>
+
+  abstract async removeFile(fileName: string): Promise<boolean>
+
+  abstract async listFiles(): Promise<[string, number?][]>
 }
 
 export {

@@ -1,5 +1,5 @@
+import fs from 'fs'
 import dotenv from 'dotenv'
-import { readFile } from './utils';
 import to from 'await-to-js';
 dotenv.config();
 
@@ -10,7 +10,7 @@ const img = '/home/abudaan/Downloads/tmp/IMG_9643.jpg';
 
 // API method
 const readImage1 = async (filePath: string): Promise<Buffer> => {
-  return readFile(filePath)
+  return fs.promises.readFile(filePath)
     .then(buffer => buffer)
     .catch(e => Promise.reject(e))
 }
@@ -56,7 +56,7 @@ test1b('non/existent')
 
 // API method
 const readImage2 = async (filePath: string): Promise<Buffer | null> => {
-  return readFile(filePath)
+  return fs.promises.readFile(filePath)
     .then(buffer => buffer)
     .catch(e => {
       console.log('2', e.message)

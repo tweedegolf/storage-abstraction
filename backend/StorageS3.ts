@@ -1,15 +1,13 @@
 import S3 from 'aws-sdk/clients/s3';
 import fs from 'fs';
-import { Storage } from './Storage';
+import { Storage, IStorage } from './Storage';
 import { StorageConfigS3 } from './types';
 import slugify from 'slugify';
 import { Readable } from 'stream';
 
-// export default class StorageS3 implements Storage {
-export default class StorageS3 extends Storage {
+export class StorageS3 extends Storage implements IStorage {
   private storage: S3;
   protected bucketName: string
-  protected bucketExists: boolean = false
 
   constructor(config: StorageConfigS3) {
     super(config)
@@ -36,33 +34,34 @@ export default class StorageS3 extends Storage {
     };
     return this.storage.getObject(params).promise()
       .then(() => this.storage.getObject(params).createReadStream())
-      .catch(e => {
-        return Promise.reject(new Error(e.message));
-      })
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
+      });
   }
 
   async removeFile(fileName: string): Promise<boolean> {
     const params = {
-      Bucket: this.bucketName,
+      Bucket: 'this.bucketName',
       Key: fileName
     };
     return this.storage.deleteObject(params).promise()
       .then(() => true)
-      .catch(e => {
-        console.error(e);
-        return false;
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
       });
   }
 
 
   // util members
 
-  async createBucket(name: string): Promise<boolean> {
-    return this.storage.createBucket({ Bucket: name }).promise()
+  async createBucket(): Promise<boolean> {
+    return this.storage.createBucket({ Bucket: this.bucketName }).promise()
       .then(() => true)
-      .catch(e => {
-        console.error(e);
-        return false;
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
       })
   }
 
@@ -74,11 +73,14 @@ export default class StorageS3 extends Storage {
       Body: readStream
     };
     return this.storage.upload(params).promise()
-      .then(data => { console.log(data); return true; })
-      .catch(err => { console.error(err); return false; })
+      .then(() => true)
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message);
+      })
   }
 
-  async getFiles(maxFiles: number = 1000): Promise<Array<[string, number]>> {
+  async listFiles(maxFiles: number = 1000): Promise<Array<[string, number]>> {
     const params = {
       Bucket: this.bucketName,
       MaxKeys: maxFiles
@@ -90,8 +92,8 @@ export default class StorageS3 extends Storage {
         return content.map(o => [o.Key, o.Size]) as [string, number][]
       })
       .catch(err => {
-        console.log(err);
-        return [] as [string, number][];
+        console.log(err.message);
+        throw new Error(err.message);
       })
   }
 }

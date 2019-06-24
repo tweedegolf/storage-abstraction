@@ -1,17 +1,15 @@
 // import axios from 'axios';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
-import { Storage } from './Storage'
+import { Storage, IStorage } from './Storage'
 import fs from 'fs';
 import path from 'path';
 import slugify from 'slugify';
 import { StorageConfigGoogle } from './types';
 import { Readable } from 'stream';
 
-// export default class StorageGoogle implements Storage {
-export default class StorageGoogle extends Storage {
+export class StorageGoogle extends Storage implements IStorage {
   private storage: GoogleCloudStorage
   protected bucketName: string
-  protected bucketExists: boolean = false
 
   constructor(config: StorageConfigGoogle) {
     super(config);
@@ -28,13 +26,15 @@ export default class StorageGoogle extends Storage {
     this.bucketName = slugify(bucketName);
   }
 
-  async getFileAsReadable(fileName: string): Promise<Readable | null> {
+  async getFileAsReadable(fileName: string): Promise<Readable> {
     const file = this.storage.bucket(this.bucketName).file(fileName)
     const [exists] = await file.exists()
     if (exists === false) {
-      return null;
+      console.log('file not found');
+      throw new Error('file not found')
+    } else {
+      return file.createReadStream();
     }
-    return file.createReadStream();
   }
 
   async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
@@ -49,10 +49,10 @@ export default class StorageGoogle extends Storage {
       destination: localFilename,
     })
       .then(() => true)
-      .catch(e => {
-        console.error(e);
-        return false;
-      })
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
+      });
   }
 
   // async getFile(fileName: string) {
@@ -73,9 +73,9 @@ export default class StorageGoogle extends Storage {
   async removeFile(fileName: string): Promise<boolean> {
     return this.storage.bucket(this.bucketName).file(fileName).delete()
       .then(() => true)
-      .catch(e => {
-        console.error(e);
-        return false;
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
       });
   }
 
@@ -89,21 +89,22 @@ export default class StorageGoogle extends Storage {
         resolve();
       });
       readStream.on('error', (e: Error) => {
-        console.log(e);
-        reject();
+        reject(e);
       });
       readStream.pipe(writeStream);
       writeStream.on('error', (e) => {
-        console.log(e.message);
-        reject();
+        reject(e);
       })
     })
       .then(() => true)
-      .catch(() => false)
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
+      });
   }
 
-  async createBucket(name: string): Promise<boolean> {
-    return this.storage.createBucket(name)
+  async createBucket(): Promise<boolean> {
+    return this.storage.createBucket(this.bucketName)
       .then(data => {
         // console.log(data)
         return true;
@@ -125,7 +126,7 @@ export default class StorageGoogle extends Storage {
     return result;
   }
 
-  async getFiles(numFiles: number = 1000): Promise<Array<[string, number?]>> {
+  async listFiles(numFiles: number = 1000): Promise<Array<[string, number?]>> {
     return this.storage.bucket(this.bucketName).getFiles()
       .then(async (data) => {
         const result: Array<[string, number?]> = data[0].map(f => [f.name]);
@@ -133,10 +134,9 @@ export default class StorageGoogle extends Storage {
         return result as [string, number][];
       })
       .catch(err => {
-        console.log(err);
-        return [] as [string, number][];
+        console.log(err.message);
+        throw new Error(err.message)
       });
   }
-
 }
 
