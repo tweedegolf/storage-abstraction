@@ -16,7 +16,7 @@ import { Readable } from 'stream';
 import { StorageGoogle } from '../storage/StorageGoogle';
 import { StorageS3 } from '../storage/StorageS3';
 import { StorageLocal } from '../storage/StorageLocal';
-import { ConfigStorageGoogle, ConfigStorageS3, ConfigStorageLocal } from '../storage/types';
+import { Storage as StorageTypes } from '../storage/types';
 
 @Service()
 export class MediaFileService {
@@ -28,56 +28,74 @@ export class MediaFileService {
   }
 
   private storage: Storage;
-  private bucket: string;
 
   constructor(type: string, config: Object) {
     if (type === Storage.TYPE_LOCAL) {
-      this.storage = new StorageGoogle(config as ConfigStorageGoogle);
+      this.storage = new StorageGoogle(config as StorageTypes.ConfigGoogle);
     } else if (type === Storage.TYPE_AMAZON_S3) {
-      this.storage = new StorageS3(config as ConfigStorageS3);
+      this.storage = new StorageS3(config as StorageTypes.ConfigS3);
     } else if (type === Storage.TYPE_LOCAL) {
-      this.storage = new StorageLocal(config as ConfigStorageLocal);
+      this.storage = new StorageLocal(config as StorageTypes.ConfigLocal);
     }
   }
 
-  public async moveUploadedFile(tempFile: Express.Multer.File, dir: string): Promise<MediaFile> {
+  /**
+   * @param tempFile: uploaded file in temporary Multer storage
+   * @param dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param dir?: the directory to save this file into, directory will be created if it doesn't exist
+   */
+  public async moveUploadedFile(tempFile: Express.Multer.File, dir?: string, newName?: string, remove?: boolean): Promise<MediaFile> {
     try {
-      await this.storage.addFileFromUpload(tempFile);
-      return this.instanceMediaFile({})
+      const result: StorageTypes.ReturnArgs = await this.storage.addFileFromUpload(tempFile, {
+        dir,
+        name: newName,
+        remove,
+      });
+      return this.instanceMediaFile(result)
     } catch (e) {
       throw new Error(e.message);
     }
   }
 
-  public async copyFixtureFile(filePath: string, dir: string): Promise<MediaFile> {
+  /**
+   * @param filePath: path to the file to be copied
+   * @param dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param remove?: whether or not to remove the file after it has been copied
+   */
+  public async copyFile(filePath: string, dir?: string, newName?: string, remove?: boolean): Promise<MediaFile> {
     try {
-      this.storage.addFileFromPath(filePath);
-      return this.instanceMediaFile({})
+      const result: StorageTypes.ReturnArgs = await this.storage.addFileFromPath(filePath, {
+        dir,
+        name: newName,
+        remove,
+      });
+      return this.instanceMediaFile(result)
     } catch (e) {
       throw new Error(e.message);
     }
-  }
-
-  public async copyFile(filePath: string, originalName: string, dir: string) {
-    this.storage.addFileFromPath(filePath);
   }
 
   public async getMediaFileReadStream(file: MediaFile): Promise<Readable> {
-    return this.storage.getFileAsReadable(file.path);
+    try {
+      const stream = await this.storage.getFileAsReadable(file.path);
+      return stream;
+    } catch (e) {
+      throw e
+    }
   }
 
   public async unlinkMediaFile(file: MediaFile): Promise<boolean> {
-    return this.storage.removeFile(file.path)
+    try {
+      await this.storage.removeFile(file.path)
+      return true
+    } catch (e) {
+      throw e;
+    }
   }
 
-  private instanceMediaFile(props): MediaFile {
-    const { fileSize, originalName, newName } = props;
-
+  private instanceMediaFile(props: { size: number, name: string, path: string }): MediaFile {
     const file = new MediaFile();
-    file.size = fileSize;
-    file.name = originalName;
-    file.path = newName;
-
+    Object.assign(file, props);
     return file;
   }
 }

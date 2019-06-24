@@ -1,17 +1,17 @@
 // import axios from 'axios';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
-import { Storage, IStorage } from './Storage'
+import { Storage } from './Storage'
 import fs from 'fs';
 import path from 'path';
 import slugify from 'slugify';
-import { ConfigStorageGoogle } from './types';
+import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
 
-export class StorageGoogle extends Storage implements IStorage {
+export class StorageGoogle extends Storage implements StorageTypes.IStorage {
   private storage: GoogleCloudStorage
   protected bucketName: string
 
-  constructor(config: ConfigStorageGoogle) {
+  constructor(config: StorageTypes.ConfigGoogle) {
     super(config);
     const {
       bucketName,
@@ -81,10 +81,10 @@ export class StorageGoogle extends Storage implements IStorage {
 
   // util members
 
-  protected async store(filePath: string, targetFileName: string): Promise<boolean> {
+  protected async store(origPath: string, targetPath: string): Promise<boolean> {
     return new Promise<void>((resolve, reject) => {
-      const readStream = fs.createReadStream(filePath);
-      const writeStream = this.storage.bucket(this.bucketName).file(targetFileName).createWriteStream();
+      const readStream = fs.createReadStream(origPath);
+      const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
       readStream.on('end', () => {
         resolve();
       });

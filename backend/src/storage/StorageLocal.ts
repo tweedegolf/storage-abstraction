@@ -1,17 +1,17 @@
 import fs from 'fs'
 import path from 'path'
 import glob from 'glob'
-import { ConfigStorageLocal } from './types';
-import { Storage, IStorage } from './Storage';
+import { Storage as StorageTypes } from './types';
+import { Storage } from './Storage';
 import { Readable } from 'stream';
 import to from 'await-to-js';
 
-export class StorageLocal extends Storage implements IStorage {
+export class StorageLocal extends Storage implements StorageTypes.IStorage {
   protected bucketName: string
   private directory: string
   private storagePath: string
 
-  constructor(config: ConfigStorageLocal) {
+  constructor(config: StorageTypes.ConfigLocal) {
     super(config);
     const {
       directory,

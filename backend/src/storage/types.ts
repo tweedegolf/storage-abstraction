@@ -1,37 +1,56 @@
-// export namespace TG {
-export interface Storage {
-  createBucket: (name: string) => Promise<Object | Error>
-  storeFile: (file: File) => Promise<Object | Error>
-  deleteFile: (file: File) => Promise<Object | Error>
-}
+import { Readable } from 'stream';
 
-interface StorageConstructor {
-  new(config: Object): Storage;
-}
+export namespace Storage {
 
-declare var Storage: StorageConstructor;
+  export interface IStorage {
+    addFileFromPath(filePath: string, args?: AddArgs): Promise<ReturnArgs>
+    addFileFromUpload(file: Express.Multer.File, args?: AddArgs): Promise<ReturnArgs>
+    createBucket(name: string): Promise<boolean>
+    getFileAsReadable(name: string): Promise<Readable>
+    removeFile(fileName: string): Promise<boolean>
+    listFiles(): Promise<[string, number?][]>
+  }
 
-export type File = {
-  name: string
-  path: string
-  type: string
-}
+  interface StorageConstructor {
+    new(config: Object): IStorage;
+  }
 
-export type ConfigStorageS3 = {
-  bucketName: string
-  accessKeyId: string
-  secretAccessKey: string
-}
+  declare var Storage: StorageConstructor;
 
-export type ConfigStorageGoogle = {
-  bucketName: string
-  projectId: string
-  keyFilename: string
-}
+  export type AddArgs = {
+    dir?: string
+    name?: string
+    remove?: boolean
+  }
 
-export type ConfigStorageLocal = {
-  bucketName: string
-  directory: string
+  export type ReturnArgs = {
+    name: string,
+    path: string,
+    size: number,
+  }
+
+
+  export type File = {
+    name: string
+    path: string
+    type: string
+  }
+
+  export type ConfigS3 = {
+    bucketName: string
+    accessKeyId: string
+    secretAccessKey: string
+  }
+
+  export type ConfigGoogle = {
+    bucketName: string
+    projectId: string
+    keyFilename: string
+  }
+
+  export type ConfigLocal = {
+    bucketName: string
+    directory: string
+  }
 }
-// }
 
