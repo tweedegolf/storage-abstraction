@@ -21,7 +21,7 @@ const createBucket = async () => {
 
 const getFiles = async () => {
   const gc = new StorageGoogle(configGoogle);
-  const d = await gc.getFiles()
+  const d = await gc.listFiles()
   console.log(d);
 }
 getFiles();

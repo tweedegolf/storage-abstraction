@@ -31,8 +31,6 @@ abstract class Storage implements IStorage {
       return fileSize;
     } catch (e) {
       throw new Error(e.message);
-    } finally {
-      return fileSize;
     }
   }
 

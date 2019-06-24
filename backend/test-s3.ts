@@ -13,7 +13,7 @@ const configS3 = {
 const s3 = new StorageS3(configS3);
 
 const getFiles = async () => {
-  const d = await s3.getFiles()
+  const d = await s3.listFiles()
   console.log(d);
 }
 // getFiles();

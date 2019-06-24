@@ -1,7 +1,10 @@
 import fs from 'fs'
 import path from 'path'
+import glob from 'glob'
 import { StorageConfigLocal } from './types';
 import { Storage, IStorage } from './Storage';
+import { Readable } from 'stream';
+import to from 'await-to-js';
 
 export class StorageLocal extends Storage implements IStorage {
   protected bucketName: string
@@ -20,7 +23,9 @@ export class StorageLocal extends Storage implements IStorage {
   }
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    const dest = path.join(this.bucketName, targetFileName)
+    const dest = path.join(this.storagePath, targetFileName);
+    // const dest = path.join('generate_error', targetFileName);
+    // console.log(dest);
     return fs.promises.copyFile(filePath, dest)
       .then(() => true)
       .catch(e => {
@@ -39,8 +44,46 @@ export class StorageLocal extends Storage implements IStorage {
       })
   }
 
-  async listFiles(numFiles: number = 1000): Promise<Array<[string, number?]>> {
+  private async globFiles(folder: string): Promise<string[]> {
+    return new Promise<string[]>((resolve, reject) => {
+      glob(`${folder}/**/*.*`, {}, (err, files) => {
+        if (err !== null) {
+          reject(err);
+        } else {
+          resolve(files);
+        }
+      })
+    })
+  }
 
+  async listFiles(): Promise<[string, number?][]> {
+    try {
+      const files = await this.globFiles(this.storagePath);
+      const result: [string, number?][] = []
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const stat = await fs.promises.stat(f)
+        result.push([path.basename(f), stat.size])
+      }
+      return result;
+    } catch (e) {
+      throw new Error(e.message);
+    }
+  }
+
+  async getFileAsReadable(name: string): Promise<Readable> {
+    const p = path.join(this.storagePath, name);
+    return fs.createReadStream(p);
+  }
+
+  async removeFile(fileName: string): Promise<boolean> {
+    const p = path.join(this.storagePath, fileName);
+    const [err] = await to(fs.promises.unlink(p));
+    if (err !== null) {
+      throw new Error(err.message);
+    } else {
+      return true;
+    }
   }
 }
 
