@@ -11,7 +11,7 @@ export class StorageGoogle extends Storage implements StorageTypes.IStorage {
   private storage: GoogleCloudStorage
   protected bucketName: string
 
-  constructor(config: StorageTypes.ConfigGoogle) {
+  constructor(config: StorageTypes.ConfigGoogleCloud) {
     super(config);
     const {
       bucketName,

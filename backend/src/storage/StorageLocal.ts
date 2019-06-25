@@ -24,11 +24,9 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
     // const dest = path.join(this.storagePath, ...targetFileName.split('/'));
-    // const dest = path.join(this.storagePath, targetFileName);
-    // const dest = path.join('generate_error', this.storagePath, targetFileName);
-    const dest = path.join('generate_error', targetFileName);
+    const dest = path.join(this.storagePath, targetFileName);
     try {
-      const dir = await fs.promises.stat(path.dirname(dest));
+      await fs.promises.stat(path.dirname(dest));
     } catch (e) {
       try {
         await fs.promises.mkdir(path.dirname(dest));

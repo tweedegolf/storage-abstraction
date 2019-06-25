@@ -9,7 +9,7 @@ export class StorageS3 extends Storage implements StorageTypes.IStorage {
   private storage: S3;
   protected bucketName: string
 
-  constructor(config: StorageTypes.ConfigS3) {
+  constructor(config: StorageTypes.ConfigAmazonS3) {
     super(config)
     const {
       bucketName,

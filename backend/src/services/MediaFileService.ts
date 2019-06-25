@@ -13,8 +13,8 @@ export enum MediaStorageMethod {
 }
 
 import { Readable } from 'stream';
-import { StorageGoogle } from '../storage/StorageGoogle';
-import { StorageS3 } from '../storage/StorageS3';
+import { StorageGoogle } from '../storage/StorageGoogleCloud';
+import { StorageS3 } from '../storage/StorageAmazonS3';
 import { StorageLocal } from '../storage/StorageLocal';
 import { Storage as StorageTypes } from '../storage/types';
 
@@ -31,9 +31,9 @@ export class MediaFileService {
 
   constructor(type: string, config: Object) {
     if (type === Storage.TYPE_LOCAL) {
-      this.storage = new StorageGoogle(config as StorageTypes.ConfigGoogle);
+      this.storage = new StorageGoogle(config as StorageTypes.ConfigGoogleCloud);
     } else if (type === Storage.TYPE_AMAZON_S3) {
-      this.storage = new StorageS3(config as StorageTypes.ConfigS3);
+      this.storage = new StorageS3(config as StorageTypes.ConfigAmazonS3);
     } else if (type === Storage.TYPE_LOCAL) {
       this.storage = new StorageLocal(config as StorageTypes.ConfigLocal);
     }
@@ -46,7 +46,7 @@ export class MediaFileService {
    */
   public async moveUploadedFile(tempFile: Express.Multer.File, dir?: string, newName?: string, remove?: boolean): Promise<MediaFile> {
     try {
-      const result: StorageTypes.ReturnArgs = await this.storage.addFileFromUpload(tempFile, {
+      const result: StorageTypes.FileMetaData = await this.storage.addFileFromUpload(tempFile, {
         dir,
         name: newName,
         remove,
@@ -64,7 +64,7 @@ export class MediaFileService {
    */
   public async copyFile(filePath: string, dir?: string, newName?: string, remove?: boolean): Promise<MediaFile> {
     try {
-      const result: StorageTypes.ReturnArgs = await this.storage.addFileFromPath(filePath, {
+      const result: StorageTypes.FileMetaData = await this.storage.addFileFromPath(filePath, {
         dir,
         name: newName,
         remove,

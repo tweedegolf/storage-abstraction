@@ -4,7 +4,11 @@ import path from 'path';
 import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
 
-
+const defaultArgs = {
+  dir: null,
+  name: null,
+  remove: false,
+}
 
 abstract class Storage implements StorageTypes.IStorage {
   public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD'
@@ -12,16 +16,16 @@ abstract class Storage implements StorageTypes.IStorage {
   public static TYPE_LOCAL: string = 'TYPE_LOCAL'
   protected bucketName: string
 
-  constructor(config: StorageTypes.ConfigS3 | StorageTypes.ConfigGoogle | StorageTypes.ConfigLocal) {
+  constructor(config: StorageTypes.ConfigAmazonS3 | StorageTypes.ConfigGoogleCloud | StorageTypes.ConfigLocal) {
     // TODO: perform sanity tests?
   }
 
-  async addFileFromUpload(file: Express.Multer.File, args?: StorageTypes.AddArgs): Promise<StorageTypes.ReturnArgs> {
+  async addFileFromUpload(file: Express.Multer.File, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
     const {
       dir,
       name: newName,
       remove,
-    } = args;
+    } = args || defaultArgs;
 
     try {
       const origPath = file.path;
@@ -29,10 +33,10 @@ abstract class Storage implements StorageTypes.IStorage {
       const fileSize = (await fs.promises.stat(origPath)).size;
       let targetPath = '';
       let targetName = origName;
-      if (typeof newName !== 'undefined') {
+      if (newName !== null) {
         targetName = newName;
       }
-      if (typeof dir !== 'undefined') {
+      if (dir !== null) {
         targetPath = dir;
       }
       targetPath = path.join(targetPath, targetName);
@@ -41,7 +45,7 @@ abstract class Storage implements StorageTypes.IStorage {
         await fs.promises.unlink(file.path)
       }
       return {
-        name: origName,
+        name: targetName,
         size: fileSize,
         path: targetPath,
       }
@@ -51,22 +55,22 @@ abstract class Storage implements StorageTypes.IStorage {
     }
   }
 
-  async addFileFromPath(origPath: string, args?: StorageTypes.AddArgs): Promise<StorageTypes.ReturnArgs> {
+  async addFileFromPath(origPath: string, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
     const {
       dir,
       name: newName,
       remove,
-    } = args;
+    } = args || defaultArgs;
 
     try {
       const origName = path.basename(origPath);
       const fileSize = (await fs.promises.stat(origPath)).size;
       let targetPath = '';
       let targetName = origName;
-      if (typeof newName !== 'undefined') {
+      if (newName !== null) {
         targetName = newName;
       }
-      if (typeof dir !== 'undefined') {
+      if (dir !== null) {
         targetPath = dir;
       }
       targetPath = path.join(targetPath, targetName);
@@ -75,7 +79,7 @@ abstract class Storage implements StorageTypes.IStorage {
         await fs.promises.unlink(origPath)
       }
       return {
-        name: origName,
+        name: targetName,
         size: fileSize,
         path: targetPath,
       };

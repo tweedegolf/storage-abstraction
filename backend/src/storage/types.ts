@@ -3,8 +3,8 @@ import { Readable } from 'stream';
 export namespace Storage {
 
   export interface IStorage {
-    addFileFromPath(filePath: string, args?: AddArgs): Promise<ReturnArgs>
-    addFileFromUpload(file: Express.Multer.File, args?: AddArgs): Promise<ReturnArgs>
+    addFileFromPath(filePath: string, args?: AddFileArgs): Promise<FileMetaData>
+    addFileFromUpload(file: Express.Multer.File, args?: AddFileArgs): Promise<FileMetaData>
     createBucket(name: string): Promise<boolean>
     getFileAsReadable(name: string): Promise<Readable>
     removeFile(fileName: string): Promise<boolean>
@@ -17,32 +17,25 @@ export namespace Storage {
 
   declare var Storage: StorageConstructor;
 
-  export type AddArgs = {
+  export type AddFileArgs = {
     dir?: string
     name?: string
     remove?: boolean
   }
 
-  export type ReturnArgs = {
+  export type FileMetaData = {
     name: string,
     path: string,
     size: number,
   }
 
-
-  export type File = {
-    name: string
-    path: string
-    type: string
-  }
-
-  export type ConfigS3 = {
+  export type ConfigAmazonS3 = {
     bucketName: string
     accessKeyId: string
     secretAccessKey: string
   }
 
-  export type ConfigGoogle = {
+  export type ConfigGoogleCloud = {
     bucketName: string
     projectId: string
     keyFilename: string
