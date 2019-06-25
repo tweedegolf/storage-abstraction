@@ -12,11 +12,17 @@ const configS3 = {
 }
 const s3 = new StorageAmazonS3(configS3);
 
+const clearBucket = async () => {
+  const d = await s3.clearBucket()
+  console.log(d);
+}
+// clearBucket();
+
 const listFiles = async () => {
   const d = await s3.listFiles()
   console.log(d);
 }
-listFiles();
+// listFiles();
 
 const getFileAsReadable = (fileName: string) => {
   s3.getFileAsReadable(fileName)
@@ -101,6 +107,7 @@ const removeFile = async (fileName: string) => {
     })
 
 }
+removeFile('subdir/renamed.jpg')
 // removeFile('aapenbeer.jpg')
 
 

@@ -11,8 +11,8 @@ import { Storage as StorageTypes } from '../types';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';
-// const type = Storage.TYPE_LOCAL;
-const type = Storage.TYPE_GOOGLE_CLOUD;
+const type = Storage.TYPE_LOCAL;
+// const type = Storage.TYPE_GOOGLE_CLOUD;
 // const type = Storage.TYPE_AMAZON_S3;
 let storage: StorageTypes.IStorage;
 
@@ -41,10 +41,26 @@ if (type === Storage.TYPE_LOCAL) {
 
 describe(`testing ${type} storage`, () => {
 
+  beforeEach(() => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+  });
+
+  afterAll(async (done) => {
+    await fs.promises.unlink('tmp.jpg')
+    done();
+  });
+
   it('create bucket', async () => {
     await expectAsync(storage.createBucket()).toBeResolvedTo(true);
   })
 
+  if (type === Storage.TYPE_AMAZON_S3) {
+    it('wait a bit', async () => {
+      await new Promise(resolve => {
+        setTimeout(resolve, 1000)
+      })
+    })
+  }
 
   it('clear bucket', async () => {
     await expectAsync(storage.clearBucket()).toBeResolvedTo(true);
@@ -92,12 +108,14 @@ describe(`testing ${type} storage`, () => {
 
 
   it('remove file success', async () => {
+    // const [err, result] = await to(storage.removeFile('subdir/renamed.jpg'));
+    // console.log(err, result);
     await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeResolvedTo(true)
   })
 
 
-  it('remove file error', async () => {
-    await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeRejected()
+  it('remove file again', async () => {
+    await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeResolvedTo(true)
   })
 
 

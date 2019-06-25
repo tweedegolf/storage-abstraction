@@ -71,12 +71,16 @@ export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage
   // }
 
   async removeFile(fileName: string): Promise<boolean> {
-    return this.storage.bucket(this.bucketName).file(fileName).delete()
-      .then(() => true)
-      .catch(err => {
-        console.log(err.message);
-        throw new Error(err.message)
-      });
+    try {
+      await this.storage.bucket(this.bucketName).file(fileName).delete()
+      return true;
+    } catch (e) {
+      if (e.message.indexOf('No such object') !== -1) {
+        return true;
+      }
+      console.log(e.message);
+      throw new Error(e.message)
+    }
   }
 
   // util members

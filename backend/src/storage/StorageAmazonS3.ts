@@ -42,11 +42,14 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
 
   async removeFile(fileName: string): Promise<boolean> {
     const params = {
-      Bucket: 'this.bucketName',
+      Bucket: this.bucketName,
       Key: fileName
     };
     return this.storage.deleteObject(params).promise()
-      .then(() => true)
+      .then((data) => {
+        // console.log(data)
+        return true
+      })
       .catch(err => {
         console.log(err.message);
         throw new Error(err.message)
@@ -66,12 +69,24 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
   }
 
   async clearBucket(): Promise<boolean> {
-    return this.storage.createBucket({ Bucket: this.bucketName }).promise()
-      .then(() => true)
-      .catch(err => {
-        console.log(err.message);
-        throw new Error(err.message)
-      })
+    try {
+      const params1 = {
+        Bucket: this.bucketName,
+        MaxKeys: 1000,
+      };
+      const { Contents: content } = await this.storage.listObjects(params1).promise()
+      const params2 = {
+        Bucket: this.bucketName,
+        Delete: {
+          Objects: content.map(value => ({ Key: value.Key })),
+          Quiet: false,
+        },
+      }
+      await this.storage.deleteObjects(params2).promise()
+      return true;
+    } catch (e) {
+      throw e;
+    }
   }
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {

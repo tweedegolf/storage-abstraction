@@ -23,7 +23,7 @@ const listFiles = async () => {
   const d = await gc.listFiles()
   console.log(d);
 }
-listFiles();
+// listFiles();
 
 
 const addFileFromPath = async (path: string, newFileName?: string) => {
@@ -37,7 +37,7 @@ const removeFile = async (fileName: string) => {
   const d = await gc.removeFile(fileName)
   console.log(d);
 }
-// removeFile('aapenbeer.jpg')
+removeFile('aapenbeer.jpg')
 
 
 // const getFile = async (fileName: string) => {

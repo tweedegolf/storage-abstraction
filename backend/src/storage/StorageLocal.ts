@@ -115,6 +115,10 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
     const p = path.join(this.storagePath, fileName);
     const [err] = await to(fs.promises.unlink(p));
     if (err !== null) {
+      if (err.message.indexOf('no such file or directory') !== -1) {
+        return true;
+      }
+      console.log(err);
       throw new Error(err.message);
     } else {
       return true;
