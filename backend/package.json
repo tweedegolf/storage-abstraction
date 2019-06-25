@@ -58,9 +58,11 @@
     "start": "nodemon --watch '**/*.ts' --ignore 'node_modules/**/*' --exec ts-node src/Server.ts",
     "test-s3": "ts-node ./src/storage/tests/test-s3.ts",
     "test-gc": "ts-node ./src/storage/tests/test-gc.ts",
-    "test-local": "ts-node ./src/storage/tests/test-local.ts",
     "test-await": "ts-node ./src/storage/tests/test-await.ts",
-    "test": "jasmine-ts ./src/storage/tests/*.ts"
+    "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./src/storage/tests/*.ts",
+    "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./src/storage/tests/*.ts",
+    "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./src/storage/tests/*.ts",
+    "test": "npm run test-local && npm run test-google && npm run test-amazon"
   },
   "keywords": [],
   "author": "",

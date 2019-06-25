@@ -57,7 +57,8 @@ const downloadFile = async (fileName: string) => {
 const getFileAsReadable = (fileName: string) => {
   gc.getFileAsReadable(fileName)
     .then(readStream => {
-      const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+      // const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+      const filePath = 'tmp.jpg';
       const writeStream = fs.createWriteStream(filePath);
       readStream.pipe(writeStream);
       writeStream.on('error', (e: Error) => {
@@ -69,4 +70,5 @@ const getFileAsReadable = (fileName: string) => {
     })
     .catch(e => { console.log(e.message) })
 }
+getFileAsReadable('image1.jpg');
 // getFileAsReadable('generate_error/SH-3-44.mid');

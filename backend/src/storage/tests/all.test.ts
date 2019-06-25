@@ -11,7 +11,11 @@ import { Storage as StorageTypes } from '../types';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';
-const type = Storage.TYPE_LOCAL;
+const type = process.env['TYPE'];
+if (!type) {
+  process.exit(1);
+}
+// const type = Storage.TYPE_LOCAL;
 // const type = Storage.TYPE_GOOGLE_CLOUD;
 // const type = Storage.TYPE_AMAZON_S3;
 let storage: StorageTypes.IStorage;
@@ -45,10 +49,14 @@ describe(`testing ${type} storage`, () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
   });
 
-  afterAll(async (done) => {
-    await fs.promises.unlink('tmp.jpg')
+  afterAll((done) => {
+    fs.promises.stat('tmp.jpg')
+      .then(() => fs.promises.unlink('tmp.jpg'))
+      .catch(e => {
+        throw e;
+      })
     done();
-  });
+  })
 
   it('create bucket', async () => {
     await expectAsync(storage.createBucket()).toBeResolvedTo(true);
@@ -135,7 +143,7 @@ describe(`testing ${type} storage`, () => {
   })
 
 
-  it('get readable stream and save file', async () => {
+  it('get readable stream and save file', async (done) => {
     storage.getFileAsReadable('image1.jpg')
       .then(readStream => {
         const filePath = 'tmp.jpg'
@@ -146,6 +154,7 @@ describe(`testing ${type} storage`, () => {
         })
         writeStream.on('finish', () => {
           console.log('FINISHED');
+          done();
         })
       })
       .catch(e => { console.log(e) })
