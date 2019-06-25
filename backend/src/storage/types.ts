@@ -3,9 +3,10 @@ import { Readable } from 'stream';
 export namespace Storage {
 
   export interface IStorage {
+    createBucket(name?: string): Promise<boolean>
+    clearBucket(name?: string): Promise<boolean>
     addFileFromPath(filePath: string, args?: AddFileArgs): Promise<FileMetaData>
     addFileFromUpload(file: Express.Multer.File, args?: AddFileArgs): Promise<FileMetaData>
-    createBucket(name: string): Promise<boolean>
     getFileAsReadable(name: string): Promise<Readable>
     removeFile(fileName: string): Promise<boolean>
     listFiles(): Promise<[string, number?][]>

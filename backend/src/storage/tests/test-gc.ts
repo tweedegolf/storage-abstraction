@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import dotenv from 'dotenv';
-import { StorageGoogle } from '../StorageGoogleCloud';
+import { StorageGoogleCloud } from '../StorageGoogleCloud';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';
@@ -10,7 +10,7 @@ const configGoogle = {
   projectId: 'default-demo-app-35b34',
   keyFilename: './da2719acad70.json',
 }
-const gc = new StorageGoogle(configGoogle);
+const gc = new StorageGoogleCloud(configGoogle);
 
 const createBucket = async () => {
   const d = await gc.createBucket()
@@ -23,11 +23,11 @@ const listFiles = async () => {
   const d = await gc.listFiles()
   console.log(d);
 }
-// listFiles();
+listFiles();
 
 
 const addFileFromPath = async (path: string, newFileName?: string) => {
-  const d = await gc.addFileFromPath(path, newFileName)
+  const d = await gc.addFileFromPath(path, { name: newFileName })
   console.log(d);
 }
 // addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'test/aapenbeer.jpg')
@@ -69,4 +69,4 @@ const getFileAsReadable = (fileName: string) => {
     })
     .catch(e => { console.log(e.message) })
 }
-getFileAsReadable('generate_error/SH-3-44.mid');
+// getFileAsReadable('generate_error/SH-3-44.mid');

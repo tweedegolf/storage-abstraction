@@ -13,8 +13,8 @@ export enum MediaStorageMethod {
 }
 
 import { Readable } from 'stream';
-import { StorageGoogle } from '../storage/StorageGoogleCloud';
-import { StorageS3 } from '../storage/StorageAmazonS3';
+import { StorageGoogleCloud } from '../storage/StorageGoogleCloud';
+import { StorageAmazonS3 } from '../storage/StorageAmazonS3';
 import { StorageLocal } from '../storage/StorageLocal';
 import { Storage as StorageTypes } from '../storage/types';
 
@@ -31,9 +31,9 @@ export class MediaFileService {
 
   constructor(type: string, config: Object) {
     if (type === Storage.TYPE_LOCAL) {
-      this.storage = new StorageGoogle(config as StorageTypes.ConfigGoogleCloud);
+      this.storage = new StorageGoogleCloud(config as StorageTypes.ConfigGoogleCloud);
     } else if (type === Storage.TYPE_AMAZON_S3) {
-      this.storage = new StorageS3(config as StorageTypes.ConfigAmazonS3);
+      this.storage = new StorageAmazonS3(config as StorageTypes.ConfigAmazonS3);
     } else if (type === Storage.TYPE_LOCAL) {
       this.storage = new StorageLocal(config as StorageTypes.ConfigLocal);
     }

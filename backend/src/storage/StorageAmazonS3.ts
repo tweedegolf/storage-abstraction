@@ -5,7 +5,7 @@ import { Storage as StorageTypes } from './types';
 import slugify from 'slugify';
 import { Readable } from 'stream';
 
-export class StorageS3 extends Storage implements StorageTypes.IStorage {
+export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
   private storage: S3;
   protected bucketName: string
 
@@ -57,6 +57,15 @@ export class StorageS3 extends Storage implements StorageTypes.IStorage {
   // util members
 
   async createBucket(): Promise<boolean> {
+    return this.storage.createBucket({ Bucket: this.bucketName }).promise()
+      .then(() => true)
+      .catch(err => {
+        console.log(err.message);
+        throw new Error(err.message)
+      })
+  }
+
+  async clearBucket(): Promise<boolean> {
     return this.storage.createBucket({ Bucket: this.bucketName }).promise()
       .then(() => true)
       .catch(err => {

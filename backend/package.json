@@ -56,10 +56,10 @@
   },
   "scripts": {
     "start": "nodemon --watch '**/*.ts' --ignore 'node_modules/**/*' --exec ts-node src/Server.ts",
-    "test-s3": "ts-node ./src/storage/test-s3.ts",
-    "test-gc": "ts-node ./src/storage/test-gc.ts",
-    "test-local": "ts-node ./src/storage/test-local.ts",
-    "test-await": "ts-node ./src/storage/test-await.ts",
+    "test-s3": "ts-node ./src/storage/tests/test-s3.ts",
+    "test-gc": "ts-node ./src/storage/tests/test-gc.ts",
+    "test-local": "ts-node ./src/storage/tests/test-local.ts",
+    "test-await": "ts-node ./src/storage/tests/test-await.ts",
     "test": "jasmine-ts ./src/storage/tests/*.ts"
   },
   "keywords": [],

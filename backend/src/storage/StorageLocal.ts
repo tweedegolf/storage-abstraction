@@ -42,7 +42,7 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
       })
   }
 
-  async createBucket(): Promise<any> {
+  async createBucket(): Promise<boolean> {
     return fs.promises.stat(this.storagePath)
       .then(() => true)
       .catch(() => fs.promises.mkdir(this.storagePath, { recursive: true, mode: 0o777 }))
@@ -51,6 +51,26 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
         console.log(e.message);
         throw new Error(e.message);
       })
+  }
+
+  async clearBucket(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      glob(`${this.storagePath}/**/*`, {}, (err, files) => {
+        if (err !== null) {
+          reject(err);
+        } else {
+          const promises = files.map(f => {
+            return fs.promises.unlink(f)
+          });
+          try {
+            Promise.all(promises)
+            resolve(true);
+          } catch (e) {
+            throw e;
+          }
+        }
+      })
+    })
   }
 
   private async globFiles(folder: string): Promise<string[]> {

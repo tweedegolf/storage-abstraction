@@ -92,7 +92,9 @@ abstract class Storage implements StorageTypes.IStorage {
 
   protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>
 
-  abstract async createBucket(name: string): Promise<boolean>
+  abstract async createBucket(name?: string): Promise<boolean>
+
+  abstract async clearBucket(name?: string): Promise<boolean>
 
   abstract async getFileAsReadable(name: string): Promise<Readable>
 

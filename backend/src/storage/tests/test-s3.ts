@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs'
 import path from 'path'
-import { StorageS3 } from '../StorageAmazonS3';
+import { StorageAmazonS3 } from '../StorageAmazonS3';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';
@@ -10,7 +10,7 @@ const configS3 = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 }
-const s3 = new StorageS3(configS3);
+const s3 = new StorageAmazonS3(configS3);
 
 const listFiles = async () => {
   const d = await s3.listFiles()
@@ -78,7 +78,7 @@ const getFileAsReadable3 = async (fileName: string) => {
 
 
 const addFileFromPath = async (path: string, newFileName?: string) => {
-  const d = await s3.addFileFromPath(path, newFileName)
+  const d = await s3.addFileFromPath(path, { name: newFileName })
   console.log(d);
 }
 // addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'aapenbeer.jpg')

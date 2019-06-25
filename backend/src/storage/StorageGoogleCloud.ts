@@ -7,7 +7,7 @@ import slugify from 'slugify';
 import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
 
-export class StorageGoogle extends Storage implements StorageTypes.IStorage {
+export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage {
   private storage: GoogleCloudStorage
   protected bucketName: string
 
@@ -104,16 +104,26 @@ export class StorageGoogle extends Storage implements StorageTypes.IStorage {
   }
 
   async createBucket(): Promise<boolean> {
-    return this.storage.createBucket(this.bucketName)
-      .then(data => {
-        // console.log(data)
-        return true;
-      })
-      .catch(err => {
+    try {
+      await this.storage.createBucket(this.bucketName)
+      return true;
+    } catch (e) {
+      if (e.code === 409) {
         // error code 409 is 'You already own this bucket. Please select another name.'
         // so we can safely return true if this error occurs
-        return err.code === 409;
-      })
+        return true;
+      }
+      throw new Error(e.message);
+    }
+  }
+
+  async clearBucket(): Promise<boolean> {
+    try {
+      await this.storage.bucket(this.bucketName).deleteFiles({ force: true })
+      return true;
+    } catch (e) {
+      throw new Error(e.message);
+    }
   }
 
   private async getMetaData(result: Array<[string, number?]>) {
