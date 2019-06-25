@@ -7,36 +7,72 @@ import 'jasmine';
 import { Storage } from '../types';
 dotenv.config();
 
-const bucketName = 'aap-en-beer';
-const configLocal = {
-  bucketName,
-  directory: '/home/abudaan/Downloads'
-}
-const sl = new StorageLocal(configLocal);
-
 describe('testing local storage', () => {
+  const bucketName = 'aap-en-beer';
+  const configLocal = {
+    bucketName,
+    directory: '/home/abudaan/Downloads'
+  }
+  const sl = new StorageLocal(configLocal);
 
-  it('create bucket', async () => {
+  it('create bucket', async (done) => {
     // TODO add extra argument to clear the bucket if it exists
-    const [err, result] = await to(sl.createBucket())
-    expect(err).toBe(null);
-    expect(result).toBe(true);
+    await expectAsync(sl.createBucket()).toBeResolvedTo(true);
+    done()
+  })
+
+  it('add file success', async (done) => {
+    await expectAsync(sl.addFileFromPath('./src/storage/tests/data/image1.jpg')).toBeResolvedTo({
+      size: 100631,
+      name: 'image1.jpg',
+      path: 'image1.jpg',
+    });
+    done()
   });
 
+  it('add file error', async (done) => {
+    await expectAsync(sl.addFileFromPath('./src/storage/tests/data/non-existent.jpg')).toBeRejected();
+    done()
+  });
 
-  it('add file', async () => {
+  it('add with new name and dir', async (done) => {
+    await expectAsync(sl.addFileFromPath('./src/storage/tests/data/image1.jpg', {
+      dir: 'subdir',
+      name: 'renamed.jpg',
+    })).toBeResolvedTo({
+      size: 100631,
+      name: 'renamed.jpg',
+      path: 'subdir/renamed.jpg',
+    })
+    done()
+  })
+
+  it('remove file success', async (done) => {
+    await expectAsync(sl.removeFile('subdir/renamed.jpg')).toBeResolvedTo(true)
+    done()
+  })
+
+  it('remove file error', async (done) => {
+    await expectAsync(sl.removeFile('subdir/renamed.jpg')).toBeRejected()
+    done()
+  })
+})
+
+/*
+describe('adding file', () => {
+  it('ok', async () => {
     const [err, result] = await to(sl.addFileFromPath('./src/storage/tests/data/image1.jpg'))
     console.log(result);
     expect(err).toBe(null);
   });
 
-  it('add file error', async () => {
+  it('error', async () => {
     const [err, result] = await to(sl.addFileFromPath('./src/storage/tests/data/non-existent.jpg'))
     expect(err).toBeDefined();
     expect(result).toBe(undefined);
   });
 
-  it('add file with new name and dir', async () => {
+  it('add with new name and dir', async () => {
     const [err, result] = await to(sl.addFileFromPath('./src/storage/tests/data/image1.jpg', {
       dir: 'subdir',
       name: 'renamed.jpg',
@@ -45,8 +81,10 @@ describe('testing local storage', () => {
     expect(err).toBe(null);
     expect(result.name).toBe('renamed.jpg');
     expect(result.path).toBe('subdir/renamed.jpg');
-  });
+  })
+})
 
+describe('removing file', () => {
   it('remove file', async () => {
     const [err, result] = await to(sl.removeFile('subdir/renamed.jpg'))
     console.log(err);
@@ -55,7 +93,7 @@ describe('testing local storage', () => {
   })
 });
 
-
+*/
 
 /*
 const listFiles = async () => {
