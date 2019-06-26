@@ -15,10 +15,8 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
     super(config);
     const {
       directory,
-      bucketName,
     } = config;
     this.directory = directory;
-    this.bucketName = bucketName;
     this.storagePath = path.join(this.directory, this.bucketName);
   }
 
@@ -26,13 +24,14 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
     // const dest = path.join(this.storagePath, ...targetFileName.split('/'));
     const dest = path.join(this.storagePath, targetFileName);
     try {
+      await this.createBucket()
       await fs.promises.stat(path.dirname(dest));
     } catch (e) {
-      try {
-        await fs.promises.mkdir(path.dirname(dest));
-      } catch (e) {
-        throw new Error(e.message)
-      }
+      fs.mkdir(path.dirname(dest), { recursive: true }, e => {
+        if (e) {
+          throw new Error(e.message)
+        }
+      });
     }
 
     return fs.promises.copyFile(filePath, dest)
@@ -43,6 +42,9 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
   }
 
   async createBucket(): Promise<boolean> {
+    if (this.bucketCreated === true) {
+      return true;
+    }
     return fs.promises.stat(this.storagePath)
       .then(() => true)
       .catch(() => fs.promises.mkdir(this.storagePath, { recursive: true, mode: 0o777 }))

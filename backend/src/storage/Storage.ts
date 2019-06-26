@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
+import slugify from 'slugify';
 
 const defaultArgs = {
   dir: null,
@@ -15,12 +16,14 @@ abstract class Storage implements StorageTypes.IStorage {
   public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3'
   public static TYPE_LOCAL: string = 'TYPE_LOCAL'
   protected bucketName: string
+  protected bucketCreated: boolean = false
 
   constructor(config: StorageTypes.ConfigAmazonS3 | StorageTypes.ConfigGoogleCloud | StorageTypes.ConfigLocal) {
     // TODO: perform sanity tests?
+    this.bucketName = slugify(config.bucketName);
   }
 
-  async addFileFromUpload(file: Express.Multer.File, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
+  private async copy(origPath: string, args?: StorageTypes.AddFileArgs) {
     const {
       dir,
       name: newName,
@@ -28,7 +31,6 @@ abstract class Storage implements StorageTypes.IStorage {
     } = args || defaultArgs;
 
     try {
-      const origPath = file.path;
       const origName = path.basename(origPath);
       const fileSize = (await fs.promises.stat(origPath)).size;
       let targetPath = '';
@@ -42,7 +44,7 @@ abstract class Storage implements StorageTypes.IStorage {
       targetPath = path.join(targetPath, targetName);
       await this.store(origPath, targetPath);
       if (remove === true) {
-        await fs.promises.unlink(file.path)
+        await fs.promises.unlink(origPath)
       }
       return {
         name: targetName,
@@ -55,37 +57,12 @@ abstract class Storage implements StorageTypes.IStorage {
     }
   }
 
-  async addFileFromPath(origPath: string, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
-    const {
-      dir,
-      name: newName,
-      remove,
-    } = args || defaultArgs;
+  async addFileFromUpload(file: Express.Multer.File, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
+    return this.copy(file.path, args);
+  }
 
-    try {
-      const origName = path.basename(origPath);
-      const fileSize = (await fs.promises.stat(origPath)).size;
-      let targetPath = '';
-      let targetName = origName;
-      if (newName !== null) {
-        targetName = newName;
-      }
-      if (dir !== null) {
-        targetPath = dir;
-      }
-      targetPath = path.join(targetPath, targetName);
-      await this.store(origPath, targetPath)
-      if (remove === true) {
-        await fs.promises.unlink(origPath)
-      }
-      return {
-        name: targetName,
-        size: fileSize,
-        path: targetPath,
-      };
-    } catch (e) {
-      throw new Error(e.message);
-    }
+  async addFileFromPath(origPath: string, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
+    return this.copy(origPath, args);
   }
 
   // stubs (to be overridden by subclasses)

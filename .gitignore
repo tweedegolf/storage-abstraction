@@ -2,5 +2,6 @@ node_modules
 frontend/.cache/
 frontend/public/
 backend/.env
+backend/src/uploads/
 backend/da2719acad70.json
 *.pdf

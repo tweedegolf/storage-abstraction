@@ -3,7 +3,6 @@ import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { Storage } from './Storage'
 import fs from 'fs';
 import path from 'path';
-import slugify from 'slugify';
 import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
 
@@ -14,7 +13,6 @@ export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage
   constructor(config: StorageTypes.ConfigGoogleCloud) {
     super(config);
     const {
-      bucketName,
       projectId,
       keyFilename,
     } = config;
@@ -22,8 +20,6 @@ export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage
       projectId,
       keyFilename,
     });
-
-    this.bucketName = slugify(bucketName);
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
@@ -86,28 +82,32 @@ export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage
   // util members
 
   protected async store(origPath: string, targetPath: string): Promise<boolean> {
-    return new Promise<void>((resolve, reject) => {
+    try {
+      await this.createBucket()
       const readStream = fs.createReadStream(origPath);
       const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
-      readStream.on('end', () => {
-        resolve();
-      });
-      readStream.on('error', (e: Error) => {
-        reject(e);
-      });
-      readStream.pipe(writeStream);
-      writeStream.on('error', (e) => {
-        reject(e);
+      return new Promise((resolve, reject) => {
+        readStream.on('end', () => {
+          resolve();
+        });
+        readStream.on('error', (e: Error) => {
+          reject(e);
+        });
+        readStream.pipe(writeStream);
+        writeStream.on('error', (e) => {
+          reject(e);
+        })
       })
-    })
-      .then(() => true)
-      .catch(err => {
-        console.log(err.message);
-        throw new Error(err.message)
-      });
+    } catch (e) {
+      console.log(e.message);
+      throw e
+    }
   }
 
   async createBucket(): Promise<boolean> {
+    if (this.bucketCreated === true) {
+      return true;
+    }
     try {
       await this.storage.createBucket(this.bucketName)
       return true;

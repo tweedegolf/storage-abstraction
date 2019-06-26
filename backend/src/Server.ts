@@ -1,4 +1,4 @@
-import { ServerLoader, ServerSettings, GlobalAcceptMimesMiddleware } from "@tsed/common";
+import { ServerLoader, ServerSettings, GlobalAcceptMimesMiddleware } from '@tsed/common';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import compress from 'compression';
@@ -8,14 +8,15 @@ import '@tsed/swagger';
 import '@tsed/typeorm';
 import '@tsed/ajv';
 import 'reflect-metadata';
-import { getConnection } from "typeorm";
-import { Address } from "./entities/Address";
+import { getConnection } from 'typeorm';
+import { Address } from './entities/Address';
+import { SUPPORTED_MIME_TYPES } from './controllers/MediaController';
 
 const rootDir = __dirname;
 
 @ServerSettings({
   rootDir,
-  acceptMimes: ["application/json"],
+  acceptMimes: ['application/json'],
   port: 3000,
   mount: {
     '/api/v1': '${rootDir}/controllers/**/*.ts',
@@ -39,7 +40,13 @@ const rootDir = __dirname;
   }],
   componentsScan: [
     `${rootDir}/services/**/**.ts`
-],})
+  ],
+  multer: {
+    fileFilter: (req, file, cb) => {
+      cb(null, SUPPORTED_MIME_TYPES.includes(file.mimetype));
+    },
+  }
+})
 export class Server extends ServerLoader {
   /**
    * @returns {Server}

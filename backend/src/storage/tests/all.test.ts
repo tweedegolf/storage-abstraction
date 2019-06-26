@@ -10,7 +10,6 @@ import 'jasmine';
 import { Storage as StorageTypes } from '../types';
 dotenv.config();
 
-const bucketName = 'aap-en-beer';
 const type = process.env['TYPE'];
 if (!type) {
   process.exit(1);
@@ -22,22 +21,22 @@ let storage: StorageTypes.IStorage;
 
 if (type === Storage.TYPE_LOCAL) {
   const configLocal = {
-    bucketName,
-    directory: '/home/abudaan/Downloads'
+    bucketName: process.env.STORAGE_BUCKETNAME,
+    directory: process.env.STORAGE_LOCAL_DIRECTORY,
   }
   storage = new StorageLocal(configLocal);
 } else if (type === Storage.TYPE_GOOGLE_CLOUD) {
   const configGoogle = {
-    bucketName,
-    projectId: 'default-demo-app-35b34',
-    keyFilename: './da2719acad70.json',
+    bucketName: process.env.STORAGE_BUCKETNAME,
+    projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
+    keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
   }
   storage = new StorageGoogleCloud(configGoogle);
 } else if (type === Storage.TYPE_AMAZON_S3) {
   const configS3 = {
-    bucketName,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    bucketName: process.env.STORAGE_BUCKETNAME,
+    accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
   }
   storage = new StorageAmazonS3(configS3);
 }

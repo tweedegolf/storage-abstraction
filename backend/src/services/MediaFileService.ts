@@ -2,15 +2,13 @@ import { Service } from '@tsed/di';
 import { MediaFile } from '../entities/MediaFile';
 import { Storage } from '../storage/Storage';
 import path from 'path';
+import dotenv from 'dotenv';
 import slugify from 'slugify';
 import {
   getLocalMediaStorageRoot,
-} from "../env";
+} from '../env';
+dotenv.config();
 
-export enum MediaStorageMethod {
-  Local = 'local',
-  GoogleCloud = 'google-cloud',
-}
 
 import { Readable } from 'stream';
 import { StorageGoogleCloud } from '../storage/StorageGoogleCloud';
@@ -29,28 +27,41 @@ export class MediaFileService {
 
   private storage: Storage;
 
-  constructor(type: string, config: Object) {
+  constructor() {
+    const type = process.env.STORAGE_TYPE;
     if (type === Storage.TYPE_LOCAL) {
-      this.storage = new StorageGoogleCloud(config as StorageTypes.ConfigGoogleCloud);
+      const configLocal = {
+        bucketName: process.env.STORAGE_BUCKETNAME,
+        directory: process.env.STORAGE_LOCAL_DIRECTORY,
+      }
+      this.storage = new StorageLocal(configLocal);
+    } else if (type === Storage.TYPE_GOOGLE_CLOUD) {
+      const configGoogle = {
+        bucketName: process.env.STORAGE_BUCKETNAME,
+        projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
+        keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
+      }
+      this.storage = new StorageGoogleCloud(configGoogle);
     } else if (type === Storage.TYPE_AMAZON_S3) {
-      this.storage = new StorageAmazonS3(config as StorageTypes.ConfigAmazonS3);
-    } else if (type === Storage.TYPE_LOCAL) {
-      this.storage = new StorageLocal(config as StorageTypes.ConfigLocal);
+      const configS3 = {
+        bucketName: process.env.STORAGE_BUCKETNAME,
+        accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
+      }
+      this.storage = new StorageAmazonS3(configS3);
     }
   }
 
   /**
    * @param tempFile: uploaded file in temporary Multer storage
-   * @param dir?: the directory to save this file into, directory will be created if it doesn't exist
-   * @param dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param config?: setting for processing this file by the permanent storage
+   * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param config.newName?: the name of the file in the storage
+   * @param config.remove?: whether or not to remove the temp file after it has been stored
    */
-  public async moveUploadedFile(tempFile: Express.Multer.File, dir?: string, newName?: string, remove?: boolean): Promise<MediaFile> {
+  public async moveUploadedFile(tempFile: Express.Multer.File, args?: StorageTypes.AddFileArgs): Promise<MediaFile> {
     try {
-      const result: StorageTypes.FileMetaData = await this.storage.addFileFromUpload(tempFile, {
-        dir,
-        name: newName,
-        remove,
-      });
+      const result: StorageTypes.FileMetaData = await this.storage.addFileFromUpload(tempFile, args);
       return this.instanceMediaFile(result)
     } catch (e) {
       throw new Error(e.message);
@@ -59,16 +70,14 @@ export class MediaFileService {
 
   /**
    * @param filePath: path to the file to be copied
-   * @param dir?: the directory to save this file into, directory will be created if it doesn't exist
-   * @param remove?: whether or not to remove the file after it has been copied
+   * @param config?: setting for processing this file by the permanent storage
+   * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param config.newName?: the name of the file in the storage
+   * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
-  public async copyFile(filePath: string, dir?: string, newName?: string, remove?: boolean): Promise<MediaFile> {
+  public async copyFile(filePath: string, args?: StorageTypes.AddFileArgs): Promise<MediaFile> {
     try {
-      const result: StorageTypes.FileMetaData = await this.storage.addFileFromPath(filePath, {
-        dir,
-        name: newName,
-        remove,
-      });
+      const result: StorageTypes.FileMetaData = await this.storage.addFileFromPath(filePath, args);
       return this.instanceMediaFile(result)
     } catch (e) {
       throw new Error(e.message);

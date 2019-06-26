@@ -2,7 +2,6 @@ import S3 from 'aws-sdk/clients/s3';
 import fs from 'fs';
 import { Storage } from './Storage';
 import { Storage as StorageTypes } from './types';
-import slugify from 'slugify';
 import { Readable } from 'stream';
 
 export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
@@ -12,7 +11,6 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
   constructor(config: StorageTypes.ConfigAmazonS3) {
     super(config)
     const {
-      bucketName,
       accessKeyId,
       secretAccessKey,
     } = config;
@@ -24,7 +22,6 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
       accessKeyId,
       secretAccessKey,
     })
-    this.bucketName = slugify(bucketName);
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
@@ -60,6 +57,9 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
   // util members
 
   async createBucket(): Promise<boolean> {
+    if (this.bucketCreated === true) {
+      return true;
+    }
     return this.storage.createBucket({ Bucket: this.bucketName }).promise()
       .then(() => true)
       .catch(err => {
@@ -90,18 +90,20 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
   }
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    const readStream = fs.createReadStream(filePath);
-    const params = {
-      Bucket: this.bucketName,
-      Key: targetFileName,
-      Body: readStream
-    };
-    return this.storage.upload(params).promise()
-      .then(() => true)
-      .catch(err => {
-        console.log(err.message);
-        throw new Error(err.message);
-      })
+    try {
+      await this.createBucket();
+      const readStream = fs.createReadStream(filePath);
+      const params = {
+        Bucket: this.bucketName,
+        Key: targetFileName,
+        Body: readStream
+      };
+      await this.storage.upload(params).promise()
+      return true;
+    } catch (e) {
+      console.log(e.message);
+      throw e;
+    }
   }
 
   async listFiles(maxFiles: number = 1000): Promise<Array<[string, number]>> {
