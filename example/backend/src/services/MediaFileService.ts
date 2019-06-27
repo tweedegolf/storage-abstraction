@@ -5,15 +5,20 @@ import {
   StorageLocal,
   StoreFileArgs,
   FileMetaData,
-} from 'storage-abstraction';
-import multer from 'multer';
+} from '../storage-abstraction';
+
+// import { Storage } from '../../../../Storage';
+// import { StorageGoogleCloud } from '../../../../StorageGoogleCloud';
+// import { StorageAmazonS3 } from '../../../../StorageAmazonS3';
+// import { StorageLocal } from '../../../../StorageLocal';
+// import { StoreFileArgs, FileMetaData } from '../../../../index.d';
+
 import { Service } from '@tsed/di';
 import { MediaFile } from '../entities/MediaFile';
 import dotenv from 'dotenv';
 dotenv.config();
 
 import { Readable } from 'stream';
-// import { Storage as StorageTypes } from '../storage/types';
 
 @Service()
 export class MediaFileService {
