@@ -1,6 +1,6 @@
 node_modules/
 example/frontend/.cache/
 example/frontend/public/
-example/backend/.env
+**/.env
 example/backend/src/uploads/
 da2719acad70.json

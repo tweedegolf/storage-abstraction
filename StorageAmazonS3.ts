@@ -2,14 +2,14 @@ import fs from 'fs';
 import { Readable } from 'stream';
 import S3 from 'aws-sdk/clients/s3';
 import { Storage } from './Storage';
-import { ConfigAmazonS3, IStorage } from '.';
+import { ConfigAmazonS3, IStorage } from './index.d';
 
 export class StorageAmazonS3 extends Storage implements IStorage {
   private storage: S3;
-  protected bucketName: string
+  protected bucketName: string;
 
   constructor(config: ConfigAmazonS3) {
-    super(config)
+    super(config);
     const {
       accessKeyId,
       secretAccessKey,
@@ -18,57 +18,56 @@ export class StorageAmazonS3 extends Storage implements IStorage {
       throw new Error('provide both an accessKeyId and a secretAccessKey!');
     }
     this.storage = new S3({
-      apiVersion: '2006-03-01',
       accessKeyId,
       secretAccessKey,
-    })
+      apiVersion: '2006-03-01',
+    });
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
     const params = {
       Bucket: this.bucketName,
-      Key: fileName
+      Key: fileName,
     };
     return this.storage.getObject(params).promise()
       .then(() => this.storage.getObject(params).createReadStream())
-      .catch(err => {
+      .catch((err: Error) => {
         console.log(err.message);
-        throw new Error(err.message)
+        throw new Error(err.message);
       });
   }
 
   async removeFile(fileName: string): Promise<boolean> {
     const params = {
       Bucket: this.bucketName,
-      Key: fileName
+      Key: fileName,
     };
     return this.storage.deleteObject(params).promise()
       .then((data) => {
         // console.log(data)
-        return true
+        return true;
       })
-      .catch(err => {
+      .catch((err: Error) => {
         console.log(err.message);
-        throw new Error(err.message)
+        throw new Error(err.message);
       });
   }
-
 
   // util members
 
   async createBucket(): Promise<boolean> {
-    if (this.bucketCreated === true) {
+    if (this.bucketCreated) {
       return true;
     }
     return this.storage.createBucket({ Bucket: this.bucketName }).promise()
       .then(() => {
-        this.bucketCreated = true
-        return true
+        this.bucketCreated = true;
+        return true;
       })
-      .catch(err => {
+      .catch((err: Error) => {
         console.log(err.message);
-        throw new Error(err.message)
-      })
+        throw new Error(err.message);
+      });
   }
 
   async clearBucket(): Promise<boolean> {
@@ -77,15 +76,15 @@ export class StorageAmazonS3 extends Storage implements IStorage {
         Bucket: this.bucketName,
         MaxKeys: 1000,
       };
-      const { Contents: content } = await this.storage.listObjects(params1).promise()
+      const { Contents: content } = await this.storage.listObjects(params1).promise();
       const params2 = {
         Bucket: this.bucketName,
         Delete: {
           Objects: content.map(value => ({ Key: value.Key })),
           Quiet: false,
         },
-      }
-      await this.storage.deleteObjects(params2).promise()
+      };
+      await this.storage.deleteObjects(params2).promise();
       return true;
     } catch (e) {
       throw e;
@@ -99,9 +98,9 @@ export class StorageAmazonS3 extends Storage implements IStorage {
       const params = {
         Bucket: this.bucketName,
         Key: targetFileName,
-        Body: readStream
+        Body: readStream,
       };
-      await this.storage.upload(params).promise()
+      await this.storage.upload(params).promise();
       return true;
     } catch (e) {
       console.log(e.message);
@@ -109,21 +108,20 @@ export class StorageAmazonS3 extends Storage implements IStorage {
     }
   }
 
-  async listFiles(maxFiles: number = 1000): Promise<Array<[string, number]>> {
+  async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
     const params = {
       Bucket: this.bucketName,
-      MaxKeys: maxFiles
+      MaxKeys: maxFiles,
     };
     return this.storage.listObjects(params).promise()
       .then(data => {
         const { Contents: content } = data;
         // console.log(data);
-        return content.map(o => [o.Key, o.Size]) as [string, number][]
+        return content.map(o => [o.Key, o.Size]) as [string, number][];
       })
-      .catch(err => {
+      .catch((err: Error) => {
         console.log(err.message);
         throw new Error(err.message);
-      })
+      });
   }
 }
-

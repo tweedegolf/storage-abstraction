@@ -2,7 +2,8 @@
   "name": "storage-abstraction",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
+  "esnext": "index.ts",
   "types": "index.d.ts",
   "files": [
     "README.md",
@@ -30,9 +31,11 @@
   "devDependencies": {
     "@types/jasmine": "^3.3.13",
     "@types/node": "^11.13.15",
+    "@types/rimraf": "^2.0.2",
     "jasmine": "^3.4.0",
     "jasmine-ts": "^0.3.0",
     "nodemon": "^1.18.11",
+    "rimraf": "^2.6.3",
     "ts-node": "^8.1.0",
     "ts-node-dev": "^1.0.0-pre.32",
     "tslint": "^5.18.0",
@@ -40,12 +43,13 @@
     "typescript": "^3.4.5"
   },
   "scripts": {
-    "test-s3": "ts-node ./src/storage/tests/test-s3.ts",
-    "test-gc": "ts-node ./src/storage/tests/test-gc.ts",
-    "test-await": "ts-node ./src/storage/tests/test-await.ts",
-    "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./src/storage/tests/*.ts",
-    "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./src/storage/tests/*.ts",
-    "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./src/storage/tests/*.ts",
+    "test-s3": "ts-node ./tests/test-s3.ts",
+    "test-gc": "ts-node ./tests/test-gc.ts",
+    "test-lc": "ts-node ./tests/test-local.ts",
+    "test-await": "ts-node ./tests/test-await.ts",
+    "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./tests/*.ts",
+    "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
+    "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
     "test": "npm run test-local && npm run test-google && npm run test-amazon"
   },
   "keywords": [],

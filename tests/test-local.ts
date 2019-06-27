@@ -1,16 +1,19 @@
 import dotenv from 'dotenv';
+import os from 'os';
 import fs from 'fs';
 import path from 'path';
-import { StorageAmazonS3 } from '../StorageAmazonS3';
+import { StorageLocal } from '../StorageLocal';
+import rimraf = require('rimraf');
 dotenv.config();
 
-const bucketName = 'aap-en-beer';
-const configS3 = {
-  bucketName,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const localDir = path.join(os.homedir(), 'storage-abstraction');
+const configLocal = {
+  bucketName: process.env.STORAGE_BUCKETNAME,
+  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+  // directory: localDir,
 };
-const s3 = new StorageAmazonS3(configS3);
+
+const s3 = new StorageLocal(configLocal);
 
 const clearBucket = async () => {
   const d = await s3.clearBucket();
@@ -80,11 +83,16 @@ const getFileAsReadable3 = async (fileName: string) => {
 // getFileAsReadable3('sun-blanket.jpg');
 // getFileAsReadable3('IMG_9643.jpg');
 
-const addFileFromPath = async (path: string, newFileName?: string) => {
-  const d = await s3.addFileFromPath(path, { name: newFileName });
+const addFileFromPath = async (path: string, newFileName?: string, dir?: string) => {
+  const d = await s3.addFileFromPath(path, { dir, name: newFileName });
   console.log(d);
+  rimraf('tmp', (e: Error) => {
+    if (e) {
+      throw e;
+    }
+  });
 };
-// addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'aapenbeer.jpg')
+addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir')
 // addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'test/aapenbeer.jpg')
 
 const removeFile = async (fileName: string) => {
@@ -103,6 +111,6 @@ const removeFile = async (fileName: string) => {
     });
 
 };
-removeFile('subdir/renamed.jpg');
+// removeFile('subdir/renamed.jpg');
 // removeFile('aapenbeer.jpg')
 

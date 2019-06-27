@@ -9,18 +9,21 @@ import {
   ConfigGoogleCloud,
   ConfigLocal,
   StoreFileArgs,
-  FileMetaData
-} from '.'
+  FileMetaData,
+} from './index.d';
 
 abstract class Storage implements IStorage {
-  public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD'
-  public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3'
-  public static TYPE_LOCAL: string = 'TYPE_LOCAL'
-  protected bucketName: string
-  protected bucketCreated: boolean = false
+  public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD';
+  public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3';
+  public static TYPE_LOCAL: string = 'TYPE_LOCAL';
+  protected bucketName: string;
+  protected bucketCreated: boolean = false;
 
   constructor(config: ConfigAmazonS3 | ConfigGoogleCloud | ConfigLocal) {
     // TODO: perform sanity tests?
+    if (typeof config.bucketName === 'undefined') {
+      throw new Error('bucket name is not defined');
+    }
     this.bucketName = slugify(config.bucketName);
   }
 
@@ -45,16 +48,16 @@ abstract class Storage implements IStorage {
       targetPath = path.join(targetPath, targetName);
       // console.log(targetPath, remove);
       await this.store(origPath, targetPath);
-      if (remove === true) {
-        await fs.promises.unlink(origPath)
+      if (remove) {
+        await fs.promises.unlink(origPath);
       }
       return {
         origName,
         size: fileSize,
         path: targetPath,
-      }
+      };
     } catch (e) {
-      console.error(e);
+      // console.error('COPY', e);
       throw new Error(e.message);
     }
   }
@@ -83,19 +86,19 @@ abstract class Storage implements IStorage {
 
   // stubs (to be overridden by subclasses)
 
-  protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>
+  protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>;
 
-  abstract async createBucket(name?: string): Promise<boolean>
+  abstract async createBucket(name?: string): Promise<boolean>;
 
-  abstract async clearBucket(name?: string): Promise<boolean>
+  abstract async clearBucket(name?: string): Promise<boolean>;
 
-  abstract async getFileAsReadable(name: string): Promise<Readable>
+  abstract async getFileAsReadable(name: string): Promise<Readable>;
 
-  abstract async removeFile(fileName: string): Promise<boolean>
+  abstract async removeFile(fileName: string): Promise<boolean>;
 
-  abstract async listFiles(): Promise<[string, number?][]>
+  abstract async listFiles(): Promise<[string, number?][]>;
 }
 
 export {
   Storage,
-}
+};
