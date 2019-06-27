@@ -18,6 +18,8 @@ import { pipeline } from 'stream';
 
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
+import slugify from 'slugify';
+import uniquid from 'uniquid';
 
 interface ResSuccess<T> {
   error: false;
@@ -51,23 +53,25 @@ export class MediaFileController {
   }
 
   @Post('/')
-  @Returns(200, { type: Boolean })
+  @Returns(200, { type: MediaFile })
   @Returns(415, { description: 'Unsupported file type' })
   public async uploadFile(
     @MultipartFile('file') tempFile: Express.Multer.File,
     @BodyParams('location') location: string,
-  ): Promise<ResSuccess<boolean>> {
+  ): Promise<ResSuccess<MediaFile>> {
     if (!tempFile) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    console.log('LOCATION', location);
-
-    const [error, result] = await to(this.mediaFileService.moveUploadedFile(tempFile));
+    const [error, result] = await to(this.mediaFileService.moveUploadedFile(tempFile, {
+      dir: location,
+      name: `${uniquid()}_${tempFile.originalname}`,
+      remove: true,
+    }));
 
     if (error !== null) {
       return {
         error: error.message,
-        data: false,
+        data: null,
       };
     } else {
       // return {
@@ -76,7 +80,7 @@ export class MediaFileController {
       // };
       return {
         error: false,
-        data: false,
+        data: result,
       };
     }
 
