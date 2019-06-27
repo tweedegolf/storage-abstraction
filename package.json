@@ -51,8 +51,9 @@
     "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
     "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
     "test": "npm run test-local && npm run test-google && npm run test-amazon",
-    "compile": "node_modules/.bin/tsc --module commonjs --esModuleInterop index.ts && npm run copy",
-    "copy": "cd ./example/backend && ./copy.sh"
+    "compile": "node_modules/.bin/tsc --module commonjs --esModuleInterop index.ts && npm run copy && npm run cleanup",
+    "copy": "cd ./example/backend && ./copy.sh",
+    "cleanup": "rm *.js"
   },
   "keywords": [],
   "author": "daniel@tweedegolf.nl",
