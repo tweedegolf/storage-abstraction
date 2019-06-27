@@ -1,1 +1,10 @@
-Using ts-node version 8.3.0, typescript version 3.5.2
+"use strict";
+exports.__esModule = true;
+var Storage_1 = require("./Storage");
+exports.Storage = Storage_1.Storage;
+var StorageLocal_1 = require("./StorageLocal");
+exports.StorageLocal = StorageLocal_1.StorageLocal;
+var StorageAmazonS3_1 = require("./StorageAmazonS3");
+exports.StorageAmazonS3 = StorageAmazonS3_1.StorageAmazonS3;
+var StorageGoogleCloud_1 = require("./StorageGoogleCloud");
+exports.StorageGoogleCloud = StorageGoogleCloud_1.StorageGoogleCloud;

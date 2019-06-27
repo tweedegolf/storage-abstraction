@@ -5,13 +5,7 @@ import {
   StorageLocal,
   StoreFileArgs,
   FileMetaData,
-} from '../storage-abstraction';
-
-// import { Storage } from '../../../../Storage';
-// import { StorageGoogleCloud } from '../../../../StorageGoogleCloud';
-// import { StorageAmazonS3 } from '../../../../StorageAmazonS3';
-// import { StorageLocal } from '../../../../StorageLocal';
-// import { StoreFileArgs, FileMetaData } from '../../../../index.d';
+} from 'storage-abstraction';
 
 import { Service } from '@tsed/di';
 import { MediaFile } from '../entities/MediaFile';

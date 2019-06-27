@@ -2,7 +2,7 @@
   "name": "storage-abstraction",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "index.js",
   "esnext": "index.ts",
   "types": "index.d.ts",
   "files": [
@@ -50,7 +50,9 @@
     "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./tests/*.ts",
     "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
     "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
-    "test": "npm run test-local && npm run test-google && npm run test-amazon"
+    "test": "npm run test-local && npm run test-google && npm run test-amazon",
+    "compile": "node_modules/.bin/tsc --module commonjs --esModuleInterop index.ts && npm run copy",
+    "copy": "cd ./example/backend && ./copy.sh"
   },
   "keywords": [],
   "author": "daniel@tweedegolf.nl",
