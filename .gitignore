@@ -1,7 +1,6 @@
-node_modules
-frontend/.cache/
-frontend/public/
-backend/.env
-backend/src/uploads/
-backend/da2719acad70.json
-*.pdf
+node_modules/
+example/frontend/.cache/
+example/frontend/public/
+example/backend/.env
+example/backend/src/uploads/
+da2719acad70.json

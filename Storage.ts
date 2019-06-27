@@ -1,23 +1,30 @@
 import 'multer';
 import fs from 'fs';
 import path from 'path';
-import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
 import slugify from 'slugify';
+import {
+  IStorage,
+  ConfigAmazonS3,
+  ConfigGoogleCloud,
+  ConfigLocal,
+  StoreFileArgs,
+  FileMetaData
+} from '.'
 
-abstract class Storage implements StorageTypes.IStorage {
+abstract class Storage implements IStorage {
   public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD'
   public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3'
   public static TYPE_LOCAL: string = 'TYPE_LOCAL'
   protected bucketName: string
   protected bucketCreated: boolean = false
 
-  constructor(config: StorageTypes.ConfigAmazonS3 | StorageTypes.ConfigGoogleCloud | StorageTypes.ConfigLocal) {
+  constructor(config: ConfigAmazonS3 | ConfigGoogleCloud | ConfigLocal) {
     // TODO: perform sanity tests?
     this.bucketName = slugify(config.bucketName);
   }
 
-  private async copy(origPath: string, args?: StorageTypes.AddFileArgs) {
+  private async copy(origPath: string, args?: StoreFileArgs) {
     const {
       dir = null,
       name: newName = null,
@@ -42,7 +49,7 @@ abstract class Storage implements StorageTypes.IStorage {
         await fs.promises.unlink(origPath)
       }
       return {
-        name: targetName,
+        origName,
         size: fileSize,
         path: targetPath,
       }
@@ -59,7 +66,7 @@ abstract class Storage implements StorageTypes.IStorage {
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the temp file after it has been stored
    */
-  async addFileFromUpload(file: Express.Multer.File, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
+  async addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData> {
     return this.copy(file.path, args);
   }
 
@@ -70,7 +77,7 @@ abstract class Storage implements StorageTypes.IStorage {
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
-  async addFileFromPath(origPath: string, args?: StorageTypes.AddFileArgs): Promise<StorageTypes.FileMetaData> {
+  async addFileFromPath(origPath: string, args?: StoreFileArgs): Promise<FileMetaData> {
     return this.copy(origPath, args);
   }
 

@@ -1,16 +1,16 @@
-// import axios from 'axios';
-import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
-import { Storage } from './Storage'
 import fs from 'fs';
 import path from 'path';
-import { Storage as StorageTypes } from './types';
+// import axios from 'axios';
 import { Readable } from 'stream';
+import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
+import { Storage } from './Storage'
+import { IStorage, ConfigGoogleCloud } from '.';
 
-export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage {
+export class StorageGoogleCloud extends Storage implements IStorage {
   private storage: GoogleCloudStorage
   protected bucketName: string
 
-  constructor(config: StorageTypes.ConfigGoogleCloud) {
+  constructor(config: ConfigGoogleCloud) {
     super(config);
     const {
       projectId,
@@ -110,6 +110,7 @@ export class StorageGoogleCloud extends Storage implements StorageTypes.IStorage
     }
     try {
       await this.storage.createBucket(this.bucketName)
+      this.bucketCreated = true
       return true;
     } catch (e) {
       if (e.code === 409) {

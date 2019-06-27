@@ -1,14 +1,14 @@
-import S3 from 'aws-sdk/clients/s3';
 import fs from 'fs';
-import { Storage } from './Storage';
-import { Storage as StorageTypes } from './types';
 import { Readable } from 'stream';
+import S3 from 'aws-sdk/clients/s3';
+import { Storage } from './Storage';
+import { ConfigAmazonS3, IStorage } from '.';
 
-export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
+export class StorageAmazonS3 extends Storage implements IStorage {
   private storage: S3;
   protected bucketName: string
 
-  constructor(config: StorageTypes.ConfigAmazonS3) {
+  constructor(config: ConfigAmazonS3) {
     super(config)
     const {
       accessKeyId,
@@ -61,7 +61,10 @@ export class StorageAmazonS3 extends Storage implements StorageTypes.IStorage {
       return true;
     }
     return this.storage.createBucket({ Bucket: this.bucketName }).promise()
-      .then(() => true)
+      .then(() => {
+        this.bucketCreated = true
+        return true
+      })
       .catch(err => {
         console.log(err.message);
         throw new Error(err.message)

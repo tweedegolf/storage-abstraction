@@ -8,7 +8,7 @@
     ]
   },
   "rules": {
-    "import-name": false,
+    "max-line-length": false,
     "variable-name": false,
     "function-name": false,
     "jsx-no-multiline-js": false

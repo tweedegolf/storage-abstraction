@@ -83,7 +83,5 @@ export class MediaFileController {
         data: result,
       };
     }
-
   }
-
 }

@@ -1,17 +1,17 @@
 import fs from 'fs'
 import path from 'path'
 import glob from 'glob'
-import { Storage as StorageTypes } from './types';
-import { Storage } from './Storage';
-import { Readable } from 'stream';
 import to from 'await-to-js';
+import { Readable } from 'stream';
+import { IStorage, ConfigLocal } from '.';
+import { Storage } from './Storage';
 
-export class StorageLocal extends Storage implements StorageTypes.IStorage {
+export class StorageLocal extends Storage implements IStorage {
   protected bucketName: string
   private directory: string
   private storagePath: string
 
-  constructor(config: StorageTypes.ConfigLocal) {
+  constructor(config: ConfigLocal) {
     super(config);
     const {
       directory,
@@ -48,7 +48,10 @@ export class StorageLocal extends Storage implements StorageTypes.IStorage {
     return fs.promises.stat(this.storagePath)
       .then(() => true)
       .catch(() => fs.promises.mkdir(this.storagePath, { recursive: true, mode: 0o777 }))
-      .then(() => true)
+      .then(() => {
+        this.bucketCreated = true;
+        return true
+      })
       .catch(e => {
         console.log(e.message);
         throw new Error(e.message);
