@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   Res,
+  Required,
 } from '@tsed/common';
 import { MultipartFile } from '@tsed/multipartfiles';
 import { Returns, ReturnsArray } from '@tsed/swagger';
@@ -50,7 +51,6 @@ export class MediaFileController {
     private readonly mediaFileService: MediaFileService,
   ) {
   }
-
   @Post('/')
   @Returns(200, { type: MediaFile })
   @Returns(415, { description: 'Unsupported file type' })
@@ -89,6 +89,42 @@ export class MediaFileController {
   public async listFiles(
   ): Promise<ResSuccess<[string, number?][]>> {
     const [error, result] = await to(this.mediaFileService.getStoredFiles());
+    if (error) {
+      return {
+        error: error.message,
+        data: null,
+      };
+    }
+    return {
+      error: null,
+      data: result,
+    };
+  }
+
+  @Get('/delete/:filePath')
+  @Returns(200, { type: Boolean })
+  public async deleteFile(
+    @Required @PathParams('filePath') filePath: string,
+  ): Promise<ResSuccess<boolean>> {
+    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(filePath));
+    if (error) {
+      return {
+        error: error.message,
+        data: null,
+      };
+    }
+    return {
+      error: null,
+      data: result,
+    };
+  }
+
+  @Post('/delete')
+  @Returns(200, { type: Boolean })
+  public async deleteFile2(
+    @Required @BodyParams('filePath') filePath: string,
+  ): Promise<ResSuccess<boolean>> {
+    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(filePath));
     if (error) {
       return {
         error: error.message,

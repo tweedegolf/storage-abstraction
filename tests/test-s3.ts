@@ -85,7 +85,8 @@ const addFileFromPath = async (path: string, newFileName?: string, dir?: string)
   const d = await s3.addFileFromPath(path, { dir, name: newFileName });
   console.log(d);
 };
-addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir')
+// addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir');
+addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg');
 
 const removeFile = async (fileName: string) => {
   // try {

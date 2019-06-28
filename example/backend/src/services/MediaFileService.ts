@@ -84,9 +84,9 @@ export class MediaFileService {
     }
   }
 
-  public async unlinkMediaFile(file: MediaFile): Promise<boolean> {
+  public async unlinkMediaFile(path: string): Promise<boolean> {
     try {
-      await this.storage.removeFile(file.path);
+      await this.storage.removeFile(path);
       return true;
     } catch (e) {
       throw e;
