@@ -3,7 +3,7 @@ import path from 'path';
 import glob from 'glob';
 import to from 'await-to-js';
 import { Readable } from 'stream';
-import { IStorage, ConfigLocal } from './index.d';
+import { IStorage, ConfigLocal } from './types';
 import { Storage } from './Storage';
 
 export class StorageLocal extends Storage implements IStorage {

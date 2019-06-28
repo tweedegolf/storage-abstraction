@@ -4,7 +4,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { Storage } from './Storage';
-import { IStorage, ConfigGoogleCloud } from './index.d';
+import { IStorage, ConfigGoogleCloud } from './types';
 
 export class StorageGoogleCloud extends Storage implements IStorage {
   private storage: GoogleCloudStorage;

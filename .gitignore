@@ -4,3 +4,4 @@ example/frontend/public/
 **/.env
 example/backend/src/uploads/
 da2719acad70.json
+dist

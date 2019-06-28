@@ -10,7 +10,7 @@ import {
   ConfigLocal,
   StoreFileArgs,
   FileMetaData,
-} from './index.d';
+} from './types';
 
 abstract class Storage implements IStorage {
   public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD';

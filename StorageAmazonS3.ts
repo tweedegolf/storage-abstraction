@@ -2,7 +2,7 @@ import fs from 'fs';
 import { Readable } from 'stream';
 import S3 from 'aws-sdk/clients/s3';
 import { Storage } from './Storage';
-import { ConfigAmazonS3, IStorage } from './index.d';
+import { ConfigAmazonS3, IStorage } from './types';
 
 export class StorageAmazonS3 extends Storage implements IStorage {
   private storage: S3;

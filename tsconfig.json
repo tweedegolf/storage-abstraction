@@ -1,23 +1,32 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es5",
     "lib": [
       "es2016"
     ],
     "types": [
       "reflect-metadata",
     ],
+    "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "preserveSymlinks": true,
     "sourceMap": true,
-    "declaration": false,
+    "declaration": true,
     "allowSyntheticDefaultImports": true
   },
+  "include": [
+    "*.ts"
+  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "examples",
+    "tests",
+    "spec",
+    "dist"
   ]
 }

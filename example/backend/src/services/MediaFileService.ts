@@ -16,7 +16,6 @@ import { Readable } from 'stream';
 
 @Service()
 export class MediaFileService {
-
   private storage: Storage;
 
   constructor() {

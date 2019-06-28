@@ -9,7 +9,7 @@ import { StorageGoogleCloud } from '../StorageGoogleCloud';
 import { StorageAmazonS3 } from '../StorageAmazonS3';
 import to from 'await-to-js';
 import 'jasmine';
-import { IStorage } from '../index.d';
+import { IStorage } from '../tmp';
 dotenv.config();
 
 const type = process.env['TYPE'];
