@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
-import { StorageLocal } from '../StorageLocal';
+import { StorageLocal } from '../src/StorageLocal';
 import rimraf = require('rimraf');
 dotenv.config();
 

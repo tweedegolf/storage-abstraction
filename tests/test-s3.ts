@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { StorageAmazonS3 } from '../StorageAmazonS3';
+import { StorageAmazonS3 } from '../src/StorageAmazonS3';
 dotenv.config();
 
 const bucketName = 'aap-en-beer';

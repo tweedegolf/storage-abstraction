@@ -3,13 +3,13 @@ import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
 import dotenv from 'dotenv';
-import { Storage } from '../Storage';
-import { StorageLocal } from '../StorageLocal';
-import { StorageGoogleCloud } from '../StorageGoogleCloud';
-import { StorageAmazonS3 } from '../StorageAmazonS3';
+import { Storage } from '../src/Storage';
+import { StorageLocal } from '../src/StorageLocal';
+import { StorageGoogleCloud } from '../src/StorageGoogleCloud';
+import { StorageAmazonS3 } from '../src/StorageAmazonS3';
 import to from 'await-to-js';
 import 'jasmine';
-import { IStorage } from '../tmp';
+import { IStorage } from '../src/types';
 dotenv.config();
 
 const type = process.env['TYPE'];
