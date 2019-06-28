@@ -91,6 +91,16 @@ export class MediaFileService {
     } catch (e) {
       throw e;
     }
+
+  }
+
+  public async getStoredFiles(): Promise<[string, number?][]> {
+    try {
+      const files = await this.storage.listFiles();
+      return files;
+    } catch (e) {
+      throw e;
+    }
   }
 
   private instanceMediaFile(props: { size: number, origName: string, path: string }): MediaFile {

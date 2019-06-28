@@ -27,7 +27,7 @@ export class StorageLocal extends Storage implements IStorage {
       await this.createBucket();
       await fs.promises.stat(path.dirname(dest));
     } catch (e) {
-      fs.mkdir(path.dirname(dest), { recursive: true }, e => {
+      fs.mkdir(path.dirname(dest), { recursive: true }, (e: Error) => {
         if (e) {
           throw new Error(e.message);
         }
@@ -75,7 +75,7 @@ export class StorageLocal extends Storage implements IStorage {
         if (err !== null) {
           reject(err);
         } else {
-          const promises = files.map(f => {
+          const promises = files.map((f) => {
             return fs.promises.unlink(f);
           });
           try {
@@ -101,10 +101,10 @@ export class StorageLocal extends Storage implements IStorage {
     });
   }
 
-  async listFiles(): Promise<[string, number?][]> {
+  async listFiles(): Promise<[string, number][]> {
     try {
       const files = await this.globFiles(this.storagePath);
-      const result: [string, number?][] = [];
+      const result: [string, number][] = [];
       for (let i = 0; i < files.length; i += 1) {
         const f = files[i];
         const stat = await fs.promises.stat(f);

@@ -96,7 +96,7 @@ abstract class Storage implements IStorage {
 
   abstract async removeFile(fileName: string): Promise<boolean>;
 
-  abstract async listFiles(): Promise<[string, number?][]>;
+  abstract async listFiles(): Promise<[string, number][]>;
 }
 
 export {

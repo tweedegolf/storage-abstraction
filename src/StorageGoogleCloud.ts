@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { zip } from 'ramda';
 // import axios from 'axios';
 import { Readable } from 'stream';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
@@ -20,6 +21,7 @@ export class StorageGoogleCloud extends Storage implements IStorage {
       projectId,
       keyFilename,
     });
+    // console.log(config);
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
@@ -131,22 +133,23 @@ export class StorageGoogleCloud extends Storage implements IStorage {
     }
   }
 
-  private async getMetaData(result: Array<[string, number?]>) {
-    for (let i = 0; i < result.length; i++) {
-      const file = this.storage.bucket(this.bucketName).file(result[i][0]);
+  private async getMetaData(files: string[]) {
+    const sizes: number[] = [];
+    for (let i = 0; i < files.length; i += 1) {
+      const file = this.storage.bucket(this.bucketName).file(files[i]);
       const [metadata] = await file.getMetadata();
-      // console.log(metadata.size);
-      result[i].push(parseInt(metadata.size, 10));
+      // console.log(metadata);
+      sizes.push(parseInt(metadata.size, 10));
     }
-    return result;
+    return sizes;
   }
 
-  async listFiles(numFiles: number = 1000): Promise<[string, number?][]> {
+  async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
     return this.storage.bucket(this.bucketName).getFiles()
       .then(async (data) => {
-        const result: [string, number?][] = data[0].map(f => [f.name]);
-        await this.getMetaData(result);
-        return result as [string, number][];
+        const names = data[0].map(f => f.name);
+        const sizes = await this.getMetaData(names);
+        return zip(names, sizes) as [string, number][];
       })
       .catch((err: Error) => {
         console.log(err.message);

@@ -18,7 +18,6 @@ import { pipeline } from 'stream';
 
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
-import slugify from 'slugify';
 import uniquid from 'uniquid';
 
 interface ResSuccess<T> {
@@ -83,5 +82,22 @@ export class MediaFileController {
         data: result,
       };
     }
+  }
+
+  @Get('/list')
+  @Returns(200, { type: Array })
+  public async listFiles(
+  ): Promise<ResSuccess<[string, number?][]>> {
+    const [error, result] = await to(this.mediaFileService.getStoredFiles());
+    if (error) {
+      return {
+        error: error.message,
+        data: null,
+      };
+    }
+    return {
+      error: null,
+      data: result,
+    };
   }
 }

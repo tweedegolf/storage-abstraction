@@ -6,31 +6,31 @@ import { StorageLocal } from '../src/StorageLocal';
 import rimraf = require('rimraf');
 dotenv.config();
 
-const localDir = path.join(os.homedir(), 'storage-abstraction');
+// const localDir = path.join(os.homedir(), 'storage-abstraction');
 const configLocal = {
   bucketName: process.env.STORAGE_BUCKETNAME,
   directory: process.env.STORAGE_LOCAL_DIRECTORY,
   // directory: localDir,
 };
 
-const s3 = new StorageLocal(configLocal);
+const sl = new StorageLocal(configLocal);
 
 const clearBucket = async () => {
-  const d = await s3.clearBucket();
+  const d = await sl.clearBucket();
   console.log(d);
 };
 // clearBucket();
 
 const listFiles = async () => {
-  const d = await s3.listFiles();
+  const d = await sl.listFiles();
   console.log(d);
 };
-// listFiles();
+listFiles();
 
 const getFileAsReadable = (fileName: string) => {
-  s3.getFileAsReadable(fileName)
-    .then(readStream => {
-      const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+  sl.getFileAsReadable(fileName)
+    .then((readStream) => {
+      const filePath = path.join(os.tmpdir(), fileName);
       const writeStream = fs.createWriteStream(filePath);
       readStream.pipe(writeStream);
       writeStream.on('error', (e: Error) => {
@@ -40,20 +40,20 @@ const getFileAsReadable = (fileName: string) => {
         console.log('FINISHED');
       });
     })
-    .catch(e => { console.log(e); });
+    .catch((e) => { console.log(e); });
 };
 // getFileAsReadable('sun-blanket.jpg');
 // getFileAsReadable('/generate_error/IMG_9643.jpg');
 
 const getFileAsReadable2 = async (fileName: string) => {
-  const readStream = await s3.getFileAsReadable(fileName)
-    .catch(e => { console.log(e); });
+  const readStream = await sl.getFileAsReadable(fileName)
+    .catch((e: Error) => { console.log(e); });
 
   if (!readStream) {
     return;
   }
   console.log(readStream);
-  const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+  const filePath = path.join(os.tmpdir(), fileName);
   const writeStream = fs.createWriteStream(filePath);
   readStream.pipe(writeStream);
   writeStream.on('error', (e: Error) => {
@@ -67,9 +67,9 @@ const getFileAsReadable2 = async (fileName: string) => {
 // getFileAsReadable2('IMG_9643.jpg');
 
 const getFileAsReadable3 = async (fileName: string) => {
-  const readStream = await s3.getFileAsReadable(fileName);
+  const readStream = await sl.getFileAsReadable(fileName);
   if (readStream !== null) {
-    const filePath = path.join('/home/abudaan/Downloads/tmp/', fileName);
+    const filePath = path.join(os.tmpdir(), fileName);
     const writeStream = fs.createWriteStream(filePath);
     readStream.pipe(writeStream);
     writeStream.on('error', (e: Error) => {
@@ -84,33 +84,31 @@ const getFileAsReadable3 = async (fileName: string) => {
 // getFileAsReadable3('IMG_9643.jpg');
 
 const addFileFromPath = async (path: string, newFileName?: string, dir?: string) => {
-  const d = await s3.addFileFromPath(path, { dir, name: newFileName });
+  const d = await sl.addFileFromPath(path, { dir, name: newFileName });
   console.log(d);
-  rimraf('tmp', (e: Error) => {
+  rimraf(configLocal.directory, (e: Error) => {
     if (e) {
       throw e;
     }
   });
 };
-addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir')
-// addFileFromPath('/home/abudaan/Pictures/sun-blanket.jpg', 'test/aapenbeer.jpg')
+// addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir');
 
 const removeFile = async (fileName: string) => {
   // try {
-  //   const d = await s3.removeFile(fileName)
+  //   const d = await sl.removeFile(fileName)
   //   console.log(d);
   // } catch (e) {
   //   console.log('error');
   // }
-  s3.removeFile(fileName)
-    .then(d => {
+  sl.removeFile(fileName)
+    .then((d) => {
       console.log(d);
     })
-    .catch(e => {
+    .catch((e) => {
       console.log(e);
     });
 
 };
 // removeFile('subdir/renamed.jpg');
 // removeFile('aapenbeer.jpg')
-

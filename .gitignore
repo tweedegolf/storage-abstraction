@@ -3,5 +3,6 @@ example/frontend/.cache/
 example/frontend/public/
 **/.env
 example/backend/src/uploads/
-da2719acad70.json
+**/da2719acad70.json
 dist
+.vscode
