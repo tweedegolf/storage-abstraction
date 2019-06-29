@@ -1,4 +1,4 @@
-import to from 'await-to-js';
+import awaitToJs from 'await-to-js';
 import {
   BodyParams,
   Controller,
@@ -50,8 +50,37 @@ export class MediaFileController {
   public constructor(
     private readonly mediaFileService: MediaFileService,
     private readonly mediaFileRepository: MediaFileRepository,
-  ) {
+  ) { }
+
+  private async download(res: Response, id: number, filePath?: string) {
+    const mediaFile = await this.mediaFileRepository.findOne(id);
+
+    if (!mediaFile) {
+      throw new NotFound('File not found in repository');
+    }
+
+    if (typeof filePath !== 'undefined' && mediaFile.path !== filePath) {
+      throw new NotFound('File not found: supplied file path doesn\'t match with file path in repository');
+    }
+
+    const [error, stream] = await awaitToJs(this.mediaFileService.getFileReadStream(mediaFile.path));
+
+    if (error !== null) {
+      throw new NotFound('File not found in Storage');
+    }
+
+    res.set('Content-Type', mime.getType(mediaFile.path));
+    res.set('Content-Disposition', 'inline');
+
+    await new Promise(
+      (resolve, reject) => pipeline(
+        stream,
+        res,
+        err => (err ? reject(err) : resolve()),
+      ),
+    );
   }
+
   @Post('/')
   @Returns(200, { type: MediaFile })
   @Returns(415, { description: 'Unsupported file type' })
@@ -62,7 +91,7 @@ export class MediaFileController {
     if (!tempFile) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    const [error, result] = await to(this.mediaFileService.moveUploadedFile(tempFile, location));
+    const [error, result] = await awaitToJs(this.mediaFileService.moveUploadedFile(tempFile, location));
 
     if (error !== null) {
       return {
@@ -82,11 +111,34 @@ export class MediaFileController {
     };
   }
 
+  @Get('/download/:id')
+  @Returns(200, { description: 'File contents' })
+  @Returns(404, { description: 'File not found' })
+  public async getMediaDownload(
+    @Req() req: Request,
+    @Res() res: Response,
+    @PathParams('id') id: number,
+  ): Promise<void> {
+    return this.download(res, id);
+  }
+
+  @Get('/download/:id/*')
+  @Returns(200, { description: 'File contents' })
+  @Returns(404, { description: 'File not found' })
+  public async getMediaDownloadWithCheckPath(
+    @Req() req: Request,
+    @Res() res: Response,
+    @PathParams('id') id: number,
+  ): Promise<void> {
+    const filePath = req.params[0];
+    return this.download(res, id, filePath);
+  }
+
   @Get('/list')
   @Returns(200, { type: Array })
   public async listFiles(
   ): Promise<ResSuccess<[string, number?][]>> {
-    const [error, result] = await to(this.mediaFileService.getStoredFiles());
+    const [error, result] = await awaitToJs(this.mediaFileService.getStoredFiles());
     if (error) {
       return {
         error: error.message,
@@ -109,7 +161,7 @@ export class MediaFileController {
     if (!file) {
       throw new NotFound('File not found');
     }
-    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(file.path));
+    const [error, result] = await awaitToJs(this.mediaFileService.unlinkMediaFile(file.path));
     if (error) {
       return {
         error: error.message,
@@ -128,7 +180,7 @@ export class MediaFileController {
   public async deleteFile2(
     @Required @BodyParams('filePath') filePath: string,
   ): Promise<ResSuccess<boolean>> {
-    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(filePath));
+    const [error, result] = await awaitToJs(this.mediaFileService.unlinkMediaFile(filePath));
     if (error) {
       return {
         error: error.message,

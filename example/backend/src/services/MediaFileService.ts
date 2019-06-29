@@ -77,7 +77,7 @@ export class MediaFileService {
     }
   }
 
-  public async getMediaFileReadStream(filePath: string): Promise<Readable> {
+  public async getFileReadStream(filePath: string): Promise<Readable> {
     try {
       const stream = await this.storage.getFileAsReadable(filePath);
       return stream;
