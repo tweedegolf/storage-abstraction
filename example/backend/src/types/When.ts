@@ -1,4 +1,4 @@
-export default interface When {
-  created: Date,
-  updated: Date,
+export interface When {
+  created: Date;
+  updated: Date;
 }

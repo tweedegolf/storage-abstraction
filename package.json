@@ -31,8 +31,7 @@
     "jasmine-ts": "^0.3.0",
     "nodemon": "^1.18.11",
     "rimraf": "^2.6.3",
-    "ts-node": "^8.1.0",
-    "ts-node-dev": "^1.0.0-pre.32",
+    "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
     "tslint-config-airbnb": "^5.11.1",
     "typescript": "^3.4.5"

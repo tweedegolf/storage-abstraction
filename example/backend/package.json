@@ -45,8 +45,7 @@
     "@types/node": "^11.13.15",
     "debug": "^4.1.1",
     "nodemon": "^1.18.11",
-    "ts-node": "^8.1.0",
-    "ts-node-dev": "^1.0.0-pre.32",
+    "ts-node-dev": "^1.0.0-pre.40",
     "tslint": "^5.18.0",
     "tslint-config-airbnb": "^5.11.1",
     "typescript": "^3.4.5"

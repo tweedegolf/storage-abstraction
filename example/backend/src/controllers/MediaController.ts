@@ -19,7 +19,7 @@ import { pipeline } from 'stream';
 
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
-import uniquid from 'uniquid';
+import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
 
 interface ResSuccess<T> {
   error: false;
@@ -49,6 +49,7 @@ export const SUPPORTED_MIME_TYPES = [
 export class MediaFileController {
   public constructor(
     private readonly mediaFileService: MediaFileService,
+    private readonly mediaFileRepository: MediaFileRepository,
   ) {
   }
   @Post('/')
@@ -61,27 +62,24 @@ export class MediaFileController {
     if (!tempFile) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    const [error, result] = await to(this.mediaFileService.moveUploadedFile(tempFile, {
-      dir: location,
-      name: `${uniquid()}_${tempFile.originalname}`,
-      remove: true,
-    }));
+    const [error, result] = await to(this.mediaFileService.moveUploadedFile(tempFile, location));
 
     if (error !== null) {
       return {
         error: error.message,
         data: null,
       };
-    } else {
-      // return {
-      //   error: false,
-      //   // data: await this.mediaFileRepository.create(file),
-      // };
-      return {
-        error: false,
-        data: result,
-      };
     }
+    const file = await this.mediaFileRepository.create({
+      name: result.origName,
+      path: result.path,
+      size: result.size,
+    });
+
+    return {
+      error: false,
+      data: file,
+    };
   }
 
   @Get('/list')
@@ -101,18 +99,24 @@ export class MediaFileController {
     };
   }
 
-  @Get('/delete/:filePath')
+  @Delete('/:id')
   @Returns(200, { type: Boolean })
+  @Returns(404, { description: 'File not found' })
   public async deleteFile(
-    @Required @PathParams('filePath') filePath: string,
+    @Required @PathParams('id') id: number,
   ): Promise<ResSuccess<boolean>> {
-    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(filePath));
+    const file = await this.mediaFileRepository.findOne(id);
+    if (!file) {
+      throw new NotFound('File not found');
+    }
+    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(file.path));
     if (error) {
       return {
         error: error.message,
         data: null,
       };
     }
+    await this.mediaFileRepository.remove([file]);
     return {
       error: null,
       data: result,

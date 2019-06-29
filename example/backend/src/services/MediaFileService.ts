@@ -6,12 +6,8 @@ import {
   StoreFileArgs,
   FileMetaData,
 } from 'storage-abstraction';
-
+import uniquid from 'uniquid';
 import { Service } from '@tsed/di';
-import { MediaFile } from '../entities/MediaFile';
-import dotenv from 'dotenv';
-dotenv.config();
-
 import { Readable } from 'stream';
 
 @Service()
@@ -41,19 +37,24 @@ export class MediaFileService {
       };
       this.storage = new StorageAmazonS3(configS3);
     }
+    if (typeof this.storage === 'undefined') {
+      throw new Error(`Storage is undefined: ${type}`);
+    }
   }
 
   /**
    * @param tempFile: uploaded file in temporary Multer storage
-   * @param config?: setting for processing this file by the permanent storage
-   * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
-   * @param config.newName?: the name of the file in the storage
-   * @param config.remove?: whether or not to remove the temp file after it has been stored
+   * @param location?: the directory to save this file into, directory will be created if it doesn't exist
    */
-  public async moveUploadedFile(tempFile: Express.Multer.File, args?: StoreFileArgs): Promise<MediaFile> {
+  public async moveUploadedFile(tempFile: Express.Multer.File, location: string): Promise<FileMetaData> {
+    const args: StoreFileArgs = {
+      dir: location,
+      name: `${uniquid()}_${tempFile.originalname}`,
+      remove: true,
+    };
     try {
       const result: FileMetaData = await this.storage.addFileFromUpload(tempFile, args);
-      return this.instanceMediaFile(result);
+      return result;
     } catch (e) {
       throw new Error(e.message);
     }
@@ -61,23 +62,24 @@ export class MediaFileService {
 
   /**
    * @param filePath: path to the file to be copied
+   * @param location?: the directory to save this file into, directory will be created if it doesn't exist
    * @param config?: setting for processing this file by the permanent storage
    * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
-  public async copyFile(filePath: string, args?: StoreFileArgs): Promise<MediaFile> {
+  public async copyFile(filePath: string, args?: StoreFileArgs): Promise<FileMetaData> {
     try {
-      const result: FileMetaData = await this.storage.addFileFromPath(filePath, args);
-      return this.instanceMediaFile(result);
+      const result = await this.storage.addFileFromPath(filePath, args);
+      return result;
     } catch (e) {
       throw new Error(e.message);
     }
   }
 
-  public async getMediaFileReadStream(file: MediaFile): Promise<Readable> {
+  public async getMediaFileReadStream(filePath: string): Promise<Readable> {
     try {
-      const stream = await this.storage.getFileAsReadable(file.path);
+      const stream = await this.storage.getFileAsReadable(filePath);
       return stream;
     } catch (e) {
       throw e;
@@ -101,16 +103,5 @@ export class MediaFileService {
     } catch (e) {
       throw e;
     }
-  }
-
-  private instanceMediaFile(props: { size: number, origName: string, path: string }): MediaFile {
-    const file = new MediaFile();
-    // Object.assign(file, props);
-    ({
-      size: file.size,
-      path: file.path,
-      origName: file.name,
-    } = props);
-    return file;
   }
 }
