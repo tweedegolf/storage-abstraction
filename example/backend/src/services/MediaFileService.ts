@@ -9,31 +9,40 @@ import {
 import uniquid from 'uniquid';
 import { Service } from '@tsed/di';
 import { Readable } from 'stream';
+import {
+  getStorageType,
+  getStorageBucketName,
+  getGoogleStorageProjectId,
+  getGoogleStorageKeyFile,
+  getAmazonS3AccessKeyId,
+  getAmazonS3SecretAccessKey,
+  getLocalStorageDir,
+} from '../env';
 
 @Service()
 export class MediaFileService {
   private storage: Storage;
 
   constructor() {
-    const type = process.env.STORAGE_TYPE;
+    const type = getStorageType();
     if (type === Storage.TYPE_LOCAL) {
       const configLocal = {
-        bucketName: process.env.STORAGE_BUCKETNAME,
-        directory: process.env.STORAGE_LOCAL_DIRECTORY,
+        bucketName: getStorageBucketName(),
+        directory: getLocalStorageDir(),
       };
       this.storage = new StorageLocal(configLocal);
     } else if (type === Storage.TYPE_GOOGLE_CLOUD) {
       const configGoogle = {
-        bucketName: process.env.STORAGE_BUCKETNAME,
-        projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
-        keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
+        bucketName: getStorageBucketName(),
+        projectId: getGoogleStorageProjectId(),
+        keyFilename: getGoogleStorageKeyFile(),
       };
       this.storage = new StorageGoogleCloud(configGoogle);
     } else if (type === Storage.TYPE_AMAZON_S3) {
       const configS3 = {
-        bucketName: process.env.STORAGE_BUCKETNAME,
-        accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
+        bucketName: getStorageBucketName(),
+        accessKeyId: getAmazonS3AccessKeyId(),
+        secretAccessKey: getAmazonS3SecretAccessKey(),
       };
       this.storage = new StorageAmazonS3(configS3);
     }

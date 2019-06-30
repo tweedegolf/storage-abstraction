@@ -2,8 +2,7 @@ node_modules/
 example/frontend/.cache/
 example/frontend/public/
 **/.env
-example/backend/cache-thumb/
-example/backend/src/uploads/
+example/backend/media/**/*.*
 **/da2719acad70.json
 dist
 .vscode

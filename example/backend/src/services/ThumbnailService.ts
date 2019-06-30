@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { Readable, pipeline } from 'stream';
-import { getMediaThumbnailCacheRoot } from '../env';
+import { getMediaThumbnailCacheDir } from '../env';
 import { MediaFileService } from './MediaFileService';
 
 interface Options {
@@ -40,8 +40,7 @@ export class ThumbnailService {
     })();
 
     const key = digest(JSON.stringify({ ...options, filePath }));
-    // const cachedFilePath = path.join(getMediaThumbnailCacheRoot(), key);
-    const cachedFilePath = path.join('cache-thumb', key);
+    const cachedFilePath = path.join(getMediaThumbnailCacheDir(), key);
     const [error, result] = await awaitToJs(fs.promises.stat(cachedFilePath));
 
     if (error !== null) {

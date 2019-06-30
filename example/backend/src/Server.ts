@@ -11,13 +11,14 @@ import '@tsed/ajv';
 import 'reflect-metadata';
 import { SUPPORTED_MIME_TYPES } from './controllers/MediaController';
 import { AjvErrorObject } from '@tsed/ajv/lib/interfaces/IAjvSettings';
+import { getMediaUploadDir } from './env';
 dotenv.config();
 
 const rootDir = __dirname;
 
 @ServerSettings({
   rootDir,
-  uploadDir: '/tmp/uploads',
+  uploadDir: `${rootDir}/${getMediaUploadDir()}`,
   acceptMimes: ['application/json'],
   port: 3000,
   mount: {

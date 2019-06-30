@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import to from 'await-to-js';
 dotenv.config();
 
-const img = '/home/abudaan/Downloads/tmp/IMG_9643.jpg';
+const img = './data/image1.jpg';
 
 // Option 1: API method propagates reject
 
@@ -17,8 +17,8 @@ const readImage1 = async (filePath: string): Promise<Buffer> => {
 // call API method
 const test1 = (path: string) => {
   readImage1(path)
-    .then(buffer => { console.log('1', buffer.length); })
-    .catch(e => { console.log('1', e.message); });
+    .then((buffer) => { console.log('1', buffer.length); })
+    .catch((e) => { console.log('1', e.message); });
 };
 
 test1(img);
