@@ -20,6 +20,7 @@ import { pipeline } from 'stream';
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
+import { ThumbnailService } from '../services/ThumbnailService';
 
 interface ResSuccess<T> {
   error: false;
@@ -50,9 +51,10 @@ export class MediaFileController {
   public constructor(
     private readonly mediaFileService: MediaFileService,
     private readonly mediaFileRepository: MediaFileRepository,
+    private readonly thumbnailerService: ThumbnailService,
   ) { }
 
-  private async download(res: Response, id: number, filePath?: string) {
+  private async getMediaFile(id: number, filePath?: string): Promise<MediaFile> {
     const mediaFile = await this.mediaFileRepository.findOne(id);
 
     if (!mediaFile) {
@@ -63,6 +65,11 @@ export class MediaFileController {
       throw new NotFound('File not found: supplied file path doesn\'t match with file path in repository');
     }
 
+    return mediaFile;
+  }
+
+  private async download(res: Response, id: number, filePath?: string) {
+    const mediaFile = await this.getMediaFile(id, filePath);
     const [error, stream] = await awaitToJs(this.mediaFileService.getFileReadStream(mediaFile.path));
 
     if (error !== null) {
@@ -70,6 +77,30 @@ export class MediaFileController {
     }
 
     res.set('Content-Type', mime.getType(mediaFile.path));
+    res.set('Content-Disposition', 'inline');
+
+    await new Promise(
+      (resolve, reject) => pipeline(
+        stream,
+        res,
+        err => (err ? reject(err) : resolve()),
+      ),
+    );
+  }
+
+  private async getThumb(res: Response, id: number, format: 'pjpeg' | 'png', width: number, filePath?: string) {
+    const mediaFile = await this.getMediaFile(id, filePath);
+
+    const { success, stream, contentType } = await this.thumbnailerService.getThumbnailReadStream(
+      mediaFile.path,
+      { format, width },
+    );
+
+    if (!success) {
+      throw new NotFound('File not found');
+    }
+
+    res.set('Content-Type', contentType);
     res.set('Content-Disposition', 'inline');
 
     await new Promise(
@@ -191,5 +222,30 @@ export class MediaFileController {
       error: null,
       data: result,
     };
+  }
+
+  @Get('/thumbnail/:format/:width/:id')
+  @Returns(404, { description: 'File not found' })
+  public async getMediaThumbnail(
+    @PathParams('format') format: 'png' | 'pjpeg',
+    @PathParams('width') width: number,
+    @PathParams('id') id: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    return this.getThumb(res, id, format, width);
+  }
+
+  @Get('/thumbnail/:format/:width/:id/*')
+  @Returns(404, { description: 'File not found' })
+  public async getMediaThumbnailWithCheckPath(
+    @PathParams('format') format: 'png' | 'pjpeg',
+    @PathParams('width') width: number,
+    @PathParams('id') id: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const filePath = req.params[0];
+    return this.getThumb(res, id, format, width, filePath);
   }
 }

@@ -9,8 +9,6 @@ import '@tsed/swagger';
 import '@tsed/typeorm';
 import '@tsed/ajv';
 import 'reflect-metadata';
-import { getConnection } from 'typeorm';
-import { Address } from './entities/Address';
 import { SUPPORTED_MIME_TYPES } from './controllers/MediaController';
 import { AjvErrorObject } from '@tsed/ajv/lib/interfaces/IAjvSettings';
 dotenv.config();
@@ -79,10 +77,9 @@ export class Server extends ServerLoader {
 }
 
 new Server().start()
-  // .then(async () => {
-  //   const con = await getConnection('tg').getRepository(Address);
-  //   console.log('CONNECTION', con);
-  // })
+  .then(async () => {
+    console.log('server running');
+  })
   .catch((err) => {
     console.error(err);
   });

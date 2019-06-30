@@ -1,10 +1,10 @@
 const getEnvOrDie = (key: string): string => {
-    const value = process.env[key];
-    if (value === undefined) {
-        throw new Error(`ENV variable ${key} not set`);
-    }
+  const value = process.env[key];
+  if (value === undefined) {
+    throw new Error(`ENV variable ${key} not set`);
+  }
 
-    return value;
+  return value;
 };
 
 export const isProduction = (): boolean => process.env.ENVIRONMENT === 'production';
@@ -17,8 +17,8 @@ export const getCorsWhitelist = (): string[] => getEnvOrDie('CORS_WHITELIST').sp
 export const getMagazetiUrl = (): string => getEnvOrDie('MAGAZETI_URL');
 export const getJwtSecret = (): string => getEnvOrDie('JWT_SECRET');
 
-export const getGoogleAuthClientId =  (): string => getEnvOrDie('GOOGLE_AUTH_CLIENT_ID');
-export const getGoogleAuthClientSecret =  (): string => getEnvOrDie('GOOGLE_AUTH_CLIENT_SECRET');
+export const getGoogleAuthClientId = (): string => getEnvOrDie('GOOGLE_AUTH_CLIENT_ID');
+export const getGoogleAuthClientSecret = (): string => getEnvOrDie('GOOGLE_AUTH_CLIENT_SECRET');
 
 export const getGoogleCloudBucket = (): string => getEnvOrDie('GOOGLE_CLOUD_BUCKET');
 export const getGoogleCloudProjectId = (): string => getEnvOrDie('GOOGLE_CLOUD_PROJECT_ID');
@@ -29,7 +29,7 @@ export const getLocalMediaStorageRoot = (): string => getEnvOrDie('MEDIA_STORAGE
 export const getMediaThumbnailCacheRoot = (): string => getEnvOrDie('MEDIA_THUMBNAIL_CACHE_ROOT');
 
 export const getMailDomain = (): string => getEnvOrDie('MAIL_DOMAIN');
-export const getMailFromAddress =  (): string => getEnvOrDie('MAIL_FROM_ADDRESS');
+export const getMailFromAddress = (): string => getEnvOrDie('MAIL_FROM_ADDRESS');
 
 export const getLoginTokenTtlMins = (): number => parseInt(getEnvOrDie('LOGIN_TOKEN_TTL_MINS'), 10);
 
