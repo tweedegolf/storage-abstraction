@@ -2,7 +2,7 @@ node_modules/
 example/frontend/.cache/
 example/frontend/public/
 **/.env
-example/backend/media/**/*.*
+example/backend/media/
 **/da2719acad70.json
 dist
 .vscode

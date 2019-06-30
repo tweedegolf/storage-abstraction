@@ -29,7 +29,7 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
 
   public async $afterRoutesInit(): Promise<boolean> {
     this.repository = this.typeORMService.get('tg').getRepository(MediaFile);
-
+    // synchronize storage with database
     const storageFiles = await this.mediaFileServer.getStoredFiles();
     const repositoryFiles = await this.repository.find();
     const notInRepository = [];
@@ -46,6 +46,7 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
     // console.log('NOT IN REPOSITORY', notInRepository);
     await this.repository.save(notInRepository);
 
+    // remove files from database that are not in storage
     const notInStorage = [];
     repositoryFiles.forEach((mf) => {
       if (storageFiles.findIndex((data: [string, number]) => data[0] === mf.path) === -1) {
