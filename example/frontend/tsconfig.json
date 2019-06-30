@@ -12,8 +12,7 @@
     "types": [
       "node",
       "express",
-      "react",
-      "router5"
+      "react"
     ],
     "typeRoots": [
       "./node_modules/@types"

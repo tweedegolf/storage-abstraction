@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { InputGroup, Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
 const Form = (props) => {
+  // const [enabled, enabled] = useState(false);
   const [isOpen, openModal] = useState(false);
   const [modalError, setError] = useState('');
   const [postalCode, setPostalCode] = useState('');
@@ -10,22 +11,29 @@ const Form = (props) => {
 
   const handleOpen = () => {
     openModal(!isOpen);
-  }
+  };
+
   const submit = () => {
     if (postalCode === '' || houseNumber === '') {
       return;
     }
     props.submit([postalCode.replace(' ', ''), houseNumber, houseNumberAddition]);
-  }
+  };
 
   return (
     <div id="form">
       <InputGroup>
-        <Input onChange={(e) => setPostalCode(e.target.value)} id="postal-code" placeholder="postcode" />
-        <Input onChange={(e) => setHouseNumber(e.target.value)} id="number" placeholder="huisnummer" />
-        <Input onChange={(e) => setHouseNumberAddition(e.target.value)} id="addition" placeholder="toevoeging" />
-      </InputGroup>
-      <InputGroup>
+        <Input
+          name="file"
+          type="file"
+          disabled={!props.enabled}
+        // onChange={async (e) => {
+        //   if (e.target && e.target.files) {
+        //     const mediaFile = await postMediaFile({ file: e.target.files[0], location });
+        //     onChange(mediaFile.id);
+        //   }
+        >
+        </Input>
         <Button onClick={submit}>Submit</Button>
       </InputGroup>
       <Modal isOpen={isOpen} toggle={handleOpen}>
@@ -37,9 +45,9 @@ const Form = (props) => {
           <Button color="primary" onClick={handleOpen}>sluiten</Button>
         </ModalFooter>
       </Modal>
-    </div>
+    </div >
   );
 };
 
-export default Form
+export { Form };
 

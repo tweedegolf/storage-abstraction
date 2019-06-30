@@ -7,7 +7,7 @@ import {
   FileMetaData,
 } from 'storage-abstraction';
 import uniquid from 'uniquid';
-import { Service } from '@tsed/di';
+import { Service, OnInit } from '@tsed/di';
 import { Readable } from 'stream';
 import {
   getStorageType,
@@ -20,7 +20,7 @@ import {
 } from '../env';
 
 @Service()
-export class MediaFileService {
+export class MediaFileService implements OnInit {
   private storage: Storage;
 
   constructor() {
@@ -49,6 +49,15 @@ export class MediaFileService {
     if (typeof this.storage === 'undefined') {
       throw new Error(`Storage is undefined: ${type}`);
     }
+  }
+
+  async $onInit(): Promise<boolean> {
+    try {
+      await this.storage.createBucket();
+    } catch (e) {
+      throw e;
+    }
+    return true;
   }
 
   /**
@@ -102,7 +111,6 @@ export class MediaFileService {
     } catch (e) {
       throw e;
     }
-
   }
 
   public async getStoredFiles(): Promise<[string, number?][]> {

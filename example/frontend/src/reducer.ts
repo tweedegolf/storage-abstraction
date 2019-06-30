@@ -1,16 +1,17 @@
-import { DATA_RECEIVED } from './actions'
+import { DATA_RECEIVED, FILES_LIST_RECEIVED } from './actions';
+import { AnyAction } from 'redux';
 
-function label(state = {}, action) {
-  switch (action.type) {
-    case DATA_RECEIVED:
-      state = {
-        address: action.payload.address,
-        label: action.payload.label,
-      }
-      return state
-    default:
-      return state
+export function rootReducer(state = {}, action: AnyAction) {
+  if (action.type === FILES_LIST_RECEIVED) {
+    const { error, data } = action.payload;
+    if (error !== null) {
+      // show error
+    } else {
+      return {
+        ...state,
+        files: data,
+      };
+    }
   }
+  return state;
 }
-
-export default label;

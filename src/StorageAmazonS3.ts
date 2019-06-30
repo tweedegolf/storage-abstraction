@@ -116,7 +116,7 @@ export class StorageAmazonS3 extends Storage implements IStorage {
     return this.storage.listObjects(params).promise()
       .then((data) => {
         const { Contents: content } = data;
-        console.log(data);
+        // console.log(data);
         return content.map(o => [o.Key, o.Size]) as [string, number][];
       })
       .catch((err: Error) => {
