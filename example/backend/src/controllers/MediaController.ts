@@ -116,13 +116,14 @@ export class MediaFileController {
   @Returns(200, { type: MediaFile })
   @Returns(415, { description: 'Unsupported file type' })
   public async uploadFile(
-    @MultipartFile('file') tempFile: Express.Multer.File,
+    @MultipartFile('files') tempFile: Express.Multer.File,
     @BodyParams('location') location: string,
   ): Promise<ResSuccess<MediaFile>> {
+    console.log('TEMPFILE', tempFile, location);
     if (!tempFile) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    const [error, result] = await awaitToJs(this.mediaFileService.moveUploadedFile(tempFile, location));
+    const [error, result] = await awaitToJs(this.mediaFileService.moveUploadedFile(tempFile[0], location));
 
     if (error !== null) {
       return {

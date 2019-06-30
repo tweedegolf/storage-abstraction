@@ -1,12 +1,11 @@
 import React, { JSXElementConstructor } from 'react';
 import { Table } from 'reactstrap';
 import { MediaFile } from '../../../backend/src/entities/MediaFile';
+import { getMediaDownloadUrl, getMediaThumbnailUrl } from '../api';
 
-const getSrcUrl = (mf: MediaFile) => `/api/v1/media/thumbnail/png/100/${mf.id}/${mf.path}`;
-const getDownloadUrl = (mf: MediaFile) => `/api/v1/media/download/${mf.id}/${mf.path}`;
 const createImg = (mf: MediaFile): JSX.Element => <img
-  src={getSrcUrl(mf)}
-  onClick={() => { window.open(getDownloadUrl(mf)); }}
+  src={getMediaThumbnailUrl(mf)}
+  onClick={() => { window.open(getMediaDownloadUrl(mf)); }}
 // TODO: open modal here
 ></img>;
 

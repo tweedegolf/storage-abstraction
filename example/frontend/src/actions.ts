@@ -1,9 +1,10 @@
 import { Dispatch, Action } from 'redux';
+import { uploadMediaFiles } from './api';
 import axios from 'axios';
 
 export const SYNCHRONIZING_WITH_STORAGE = 'SYNCHRONIZING_WITH_STORAGE';
 export const FILES_LIST_RECEIVED = 'FILES_LIST_RECEIVED';
-export const LOADING = 'LOADING';
+export const UPLOADING_FILES = 'UPLOADING_FILES';
 export const DATA_RECEIVED = 'DATA_RECEIVED';
 
 export const synchronizeWithStorage = async (dispatch: Dispatch) => {
@@ -24,27 +25,17 @@ export const synchronizeWithStorage = async (dispatch: Dispatch) => {
   });
 };
 
-export const submitForm = (data: string[]) => async (dispatch: Dispatch) => {
+export const uploadFiles = (files: FileList, location?: string) => async (dispatch: Dispatch) => {
   dispatch({
-    type: LOADING,
-  });
-  let params = '';
-  data.forEach((d: string) => {
-    if (d) {
-      params += `/${d.toUpperCase()}`;
-    }
+    type: UPLOADING_FILES,
   });
 
-  const payload = await axios.get(`/api/v1/label-and-address${params}`)
-    .then((response) => {
-      return response.data;
-    }).catch((error: string) => {
-      return { error };
-    });
+  const payload = await uploadMediaFiles(files, location);
+  console.log(payload);
 
   const event = {
-    type: DATA_RECEIVED,
     payload,
+    type: DATA_RECEIVED,
   };
 
   dispatch(event);

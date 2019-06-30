@@ -1,13 +1,14 @@
 import React from 'react';
 import { Form } from './Form';
 import { ListUI as List } from './List';
-import { submitForm } from '../actions';
+import { uploadFiles } from '../actions';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 const App = (props) => {
   return (
     <div>
+      <Form uploadFiles={props.uploadFiles}></Form>
       <List files={props.files}></List>
     </div >
   );
@@ -21,7 +22,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch: Dispatch) => {
   return bindActionCreators({
-    submitForm,
+    uploadFiles,
     // tslint:disable-next-line: align
   }, dispatch);
 };

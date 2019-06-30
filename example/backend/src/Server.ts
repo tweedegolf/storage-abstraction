@@ -43,8 +43,17 @@ const rootDir = __dirname;
     ],
   }],
   multer: {
-    fileFilter: (req: Request, file: Express.Multer.File, cb) => {
-      cb(null, SUPPORTED_MIME_TYPES.includes(file.mimetype));
+    fileFilter: (req: Request, files: Express.Multer.File[], cb) => {
+      cb(null, (() => {
+        let pass = 0;
+        for (let i = 0; i < files.length; i += 1) {
+          const file = files[i]
+          if (SUPPORTED_MIME_TYPES.includes(file.mimetype)) {
+            pass += 1;
+          }
+        }
+        return pass === files.length;
+      })());
     },
   },
   swagger: [{
