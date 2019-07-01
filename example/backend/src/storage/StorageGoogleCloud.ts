@@ -25,17 +25,20 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
+    console.log('111');
     try {
       const file = await this.storage.bucket(this.bucketName).file(fileName);
+      console.log('222', file);
       return file.createReadStream();
     } catch (e) {
+      console.log('ERROR');
       throw e;
     }
   }
 
   async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
     try {
-      const file = await this.storage.bucket(this.bucketName).file(fileName);
+      const file = await this.storage.bucket(this.bucketName).file('fileName');
       const localFilename = path.join(downloadPath, fileName);
       return file.download({
         destination: localFilename,
