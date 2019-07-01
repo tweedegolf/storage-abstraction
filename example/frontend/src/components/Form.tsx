@@ -20,7 +20,7 @@ const Form = (props) => {
           disabled={!enabled}
           onChange={async (e) => {
             if (e.target && e.target.files) {
-              props.uploadFiles(e.target.files[0]);
+              props.uploadFiles(e.target.files);
               // const mediaFile = await props.uploadMediaFiles({ file: e.target.files[0], location });
             }
           }}

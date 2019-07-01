@@ -58,11 +58,15 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
     return true;
   }
 
-  public async create(args: { name: string, path: string, size: number }): Promise<MediaFile> {
-    const file = new MediaFile();
-    Object.assign(file, args);
-    await this.repository.save(file);
-    return file;
+  public async create(args: { name: string, path: string, size: number }[]): Promise<MediaFile[]> {
+    const files = [];
+    for (let i = 0; i < args.length; i += 1) {
+      const mf = new MediaFile();
+      Object.assign(mf, args[i]);
+      files.push(mf);
+    }
+    await this.repository.save(files);
+    return files;
   }
 
   public async update(file: MediaFile): Promise<void> {

@@ -21,11 +21,8 @@ import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
 import { ThumbnailService } from '../services/ThumbnailService';
-
-interface ResSuccess<T> {
-  error: false;
-  data: T;
-}
+import { FileMetaData } from 'storage-abstraction';
+import { ResError, ResSuccess, ResResult } from '../../../common/types';
 
 export const SUPPORTED_MIME_TYPES = [
   'image/png',
@@ -113,33 +110,46 @@ export class MediaFileController {
   }
 
   @Post('/')
-  @Returns(200, { type: MediaFile })
+  @Returns(200, { type: Array })
   @Returns(415, { description: 'Unsupported file type' })
   public async uploadFile(
-    @MultipartFile('files') tempFile: Express.Multer.File,
+    @MultipartFile('files', 10) tempFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
-  ): Promise<ResSuccess<MediaFile>> {
-    console.log('TEMPFILE', tempFile, location);
-    if (!tempFile) {
+  ): Promise<ResResult<MediaFile[]>> {
+    console.log('TEMPFILE', tempFiles, location);
+    if (!tempFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    const [error, result] = await awaitToJs(this.mediaFileService.moveUploadedFile(tempFile[0], location));
-
-    if (error !== null) {
-      return {
-        error: error.message,
-        data: null,
-      };
+    // const promises = []
+    const results: { name: string, path: string, size: number }[] = [];
+    const errors: string[] = [];
+    for (let i = 0; i < tempFiles.length; i += 1) {
+      // promises.push(this.mediaFileService.moveUploadedFile(tempFiles[i], location));
+      const [error, result] = await awaitToJs(this.mediaFileService.moveUploadedFile(tempFiles[i], location));
+      if (error === null) {
+        // console.log(result);
+        results.push({
+          name: result.origName,
+          path: result.path,
+          size: result.size,
+        });
+      } else {
+        errors.push(error.message);
+      }
     }
-    const file = await this.mediaFileRepository.create({
-      name: result.origName,
-      path: result.path,
-      size: result.size,
-    });
+
+    if (errors.length > 0) {
+      return {
+        status: 415,
+        message: errors.join(','),
+        error: true,
+      } as ResError;
+    }
+    const files = await this.mediaFileRepository.create(results);
 
     return {
       error: false,
-      data: file,
+      data: files,
     };
   }
 

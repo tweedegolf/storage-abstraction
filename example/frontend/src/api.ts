@@ -5,7 +5,7 @@ import {
 import {
   ResResult,
   ResSuccess,
-} from './types';
+} from '../../common/types';
 
 const baseUrl = '/api/v1';
 const baseConfig = () => ({
@@ -44,15 +44,13 @@ const doDelete = async <T>(
   config?: AxiosRequestConfig,
 ): Promise<T> => parseResult<T>(url, await axios.delete(url, { ...baseConfig(), ...config }));
 
-export const uploadMediaFiles = (files: File, location?: string): Promise<MediaFile> => {
+export const uploadMediaFiles = (files: FileList, location?: string): Promise<MediaFile> => {
   const data = new FormData();
-  // for (let i = 0; i < files.length; i += 1) {
-  //   const file = files[i];
-  //   data.append(`files[${i}]`, file);
-  // }
-  data.append('files', files);
-  // data.append('location', location);
-  data.append('location', 'gagaga');
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    data.append('files', file);
+  }
+  data.append('location', location);
   return post(`${baseUrl}/media`, data, {
     headers: { 'content-type': 'multipart/form-data' },
     timeout: 10000,

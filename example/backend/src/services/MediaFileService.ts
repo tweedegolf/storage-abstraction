@@ -68,7 +68,7 @@ export class MediaFileService implements OnInit {
     const args: StoreFileArgs = {
       dir: location,
       name: `${uniquid()}_${tempFile.originalname}`,
-      remove: true,
+      remove: false,
     };
     try {
       const result: FileMetaData = await this.storage.addFileFromUpload(tempFile, args);
