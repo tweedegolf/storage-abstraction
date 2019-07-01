@@ -1,11 +1,14 @@
 import { Dispatch, Action } from 'redux';
-import { uploadMediaFiles } from './api';
+import { uploadMediaFiles, deleteMediaFile } from './api';
 import axios from 'axios';
+import { MediaFile } from '../../backend/src/entities/MediaFile';
 
 export const SYNCHRONIZING_WITH_STORAGE = 'SYNCHRONIZING_WITH_STORAGE';
-export const FILES_LIST_RECEIVED = 'FILES_LIST_RECEIVED';
+export const LIST_RECEIVED = 'LIST_RECEIVED';
 export const UPLOADING_FILES = 'UPLOADING_FILES';
-export const DATA_RECEIVED = 'DATA_RECEIVED';
+export const FILES_UPLOADED = 'FILES_UPLOADED';
+export const DELETING_FILE = 'DELETING_FILE';
+export const FILE_DELETED = 'FILE_DELETED';
 
 export const synchronizeWithStorage = async (dispatch: Dispatch) => {
   dispatch({
@@ -21,7 +24,7 @@ export const synchronizeWithStorage = async (dispatch: Dispatch) => {
 
   dispatch({
     payload,
-    type: FILES_LIST_RECEIVED,
+    type: LIST_RECEIVED,
   });
 };
 
@@ -31,10 +34,23 @@ export const uploadFiles = (files: FileList, location?: string) => async (dispat
   });
 
   const payload = await uploadMediaFiles(files, location);
-
   const event = {
     payload,
-    type: DATA_RECEIVED,
+    type: FILES_UPLOADED,
+  };
+
+  dispatch(event);
+};
+
+export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
+  dispatch({
+    type: DELETING_FILE,
+  });
+
+  const payload = await deleteMediaFile(mf.id);
+  const event = {
+    payload,
+    type: FILE_DELETED,
   };
 
   dispatch(event);

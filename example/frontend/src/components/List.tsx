@@ -9,7 +9,10 @@ const createImg = (mf: MediaFile): JSX.Element => <img
 // TODO: open modal here
 ></img>;
 
-export const ListUI = (props: { files: MediaFile[] }) => {
+export const ListUI = (props: {
+  files: MediaFile[],
+  deleteFile: (mf: MediaFile) => void,
+}) => {
   if (typeof props.files === 'undefined' || props.files.length === 0) {
     return null;
   }
@@ -24,8 +27,9 @@ export const ListUI = (props: { files: MediaFile[] }) => {
     body.push(<tr key={`file-${i}`}>
       <td key={`name-${i}`}>{file.name}</td>
       <td key={`size-${i}`}>{file.size}</td>
-      <td key={`path-${i}`}>{file.path}</td>
+      {/* <td key={`path-${i}`}>{file.path}</td> */}
       <td key={`img-${i}`}>{createImg(file)}</td>
+      <td key={`delete-${i}`} onClick={() => { props.deleteFile(file); }}>delete</td>
     </tr>);
   });
 

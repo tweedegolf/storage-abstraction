@@ -1,42 +1,26 @@
-import React, { useState } from 'react';
-import { InputGroup, Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import React from 'react';
+import { InputGroup, Input } from 'reactstrap';
 
-const Form = (props) => {
-  const [enabled, setEnabled] = useState(true);
-  const [isOpen, openModal] = useState(true);
-  const [modalError, setError] = useState('aap en beer zijn in het bos!');
-
-  const handleOpen = () => {
-    openModal(!isOpen);
-  };
-
-  return (
+const Form = (props: {
+  enabled: boolean,
+  uploadFiles: (files: FileList) => void,
+}) => (
     <div id="form">
       <InputGroup>
         <Input
           name="file"
           type="file"
           multiple={true}
-          disabled={!enabled}
+          disabled={!props.enabled}
           onChange={async (e) => {
             if (e.target && e.target.files) {
               props.uploadFiles(e.target.files);
-              // const mediaFile = await props.uploadMediaFiles({ file: e.target.files[0], location });
+              e.target.value = null;
             }
           }}
         ></Input>
       </InputGroup>
-      <Modal isOpen={isOpen} toggle={handleOpen}>
-        <ModalHeader toggle={handleOpen}>Er ging iets verkeerd</ModalHeader>
-        <ModalBody>
-          {modalError}
-        </ModalBody>
-        <ModalFooter>
-          <Button color="primary" onClick={handleOpen}>sluiten</Button>
-        </ModalFooter>
-      </Modal>
     </div >
   );
-};
 
 export { Form };

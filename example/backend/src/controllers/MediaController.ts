@@ -120,48 +120,34 @@ export class MediaFileController {
   public async uploadFile(
     @MultipartFile('files', 10) tmpFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
-  ): Promise<ResResult<{ message: string, files: MediaFile[] }>> {
+  ): Promise<ResResult<{ files: MediaFile[] }>> {
     // console.log('TEMP FILES', tmpFiles);
     if (!tmpFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    // const promises = [];
-    // for (let i = 0; i < tmpFiles.length; i += 1) {
-    //   promises.push(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
-    // }
-    // let [error, result] = await to(Promise.all(promises));
-    // if (error !== null) {
-    //   throw new InternalServerError(error.message);
-    // }
 
-    const results: { name: string, path: string, size: number }[] = [];
-    const errors: string[] = [];
+    const promises = [];
     for (let i = 0; i < tmpFiles.length; i += 1) {
-      // promises.push(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
-      const [error, result] = await to(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
-      if (error === null) {
-        // console.log(result);
-        results.push({
-          name: result.origName,
-          path: result.path,
-          size: result.size,
-        });
-      } else {
-        errors.push(error.message);
-      }
+      promises.push(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
     }
-    if (errors.length === tmpFiles.length) {
-      throw new UnsupportedMediaType(errors.join(','));
+    let [error, result] = await to(Promise.all(promises));
+    if (error !== null) {
+      throw new InternalServerError(error.message);
     }
 
-    const [error, result] = await to(this.mediaFileRepository.create(results));
+    [error, result] = await to(this.mediaFileRepository.create(
+      result.map((m: FileMetaData) => ({
+        name: m.origName,
+        size: m.size,
+        path: m.path,
+      }))));
     if (error !== null) {
       throw new InternalServerError(error.message);
     }
 
     return {
       error: false,
-      data: { message: errors.join(','), files: result },
+      data: { files: result },
     };
   }
 
@@ -169,7 +155,6 @@ export class MediaFileController {
   @Returns(200, { description: 'File contents' })
   @Returns(404, { description: 'File not found' })
   public async getMediaDownload(
-    @Req() req: Request,
     @Res() res: Response,
     @PathParams('id') id: number,
   ): Promise<void> {
@@ -204,7 +189,7 @@ export class MediaFileController {
   @Returns(404, { description: 'File not found' })
   public async deleteFile(
     @Required @PathParams('id') id: number,
-  ): Promise<ResSuccess<boolean>> {
+  ): Promise<ResSuccess<{ id: number }>> {
     const file = await this.mediaFileRepository.findOne(id);
     if (!file) {
       throw new NotFound('File not found');
@@ -219,7 +204,7 @@ export class MediaFileController {
     await this.mediaFileRepository.remove([file]);
     return {
       error: null,
-      data: result,
+      data: { id },
     };
   }
 

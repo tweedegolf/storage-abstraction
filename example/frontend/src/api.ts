@@ -9,7 +9,7 @@ import {
 
 const baseUrl = '/api/v1';
 const baseConfig = () => ({
-  baseUrl,
+  baseURL: baseUrl,
   timeout: 10000,
 });
 
@@ -35,14 +35,16 @@ const put = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Pro
   parseResult<U>(url, await axios.put(url, data, { ...baseConfig(), ...config }))
 );
 
-const post = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Promise<U> => (
-  parseResult<U>(url, await axios.post(url, data, { ...baseConfig(), ...config }))
-);
+const post = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Promise<U> => {
+  return parseResult<U>(url, await axios.post(url, data, { ...baseConfig(), ...config }))
+};
 
 const doDelete = async <T>(
   url: string,
   config?: AxiosRequestConfig,
-): Promise<T> => parseResult<T>(url, await axios.delete(url, { ...baseConfig(), ...config }));
+): Promise<T> => {
+  return parseResult<T>(url, await axios.delete(url, { ...baseConfig(), ...config }));
+};
 
 export const uploadMediaFiles = (files: FileList, location?: string): Promise<MediaFile> => {
   const data = new FormData();
@@ -53,7 +55,7 @@ export const uploadMediaFiles = (files: FileList, location?: string): Promise<Me
   if (typeof location !== 'undefined') {
     data.append('location', location);
   }
-  return post(`${baseUrl}/media`, data, {
+  return post('/media', data, {
     headers: { 'content-type': 'multipart/form-data' },
     timeout: 10000,
   });
@@ -61,3 +63,4 @@ export const uploadMediaFiles = (files: FileList, location?: string): Promise<Me
 
 export const getMediaThumbnailUrl = (mf: MediaFile) => `${baseUrl}/media/thumbnail/png/100/${mf.id}/${mf.path}`;
 export const getMediaDownloadUrl = (mf: MediaFile) => `${baseUrl}/media/download/${mf.id}/${mf.path}`;
+export const deleteMediaFile = (id: number): Promise<MediaFile[]> => doDelete(`/media/${id}`);
