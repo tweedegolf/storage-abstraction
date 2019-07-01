@@ -50,8 +50,9 @@ export const uploadMediaFiles = (files: FileList, location?: string): Promise<Me
     const file = files[i];
     data.append('files', file);
   }
-  // console.log(location, typeof location === 'undefined');
-  data.append('location', location);
+  if (typeof location !== 'undefined') {
+    data.append('location', location);
+  }
   return post(`${baseUrl}/media`, data, {
     headers: { 'content-type': 'multipart/form-data' },
     timeout: 10000,

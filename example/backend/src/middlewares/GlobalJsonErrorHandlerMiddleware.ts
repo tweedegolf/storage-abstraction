@@ -22,7 +22,6 @@ class GlobalJsonErrorHandlerMiddleware implements IMiddlewareError {
     @Response() response: Express.Response,
   ): any {
     this.setHeaders(response, error, error.origin);
-    console.log('ERROR', error);
 
     const description = this.deconstructError(error);
 
@@ -37,8 +36,6 @@ class GlobalJsonErrorHandlerMiddleware implements IMiddlewareError {
         ...responseData,
         error: true,
       });
-
-    console.warn(description);
 
     if (description.status === 500) {
       Sentry.captureEvent({

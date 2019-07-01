@@ -76,13 +76,15 @@ export class MediaFileController {
     res.set('Content-Type', mime.getType(mediaFile.path));
     res.set('Content-Disposition', 'inline');
 
-    await new Promise(
-      (resolve, reject) => pipeline(
-        stream,
-        res,
-        err => (err ? reject(err) : resolve()),
-      ),
-    );
+    await new Promise((resolve) => {
+      return pipeline(stream, res, (err) => {
+        if (err) {
+          throw new InternalServerError(err.message);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   private async getThumb(res: Response, id: number, format: 'pjpeg' | 'png', width: number, filePath?: string) {
@@ -100,13 +102,15 @@ export class MediaFileController {
     res.set('Content-Type', contentType);
     res.set('Content-Disposition', 'inline');
 
-    await new Promise(
-      (resolve, reject) => pipeline(
-        stream,
-        res,
-        err => (err ? reject(err) : resolve()),
-      ),
-    );
+    await new Promise((resolve) => {
+      return pipeline(stream, res, (err) => {
+        if (err) {
+          throw new InternalServerError(err.message);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   @Post('/')
@@ -114,31 +118,50 @@ export class MediaFileController {
   @Returns(415, { description: 'Unsupported file type' })
   @Returns(500, { description: 'Internal server error' })
   public async uploadFile(
-    @MultipartFile('files', 10) tempFiles: Express.Multer.File[],
+    @MultipartFile('files', 10) tmpFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
-  ): Promise<ResResult<MediaFile[]>> {
-    console.log('TEMP FILES', tempFiles);
-    if (!tempFiles) {
+  ): Promise<ResResult<{ message: string, files: MediaFile[] }>> {
+    // console.log('TEMP FILES', tmpFiles);
+    if (!tmpFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    const promises = [];
-    for (let i = 0; i < tempFiles.length; i += 1) {
-      promises.push(this.mediaFileService.moveUploadedFile(tempFiles[i], location));
-    }
-    let [error, result] = await Promise.all(promises);
+    // const promises = [];
+    // for (let i = 0; i < tmpFiles.length; i += 1) {
+    //   promises.push(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
+    // }
+    // let [error, result] = await to(Promise.all(promises));
+    // if (error !== null) {
+    //   throw new InternalServerError(error.message);
+    // }
 
-    if (error !== null) {
-      throw new InternalServerError(error.message);
+    const results: { name: string, path: string, size: number }[] = [];
+    const errors: string[] = [];
+    for (let i = 0; i < tmpFiles.length; i += 1) {
+      // promises.push(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
+      const [error, result] = await to(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
+      if (error === null) {
+        // console.log(result);
+        results.push({
+          name: result.origName,
+          path: result.path,
+          size: result.size,
+        });
+      } else {
+        errors.push(error.message);
+      }
+    }
+    if (errors.length === tmpFiles.length) {
+      throw new UnsupportedMediaType(errors.join(','));
     }
 
-    [error, result] = await to(this.mediaFileRepository.create(result));
+    const [error, result] = await to(this.mediaFileRepository.create(results));
     if (error !== null) {
       throw new InternalServerError(error.message);
     }
 
     return {
       error: false,
-      data: result,
+      data: { message: errors.join(','), files: result },
     };
   }
 
