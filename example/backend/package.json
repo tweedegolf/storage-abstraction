@@ -57,7 +57,8 @@
   },
   "scripts": {
     "start": "nodemon --watch '**/*.ts' --ignore 'node_modules/**/*' --exec ts-node src/Server.ts",
-    "postinstall": "./copy.sh"
+    "postinstall": "./copy.sh",
+    "clear": "rm -f ./media/cache/* && rm -f ./media/upload/*"
   },
   "keywords": [],
   "author": "",

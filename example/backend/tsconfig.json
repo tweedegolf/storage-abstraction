@@ -15,7 +15,8 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "declaration": false,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "preserveSymlinks": true
   },
   "exclude": [
     "node_modules"

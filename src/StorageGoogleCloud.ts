@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { zip } from 'ramda';
-// import axios from 'axios';
+import to from 'await-to-js';
 import { Readable } from 'stream';
-import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
+import { Storage as GoogleCloudStorage, File } from '@google-cloud/storage';
 import { Storage } from './Storage';
 import { IStorage, ConfigGoogleCloud } from './types';
 
@@ -25,22 +25,15 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
-    const file = this.storage.bucket(this.bucketName).file(fileName);
-    const [exists] = await file.exists();
-    if (!exists) {
-      console.log('file not found');
-      throw new Error('file not found');
-    } else {
-      return file.createReadStream();
-    }
+    const file = await this.storage.bucket(this.bucketName).file(fileName);
+    return file.createReadStream();
   }
 
   async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
     const file = this.storage.bucket(this.bucketName).file(fileName);
     const [exists] = await file.exists();
     if (!exists) {
-      console.error(`${fileName} does not exist`);
-      return false;
+      throw new Error(`[Google Cloud] ${fileName} does not exist`);
     }
     const localFilename = path.join(downloadPath, fileName);
     return file.download({
@@ -48,8 +41,8 @@ export class StorageGoogleCloud extends Storage implements IStorage {
     })
       .then(() => true)
       .catch((err: Error) => {
-        console.log(err.message);
-        throw new Error(err.message);
+        // console.log(err.message);
+        throw new Error(`[Google Cloud] ${err.message}`);
       });
   }
 
@@ -76,8 +69,8 @@ export class StorageGoogleCloud extends Storage implements IStorage {
       if (e.message.indexOf('No such object') !== -1) {
         return true;
       }
-      console.log(e.message);
-      throw new Error(e.message);
+      // console.log(e.message);
+      throw new Error(`[Google Cloud] ${e.message}`);
     }
   }
 
@@ -101,7 +94,7 @@ export class StorageGoogleCloud extends Storage implements IStorage {
         });
       });
     } catch (e) {
-      console.log(e.message);
+      // console.log('STORE', e.message);
       throw e;
     }
   }
@@ -129,7 +122,7 @@ export class StorageGoogleCloud extends Storage implements IStorage {
       await this.storage.bucket(this.bucketName).deleteFiles({ force: true });
       return true;
     } catch (e) {
-      throw new Error(e.message);
+      throw new Error(`[Google Cloud] ${e.message}`);
     }
   }
 
@@ -152,8 +145,8 @@ export class StorageGoogleCloud extends Storage implements IStorage {
         return zip(names, sizes) as [string, number][];
       })
       .catch((err: Error) => {
-        console.log(err.message);
-        throw new Error(err.message);
+        // console.log(err.message);
+        throw new Error(`[Google Cloud] ${err.message}`);
       });
   }
 }
