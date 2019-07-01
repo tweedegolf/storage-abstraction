@@ -1,4 +1,4 @@
-import awaitToJs from 'await-to-js';
+import to from 'await-to-js';
 import {
   BodyParams,
   Controller,
@@ -12,7 +12,7 @@ import {
 } from '@tsed/common';
 import { MultipartFile } from '@tsed/multipartfiles';
 import { Returns, ReturnsArray } from '@tsed/swagger';
-import { NotFound, UnsupportedMediaType } from 'ts-httpexceptions';
+import { NotFound, UnsupportedMediaType, InternalServerError } from 'ts-httpexceptions';
 import { Request, Response } from 'express';
 import mime from 'mime';
 import { pipeline } from 'stream';
@@ -67,7 +67,7 @@ export class MediaFileController {
 
   private async download(res: Response, id: number, filePath?: string) {
     const mediaFile = await this.getMediaFile(id, filePath);
-    const [error, stream] = await awaitToJs(this.mediaFileService.getFileReadStream(mediaFile.path));
+    const [error, stream] = await to(this.mediaFileService.getFileReadStream(mediaFile.path));
 
     if (error !== null) {
       throw new NotFound('File not found in Storage');
@@ -112,43 +112,33 @@ export class MediaFileController {
   @Post('/')
   @Returns(200, { type: Array })
   @Returns(415, { description: 'Unsupported file type' })
+  @Returns(500, { description: 'Internal server error' })
   public async uploadFile(
     @MultipartFile('files', 10) tempFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
   ): Promise<ResResult<MediaFile[]>> {
+    console.log('TEMP FILES', tempFiles);
     if (!tempFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
-    // const promises = []
-    const results: { name: string, path: string, size: number }[] = [];
-    const errors: string[] = [];
+    const promises = [];
     for (let i = 0; i < tempFiles.length; i += 1) {
-      // promises.push(this.mediaFileService.moveUploadedFile(tempFiles[i], location));
-      const [error, result] = await awaitToJs(this.mediaFileService.moveUploadedFile(tempFiles[i], location));
-      if (error === null) {
-        // console.log(result);
-        results.push({
-          name: result.origName,
-          path: result.path,
-          size: result.size,
-        });
-      } else {
-        errors.push(error.message);
-      }
+      promises.push(this.mediaFileService.moveUploadedFile(tempFiles[i], location));
+    }
+    let [error, result] = await Promise.all(promises);
+
+    if (error !== null) {
+      throw new InternalServerError(error.message);
     }
 
-    if (errors.length > 0) {
-      return {
-        status: 415,
-        message: errors.join(','),
-        error: true,
-      } as ResError;
+    [error, result] = await to(this.mediaFileRepository.create(result));
+    if (error !== null) {
+      throw new InternalServerError(error.message);
     }
-    const files = await this.mediaFileRepository.create(results);
 
     return {
       error: false,
-      data: files,
+      data: result,
     };
   }
 
@@ -196,7 +186,7 @@ export class MediaFileController {
     if (!file) {
       throw new NotFound('File not found');
     }
-    const [error, result] = await awaitToJs(this.mediaFileService.unlinkMediaFile(file.path));
+    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(file.path));
     if (error) {
       return {
         error: error.message,
@@ -215,7 +205,7 @@ export class MediaFileController {
   public async deleteFile2(
     @Required @BodyParams('filePath') filePath: string,
   ): Promise<ResSuccess<boolean>> {
-    const [error, result] = await awaitToJs(this.mediaFileService.unlinkMediaFile(filePath));
+    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(filePath));
     if (error) {
       return {
         error: error.message,

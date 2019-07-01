@@ -31,7 +31,6 @@ export const uploadFiles = (files: FileList, location?: string) => async (dispat
   });
 
   const payload = await uploadMediaFiles(files, location);
-  console.log(payload);
 
   const event = {
     payload,

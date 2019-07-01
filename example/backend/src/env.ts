@@ -25,4 +25,4 @@ export const getMediaThumbnailCacheDir = (): string => getEnvOrDie('MEDIA_THUMBN
 export const getSentryDsn = (): string | undefined => process.env.SENTRY_DSN;
 export const getVersion = (): string => 'development';
 export const getEnvironment = (): string => 'development';
-
+export const isProduction = (): boolean => false;

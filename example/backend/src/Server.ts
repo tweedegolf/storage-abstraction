@@ -36,6 +36,7 @@ const rootDir = __dirname;
   },
   componentsScan: [
     `${rootDir}/services/**/**.ts`,
+    `${rootDir}/middlewares/**/**.ts`,
   ],
   typeorm: [{
     name: 'tg',
