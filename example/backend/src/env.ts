@@ -21,3 +21,8 @@ export const getAmazonS3SecretAccessKey = (): string => getEnvOrDie('STORAGE_AWS
 export const getMediaUploadDir = (): string => getEnvOrDie('MEDIA_UPLOAD_DIR');
 // thumbnailservice
 export const getMediaThumbnailCacheDir = (): string => getEnvOrDie('MEDIA_THUMBNAIL_CACHE_DIR');
+
+export const getSentryDsn = (): string | undefined => process.env.SENTRY_DSN;
+export const getVersion = (): string => 'development';
+export const getEnvironment = (): string => 'development';
+

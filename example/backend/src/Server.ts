@@ -1,4 +1,5 @@
 import { ServerLoader, ServerSettings, GlobalAcceptMimesMiddleware, Request } from '@tsed/common';
+import * as Sentry from '@sentry/node';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import compression from 'compression';
@@ -11,8 +12,18 @@ import '@tsed/ajv';
 import 'reflect-metadata';
 import { SUPPORTED_MIME_TYPES } from './controllers/MediaController';
 import { AjvErrorObject } from '@tsed/ajv/lib/interfaces/IAjvSettings';
-import { getMediaUploadDir } from './env';
+import { getMediaUploadDir, getSentryDsn, getVersion, getEnvironment } from './env';
 dotenv.config();
+
+const sentryDsn = getSentryDsn();
+
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    release: getVersion(),
+    environment: getEnvironment(),
+  });
+}
 
 const rootDir = __dirname;
 @ServerSettings({

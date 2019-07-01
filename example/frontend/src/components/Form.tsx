@@ -3,8 +3,8 @@ import { InputGroup, Input, Button, Modal, ModalHeader, ModalBody, ModalFooter }
 
 const Form = (props) => {
   const [enabled, setEnabled] = useState(true);
-  const [isOpen, openModal] = useState(false);
-  const [modalError, setError] = useState('');
+  const [isOpen, openModal] = useState(true);
+  const [modalError, setError] = useState('aap en beer zijn in het bos!');
 
   const handleOpen = () => {
     openModal(!isOpen);

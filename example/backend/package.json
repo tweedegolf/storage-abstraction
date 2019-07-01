@@ -41,6 +41,7 @@
     "uniquid": "^1.1.4"
   },
   "devDependencies": {
+    "@sentry/node": "^5.4.3",
     "@types/body-parser": "^1.17.0",
     "@types/compression": "0.0.36",
     "@types/cookie-parser": "^1.4.1",

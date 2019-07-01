@@ -116,7 +116,6 @@ export class MediaFileController {
     @MultipartFile('files', 10) tempFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
   ): Promise<ResResult<MediaFile[]>> {
-    console.log('TEMPFILE', tempFiles, location);
     if (!tempFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }

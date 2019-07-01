@@ -27,7 +27,7 @@ abstract class Storage implements IStorage {
     this.bucketName = slugify(config.bucketName);
   }
 
-  private async copy(origPath: string, args?: StoreFileArgs) {
+  private async copy(origPath: string, origName: string, args?: StoreFileArgs) {
     const {
       dir = null,
       name: newName = null,
@@ -35,14 +35,13 @@ abstract class Storage implements IStorage {
     } = args || {};
 
     try {
-      const origName = path.basename(origPath);
       const fileSize = (await fs.promises.stat(origPath)).size;
       let targetPath = '';
       let targetName = slugify(origName);
       if (newName !== null) {
         targetName = slugify(newName);
       }
-      if (dir !== null) {
+      if (dir !== null && typeof dir !== 'undefined') {
         targetPath = slugify(dir);
       }
       targetPath = path.join(targetPath, targetName);
@@ -70,7 +69,7 @@ abstract class Storage implements IStorage {
    * @param config.remove?: whether or not to remove the temp file after it has been stored
    */
   async addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.copy(file.path, args);
+    return this.copy(file.path, file.originalname, args);
   }
 
   /**
@@ -81,7 +80,7 @@ abstract class Storage implements IStorage {
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
   async addFileFromPath(origPath: string, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.copy(origPath, args);
+    return this.copy(origPath, path.basename(origPath), args);
   }
 
   // stubs (to be overridden by subclasses)
