@@ -77,12 +77,7 @@ export class MediaFileService implements OnInit {
       name: `${uniquid()}_${tempFile.originalname}`,
       remove: false,
     };
-    try {
-      const result: FileMetaData = await this.storage.addFileFromUpload(tempFile, args);
-      return result;
-    } catch (e) {
-      throw new Error(e.message);
-    }
+    return this.storage.addFileFromUpload(tempFile, args);
   }
 
   /**
@@ -94,38 +89,18 @@ export class MediaFileService implements OnInit {
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
   public async copyFile(filePath: string, args?: StoreFileArgs): Promise<FileMetaData> {
-    try {
-      const result = await this.storage.addFileFromPath(filePath, args);
-      return result;
-    } catch (e) {
-      throw new Error(e.message);
-    }
+    return this.storage.addFileFromPath(filePath, args);
   }
 
   public async getFileReadStream(filePath: string): Promise<Readable> {
-    try {
-      const stream = await this.storage.getFileAsReadable(filePath);
-      return stream;
-    } catch (e) {
-      throw e;
-    }
+    return this.storage.getFileAsReadable(filePath);
   }
 
   public async unlinkMediaFile(path: string): Promise<boolean> {
-    try {
-      await this.storage.removeFile(path);
-      return true;
-    } catch (e) {
-      throw e;
-    }
+    return this.storage.removeFile(path);
   }
 
-  public async getStoredFiles(): Promise<[string, number?][]> {
-    try {
-      const files = await this.storage.listFiles();
-      return files;
-    } catch (e) {
-      throw e;
-    }
+  public async getStoredFiles(): Promise<[string, number][]> {
+    return this.storage.listFiles();
   }
 }

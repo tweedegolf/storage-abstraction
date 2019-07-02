@@ -24,21 +24,38 @@ export class StorageGoogleCloud extends Storage implements IStorage {
     // console.log(config);
   }
 
+  // After uploading a file to Google Storage it may take a while before the file
+  // can be discovered and downloaded; this function adds a little delay
+  async getFile(fileName: string, retries: number = 5): Promise<File> {
+    const file = this.storage.bucket(this.bucketName).file(fileName);
+    const [exists] = await file.exists();
+    if (!exists && retries !== 0) {
+      const r = retries - 1;
+      await new Promise((res) => {
+        setTimeout(res, 250);
+      });
+      // console.log('RETRY', r, fileName);
+      return this.getFile(fileName, r);
+    }
+    if (!exists) {
+      throw new Error(`File ${fileName} could not be retreived from bucket ${this.bucketName}`);
+    }
+    return file;
+  }
+
   async getFileAsReadable(fileName: string): Promise<Readable> {
-    console.log('111');
     try {
-      const file = await this.storage.bucket(this.bucketName).file(fileName);
-      console.log('222', file);
+      const file = await this.getFile(fileName);
       return file.createReadStream();
     } catch (e) {
-      console.log('ERROR');
       throw e;
     }
   }
 
+  // not in use
   async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
     try {
-      const file = await this.storage.bucket(this.bucketName).file('fileName');
+      const file = await this.storage.bucket(this.bucketName).file(fileName);
       const localFilename = path.join(downloadPath, fileName);
       return file.download({
         destination: localFilename,
@@ -86,24 +103,18 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   protected async store(origPath: string, targetPath: string): Promise<boolean> {
     try {
       await this.createBucket();
-      const readStream = fs.createReadStream(origPath);
-      const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
-      return new Promise((resolve, reject) => {
-        readStream.on('end', () => {
-          resolve();
-        });
-        readStream.on('error', (e: Error) => {
-          reject(e);
-        });
-        readStream.pipe(writeStream);
-        writeStream.on('error', (e) => {
-          reject(e);
-        });
-      });
     } catch (e) {
-      // console.log('STORE', e.message);
       throw e;
     }
+    const readStream = fs.createReadStream(origPath);
+    const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
+
+    return new Promise((resolve, reject) => {
+      readStream.on('end', resolve)
+      readStream.on('error', reject);
+      readStream.pipe(writeStream);
+      writeStream.on('error', reject);
+    });
   }
 
   async createBucket(): Promise<boolean> {

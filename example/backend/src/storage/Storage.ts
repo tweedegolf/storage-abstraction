@@ -41,7 +41,7 @@ abstract class Storage implements IStorage {
       if (newName !== null) {
         targetName = slugify(newName);
       }
-      if (dir !== null && typeof dir !== 'undefined') {
+      if (dir !== null) {
         targetPath = slugify(dir);
       }
       targetPath = path.join(targetPath, targetName);
