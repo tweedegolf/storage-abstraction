@@ -32,16 +32,18 @@ const getFileAsReadable = (fileName: string) => {
       const writeStream = fs.createWriteStream(filePath);
       readStream.pipe(writeStream);
       writeStream.on('error', (e: Error) => {
-        console.log(e.message);
+        throw e;
       });
       writeStream.on('finish', () => {
         console.log('FINISHED');
       });
     })
-    .catch(e => { console.log(e); });
+    .catch((e) => {
+      console.log('JUST A NEAT ERROR', e);
+    });
 };
 // getFileAsReadable('sun-blanket.jpg');
-// getFileAsReadable('/generate_error/IMG_9643.jpg');
+getFileAsReadable('/generate_error/IMG_9643.jpg');
 
 const getFileAsReadable2 = async (fileName: string) => {
   const readStream = await s3.getFileAsReadable(fileName)

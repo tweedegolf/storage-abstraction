@@ -33,23 +33,20 @@ export class StorageLocal extends Storage implements IStorage {
         }
       });
     }
+    await fs.promises.copyFile(filePath, dest);
+    return true;
 
-    return new Promise<boolean>((resolve) => {
-      fs.copyFile(filePath, dest, (e: Error) => {
-        if (e) {
-          console.log('STORE LOCAL', e);
-          throw new Error(e.message);
-        } else {
-          resolve(true);
-        }
-      });
-    });
-
-    // return fs.promises.copyFile(filePath, dest)
-    //   .then(() => true)
-    //   .catch((e: Error) => {
-    //     throw new Error(e.message);
+    // return new Promise<boolean>((resolve) => {
+    //   fs.copyFile(filePath, dest, (e: Error) => {
+    //     if (e) {
+    //       console.log('STORE LOCAL', e);
+    //       throw new Error(e.message);
+    //     } else {
+    //       resolve(true);
+    //     }
     //   });
+    // });
+
   }
 
   async createBucket(): Promise<boolean> {
@@ -115,6 +112,7 @@ export class StorageLocal extends Storage implements IStorage {
     const p = path.join(this.storagePath, fileName);
     const [err] = await to(fs.promises.unlink(p));
     if (err !== null) {
+      // don't throw an error if the file has already been removed (or didn't exist at all)
       if (err.message.indexOf('no such file or directory') !== -1) {
         return true;
       }

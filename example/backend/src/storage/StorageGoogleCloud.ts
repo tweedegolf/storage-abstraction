@@ -56,21 +56,6 @@ export class StorageGoogleCloud extends Storage implements IStorage {
     return true;
   }
 
-  // async getFile(fileName: string) {
-  //   const file = this.storage.bucket(this.bucketName).file(fileName)
-  //   file.get().then(async (data) => {
-  //     const apiResponse: any = data[1];
-  //     const bin = axios.request({
-  //       url: apiResponse.selfLink,
-  //       headers: {
-  //         'x-goog-project-id': '',
-  //       }
-  //     })
-  //       .then(data => console.log(data))
-  //       .catch(e => console.error(e));
-  //   });
-  // }
-
   async removeFile(fileName: string): Promise<boolean> {
     try {
       await this.storage.bucket(this.bucketName).file(fileName).delete();
@@ -139,4 +124,19 @@ export class StorageGoogleCloud extends Storage implements IStorage {
     const sizes = await this.getMetaData(names);
     return zip(names, sizes) as [string, number][];
   }
+
+  // async getFile(fileName: string) {
+  //   const file = this.storage.bucket(this.bucketName).file(fileName)
+  //   file.get().then(async (data) => {
+  //     const apiResponse: any = data[1];
+  //     const bin = axios.request({
+  //       url: apiResponse.selfLink,
+  //       headers: {
+  //         'x-goog-project-id': '',
+  //       }
+  //     })
+  //       .then(data => console.log(data))
+  //       .catch(e => console.error(e));
+  //   });
+  // }  
 }

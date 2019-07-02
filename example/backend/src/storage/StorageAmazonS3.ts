@@ -29,6 +29,9 @@ export class StorageAmazonS3 extends Storage implements IStorage {
       Bucket: this.bucketName,
       Key: fileName,
     };
+    // check if exists
+    await this.storage.getObject(params).promise()
+    // then return stream
     return this.storage.getObject(params).createReadStream();
   }
 
@@ -37,7 +40,7 @@ export class StorageAmazonS3 extends Storage implements IStorage {
       Bucket: this.bucketName,
       Key: fileName,
     };
-    await this.storage.deleteObject(params).promise()
+    await this.storage.deleteObject(params).promise();
     return true;
   }
 
@@ -47,7 +50,7 @@ export class StorageAmazonS3 extends Storage implements IStorage {
     if (this.bucketCreated) {
       return true;
     }
-    await this.storage.createBucket({ Bucket: this.bucketName }).promise()
+    await this.storage.createBucket({ Bucket: this.bucketName }).promise();
     return true;
   }
 
@@ -72,7 +75,7 @@ export class StorageAmazonS3 extends Storage implements IStorage {
     await this.createBucket();
     const readStream = fs.createReadStream(filePath);
     const params = {
-      Bucket: 'this.bucketName',
+      Bucket: this.bucketName,
       Key: targetFileName,
       Body: readStream,
     };

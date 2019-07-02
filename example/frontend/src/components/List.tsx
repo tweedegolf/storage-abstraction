@@ -1,5 +1,5 @@
 import React, { JSXElementConstructor } from 'react';
-import { Table } from 'reactstrap';
+import { Table, Button, Spinner, Media } from 'reactstrap';
 import { MediaFile } from '../../../backend/src/entities/MediaFile';
 import { getMediaDownloadUrl, getMediaThumbnailUrl } from '../api';
 
@@ -15,11 +15,16 @@ const sortDateUpdated = (mfA: MediaFile, mfB: MediaFile): number => {
   return 0;
 }
 
-const createImg = (mf: MediaFile): JSX.Element => <img
-  src={getMediaThumbnailUrl(mf)}
+// const createImg = (mf: MediaFile): JSX.Element => <img
+//   src={getMediaThumbnailUrl(mf)}
+//   onClick={() => { window.open(getMediaDownloadUrl(mf)); }}
+// // TODO: open modal here
+// ></img>;
+
+const createImg = (mf: MediaFile): JSX.Element => <Media
+  object src={getMediaThumbnailUrl(mf)}
   onClick={() => { window.open(getMediaDownloadUrl(mf)); }}
-// TODO: open modal here
-></img>;
+/>;
 
 export const ListUI = (props: {
   files: MediaFile[],
@@ -42,7 +47,7 @@ export const ListUI = (props: {
       <td key={`${file.name}-size-${i}`}>{file.size}</td>
       {/* <td key={`path-${i}`}>{file.path}</td> */}
       <td key={`${file.name}-img-${i}`}>{createImg(file)}</td>
-      <td key={`${file.name}-delete-${i}`} onClick={() => { props.deleteFile(file); }}>delete</td>
+      <td key={`${file.name}-delete-${i}`}><Button outline color="danger" onClick={() => { props.deleteFile(file); }}>delete</Button></td>
     </tr>);
   });
 

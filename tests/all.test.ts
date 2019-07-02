@@ -74,13 +74,13 @@ describe(`testing ${type} storage`, () => {
     await expectAsync(storage.createBucket()).toBeResolvedTo(true);
   });
 
-  if (type === Storage.TYPE_AMAZON_S3) {
-    it('wait a bit', async () => {
-      await new Promise((resolve) => {
-        setTimeout(resolve, 1000);
-      });
-    });
-  }
+  // if (type === Storage.TYPE_AMAZON_S3) {
+  //   it('wait a bit', async () => {
+  //     await new Promise((resolve) => {
+  //       setTimeout(resolve, 1000);
+  //     });
+  //   });
+  // }
 
   it('clear bucket', async () => {
     await expectAsync(storage.clearBucket()).toBeResolvedTo(true);
@@ -118,7 +118,7 @@ describe(`testing ${type} storage`, () => {
   if (type !== Storage.TYPE_LOCAL) {
     it('wait a bit', async () => {
       await new Promise((resolve) => {
-        setTimeout(resolve, 3000);
+        setTimeout(resolve, 5000);
       });
     });
   }
