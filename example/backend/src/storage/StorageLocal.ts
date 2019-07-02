@@ -62,28 +62,20 @@ export class StorageLocal extends Storage implements IStorage {
       .then(() => {
         this.bucketCreated = true;
         return true;
-      })
-      .catch((e: Error) => {
-        console.log(e.message);
-        throw new Error(e.message);
       });
   }
 
   async clearBucket(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      glob(`${this.storagePath}/**/*`, {}, (err, files) => {
+      glob(`${this.storagePath}/**/*`, {}, async (err, files) => {
         if (err !== null) {
           reject(err);
         } else {
           const promises = files.map((f) => {
             return fs.promises.unlink(f);
           });
-          try {
-            Promise.all(promises);
-            resolve(true);
-          } catch (e) {
-            throw e;
-          }
+          await Promise.all(promises);
+          resolve(true);
         }
       });
     });
@@ -102,29 +94,21 @@ export class StorageLocal extends Storage implements IStorage {
   }
 
   async listFiles(): Promise<[string, number][]> {
-    try {
-      const files = await this.globFiles(this.storagePath);
-      const result: [string, number][] = [];
-      for (let i = 0; i < files.length; i += 1) {
-        const f = files[i];
-        const stat = await fs.promises.stat(f);
-        // result.push([path.basename(f), stat.size])
-        result.push([f.replace(`${this.storagePath}/`, ''), stat.size]);
-      }
-      return result;
-    } catch (e) {
-      throw new Error(e.message);
+    const files = await this.globFiles(this.storagePath);
+    const result: [string, number][] = [];
+    for (let i = 0; i < files.length; i += 1) {
+      const f = files[i];
+      const stat = await fs.promises.stat(f);
+      // result.push([path.basename(f), stat.size])
+      result.push([f.replace(`${this.storagePath}/`, ''), stat.size]);
     }
+    return result;
   }
 
   async getFileAsReadable(name: string): Promise<Readable> {
     const p = path.join(this.storagePath, name);
-    try {
-      await fs.promises.stat(p);
-      return fs.createReadStream(p);
-    } catch (e) {
-      throw new Error(e.message);
-    }
+    await fs.promises.stat(p);
+    return fs.createReadStream(p);
   }
 
   async removeFile(fileName: string): Promise<boolean> {
@@ -134,7 +118,6 @@ export class StorageLocal extends Storage implements IStorage {
       if (err.message.indexOf('no such file or directory') !== -1) {
         return true;
       }
-      console.log(err);
       throw new Error(err.message);
     } else {
       return true;

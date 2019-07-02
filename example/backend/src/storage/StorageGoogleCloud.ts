@@ -44,30 +44,16 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
-    try {
-      const file = await this.getFile(fileName);
-      return file.createReadStream();
-    } catch (e) {
-      throw e;
-    }
+    const file = await this.getFile(fileName);
+    return file.createReadStream();
   }
 
   // not in use
   async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
-    try {
-      const file = await this.storage.bucket(this.bucketName).file(fileName);
-      const localFilename = path.join(downloadPath, fileName);
-      return file.download({
-        destination: localFilename,
-      })
-        .then(() => true)
-        .catch((err: Error) => {
-          // console.log(err.message);
-          throw err;
-        });
-    } catch (e) {
-      throw e;
-    }
+    const file = await this.storage.bucket(this.bucketName).file(fileName);
+    const localFilename = path.join(downloadPath, fileName);
+    await file.download({ destination: localFilename });
+    return true;
   }
 
   // async getFile(fileName: string) {
@@ -101,16 +87,12 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   // util members
 
   protected async store(origPath: string, targetPath: string): Promise<boolean> {
-    try {
-      await this.createBucket();
-    } catch (e) {
-      throw e;
-    }
+    await this.createBucket();
     const readStream = fs.createReadStream(origPath);
     const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
 
     return new Promise((resolve, reject) => {
-      readStream.on('end', resolve)
+      readStream.on('end', resolve);
       readStream.on('error', reject);
       readStream.pipe(writeStream);
       writeStream.on('error', reject);
@@ -136,12 +118,8 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   }
 
   async clearBucket(): Promise<boolean> {
-    try {
-      await this.storage.bucket(this.bucketName).deleteFiles({ force: true });
-      return true;
-    } catch (e) {
-      throw new Error(`[Google Cloud] ${e.message}`);
-    }
+    await this.storage.bucket(this.bucketName).deleteFiles({ force: true });
+    return true;
   }
 
   private async getMetaData(files: string[]) {
@@ -156,15 +134,9 @@ export class StorageGoogleCloud extends Storage implements IStorage {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    return this.storage.bucket(this.bucketName).getFiles()
-      .then(async (data) => {
-        const names = data[0].map(f => f.name);
-        const sizes = await this.getMetaData(names);
-        return zip(names, sizes) as [string, number][];
-      })
-      .catch((err: Error) => {
-        // console.log(err.message);
-        throw new Error(`[Google Cloud] ${err.message}`);
-      });
+    const data = await this.storage.bucket(this.bucketName).getFiles();
+    const names = data[0].map(f => f.name);
+    const sizes = await this.getMetaData(names);
+    return zip(names, sizes) as [string, number][];
   }
 }
