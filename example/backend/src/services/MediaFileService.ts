@@ -8,10 +8,7 @@
 // } from 'storage-abstraction';
 
 import { Storage } from '../storage/Storage';
-import { StorageGoogleCloud } from '../storage/StorageGoogleCloud';
-import { StorageAmazonS3 } from '../storage/StorageAmazonS3';
-import { StorageLocal } from '../storage/StorageLocal';
-import { StoreFileArgs, FileMetaData } from '../storage/types';
+import { StoreFileArgs, FileMetaData, StorageConfig } from '../storage/types';
 
 import uniquid from 'uniquid';
 import { Service, OnInit } from '@tsed/di';
@@ -32,27 +29,26 @@ export class MediaFileService implements OnInit {
 
   constructor() {
     const type = getStorageType();
+    let config: StorageConfig;
     if (type === Storage.TYPE_LOCAL) {
-      const configLocal = {
+      config = {
         bucketName: getStorageBucketName(),
         directory: getLocalStorageDir(),
       };
-      this.storage = new StorageLocal(configLocal);
     } else if (type === Storage.TYPE_GOOGLE_CLOUD) {
-      const configGoogle = {
+      config = {
         bucketName: getStorageBucketName(),
         projectId: getGoogleStorageProjectId(),
         keyFilename: getGoogleStorageKeyFile(),
       };
-      this.storage = new StorageGoogleCloud(configGoogle);
     } else if (type === Storage.TYPE_AMAZON_S3) {
-      const configS3 = {
+      config = {
         bucketName: getStorageBucketName(),
         accessKeyId: getAmazonS3AccessKeyId(),
         secretAccessKey: getAmazonS3SecretAccessKey(),
       };
-      this.storage = new StorageAmazonS3(configS3);
     }
+    this.setStorage(config);
     if (typeof this.storage === 'undefined') {
       throw new Error(`Storage is undefined: ${type}`);
     }
@@ -65,6 +61,10 @@ export class MediaFileService implements OnInit {
       throw e;
     }
     return true;
+  }
+
+  public setStorage(config: StorageConfig): void {
+    this.storage = new Storage(config);
   }
 
   /**

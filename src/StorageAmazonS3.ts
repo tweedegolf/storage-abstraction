@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { Readable } from 'stream';
 import S3 from 'aws-sdk/clients/s3';
-import { Storage } from './Storage';
+import { AbstractStorage } from './AbstractStorage';
 import { ConfigAmazonS3, IStorage } from './types';
 
-export class StorageAmazonS3 extends Storage implements IStorage {
+export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   private storage: S3;
   protected bucketName: string;
 
@@ -22,6 +22,7 @@ export class StorageAmazonS3 extends Storage implements IStorage {
       secretAccessKey,
       apiVersion: '2006-03-01',
     });
+    // console.log(config, this.bucketName);
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
@@ -46,7 +47,8 @@ export class StorageAmazonS3 extends Storage implements IStorage {
 
   // util members
 
-  async createBucket(): Promise<boolean> {
+  async createBucket(name?: string): Promise<boolean> {
+    super.createBucket(name);
     if (this.bucketCreated) {
       return true;
     }

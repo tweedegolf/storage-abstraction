@@ -4,12 +4,9 @@ import path from 'path';
 import rimraf from 'rimraf';
 import dotenv from 'dotenv';
 import { Storage } from '../src/Storage';
-import { StorageLocal } from '../src/StorageLocal';
-import { StorageGoogleCloud } from '../src/StorageGoogleCloud';
-import { StorageAmazonS3 } from '../src/StorageAmazonS3';
 import to from 'await-to-js';
 import 'jasmine';
-import { IStorage } from '../src/types';
+import { IStorage, StorageConfig } from '../src/types';
 dotenv.config();
 
 const type = process.env['TYPE'];
@@ -20,30 +17,30 @@ if (!type) {
 // const type = Storage.TYPE_GOOGLE_CLOUD;
 // const type = Storage.TYPE_AMAZON_S3;
 let storage: IStorage;
+let config: StorageConfig;
 const localDir = path.join(os.homedir(), 'storage-abstraction');
+const bucketName = process.env.STORAGE_BUCKETNAME;
 
 if (type === Storage.TYPE_LOCAL) {
-  const configLocal = {
-    bucketName: process.env.STORAGE_BUCKETNAME,
+  config = {
+    bucketName,
     // directory: process.env.STORAGE_LOCAL_DIRECTORY,
     directory: localDir,
   };
-  storage = new StorageLocal(configLocal);
 } else if (type === Storage.TYPE_GOOGLE_CLOUD) {
-  const configGoogle = {
-    bucketName: process.env.STORAGE_BUCKETNAME,
+  config = {
+    bucketName,
     projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
     keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
   };
-  storage = new StorageGoogleCloud(configGoogle);
 } else if (type === Storage.TYPE_AMAZON_S3) {
-  const configS3 = {
-    bucketName: process.env.STORAGE_BUCKETNAME,
+  config = {
+    bucketName,
     accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
   };
-  storage = new StorageAmazonS3(configS3);
 }
+storage = new Storage(config);
 
 describe(`testing ${type} storage`, () => {
 
@@ -124,7 +121,7 @@ describe(`testing ${type} storage`, () => {
   }
 
   it('list files 1', async () => {
-    const expectedResult: [string, number?][] = [['image1.jpg', 100631], ['subdir/renamed.jpg', 100631]];
+    const expectedResult: [string, number][] = [['image1.jpg', 100631], ['subdir/renamed.jpg', 100631]];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 
@@ -139,7 +136,7 @@ describe(`testing ${type} storage`, () => {
   });
 
   it('list files 2', async () => {
-    const expectedResult: [string, number?][] = [['image1.jpg', 100631]];
+    const expectedResult: [string, number][] = [['image1.jpg', 100631]];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 

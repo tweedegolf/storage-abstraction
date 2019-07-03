@@ -4,10 +4,10 @@ import { zip } from 'ramda';
 import to from 'await-to-js';
 import { Readable } from 'stream';
 import { Storage as GoogleCloudStorage, File } from '@google-cloud/storage';
-import { Storage } from './Storage';
+import { AbstractStorage } from './AbstractStorage';
 import { IStorage, ConfigGoogleCloud } from './types';
 
-export class StorageGoogleCloud extends Storage implements IStorage {
+export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   private storage: GoogleCloudStorage;
   protected bucketName: string;
 
@@ -17,11 +17,15 @@ export class StorageGoogleCloud extends Storage implements IStorage {
       projectId,
       keyFilename,
     } = config;
+    if (!projectId || !keyFilename) {
+      throw new Error('provide both an accessKeyId and a secretAccessKey!');
+    }
+
     this.storage = new GoogleCloudStorage({
       projectId,
       keyFilename,
     });
-    // console.log(config);
+    // console.log(config, this.bucketName);
   }
 
   // After uploading a file to Google Storage it may take a while before the file
@@ -84,7 +88,8 @@ export class StorageGoogleCloud extends Storage implements IStorage {
     });
   }
 
-  async createBucket(): Promise<boolean> {
+  async createBucket(name?: string): Promise<boolean> {
+    super.createBucket(name);
     if (this.bucketCreated) {
       return true;
     }

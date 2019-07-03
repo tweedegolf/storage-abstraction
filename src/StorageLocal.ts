@@ -4,9 +4,9 @@ import glob from 'glob';
 import to from 'await-to-js';
 import { Readable } from 'stream';
 import { IStorage, ConfigLocal } from './types';
-import { Storage } from './Storage';
+import { AbstractStorage } from './AbstractStorage';
 
-export class StorageLocal extends Storage implements IStorage {
+export class StorageLocal extends AbstractStorage implements IStorage {
   protected bucketName: string;
   private directory: string;
   private storagePath: string;
@@ -16,8 +16,12 @@ export class StorageLocal extends Storage implements IStorage {
     const {
       directory,
     } = config;
+    if (!directory) {
+      throw new Error('provide a directory!');
+    }
     this.directory = directory;
     this.storagePath = path.join(this.directory, this.bucketName);
+    // console.log(config, this.bucketName);
   }
 
   protected async store(filePath: string, targetFileName: string): Promise<boolean> {
@@ -49,7 +53,8 @@ export class StorageLocal extends Storage implements IStorage {
 
   }
 
-  async createBucket(): Promise<boolean> {
+  async createBucket(name?: string): Promise<boolean> {
+    super.createBucket(name);
     if (this.bucketCreated) {
       return true;
     }
