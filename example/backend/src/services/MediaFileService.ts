@@ -7,8 +7,8 @@
 //   FileMetaData,
 // } from 'storage-abstraction';
 
-import { Storage } from '../storage/Storage';
-import { StoreFileArgs, FileMetaData, StorageConfig } from '../storage/types';
+import { Storage } from '../storage-dev-tmp/Storage';
+import { StoreFileArgs, FileMetaData, StorageConfig } from '../storage-dev-tmp/types';
 
 import uniquid from 'uniquid';
 import { Service, OnInit } from '@tsed/di';

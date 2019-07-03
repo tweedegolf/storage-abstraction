@@ -1,5 +1,5 @@
 #!/bin/sh
 
-TARGET="./example/storage-dev"
+TARGET="./example/backend/src/storage-dev-tmp/"
 mkdir -p $TARGET
-cp -r "./src/" $TARGET
+cp -v ./src/*.ts $TARGET
