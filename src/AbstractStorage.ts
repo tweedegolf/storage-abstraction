@@ -28,7 +28,7 @@ export abstract class AbstractStorage implements IStorage {
 
   private async copy(origPath: string, origName: string, args?: StoreFileArgs) {
     const {
-      dir = null,
+      path: dir = null,
       name: newName = null,
       remove = false,
     } = args || {};
@@ -37,13 +37,14 @@ export abstract class AbstractStorage implements IStorage {
       const fileSize = (await fs.promises.stat(origPath)).size;
       let targetPath = '';
       let targetName = slugify(origName);
+      let paths: string[] = [];
       if (newName !== null) {
         targetName = slugify(newName);
       }
       if (dir !== null) {
-        targetPath = slugify(dir);
+        paths = dir.split('/').map(d => slugify(d));
       }
-      targetPath = path.join(targetPath, targetName);
+      targetPath = path.join(...paths, targetName);
       // console.log(targetPath, remove);
       await this.store(origPath, targetPath);
       if (remove) {

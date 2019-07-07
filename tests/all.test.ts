@@ -102,7 +102,7 @@ describe(`testing ${type} storage`, () => {
     // }));
 
     await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', {
-      dir: 'subdir',
+      path: 'subdir',
       name: 'renamed.jpg',
     })).toBeResolvedTo({
       size: 100631,

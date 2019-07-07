@@ -37,14 +37,15 @@ export abstract class AbstractStorage implements IStorage {
       const fileSize = (await fs.promises.stat(origPath)).size;
       let targetPath = '';
       let targetName = slugify(origName);
+      let paths: string[] = [];
       if (newName !== null) {
         targetName = slugify(newName);
       }
       if (dir !== null) {
-        targetPath = slugify(dir);
+        paths = dir.split('/').map(d => slugify(d));
       }
-      targetPath = path.join(targetPath, targetName);
-      // console.log(targetPath, remove);
+      targetPath = path.join(...paths, targetName);
+      console.log(targetPath, remove);
       await this.store(origPath, targetPath);
       if (remove) {
         await fs.promises.unlink(origPath);

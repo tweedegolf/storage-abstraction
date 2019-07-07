@@ -1,6 +1,6 @@
 # Storage Abstraction
 
-Provides an API for storing and retreiving files from a storage; this storage can be local or in the cloud. Cloud storage: currently Google Cloud and Amazon S3 and complient cloud services are supported.
+Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud. Cloud storage: currently Google Cloud and Amazon S3 and complient cloud services are supported.
 
 ## Instantiate a storage
 
@@ -59,24 +59,32 @@ Removes all objects in the bucket. If you omit the name parameter, the bucket wi
 addFileFromPath(filePath: string, args?: StoreFileArgs): Promise<FileMetaData>;
 ```
 Copies a file from a local path to the storage. The `args` object contains the following optional keys:
-- `dir`: the directory to save this file into, directory will be created if it doesn't exist
+- `path`: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
 - `newName`: if you want to rename the file this is the new name of the file in the storage
-- `remove`: whether or not to remove the file after it has been copied to the storage
+- `remove`: whether or not to remove the file after it has been copied to the storage, defaults to `false`
+
+```typescript
+storage.addFileFromPath('./tests/data/image1.jpg', {
+  path: 'subdir/sub-subdir/another-dir',
+  name: 'renamed.jpg',
+  remove: false,
+})
+```
 
 ### addFileFromUpload
 ```typescript
 addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData>;
 ```
 Copies a file from the temporary Multer storage to the storage. The `args` object contains the following optional keys:
-- `dir`: the directory to save this file into, directory will be created if it doesn't exist
+- `path`: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
 - `newName`: if you want to rename the file this is the new name of the file in the storage
-- `remove`: whether or not to remove the file after it has been moved to the storage
+- `remove`: whether or not to remove the file after it has been moved to the storage, defaults to `false`
 
 ### getFileAsReadable
 ```typescript
 getFileAsReadable(name: string): Promise<Readable>;
 ```
-Return a file a readable stream
+Returns a file as a readable stream
 
 ### removeFile
 ```typescript
@@ -88,4 +96,4 @@ Remove a file (object) from the bucket
 ```typescript
 listFiles(): Promise<[string, number][]>;
 ```
-Returns a list of all files in the bucket; for each file a tuple is returned containing the path and the size of the file.
+Returns a list of all files (objects) in the bucket; for each file a tuple is returned containing the path and the size of the file.

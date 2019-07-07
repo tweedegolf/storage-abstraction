@@ -16,7 +16,7 @@ export interface IStorage {
   /**
    * @param filePath: path to the file to be copied
    * @param config?: setting for processing this file by the permanent storage
-   * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param config.path?: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
@@ -25,7 +25,7 @@ export interface IStorage {
   /**
    * @param tempFile: temporary Multer file
    * @param config?: setting for processing this file by the permanent storage
-   * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param config.path?: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the temp file after it has been stored
    */
@@ -48,7 +48,7 @@ export interface IStorage {
 }
 
 export type StoreFileArgs = {
-  dir?: string,
+  path?: string,
   name?: string,
   remove?: boolean,
 };
