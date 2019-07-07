@@ -1,62 +1,91 @@
-# Energy Label app
+# Storage Abstraction
 
-This is a simple SPA where you can retrieve address details such as street, city and area, and the energy-label of an address by entering a postal code, a house-number and optionally a house-number addition. It uses 2 different rest apis:
+Provides an API for storing and retreiving files from a storage; this storage can be local or in the cloud. Cloud storage: currently Google Cloud and Amazon S3 and complient cloud services are supported.
 
-- address data: <https://www.postcodeapi.nu/docs/>
-- energy label data: <https://www.energielabel.nl/>
+## Instantiate a storage
 
-## Install and run the SPA
-
-The project runs both the backend and the frontend in a Docker container:
-
-```
-docker-compose run --no-deps frontend npm ci
-docker-compose run --no-deps backend npm ci
-docker-compose up
-```
-Add `energylabel.test 127.0.0.1` to your `/etc/hosts` file and you can access the SPA on <https://energylabel.test/>.
-The swagger documentation can be found at: <https://energylabel.test/docs>.
-
-## Objective
-
-This project's aim is to show you how you can use the same backend TypeORM entities in the frontend without having to load the complete TypeORM library. Note that TypeORM doesn't run in the frontend anyway because of its Node dependencies such as `fs` and database controllers.
-
-The solution is actually quite simple: the TypeORM library contains shims that you can use on the frontend. These shims contain all decorator functions that are available in TypeORM, only they don't actually do anything, they are just stub functions. The models in this app also use decorators from Ts.ED so I created a shim for all used Ts.ED decorators as well.
-
-In your package.json file you add the path to these shims to the browser key; this instructs Parcel to use the shim files instead of looking for the modules in the `node_modules` folder when it encounters an import from TypeORM or Ts.ED, e.g. `import { Entity } from 'typeorm'`:
-
-```
-  "browser": {
-    "typeorm": "./shim/typeorm.js",
-    "@tsed/common": "./shim/tsed.js"
-  },
+```javascript
+const s = new Storage(config);
 ```
 
-## Compiling using frontend entities
+Each type of storage requires a different config object, the only key that these config objects have in common is the name of the bucket. For local storage, the bucketname simply is the name of a directory.
 
-In the file [store.ts](./frontend/src/store.ts) you can see that for the initial state a [Label](./backend/src/entities/Label.ts) entity and a [Address](./backend/src/entities/Address.ts) entity get instantiated. At the top of the file the entity files are imported from the backend folder, so the backend and the frontend will always use the same entities.
+### Local storage
+```typescript
+const config = {
+  bucketName: 'images',
+  directory: '/home/user/domains/my-site',
+}
+const s = new Storage(config); 
+```
+Files will be stored in `/home/user/domains/my-site/images`.
 
-If I were to compile this **without** the additional browser key in package.json as described above, the frontend will be compiled but with a lot of warnings. It doesn't run in a browser because of the missing dependencies though.
+### Google Cloud
+```typescript
+const config = {
+  bucketName: 'images',
+  projectId: 'id-of-your-project',
+  keyFilename: 'path/to/json/key-file',
+}
+const s = new Storage(config); 
+```
 
-Here is (a part of) the console output:
+### Amazon S3
+```typescript
+const config = {
+  bucketName: 'images',
+  accessKeyId: 'your-access-key-id',
+  secretAccessKey: 'your-amazonaccess-key-secret',
+}
+const s = new Storage(config); 
+```
 
-![frontend entities without shim](./readme-images/build-typeorm.png)
+## API methods
 
-Note that Parcel complains about missing `fs` and the filesize of the resulting bundle: 2.82 MB
+### createBucket
+```typescript
+createBucket(name?: string): Promise<boolean>;
+```
+If you omit the name parameter, a new bucket with be created using the name provided in the config object. If the bucket already exists `true` will be returned.
 
-Now this is console output when we do use the shims:
+### clearBucket
+```typescript
+clearBucket(name?: string): Promise<boolean>;
+```
+Removes all objects in the bucket. If you omit the name parameter, the bucket with the name that was provided with the config object will be cleared.
 
-![frontend entities using shim](./readme-images/build-typeorm-shim.png)
+### addFileFromPath
+```typescript
+addFileFromPath(filePath: string, args?: StoreFileArgs): Promise<FileMetaData>;
+```
+Copies a file from a local path to the storage. The `args` object contains the following optional keys:
+- `dir`: the directory to save this file into, directory will be created if it doesn't exist
+- `newName`: if you want to rename the file this is the new name of the file in the storage
+- `remove`: whether or not to remove the file after it has been copied to the storage
 
-The filesize is only a little over 411 KB! So no TypeORM and Ts.ED modules are included. And this version actually runs in a browser because when for instance the `@Entity` decorator gets called upon instantiation of an entity, it just runs an empty function in the shim. Just for fun I have added a console.log statement that prints out the type of entity that is being instantiated; check your browser log.
+### addFileFromUpload
+```typescript
+addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData>;
+```
+Copies a file from the temporary Multer storage to the storage. The `args` object contains the following optional keys:
+- `dir`: the directory to save this file into, directory will be created if it doesn't exist
+- `newName`: if you want to rename the file this is the new name of the file in the storage
+- `remove`: whether or not to remove the file after it has been moved to the storage
 
-## Conclusion
+### getFileAsReadable
+```typescript
+getFileAsReadable(name: string): Promise<Readable>;
+```
+Return a file a readable stream
 
-Using the same TypeORM entities both in the backend and the frontend is very easy. The solution provided by TypeORM also serves as an example to 'outsmart' other backend decorator functions on the frontend, like controller decorators from Ts.ED.
+### removeFile
+```typescript
+removeFile(name: string): Promise<boolean>;
+```
+Remove a file (object) from the bucket
 
-## More reading
-
-- <https://github.com/typeorm/typeorm/issues/2841>
-- <https://github.com/typeorm/typeorm/issues/62>
-
-
+### listFiles
+```typescript
+listFiles(): Promise<[string, number][]>;
+```
+Returns a list of all files in the bucket; for each file a tuple is returned containing the path and the size of the file.

@@ -9,7 +9,7 @@ export interface IStorage {
 
   /**
    * @param name?: deletes all file in the bucket. If no name is provided the default bucket of the
-   * current storage will be emtied.
+   * current storage will be emptied.
    */
   clearBucket(name?: string): Promise<boolean>;
 

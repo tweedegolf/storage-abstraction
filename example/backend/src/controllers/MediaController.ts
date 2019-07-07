@@ -176,8 +176,7 @@ export class MediaFileController {
 
   @Get('/list')
   @Returns(200, { type: Array })
-  public async listFiles(
-  ): Promise<ResSuccess<MediaFile[]>> {
+  public async listFiles(): Promise<ResSuccess<MediaFile[]>> {
     const files = await this.mediaFileRepository.find();
     return {
       error: null,

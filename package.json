@@ -1,7 +1,7 @@
 {
   "name": "storage-abstraction",
   "version": "1.0.0",
-  "description": "",
+  "description": "Provides an API for storing and retreiving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -51,7 +51,11 @@
     "tsc": "node_modules/.bin/tsc",
     "tsc:cp": "npm run tsc && npm run copy"
   },
-  "keywords": [],
+  "keywords": [
+    "storage",
+    "google cloud",
+    "amazon s3"
+  ],
   "author": "daniel@tweedegolf.nl",
   "license": "MIT"
 }
