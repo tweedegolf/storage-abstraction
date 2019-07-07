@@ -1,3 +1,16 @@
-.env
+.vscode
+dist/
+example/
 node_modules/
+test/test-await.ts
+test/test-gc.ts
+test/test-lc.ts
+test/test-s3.ts
+.env
+.env-default
+.gitignore
+copy.sh
 da2719acad70.json
+package-lock.json
+tsconfig.json
+tslint.json
