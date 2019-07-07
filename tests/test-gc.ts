@@ -23,13 +23,13 @@ const listFiles = async () => {
   const d = await gc.listFiles();
   console.log(d);
 };
-listFiles();
+// listFiles();
 
 const addFileFromPath = async (path: string, newFileName?: string, dir?: string) => {
-  const d = await gc.addFileFromPath(path, { dir, name: newFileName });
+  const d = await gc.addFileFromPath(path, { path, name: newFileName });
   console.log(d);
 };
-addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'test')
+addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'test/kont/beer');
 
 const removeFile = async (fileName: string) => {
   const d = await gc.removeFile(fileName);

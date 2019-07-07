@@ -63,12 +63,22 @@ Copies a file from a local path to the storage. The `args` object contains the f
 - `newName`: if you want to rename the file this is the new name of the file in the storage
 - `remove`: whether or not to remove the file after it has been copied to the storage, defaults to `false`
 
+The promise returns a metadata object that contains the keys `originalName`, `path` and `size`.
+
 ```typescript
 storage.addFileFromPath('./tests/data/image1.jpg', {
   path: 'subdir/sub-subdir/another-dir',
   name: 'renamed.jpg',
   remove: false,
 })
+.then(data) {
+  console.log(data);
+}
+
+// prints:
+// { origName: 'image1.jpg',
+//   size: 103704,
+//   path: 'subdir/sub-subdir/another-dir/renamed.jpg' }
 ```
 
 ### addFileFromUpload
@@ -79,6 +89,8 @@ Copies a file from the temporary Multer storage to the storage. The `args` objec
 - `path`: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
 - `newName`: if you want to rename the file this is the new name of the file in the storage
 - `remove`: whether or not to remove the file after it has been moved to the storage, defaults to `false`
+
+The promise returns a metadata object that contains the keys `originalName`, `path` and `size`.
 
 ### getFileAsReadable
 ```typescript

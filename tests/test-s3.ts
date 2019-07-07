@@ -47,7 +47,7 @@ getFileAsReadable('/generate_error/IMG_9643.jpg');
 
 const getFileAsReadable2 = async (fileName: string) => {
   const readStream = await s3.getFileAsReadable(fileName)
-    .catch(e => { console.log(e); });
+    .catch((e) => { console.log(e); });
 
   if (!readStream) {
     return;
@@ -84,7 +84,7 @@ const getFileAsReadable3 = async (fileName: string) => {
 // getFileAsReadable3('IMG_9643.jpg');
 
 const addFileFromPath = async (path: string, newFileName?: string, dir?: string) => {
-  const d = await s3.addFileFromPath(path, { dir, name: newFileName });
+  const d = await s3.addFileFromPath(path, { path, name: newFileName });
   console.log(d);
 };
 // addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir');
