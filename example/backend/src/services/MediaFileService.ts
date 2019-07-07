@@ -1,10 +1,8 @@
 import {
   Storage,
-  StorageGoogleCloud,
-  StorageAmazonS3,
-  StorageLocal,
   StoreFileArgs,
   FileMetaData,
+  StorageConfig,
 } from 'storage-abstraction';
 
 import uniquid from 'uniquid';
@@ -70,7 +68,7 @@ export class MediaFileService implements OnInit {
    */
   public async moveUploadedFile(tempFile: Express.Multer.File, location: string): Promise<FileMetaData> {
     const args: StoreFileArgs = {
-      dir: location,
+      path: location,
       name: `${uniquid()}_${tempFile.originalname}`,
       remove: false,
     };
@@ -81,7 +79,7 @@ export class MediaFileService implements OnInit {
    * @param filePath: path to the file to be copied
    * @param location?: the directory to save this file into, directory will be created if it doesn't exist
    * @param config?: setting for processing this file by the permanent storage
-   * @param config.dir?: the directory to save this file into, directory will be created if it doesn't exist
+   * @param config.path?: the directory to save this file into, directory will be created if it doesn't exist
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
