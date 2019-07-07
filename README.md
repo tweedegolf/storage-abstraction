@@ -1,6 +1,6 @@
 # Storage Abstraction
 
-Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud. Cloud storage: currently Google Cloud and Amazon S3 and complient cloud services are supported.
+Provides an API for storing and retrieving files from a storage; this storage can be a local file system or a cloud storage. For cloud storage currently Google Cloud and Amazon S3 and complient cloud services are supported.
 
 ## Instantiate a storage
 
@@ -74,7 +74,6 @@ storage.addFileFromPath('./tests/data/image1.jpg', {
 .then(data) {
   console.log(data);
 }
-
 // prints:
 // { origName: 'image1.jpg',
 //   size: 103704,
@@ -96,16 +95,36 @@ The promise returns a metadata object that contains the keys `originalName`, `pa
 ```typescript
 getFileAsReadable(name: string): Promise<Readable>;
 ```
-Returns a file as a readable stream
+Returns a file as a readable stream.
 
 ### removeFile
 ```typescript
 removeFile(name: string): Promise<boolean>;
 ```
-Remove a file (object) from the bucket
+Remove a file (object) from the bucket.
 
 ### listFiles
 ```typescript
 listFiles(): Promise<[string, number][]>;
 ```
 Returns a list of all files (objects) in the bucket; for each file a tuple is returned containing the path and the size of the file.
+
+### switchBucket
+```typescript
+switchBucket(name: string): Promise<boolean>;
+```
+Switch to another bucket in an existing `Storage` instance at runtime:
+```typescript
+const config = {
+  bucketName: 'images',
+  directory: '/home/user/domains/my-site',
+}
+const s = new Storage(config); 
+s.switchBucket('documents');
+```
+### switchStorage
+```typescript
+switchStorage(config: StorageConfig): void;
+```
+Switch to another storage type in an existing `Storage` instance at runtime. The config object is the same type of object that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files (objects) from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances.
+

@@ -31,7 +31,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Key: fileName,
     };
     // check if exists
-    await this.storage.getObject(params).promise()
+    await this.storage.getObject(params).promise();
     // then return stream
     return this.storage.getObject(params).createReadStream();
   }
