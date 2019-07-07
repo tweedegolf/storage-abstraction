@@ -1,6 +1,6 @@
 {
   "name": "storage-abstraction",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Provides an API for storing and retreiving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -49,9 +49,9 @@
     "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
     "copy": "cd ./example/backend && ./copy.sh",
     "tsc": "node_modules/.bin/tsc",
-    "tsc:cp": "npm run tsc && npm run copy"
+    "tsc:cp": "npm run tsc && npm run copy",
+    "prepublishOnly": "npm run tsc"
   },
-  "prepublishOnly": "npm run tsc",
   "keywords": [
     "storage",
     "google cloud",
