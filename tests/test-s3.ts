@@ -5,7 +5,7 @@ import path from 'path';
 import { StorageAmazonS3 } from '../src/StorageAmazonS3';
 dotenv.config();
 
-const bucketName = 'aap-en-beer';
+const bucketName = 'the buck';
 const configS3 = {
   bucketName,
   accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
@@ -42,8 +42,8 @@ const getFileAsReadable = (fileName: string) => {
       console.log('JUST A NEAT ERROR', e);
     });
 };
-// getFileAsReadable('sun-blanket.jpg');
-getFileAsReadable('/generate_error/IMG_9643.jpg');
+// getFileAsReadable('image1.jpg');
+getFileAsReadable('/generate_error/non_existent.jpg');
 
 const getFileAsReadable2 = async (fileName: string) => {
   const readStream = await s3.getFileAsReadable(fileName)
@@ -63,8 +63,7 @@ const getFileAsReadable2 = async (fileName: string) => {
     console.log('FINISHED');
   });
 };
-// getFileAsReadable2('sun-blanket.jpg');
-// getFileAsReadable2('IMG_9643.jpg');
+// getFileAsReadable2('image1.jpg');
 
 const getFileAsReadable3 = async (fileName: string) => {
   const readStream = await s3.getFileAsReadable(fileName);
@@ -80,15 +79,14 @@ const getFileAsReadable3 = async (fileName: string) => {
     });
   }
 };
-// getFileAsReadable3('sun-blanket.jpg');
-// getFileAsReadable3('IMG_9643.jpg');
+// getFileAsReadable3('image1.jpg');
 
 const addFileFromPath = async (path: string, newFileName?: string, dir?: string) => {
   const d = await s3.addFileFromPath(path, { path, name: newFileName });
   console.log(d);
 };
-// addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'subdir');
-addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg');
+// addFileFromPath('./tests/data/image1.jpg', 'new name.jpg', 'subdir/sub subdir');
+addFileFromPath('./tests/data/image1.jpg', 'new name.jpg');
 
 const removeFile = async (fileName: string) => {
   // try {
@@ -106,5 +104,4 @@ const removeFile = async (fileName: string) => {
     });
 
 };
-// removeFile('subdir/renamed.jpg');
-// removeFile('aapenbeer.jpg')
+// removeFile('subdir/sub-subdir/new-name.jpg');

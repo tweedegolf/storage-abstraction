@@ -1,14 +1,11 @@
-// import {
-//   Storage,
-//   StorageGoogleCloud,
-//   StorageAmazonS3,
-//   StorageLocal,
-//   StoreFileArgs,
-//   FileMetaData,
-// } from 'storage-abstraction';
-
-import { Storage } from '../storage-dev-tmp/Storage';
-import { StoreFileArgs, FileMetaData, StorageConfig } from '../storage-dev-tmp/types';
+import {
+  Storage,
+  StorageGoogleCloud,
+  StorageAmazonS3,
+  StorageLocal,
+  StoreFileArgs,
+  FileMetaData,
+} from 'storage-abstraction';
 
 import uniquid from 'uniquid';
 import { Service, OnInit } from '@tsed/di';

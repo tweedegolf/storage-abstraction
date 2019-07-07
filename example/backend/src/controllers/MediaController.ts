@@ -21,8 +21,7 @@ import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
 import { ThumbnailService } from '../services/ThumbnailService';
-// import { FileMetaData } from 'storage-abstraction';
-import { FileMetaData } from '../storage-dev-tmp/types';
+import { FileMetaData } from 'storage-abstraction';
 import { ResError, ResSuccess, ResResult } from '../../../common/types';
 
 export const SUPPORTED_MIME_TYPES = [

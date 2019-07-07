@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { StorageGoogleCloud } from '../src/StorageGoogleCloud';
 dotenv.config();
 
-const bucketName = 'aap-en-beer';
+const bucketName = 'the buck';
 const configGoogle = {
   bucketName,
   projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
@@ -25,30 +25,30 @@ const listFiles = async () => {
 };
 // listFiles();
 
-const addFileFromPath = async (path: string, newFileName?: string, dir?: string) => {
-  const d = await gc.addFileFromPath(path, { path, name: newFileName });
+const addFileFromPath = async (origPath: string, newFileName?: string, storePath?: string) => {
+  const d = await gc.addFileFromPath(origPath, { path: storePath, name: newFileName });
   console.log(d);
 };
-addFileFromPath('./tests/data/sun-blanket.jpg', 'aapenbeer.jpg', 'test/kont/beer');
+addFileFromPath('./tests/data/image1.jpg', 'new name.jpg', 'test/sub/sub sub');
 
 const removeFile = async (fileName: string) => {
   const d = await gc.removeFile(fileName);
   console.log(d);
 };
-// removeFile('aapenbeer.jpg');
+// removeFile('new-name.jpg');
 
 // const getFile = async (fileName: string) => {
 //   const gc = new StorageGoogle(configGoogle);
 //   const d = await gc.getFile(fileName)
 //   console.log(d);
 // }
-// getFile('sun-blanket.jpg')
+// getFile('new-name.jpg')
 
 const downloadFile = async (fileName: string) => {
   const r = await gc.downloadFile(fileName, os.tmpdir());
   console.log('R', r);
 };
-// downloadFile('sun-blanket.jpg')
+// downloadFile('image1.jpg')
 
 const getFileAsReadable = (fileName: string) => {
   gc.getFileAsReadable(fileName)
@@ -67,4 +67,4 @@ const getFileAsReadable = (fileName: string) => {
     .catch((e) => { console.log(e.message); });
 };
 // getFileAsReadable('image1.jpg');
-// getFileAsReadable('generate_error/SH-3-44.mid');
+// getFileAsReadable('generate-error/non-existent.png');

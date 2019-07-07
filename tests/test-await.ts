@@ -56,7 +56,7 @@ test1b('non/existent');
 const readImage2 = async (filePath: string): Promise<Buffer | null> => {
   return fs.promises.readFile(filePath)
     .then(buffer => buffer)
-    .catch(e => {
+    .catch((e) => {
       console.log('2', e.message);
       return null;
     });
