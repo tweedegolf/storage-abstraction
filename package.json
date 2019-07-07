@@ -47,11 +47,11 @@
     "test": "npm run test-local",
     "test-all": "npm run test-local && npm run test-google && npm run test-amazon",
     "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
-    "copy2": "./copy.sh",
     "copy": "cd ./example/backend && ./copy.sh",
     "tsc": "node_modules/.bin/tsc",
     "tsc:cp": "npm run tsc && npm run copy"
   },
+  "prepublishOnly": "npm run tsc",
   "keywords": [
     "storage",
     "google cloud",

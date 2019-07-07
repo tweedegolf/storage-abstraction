@@ -2,10 +2,10 @@
 dist/
 example/
 node_modules/
-test/test-await.ts
-test/test-gc.ts
-test/test-lc.ts
-test/test-s3.ts
+tests/test-await.ts
+tests/test-gc.ts
+tests/test-lc.ts
+tests/test-s3.ts
 .env
 .env-default
 .gitignore
