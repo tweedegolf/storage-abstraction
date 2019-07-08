@@ -1,3 +1,8 @@
+import '@tsed/swagger';
+import '@tsed/typeorm';
+import '@tsed/ajv';
+import 'reflect-metadata';
+import multer from 'multer';
 import { ServerLoader, ServerSettings, GlobalAcceptMimesMiddleware, Request } from '@tsed/common';
 import * as Sentry from '@sentry/node';
 import cookieParser from 'cookie-parser';
@@ -6,10 +11,6 @@ import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import methodOverride from 'method-override';
-import '@tsed/swagger';
-import '@tsed/typeorm';
-import '@tsed/ajv';
-import 'reflect-metadata';
 import { SUPPORTED_MIME_TYPES } from './controllers/MediaController';
 import { AjvErrorObject } from '@tsed/ajv/lib/interfaces/IAjvSettings';
 import { getMediaUploadDir, getSentryDsn, getVersion, getEnvironment } from './env';
@@ -28,7 +29,7 @@ if (sentryDsn) {
 const rootDir = __dirname;
 @ServerSettings({
   rootDir,
-  uploadDir: `${getMediaUploadDir()}`,
+  // uploadDir: `${getMediaUploadDir()}`,
   acceptMimes: ['application/json'],
   port: 3000,
   mount: {
@@ -57,6 +58,7 @@ const rootDir = __dirname;
     fileFilter: (req: Request, file: Express.Multer.File, cb) => {
       cb(null, SUPPORTED_MIME_TYPES.includes(file.mimetype));
     },
+    storage: multer.memoryStorage(),
   },
   swagger: [{
     path: '/docs',
