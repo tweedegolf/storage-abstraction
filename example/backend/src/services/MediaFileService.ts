@@ -1,10 +1,9 @@
+import fs from 'fs';
 import {
   Storage,
-  StoreFileArgs,
-  FileMetaData,
   StorageConfig,
 } from 'storage-abstraction';
-
+import slugify from 'slugify';
 import uniquid from 'uniquid';
 import { Service, OnInit } from '@tsed/di';
 import { Readable } from 'stream';
@@ -17,6 +16,7 @@ import {
   getAmazonS3SecretAccessKey,
   getLocalStorageDir,
 } from '../env';
+import { MediaFile } from '../entities/MediaFile';
 
 @Service()
 export class MediaFileService implements OnInit {
@@ -66,13 +66,28 @@ export class MediaFileService implements OnInit {
    * @param tempFile: uploaded file in temporary Multer storage
    * @param location?: the directory to save this file into, directory will be created if it doesn't exist
    */
-  public async moveUploadedFile(tempFile: Express.Multer.File, location: string): Promise<FileMetaData> {
-    const args: StoreFileArgs = {
-      path: location,
-      name: `${uniquid()}_${tempFile.originalname}`,
-      remove: false,
-    };
-    return this.storage.addFileFromUpload(tempFile, args);
+  public async moveUploadedFile(tempFile: Express.Multer.File, location: string): Promise<MediaFile> {
+    try {
+      const slugName = `${uniquid()}_${slugify(tempFile.originalname)}`;
+      const slugPath = location.split('/').map(d => slugify(d));
+      slugPath.push(slugName);
+      const targetPath = slugPath.join('/');
+
+      if (typeof tempFile.buffer !== 'undefined') {
+        await this.storage.addFileFromBuffer(tempFile.buffer, targetPath);
+      } else {
+        await this.storage.addFileFromPath(tempFile.path, targetPath);
+        await fs.promises.unlink(tempFile.path);
+      }
+
+      const mf = new MediaFile();
+      mf.name = slugName;
+      mf.path = targetPath;
+      mf.size = tempFile.size;
+      return mf;
+    } catch (e) {
+      throw e;
+    }
   }
 
   /**
@@ -83,8 +98,8 @@ export class MediaFileService implements OnInit {
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
-  public async copyFile(filePath: string, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.storage.addFileFromPath(filePath, args);
+  public async copyFile(filePath: string, targetPath: string): Promise<boolean> {
+    return this.storage.addFileFromPath(filePath, targetPath);
   }
 
   public async getFileReadStream(filePath: string): Promise<Readable> {

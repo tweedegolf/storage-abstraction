@@ -21,7 +21,6 @@ import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
 import { ThumbnailService } from '../services/ThumbnailService';
-import { FileMetaData } from 'storage-abstraction';
 import { ResError, ResSuccess, ResResult } from '../../../common/types';
 
 export const SUPPORTED_MIME_TYPES = [
@@ -121,7 +120,6 @@ export class MediaFileController {
     @MultipartFile('files', 10) tmpFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
   ): Promise<ResResult<{ files: MediaFile[] }>> {
-    // console.log('TEMP FILES', tmpFiles);
     if (!tmpFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
@@ -135,12 +133,7 @@ export class MediaFileController {
       throw new InternalServerError(error.message);
     }
 
-    [error, result] = await to(this.mediaFileRepository.create(
-      result.map((m: FileMetaData) => ({
-        name: m.origName,
-        size: m.size,
-        path: m.path,
-      }))));
+    [error, result] = await to(this.mediaFileRepository.create(result));
     if (error !== null) {
       throw new InternalServerError(error.message);
     }

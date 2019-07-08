@@ -48,11 +48,12 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   // util members
 
   async createBucket(name?: string): Promise<boolean> {
-    super.createBucket(name);
+    super.checkBucket(name);
     if (this.bucketCreated) {
       return true;
     }
     await this.storage.createBucket({ Bucket: this.bucketName }).promise();
+    this.bucketCreated = true;
     return true;
   }
 
@@ -73,13 +74,32 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     return true;
   }
 
-  protected async store(filePath: string, targetFileName: string): Promise<boolean> {
+  async deleteBucket(): Promise<boolean> {
+    return false;
+  }
+
+  protected async store(origPath: string, targetPath: string): Promise<boolean> {
     await this.createBucket();
-    const readStream = fs.createReadStream(filePath);
+    const readStream = fs.createReadStream(origPath);
     const params = {
       Bucket: this.bucketName,
-      Key: targetFileName,
+      Key: targetPath,
       Body: readStream,
+    };
+    await this.storage.upload(params).promise();
+    return true;
+  }
+
+  protected async storeBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+    await this.createBucket();
+    const readable = new Readable();
+    readable._read = () => { }; // _read is required but you can noop it
+    readable.push(buffer);
+    readable.push(null);
+    const params = {
+      Bucket: this.bucketName,
+      Key: targetPath,
+      Body: readable,
     };
     await this.storage.upload(params).promise();
     return true;

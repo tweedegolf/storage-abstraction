@@ -14,22 +14,28 @@ export interface IStorage {
   clearBucket(name?: string): Promise<boolean>;
 
   /**
+   * @param name?: deletes the bucket with this name. If no name is provided the default bucket of the
+   * current storage will be deleted.
+   */
+  deleteBucket(name?: string): Promise<boolean>;
+
+  /**
    * @param filePath: path to the file to be copied
    * @param config?: setting for processing this file by the permanent storage
    * @param config.path?: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the file after it has been copied to the storage
    */
-  addFileFromPath(filePath: string, args?: StoreFileArgs): Promise<FileMetaData>;
+  addFileFromPath(origPath: string, targetPath: string): Promise<boolean>;
 
   /**
-   * @param tempFile: temporary Multer file
+   * @param buffer: file as buffer
    * @param config?: setting for processing this file by the permanent storage
    * @param config.path?: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
    * @param config.newName?: the name of the file in the storage
    * @param config.remove?: whether or not to remove the temp file after it has been stored
    */
-  addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData>;
+  addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean>;
 
   /**
    * @param name: name of the object (file) to be returned as a readable stream
@@ -46,18 +52,6 @@ export interface IStorage {
    */
   listFiles(): Promise<[string, number][]>;
 }
-
-export type StoreFileArgs = {
-  path?: string,
-  name?: string,
-  remove?: boolean,
-};
-
-export type FileMetaData = {
-  origName: string,
-  path: string,
-  size: number,
-};
 
 export type ConfigAmazonS3 = {
   bucketName: string,

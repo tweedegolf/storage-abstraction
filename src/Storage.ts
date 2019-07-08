@@ -6,8 +6,6 @@ import {
   ConfigLocal,
   ConfigAmazonS3,
   ConfigGoogleCloud,
-  StoreFileArgs,
-  FileMetaData,
 } from './types';
 import { StorageLocal, StorageAmazonS3, StorageGoogleCloud } from '.';
 
@@ -23,12 +21,12 @@ export class Storage implements IStorage {
     this.switchStorage(config);
   }
 
-  async addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.storage.addFileFromUpload(file, args);
+  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+    return this.storage.addFileFromBuffer(buffer, targetPath);
   }
 
-  async addFileFromPath(origPath: string, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.storage.addFileFromPath(origPath, args);
+  async addFileFromPath(origPath: string, targetPath: string): Promise<boolean> {
+    return this.storage.addFileFromPath(origPath, targetPath);
   }
 
   async createBucket(name?: string): Promise<boolean> {
@@ -37,6 +35,10 @@ export class Storage implements IStorage {
 
   async clearBucket(name?: string): Promise<boolean> {
     return this.storage.clearBucket(name);
+  }
+
+  async deleteBucket(name?: string): Promise<boolean> {
+    return this.storage.deleteBucket(name);
   }
 
   async getFileAsReadable(name: string): Promise<Readable> {

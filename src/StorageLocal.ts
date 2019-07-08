@@ -24,37 +24,48 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     // console.log(config, this.bucketName);
   }
 
-  protected async store(filePath: string, targetFileName: string): Promise<boolean> {
-    // const dest = path.join(this.storagePath, ...targetFileName.split('/'));
-    const dest = path.join(this.storagePath, targetFileName);
+  private async createDestination(targetPath: string): Promise<string> {
+    const dest = path.join(this.storagePath, ...targetPath.split('/'));
+    // const dest = path.join(this.storagePath, targetPath);
     try {
       await this.createBucket();
       await fs.promises.stat(path.dirname(dest));
     } catch (e) {
-      fs.mkdir(path.dirname(dest), { recursive: true }, (e: Error) => {
-        if (e) {
-          throw new Error(e.message);
-        }
-      });
+      const [error] = await to(fs.promises.mkdir(path.dirname(dest), { recursive: true }));
+      if (error !== null) {
+        throw error;
+      }
+      return dest;
     }
+    return dest;
+  }
+
+  protected async store(filePath: string, targetPath: string): Promise<boolean> {
+    const dest = await this.createDestination(targetPath);
     await fs.promises.copyFile(filePath, dest);
     return true;
+  }
 
-    // return new Promise<boolean>((resolve) => {
-    //   fs.copyFile(filePath, dest, (e: Error) => {
-    //     if (e) {
-    //       console.log('STORE LOCAL', e);
-    //       throw new Error(e.message);
-    //     } else {
-    //       resolve(true);
-    //     }
-    //   });
-    // });
+  protected async storeBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+    const dest = await this.createDestination(targetPath);
 
+    const readStream = new Readable();
+    readStream._read = () => { }; // _read is required but you can noop it
+    readStream.push(buffer);
+    readStream.push(null); // close stream
+
+    const writeStream = fs.createWriteStream(dest);
+
+    return new Promise((resolve, reject) => {
+      readStream.on('end', resolve);
+      readStream.on('error', reject);
+      readStream.pipe(writeStream);
+      writeStream.on('error', reject);
+    });
   }
 
   async createBucket(name?: string): Promise<boolean> {
-    super.createBucket(name);
+    super.checkBucket(name);
     if (this.bucketCreated) {
       return true;
     }
@@ -81,6 +92,10 @@ export class StorageLocal extends AbstractStorage implements IStorage {
         }
       });
     });
+  }
+
+  async deleteBucket(): Promise<boolean> {
+    return false;
   }
 
   private async globFiles(folder: string): Promise<string[]> {

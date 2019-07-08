@@ -25,7 +25,6 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       projectId,
       keyFilename,
     });
-    // console.log(config, this.bucketName);
   }
 
   // After uploading a file to Google Storage it may take a while before the file
@@ -88,8 +87,23 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     });
   }
 
+  protected async storeBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+    const readStream = new Readable();
+    const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
+    readStream._read = () => { }; // _read is required but you can noop it
+    readStream.push(buffer);
+    readStream.push(null);
+
+    return new Promise((resolve, reject) => {
+      readStream.on('end', resolve);
+      readStream.on('error', reject);
+      readStream.pipe(writeStream);
+      writeStream.on('error', reject);
+    });
+  }
+
   async createBucket(name?: string): Promise<boolean> {
-    super.createBucket(name);
+    super.checkBucket(name);
     if (this.bucketCreated) {
       return true;
     }
@@ -101,6 +115,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       if (e.code === 409) {
         // error code 409 is 'You already own this bucket. Please select another name.'
         // so we can safely return true if this error occurs
+        this.bucketCreated = true;
         return true;
       }
       throw new Error(e.message);
@@ -110,6 +125,10 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   async clearBucket(): Promise<boolean> {
     await this.storage.bucket(this.bucketName).deleteFiles({ force: true });
     return true;
+  }
+
+  async deleteBucket(): Promise<boolean> {
+    return false;
   }
 
   private async getMetaData(files: string[]) {
@@ -143,5 +162,5 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   //       .then(data => console.log(data))
   //       .catch(e => console.error(e));
   //   });
-  // }  
+  // }
 }

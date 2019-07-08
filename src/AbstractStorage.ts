@@ -6,8 +6,6 @@ import slugify from 'slugify';
 import {
   IStorage,
   StorageConfig,
-  StoreFileArgs,
-  FileMetaData,
 } from './types';
 
 export abstract class AbstractStorage implements IStorage {
@@ -26,62 +24,45 @@ export abstract class AbstractStorage implements IStorage {
     this.bucketName = slugify(config.bucketName);
   }
 
-  private async copy(origPath: string, origName: string, args?: StoreFileArgs) {
-    const {
-      path: dir = null,
-      name: newName = null,
-      remove = false,
-    } = args || {};
-
+  async addFileFromPath(origPath: string, targetPath: string): Promise<boolean> {
     try {
-      const fileSize = (await fs.promises.stat(origPath)).size;
-      let targetPath = '';
-      let targetName = slugify(origName);
-      let paths: string[] = [];
-      if (newName !== null) {
-        targetName = slugify(newName);
-      }
-      if (dir !== null) {
-        paths = dir.split('/').map(d => slugify(d));
-      }
-      targetPath = path.join(...paths, targetName);
-      // console.log(targetPath, remove);
-      await this.store(origPath, targetPath);
-      if (remove) {
-        await fs.promises.unlink(origPath);
-      }
-      return {
-        origName,
-        size: fileSize,
-        path: targetPath,
-      };
+      const paths = targetPath.split('/').map(d => slugify(d));
+      await this.store(origPath, path.join(...paths));
+      return true;
     } catch (e) {
-      // console.error('COPY', e);
       throw new Error(e.message);
     }
   }
 
-  async addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.copy(file.path, file.originalname, args);
+  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+    try {
+      const paths = targetPath.split('/').map(d => slugify(d));
+      await this.storeBuffer(buffer, path.join(...paths));
+      return true;
+    } catch (e) {
+      throw new Error(e.message);
+    }
   }
 
-  async addFileFromPath(origPath: string, args?: StoreFileArgs): Promise<FileMetaData> {
-    return this.copy(origPath, path.basename(origPath), args);
-  }
-
-  async createBucket(name?: string): Promise<boolean> {
+  protected checkBucket(name?: string): void {
     if (typeof name !== 'undefined' && name !== this.bucketOrigName) {
       this.bucketOrigName = name;
       this.bucketName = slugify(name);
+      this.bucketCreated = false;
     }
-    return true;
   }
 
   // stubs
 
   protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>;
 
+  protected abstract async storeBuffer(buffer: Buffer, targetFileName: string): Promise<boolean>;
+
+  abstract async createBucket(name?: string): Promise<boolean>;
+
   abstract async clearBucket(name?: string): Promise<boolean>;
+
+  abstract async deleteBucket(name?: string): Promise<boolean>;
 
   abstract async getFileAsReadable(name: string): Promise<Readable>;
 

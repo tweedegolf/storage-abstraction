@@ -6,3 +6,4 @@ example/backend/media/
 **/da2719acad70.json
 dist
 .vscode
+tests/test.jpg

@@ -18,7 +18,7 @@ if (!type) {
 // const type = Storage.TYPE_AMAZON_S3;
 let storage: IStorage;
 let config: StorageConfig;
-const localDir = path.join(os.homedir(), 'storage-abstraction');
+const localDir = __dirname;
 const bucketName = process.env.STORAGE_BUCKETNAME;
 
 if (type === Storage.TYPE_LOCAL) {
@@ -84,15 +84,11 @@ describe(`testing ${type} storage`, () => {
   });
 
   it('add file success', async () => {
-    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg')).toBeResolvedTo({
-      size: 100631,
-      path: 'image1.jpg',
-      origName: 'image1.jpg',
-    });
+    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', 'image1.jpg')).toBeResolvedTo(true);
   });
 
   it('add file error', async () => {
-    await expectAsync(storage.addFileFromPath('./tests/data/non-existent.jpg')).toBeRejected();
+    await expectAsync(storage.addFileFromPath('./tests/data/non-existent.jpg', 'non-existent.jpg')).toBeRejected();
   });
 
   it('add with new name and dir', async () => {
@@ -101,14 +97,7 @@ describe(`testing ${type} storage`, () => {
     //   name: 'renamed.jpg',
     // }));
 
-    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', {
-      path: 'subdir',
-      name: 'renamed.jpg',
-    })).toBeResolvedTo({
-      size: 100631,
-      path: 'subdir/renamed.jpg',
-      origName: 'image1.jpg',
-    });
+    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', 'subdir/renamed.jpg')).toBeResolvedTo(true);
   });
 
   // necessary for Google and Amazon
@@ -121,7 +110,7 @@ describe(`testing ${type} storage`, () => {
   }
 
   it('list files 1', async () => {
-    const expectedResult: [string, number][] = [['image1.jpg', 100631], ['subdir/renamed.jpg', 100631]];
+    const expectedResult: [string, number][] = [['image1.jpg', 32201], ['subdir/renamed.jpg', 32201]];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 
@@ -136,7 +125,7 @@ describe(`testing ${type} storage`, () => {
   });
 
   it('list files 2', async () => {
-    const expectedResult: [string, number][] = [['image1.jpg', 100631]];
+    const expectedResult: [string, number][] = [['image1.jpg', 32201]];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 

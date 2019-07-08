@@ -16,7 +16,7 @@
     "sourceMap": true,
     "declaration": false,
     "allowSyntheticDefaultImports": true,
-    "preserveSymlinks": true
+    "preserveSymlinks": false
   },
   "exclude": [
     "node_modules"
