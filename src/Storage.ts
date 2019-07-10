@@ -1,4 +1,3 @@
-import 'multer';
 import { Readable } from 'stream';
 import {
   IStorage,

@@ -144,6 +144,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async listFiles(): Promise<[string, number][]> {
+    if (this.bucketName === null) {
+      throw new Error('Please select a bucket first');
+    }
     const storagePath = path.join(this.directory, this.bucketName);
     const files = await this.globFiles(storagePath);
     const result: [string, number][] = [];

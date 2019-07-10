@@ -8,7 +8,7 @@ Provides an API for storing and retrieving files from a storage; this storage ca
 const s = new Storage(config);
 ```
 
-Each type of storage requires a different config object, the only key that these config objects have in common is the name of the bucket. For local storage, the bucketname simply is the name of a directory.
+Each type of storage requires a different config object, the only key that these config objects have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing files. If you don't set a value for `bucketName` you can only store files after you have selected a bucket by using `selectBucket`, see below.
 
 ### Local storage
 ```typescript
@@ -44,54 +44,45 @@ const s = new Storage(config);
 
 ### createBucket
 ```typescript
-createBucket(name?: string): Promise<boolean>;
+createBucket(name: string): Promise<boolean>;
 ```
-If you omit the name parameter, a new bucket with be created using the name provided in the config object. If the bucket already exists `true` will be returned.
+Once the bucket has been created `true` will be returned; if the bucket already existed `true` will be returned as well.
+
+### selectBucket
+```typescript
+selectBucket(name: string): Promise<boolean>;
+```
+Select another bucket for storing files, the bucket will be created automatically if it doesn't exist.
 
 ### clearBucket
 ```typescript
 clearBucket(name?: string): Promise<boolean>;
 ```
-Removes all objects in the bucket. If you omit the name parameter, the bucket with the name that was provided with the config object will be cleared.
+Removes all files in the bucket. If you omit the `name` parameter all files in the currently selected bucket will be removed. If no bucket is selected an error will be thrown.
+
+### deleteBucket
+```typescript
+deleteBucket(name?: string): Promise<boolean>;
+```
+Deletes the bucket and all files in it. If you omit the `name` parameter the currently selected bucket will be deleted. If no bucket is selected an error will be thrown.
+
+### listBuckets
+```typescript
+listBuckets(): Promise<string[]>
+```
+Returns a list with the names of all buckets in the storage.
 
 ### addFileFromPath
 ```typescript
-addFileFromPath(filePath: string, args?: StoreFileArgs): Promise<FileMetaData>;
+addFileFromPath(filePath: string, targetPath: string): Promise<boolean>;
 ```
-Copies a file from a local path to the storage. The `args` object contains the following optional keys:
-- `path`: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
-- `newName`: if you want to rename the file this will be the new name of the file in the storage
-- `remove`: whether or not to remove the original file after it has been copied to the storage, defaults to `false`
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name plus extension; the value will be slugified automatically.
 
-The promise returns a metadata object that contains the keys `originalName`, `path` and `size`.
-
+### addFileFromBuffer
 ```typescript
-storage.addFileFromPath('./tests/data/image1.jpg', {
-  path: 'subdir/sub subdir/another dir',
-  name: 'renamed image.jpg',
-  remove: false,
-})
-.then(data) {
-  console.log(data);
-}
-// prints:
-// { origName: 'image1.jpg',
-//   size: 103704,
-//   path: 'subdir/sub-subdir/another-dir/renamed-image.jpg' }
+addFileFromUpload(buffer: Buffer, targetPath: string): Promise<boolean>;
 ```
-
-Note that both the path and the name get automatically slugified.
-
-### addFileFromUpload
-```typescript
-addFileFromUpload(file: Express.Multer.File, args?: StoreFileArgs): Promise<FileMetaData>;
-```
-Copies a file uploaded using Multer (with DiskStorage) to the storage. The `args` object contains the following optional keys:
-- `path`: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
-- `newName`: if you want to rename the file this will be the new name of the file in the storage
-- `remove`: whether or not to remove the temporary Multer file after it has been moved to the storage, defaults to `false`
-
-The promise returns a metadata object that contains the keys `originalName`, `path` and `size`.
+Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name plus extension; the value will be slugified automatically. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with DiskStorage.
 
 ### getFileAsReadable
 ```typescript
@@ -103,27 +94,14 @@ Returns a file in the storage as a readable stream.
 ```typescript
 removeFile(name: string): Promise<boolean>;
 ```
-Remove a file from the bucket.
+Removes a file from the bucket. Returns `true` if the file didn't exist.
 
 ### listFiles
 ```typescript
 listFiles(): Promise<[string, number][]>;
 ```
-Returns a list of all files in the bucket; for each file a tuple is returned containing the path and the size of the file.
+Returns a list of all files in the currently selected bucket; for each file a tuple is returned containing the path and the size of the file. If no bucket is selected an error will be thrown.
 
-### switchBucket
-```typescript
-switchBucket(name: string): Promise<boolean>;
-```
-Switch to another bucket in an existing `Storage` instance at runtime:
-```typescript
-const config = {
-  bucketName: 'images',
-  directory: '/home/user/domains/my-site',
-}
-const s = new Storage(config); 
-s.switchBucket('documents');
-```
 ### switchStorage
 ```typescript
 switchStorage(config: StorageConfig): void;
@@ -139,11 +117,13 @@ When you create a `Storage` instance you create a thin wrapper around one of the
 - `StorageGoogleCloud`
 - `StorageAmazonS3`
 
-Let's call these classes the functional classes because they actually define the functionality of the API methods. The wrapper creates an instance of one of these functional classes based on the provided config object and then forwards every API call to this instance. This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except for the last 2, `switchBucket` and `switchStorage`; these methods are implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from the method `switchStorage`; this method is called by the constructor as well. The method `switchBucket` calls the method `createBucket` on the functional class instance that has been created by the constructor.
+Let's call these classes the functional classes because they actually define the functionality of the API methods. The wrapper creates an instance of one of these functional classes based on the provided config object and then forwards every API call to this instance. 
 
-The functional classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements a generic private copy function that is used by the API calls `addFileFromUpload` and `addFileFromPath`. For the rest it contains stub methods for API calls that need a different implementation per storage type and that therefor need to be overruled or extented by the functional subclasses.
+This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except for the last one, `switchStorage`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchStorage`; it is called by the constructor as well. 
 
-If your application doesn't need the methods `switchBucket` and `switchStorage` you can also instantiate a functional class directly:
+The functional classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer` and `addFileFromPath`. For the rest it contains stub methods that need to be overruled or extended by the functional subclasses.
+
+If your application doesn't need `switchStorage` you can also instantiate a functional class directly:
 
 ```typescript
 // config is for Google Cloud storage
@@ -159,14 +139,10 @@ const s2 = new StorageGoogleCloud(config);
 ```
 Note that `s1` and `s2` are not the same; the `s1` instance has a private member `storage` that is an instance of `StorageGoogleCloud`. 
 
-The class names of the functional classes are:
-
-- `StorageGoogleCloud`
-- `StorageAmazonS3`
-- `StorageLocal`
-
 More functional classes can be added for different storage types, note however that there are many storage vendors that keep their API compliant with Amazon S3.
 
 ## Example application
+TBD
 
 ## Tests
+TBD

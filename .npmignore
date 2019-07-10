@@ -3,9 +3,8 @@ dist/
 example/
 node_modules/
 tests/test-await.ts
-tests/test-gc.ts
-tests/test-lc.ts
-tests/test-s3.ts
+tests/tmp
+tests/data
 .env
 .env-default
 .gitignore

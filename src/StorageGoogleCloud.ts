@@ -171,6 +171,9 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
+    if (this.bucketName === null) {
+      throw new Error('Please select a bucket first');
+    }
     const data = await this.storage.bucket(this.bucketName).getFiles();
     const names = data[0].map(f => f.name);
     const sizes = await this.getMetaData(names);

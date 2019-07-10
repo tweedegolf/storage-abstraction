@@ -1,5 +1,4 @@
 import path from 'path';
-import 'multer';
 import { Readable } from 'stream';
 import slugify from 'slugify';
 import {
@@ -21,23 +20,15 @@ export abstract class AbstractStorage implements IStorage {
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<boolean> {
-    try {
-      const paths = targetPath.split('/').map(d => slugify(d));
-      await this.store(origPath, path.join(...paths));
-      return true;
-    } catch (e) {
-      throw e;
-    }
+    const paths = targetPath.split('/').map(d => slugify(d));
+    await this.store(origPath, path.join(...paths));
+    return true;
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
-    try {
-      const paths = targetPath.split('/').map(d => slugify(d));
-      await this.store(buffer, path.join(...paths));
-      return true;
-    } catch (e) {
-      throw new Error(e.message);
-    }
+    const paths = targetPath.split('/').map(d => slugify(d));
+    await this.store(buffer, path.join(...paths));
+    return true;
   }
 
   protected checkBucket(name: string): boolean {

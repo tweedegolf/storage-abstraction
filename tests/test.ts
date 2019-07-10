@@ -49,10 +49,19 @@ const test = async (storage: IStorage) => {
   r = await storage.selectBucket('fnaap1');
   r = await storage.addFileFromPath('./tests/data/image1.jpg', 'subdir/sub subdir/new name.jpg');
 
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  });
+
   r = await storage.listFiles();
   console.log('list files', r);
 
   r = await storage.clearBucket();
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  });
+
   r = await storage.listFiles();
   console.log('list files', r);
 
@@ -83,8 +92,8 @@ const test = async (storage: IStorage) => {
   r = await storage.deleteBucket('fnaap2');
 };
 
-const storage = new StorageLocal(configLocal);
+// const storage = new StorageLocal(configLocal);
 // const storage = new StorageAmazonS3(configS3);
-// const storage = new StorageGoogleCloud(configGoogle);
+const storage = new StorageGoogleCloud(configGoogle);
 // storage.listBuckets().then(data => { console.log(data); });
 test(storage);

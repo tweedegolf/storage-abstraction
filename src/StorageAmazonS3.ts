@@ -166,6 +166,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
+    if (this.bucketName === null) {
+      throw new Error('Please select a bucket first');
+    }
     const params = {
       Bucket: this.bucketName,
       MaxKeys: maxFiles,
