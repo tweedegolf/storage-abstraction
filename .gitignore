@@ -7,3 +7,4 @@ example/backend/media/
 dist
 .vscode
 tests/test.jpg
+tests/tmp/

@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import 'multer';
 import { Readable } from 'stream';
@@ -14,7 +13,7 @@ export abstract class AbstractStorage implements IStorage {
   public static TYPE_LOCAL: string = 'TYPE_LOCAL';
   protected bucketName: string;
   protected bucketOrigName: string;
-  protected bucketCreated: boolean = false;
+  protected buckets: string[] = [];
 
   constructor(config: StorageConfig) {
     if (typeof config.bucketName === 'undefined') {
@@ -30,39 +29,40 @@ export abstract class AbstractStorage implements IStorage {
       await this.store(origPath, path.join(...paths));
       return true;
     } catch (e) {
-      throw new Error(e.message);
+      throw e;
     }
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
     try {
       const paths = targetPath.split('/').map(d => slugify(d));
-      await this.storeBuffer(buffer, path.join(...paths));
+      await this.store(buffer, path.join(...paths));
       return true;
     } catch (e) {
       throw new Error(e.message);
     }
   }
 
-  protected checkBucket(name?: string): void {
-    if (typeof name !== 'undefined' && name !== this.bucketOrigName) {
-      this.bucketOrigName = name;
-      this.bucketName = slugify(name);
-      this.bucketCreated = false;
-    }
+  protected checkBucket(name: string): boolean {
+    // console.log(name, this.buckets, this.buckets.indexOf(name));
+    return this.buckets.indexOf(name) !== -1;
   }
 
   // stubs
 
   protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>;
 
-  protected abstract async storeBuffer(buffer: Buffer, targetFileName: string): Promise<boolean>;
+  protected abstract async store(buffer: Buffer, targetFileName: string): Promise<boolean>;
 
-  abstract async createBucket(name?: string): Promise<boolean>;
+  abstract async createBucket(name: string): Promise<boolean>;
+
+  abstract async selectBucket(name: string): Promise<boolean>;
 
   abstract async clearBucket(name?: string): Promise<boolean>;
 
   abstract async deleteBucket(name?: string): Promise<boolean>;
+
+  abstract async listBuckets(): Promise<string[]>;
 
   abstract async getFileAsReadable(name: string): Promise<Readable>;
 

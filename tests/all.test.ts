@@ -68,7 +68,7 @@ describe(`testing ${type} storage`, () => {
   });
 
   it('create bucket', async () => {
-    await expectAsync(storage.createBucket()).toBeResolvedTo(true);
+    await expectAsync(storage.createBucket(bucketName)).toBeResolvedTo(true);
   });
 
   // if (type === Storage.TYPE_AMAZON_S3) {

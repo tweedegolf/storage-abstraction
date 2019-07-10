@@ -6,6 +6,7 @@ import { Readable } from 'stream';
 import { Storage as GoogleCloudStorage, File } from '@google-cloud/storage';
 import { AbstractStorage } from './AbstractStorage';
 import { IStorage, ConfigGoogleCloud } from './types';
+import slugify from 'slugify';
 
 export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   private storage: GoogleCloudStorage;
@@ -68,15 +69,24 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
         return true;
       }
       // console.log(e.message);
-      throw new Error(`[Google Cloud] ${e.message}`);
+      throw e;
     }
   }
 
   // util members
 
-  protected async store(origPath: string, targetPath: string): Promise<boolean> {
-    await this.createBucket();
-    const readStream = fs.createReadStream(origPath);
+  protected async store(buffer: Buffer, targetPath: string): Promise<boolean>;
+  protected async store(origPath: string, targetPath: string): Promise<boolean>;
+  protected async store(arg: string | Buffer, targetPath: string): Promise<boolean> {
+    await this.createBucket(this.bucketName);
+    let readStream: Readable;
+    if (typeof arg === 'string') {
+      readStream = fs.createReadStream(arg);
+    } else if (arg instanceof Buffer) {
+      readStream._read = () => { }; // _read is required but you can noop it
+      readStream.push(arg); readStream.push(null);
+      readStream.push(null);
+    }
     const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
 
     return new Promise((resolve, reject) => {
@@ -87,48 +97,64 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     });
   }
 
-  protected async storeBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
-    const readStream = new Readable();
-    const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
-    readStream._read = () => { }; // _read is required but you can noop it
-    readStream.push(buffer);
-    readStream.push(null);
-
-    return new Promise((resolve, reject) => {
-      readStream.on('end', resolve);
-      readStream.on('error', reject);
-      readStream.pipe(writeStream);
-      writeStream.on('error', reject);
-    });
-  }
-
-  async createBucket(name?: string): Promise<boolean> {
-    super.checkBucket(name);
-    if (this.bucketCreated) {
+  async createBucket(name: string): Promise<boolean> {
+    const n = slugify(name);
+    if (super.checkBucket(n)) {
       return true;
     }
+    const bucket = this.storage.bucket(n);
+    const [exists] = await bucket.exists();
+    if (exists) {
+      return true;
+    }
+
     try {
-      await this.storage.createBucket(this.bucketName);
-      this.bucketCreated = true;
+      await this.storage.createBucket(n);
+      this.buckets.push(n);
       return true;
     } catch (e) {
       if (e.code === 409) {
         // error code 409 is 'You already own this bucket. Please select another name.'
         // so we can safely return true if this error occurs
-        this.bucketCreated = true;
         return true;
       }
       throw new Error(e.message);
     }
   }
 
-  async clearBucket(): Promise<boolean> {
-    await this.storage.bucket(this.bucketName).deleteFiles({ force: true });
+  async selectBucket(name: string): Promise<boolean> {
+    const [error] = await to(this.createBucket(name));
+    if (error !== null) {
+      throw error;
+    }
+    this.bucketName = name;
     return true;
   }
 
-  async deleteBucket(): Promise<boolean> {
-    return false;
+  async clearBucket(name?: string): Promise<boolean> {
+    const n = name || this.bucketName;
+    await this.storage.bucket(n).deleteFiles({ force: true });
+    return true;
+  }
+
+  async deleteBucket(name?: string): Promise<boolean> {
+    const n = name || this.bucketName;
+    try {
+      const data = await this.storage.bucket(n).delete();
+      // console.log(data);
+      if (n === this.bucketName) {
+        this.bucketName = null;
+      }
+      this.buckets = this.buckets.filter(b => b !== n);
+      return true;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  async listBuckets(): Promise<string[]> {
+    const [buckets] = await this.storage.getBuckets();
+    return buckets.map(b => b.metadata.id);
   }
 
   private async getMetaData(files: string[]) {

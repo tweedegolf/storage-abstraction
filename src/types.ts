@@ -2,10 +2,17 @@ import { Readable } from 'stream';
 
 export interface IStorage {
   /**
-   * @param name?: name of the bucket to create or to use is the bucket already exists. Note that
-   * the provided name will be slugified
+   * @param name?: name of the bucket to create, returns true once the bucket has been created but
+   * also when the bucket already exists. Note that the provided name will be slugified. Also note that
+   * you have to use `selectBucket` to start using the newly created bucket
    */
-  createBucket(name?: string): Promise<boolean>;
+  createBucket(name: string): Promise<boolean>;
+
+  /**
+   * @param name?: name of the bucket to use, if the bucket does not exist it will be created.
+   * Note that the provided name will be slugified.
+   */
+  selectBucket(name: string): Promise<boolean>;
 
   /**
    * @param name?: deletes all file in the bucket. If no name is provided the default bucket of the
@@ -20,20 +27,19 @@ export interface IStorage {
   deleteBucket(name?: string): Promise<boolean>;
 
   /**
-   * @param filePath: path to the file to be copied
-   * @param config?: setting for processing this file by the permanent storage
-   * @param config.path?: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
-   * @param config.newName?: the name of the file in the storage
-   * @param config.remove?: whether or not to remove the file after it has been copied to the storage
+   * Gets a list of the names of the buckets in this storage
+   */
+  listBuckets(): Promise<string[]>;
+
+  /**
+   * @param origPath: path of the file to be copied
+   * @param targetPath: path to copy the file to
    */
   addFileFromPath(origPath: string, targetPath: string): Promise<boolean>;
 
   /**
    * @param buffer: file as buffer
-   * @param config?: setting for processing this file by the permanent storage
-   * @param config.path?: the path to the file in the storage; this allows you to organize your files in subfolders in the bucket
-   * @param config.newName?: the name of the file in the storage
-   * @param config.remove?: whether or not to remove the temp file after it has been stored
+   * @param targetPath: path to the file to save the buffer to
    */
   addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean>;
 

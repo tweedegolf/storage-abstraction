@@ -41,6 +41,10 @@ export class Storage implements IStorage {
     return this.storage.deleteBucket(name);
   }
 
+  async listBuckets(): Promise<string[]> {
+    return this.storage.listBuckets();
+  }
+
   async getFileAsReadable(name: string): Promise<Readable> {
     return this.storage.getFileAsReadable(name);
   }
@@ -53,8 +57,8 @@ export class Storage implements IStorage {
     return this.storage.listFiles();
   }
 
-  async switchBucket(name: string): Promise<boolean> {
-    return this.storage.createBucket(name);
+  async selectBucket(name: string): Promise<boolean> {
+    return this.storage.selectBucket(name);
   }
 
   switchStorage(config: StorageConfig): void {
