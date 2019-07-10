@@ -60,19 +60,19 @@ export interface IStorage {
 }
 
 export type ConfigAmazonS3 = {
-  bucketName: string,
+  bucketName?: string,
   accessKeyId: string,
   secretAccessKey: string,
 };
 
 export type ConfigGoogleCloud = {
-  bucketName: string,
+  bucketName?: string,
   projectId: string,
   keyFilename: string,
 };
 
 export type ConfigLocal = {
-  bucketName: string,
+  bucketName?: string,
   directory: string,
 };
 

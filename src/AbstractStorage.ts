@@ -11,16 +11,13 @@ export abstract class AbstractStorage implements IStorage {
   public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD';
   public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3';
   public static TYPE_LOCAL: string = 'TYPE_LOCAL';
-  protected bucketName: string;
-  protected bucketOrigName: string;
+  protected bucketName: null | string = null;
   protected buckets: string[] = [];
 
   constructor(config: StorageConfig) {
-    if (typeof config.bucketName === 'undefined') {
-      throw new Error('config should define a bucket name');
+    if (typeof config.bucketName !== 'undefined') {
+      this.bucketName = slugify(config.bucketName);
     }
-    this.bucketOrigName = config.bucketName;
-    this.bucketName = slugify(config.bucketName);
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<boolean> {

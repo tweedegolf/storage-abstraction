@@ -2,7 +2,7 @@ import fs from 'fs';
 import to from 'await-to-js';
 import path from 'path';
 import glob from 'glob';
-import rimraf, { Options } from 'rimraf';
+import rimraf from 'rimraf';
 import slugify from 'slugify';
 import { Readable } from 'stream';
 import { IStorage, ConfigLocal } from './types';
@@ -11,7 +11,6 @@ import { AbstractStorage } from './AbstractStorage';
 export class StorageLocal extends AbstractStorage implements IStorage {
   protected bucketName: string;
   private directory: string;
-  private storagePath: string;
 
   constructor(config: ConfigLocal) {
     super(config);
@@ -25,6 +24,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   private async createDestination(targetPath: string): Promise<string> {
+    if (this.bucketName === null) {
+      throw new Error('Please select a bucket first');
+    }
     const storagePath = path.join(this.directory, this.bucketName);
     // const dest = path.join(storagePath, ...targetPath.split('/'));
     const dest = path.join(storagePath, targetPath);
@@ -46,13 +48,10 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   protected async store(arg: string | Buffer, targetPath: string): Promise<boolean> {
     const dest = await this.createDestination(targetPath);
     if (typeof arg === 'string') {
-      try {
-        await fs.promises.copyFile(arg, dest);
-        return true;
-      } catch (e) {
-        throw e;
-      }
-    } else if (arg instanceof Buffer) {
+      await fs.promises.copyFile(arg, dest);
+      return true;
+    }
+    if (arg instanceof Buffer) {
       const writeStream = fs.createWriteStream(dest);
       const readStream = new Readable();
       readStream._read = () => { }; // _read is required but you can noop it
@@ -85,28 +84,25 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async clearBucket(name?: string): Promise<boolean> {
-    const bn = name || this.bucketName;
+    let bn = name || this.bucketName;
+    bn = slugify(bn);
     if (!bn) {
       return true;
     }
     const storagePath = path.join(this.directory, bn);
-    return new Promise<boolean>((resolve, reject) => {
-      glob(`${storagePath}/**/*`, {}, async (err, files) => {
-        if (err !== null) {
-          reject(err);
-        } else {
-          const promises = files.map((f) => {
-            return fs.promises.unlink(f);
-          });
-          await Promise.all(promises);
-          resolve(true);
+    return new Promise((resolve) => {
+      rimraf(storagePath, (e) => {
+        if (e !== null) {
+          throw e;
         }
+        resolve(true);
       });
     });
   }
 
   async deleteBucket(name?: string): Promise<boolean> {
-    const bn = name || this.bucketName;
+    let bn = name || this.bucketName;
+    bn = slugify(bn);
     if (!bn) {
       return true;
     }
@@ -122,25 +118,17 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async selectBucket(name: string): Promise<boolean> {
-    try {
-      this.createBucket(name);
-      this.bucketName = name;
-      return true;
-    } catch (e) {
-      throw e;
-    }
+    this.createBucket(name);
+    this.bucketName = name;
+    return true;
   }
 
   async listBuckets(): Promise<string[]> {
-    try {
-      const files = await fs.promises.readdir(this.directory);
-      const stats = await Promise.all(files.map(f => fs.promises.stat(path.join(this.directory, f))));
-      const folders = files.filter((f, i) => stats[i].isDirectory());
-      // console.log(files);
-      return folders;
-    } catch (e) {
-      throw e;
-    }
+    const files = await fs.promises.readdir(this.directory);
+    const stats = await Promise.all(files.map(f => fs.promises.stat(path.join(this.directory, f))));
+    const folders = files.filter((f, i) => stats[i].isDirectory());
+    // console.log(files);
+    return folders;
   }
 
   private async globFiles(folder: string): Promise<string[]> {
@@ -169,15 +157,13 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async getFileAsReadable(name: string): Promise<Readable> {
-    const storagePath = path.join(this.directory, this.bucketName);
-    const p = path.join(storagePath, name);
+    const p = path.join(this.directory, this.bucketName, name);
     await fs.promises.stat(p);
     return fs.createReadStream(p);
   }
 
   async removeFile(fileName: string): Promise<boolean> {
-    const storagePath = path.join(this.directory, this.bucketName);
-    const p = path.join(storagePath, fileName);
+    const p = path.join(this.directory, this.bucketName, fileName);
     const [err] = await to(fs.promises.unlink(p));
     if (err !== null) {
       // don't throw an error if the file has already been removed (or didn't exist at all)

@@ -50,6 +50,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
 
   async createBucket(name: string): Promise<boolean> {
     const n = slugify(name);
+    // console.log('createBucket', n);
     if (super.checkBucket(n)) {
       // console.log('CHECK BUCKET', n);
       return true;
@@ -60,34 +61,38 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       this.buckets.push(n);
       return true;
     } catch (e) {
-      try {
-        const data = await this.storage.createBucket({ Bucket: n }).promise();
-        // console.log('CREATE BUCKET', n, data);
-        this.buckets.push(n);
-        return true;
-      } catch (e) {
+      if (e.code === 'Forbidden') {
+        // BucketAlreadyExists: The requested bucket name is not available.
+        // The bucket namespace is shared by all users of the system.
+        // Please select a different name and try again.
         throw e;
       }
+      const data = await this.storage.createBucket({ Bucket: n }).promise();
+      // console.log('CREATE BUCKET', n, data);
+      this.buckets.push(n);
+      return true;
     }
   }
 
   async selectBucket(name: string): Promise<boolean> {
-    try {
-      await this.createBucket(name);
-      this.bucketName = name;
-      return true;
-    } catch (e) {
-      throw e;
-    }
+    await this.createBucket(name);
+    this.bucketName = name;
+    return true;
   }
 
   async clearBucket(name?: string): Promise<boolean> {
-    const n = name || this.bucketName;
+    let n = name || this.bucketName;
+    n = slugify(n);
+    // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
       MaxKeys: 1000,
     };
     const { Contents: content } = await this.storage.listObjects(params1).promise();
+    if (content.length === 0) {
+      return true;
+    }
+
     const params2 = {
       Bucket: n,
       Delete: {
@@ -95,16 +100,13 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
         Quiet: false,
       },
     };
-    try {
-      await this.storage.deleteObjects(params2).promise();
-      return true;
-    } catch (e) {
-      throw e;
-    }
+    await this.storage.deleteObjects(params2).promise();
+    return true;
   }
 
   async deleteBucket(name?: string): Promise<boolean> {
-    const n = name || this.bucketName;
+    let n = name || this.bucketName;
+    n = slugify(n);
     // try {
     //   const data = await this.storage.listObjectVersions({ Bucket: n }).promise();
     //   console.log(data);
@@ -112,6 +114,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     // } catch (e) {
     //   throw e;
     // }
+    // console.log('deleteBucket', n);
     try {
       await this.clearBucket(name);
       const result = await this.storage.deleteBucket({

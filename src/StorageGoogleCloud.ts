@@ -78,6 +78,9 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   protected async store(buffer: Buffer, targetPath: string): Promise<boolean>;
   protected async store(origPath: string, targetPath: string): Promise<boolean>;
   protected async store(arg: string | Buffer, targetPath: string): Promise<boolean> {
+    if (this.bucketName === null) {
+      throw new Error('Please select a bucket first');
+    }
     await this.createBucket(this.bucketName);
     let readStream: Readable;
     if (typeof arg === 'string') {
@@ -132,24 +135,23 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   }
 
   async clearBucket(name?: string): Promise<boolean> {
-    const n = name || this.bucketName;
+    let n = name || this.bucketName;
+    n = slugify(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
     return true;
   }
 
   async deleteBucket(name?: string): Promise<boolean> {
-    const n = name || this.bucketName;
-    try {
-      const data = await this.storage.bucket(n).delete();
-      // console.log(data);
-      if (n === this.bucketName) {
-        this.bucketName = null;
-      }
-      this.buckets = this.buckets.filter(b => b !== n);
-      return true;
-    } catch (e) {
-      throw e;
+    let n = name || this.bucketName;
+    n = slugify(n);
+    await this.clearBucket(n);
+    const data = await this.storage.bucket(n).delete();
+    // console.log(data);
+    if (n === this.bucketName) {
+      this.bucketName = null;
     }
+    this.buckets = this.buckets.filter(b => b !== n);
+    return true;
   }
 
   async listBuckets(): Promise<string[]> {
