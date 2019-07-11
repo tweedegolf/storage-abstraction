@@ -39,7 +39,7 @@
     "reflect-metadata": "^0.1.13",
     "sharp": "^0.22.1",
     "slugify": "^1.3.4",
-    "storage-abstraction": "^1.0.2",
+    "storage-abstraction": "^1.1.2",
     "ts-node": "^8.3.0",
     "typeorm": "^0.2.16",
     "uniquid": "^1.1.4"

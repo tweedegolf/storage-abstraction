@@ -31,7 +31,7 @@ Files will be stored in `/home/user/domains/my-site/images`, folders will be cre
 ### Google Cloud
 ```typescript
 type config = {
-  bucketName: string,
+  bucketName?: string,
   projectId: string,
   keyFilename: string, // path to key-file.json,
 }
@@ -40,7 +40,7 @@ type config = {
 ### Amazon S3
 ```typescript
 type config = {
-  bucketName: string,
+  bucketName?: string,
   accessKeyId: string,
   secretAccessKey: string,
 }
