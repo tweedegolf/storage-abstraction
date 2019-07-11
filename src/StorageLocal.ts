@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import to from 'await-to-js';
 import path from 'path';
 import glob from 'glob';
@@ -17,10 +18,11 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     const {
       directory,
     } = config;
-    if (!directory) {
-      throw new Error('provide a directory!');
-    }
     this.directory = directory;
+    if (!directory) {
+      // throw new Error('provide a directory!');
+      this.directory = os.tmpdir();
+    }
   }
 
   private async createDestination(targetPath: string): Promise<string> {

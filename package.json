@@ -1,6 +1,6 @@
 {
   "name": "storage-abstraction",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

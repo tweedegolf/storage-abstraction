@@ -2,6 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
+import slugify from 'slugify';
 import dotenv from 'dotenv';
 import { Storage } from '../src/Storage';
 import to from 'await-to-js';
@@ -56,7 +57,8 @@ describe(`testing ${type} storage`, () => {
     //   });
     if (type === Storage.TYPE_LOCAL) {
       await new Promise((resolve, reject) => {
-        rimraf(localDir, (e: Error) => {
+        fs.promises.unlink(path.join(localDir, 'test.jpg'));
+        rimraf(path.join(localDir, slugify(bucketName)), (e: Error) => {
           if (e) {
             throw e;
           } else {
@@ -142,12 +144,16 @@ describe(`testing ${type} storage`, () => {
       const readStream = await storage.getFileAsReadable('image1.jpg');
       const filePath = path.join(localDir, 'test.jpg');
       const writeStream = fs.createWriteStream(filePath);
-      readStream.pipe(writeStream);
-      writeStream.on('error', (e: Error) => {
-        console.log(e.message);
-      });
-      writeStream.on('finish', () => {
-        console.log('FINISHED');
+      await new Promise((resolve, reject) => {
+        readStream.pipe(writeStream);
+        writeStream.on('error', (e: Error) => {
+          console.log(e.message);
+          reject();
+        });
+        writeStream.on('finish', () => {
+          console.log('FINISHED');
+          resolve();
+        });
       });
     } catch (e) {
       console.log(e);

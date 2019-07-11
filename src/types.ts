@@ -74,7 +74,7 @@ export type ConfigGoogleCloud = {
 
 export type ConfigLocal = {
   bucketName?: string,
-  directory: string,
+  directory?: string,
 };
 
 export type StorageConfig =

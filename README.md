@@ -12,6 +12,14 @@ Each type of storage requires a different config object, the only key that these
 
 ### Local storage
 ```typescript
+type config = {
+  bucketName?: string,
+  directory?: string, // if omitted the default TMP dir of the os will be used
+}
+```
+Example: 
+
+```typescript
 const config = {
   bucketName: 'images',
   directory: '/home/user/domains/my-site',
@@ -22,22 +30,20 @@ Files will be stored in `/home/user/domains/my-site/images`, folders will be cre
 
 ### Google Cloud
 ```typescript
-const config = {
-  bucketName: 'images',
-  projectId: 'id-of-your-project',
-  keyFilename: 'path/to/json/key-file',
+type config = {
+  bucketName: string,
+  projectId: string,
+  keyFilename: string, // path to key-file.json,
 }
-const s = new Storage(config); 
 ```
 
 ### Amazon S3
 ```typescript
-const config = {
-  bucketName: 'images',
-  accessKeyId: 'your-access-key-id',
-  secretAccessKey: 'your-access-key-secret',
+type config = {
+  bucketName: string,
+  accessKeyId: string,
+  secretAccessKey: string,
 }
-const s = new Storage(config); 
 ```
 
 ## API methods
@@ -141,8 +147,20 @@ Note that `s1` and `s2` are not the same; the `s1` instance has a private member
 
 More functional classes can be added for different storage types, note however that there are many storage vendors that keep their API compliant with Amazon S3.
 
-## Example application
-TBD
-
 ## Tests
-TBD
+
+You can run a Jasmine test suite that tests the local storage type:
+
+```npm test```
+
+You can perform the same tests on a Google Cloud and Amazon S3 storage if you add your secret data to a `.env` file, see the file `.env.default` for more explanation. To run all 3 tests use this command:
+
+```npm run test-all```
+
+You can find some additional non-Jasmine tests in the file `tests/test.ts`. Uncomment the type of storage you want to test and run:
+
+```npm run test2```
+
+## Example application
+
+There is sample application that uses the storage abstraction and TsED and TypeORM. More documentation about this soon.
