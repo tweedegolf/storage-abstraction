@@ -45,15 +45,13 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     return dest;
   }
 
-  protected async store(buffer: Buffer, targetPath: string): Promise<boolean>;
-  protected async store(filePath: string, targetPath: string): Promise<boolean>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<boolean> {
+  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
+  protected async store(filePath: string, targetPath: string): Promise<void>;
+  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
     const dest = await this.createDestination(targetPath);
     if (typeof arg === 'string') {
       await fs.promises.copyFile(arg, dest);
-      return true;
-    }
-    if (arg instanceof Buffer) {
+    } else if (arg instanceof Buffer) {
       const writeStream = fs.createWriteStream(dest);
       const readStream = new Readable();
       readStream._read = () => { }; // _read is required but you can noop it
@@ -61,19 +59,20 @@ export class StorageLocal extends AbstractStorage implements IStorage {
       readStream.push(null); // close stream
 
       return new Promise((resolve, reject) => {
-        readStream.on('end', resolve);
-        readStream.on('error', reject);
-        readStream.pipe(writeStream);
-        writeStream.on('error', reject);
+        readStream
+          .pipe(writeStream)
+          .on('error', reject)
+          .on('finish', resolve);
+        writeStream
+          .on('error', reject);
       });
     }
-    return false;
   }
 
-  async createBucket(name: string): Promise<boolean> {
+  async createBucket(name: string): Promise<void> {
     const bn = slugify(name);
     if (super.checkBucket(bn)) {
-      return true;
+      return;
     }
     const storagePath = path.join(this.directory, bn);
     return fs.promises.stat(storagePath)
@@ -81,15 +80,14 @@ export class StorageLocal extends AbstractStorage implements IStorage {
       .catch(() => fs.promises.mkdir(storagePath, { recursive: true, mode: 0o777 }))
       .then(() => {
         this.buckets.push(bn);
-        return true;
       });
   }
 
-  async clearBucket(name?: string): Promise<boolean> {
+  async clearBucket(name?: string): Promise<void> {
     let bn = name || this.bucketName;
     bn = slugify(bn);
     if (!bn) {
-      return true;
+      return;
     }
     const storagePath = path.join(this.directory, bn);
     return new Promise((resolve) => {
@@ -97,16 +95,16 @@ export class StorageLocal extends AbstractStorage implements IStorage {
         if (e !== null) {
           throw e;
         }
-        resolve(true);
+        resolve();
       });
     });
   }
 
-  async deleteBucket(name?: string): Promise<boolean> {
+  async deleteBucket(name?: string): Promise<void> {
     let bn = name || this.bucketName;
     bn = slugify(bn);
     if (!bn) {
-      return true;
+      return;
     }
     const storagePath = path.join(this.directory, bn);
     return new Promise((resolve) => {
@@ -114,15 +112,14 @@ export class StorageLocal extends AbstractStorage implements IStorage {
         if (e !== null) {
           throw e;
         }
-        resolve(true);
+        resolve();
       });
     });
   }
 
-  async selectBucket(name: string): Promise<boolean> {
-    this.createBucket(name);
+  async selectBucket(name: string): Promise<void> {
+    await this.createBucket(name);
     this.bucketName = name;
-    return true;
   }
 
   async listBuckets(): Promise<string[]> {
@@ -167,17 +164,15 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     return fs.createReadStream(p);
   }
 
-  async removeFile(fileName: string): Promise<boolean> {
+  async removeFile(fileName: string): Promise<void> {
     const p = path.join(this.directory, this.bucketName, fileName);
     const [err] = await to(fs.promises.unlink(p));
     if (err !== null) {
       // don't throw an error if the file has already been removed (or didn't exist at all)
       if (err.message.indexOf('no such file or directory') !== -1) {
-        return true;
+        return;
       }
       throw new Error(err.message);
-    } else {
-      return true;
     }
   }
 }

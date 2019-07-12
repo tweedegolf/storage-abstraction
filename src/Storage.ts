@@ -20,23 +20,23 @@ export class Storage implements IStorage {
     this.switchStorage(config);
   }
 
-  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
     return this.storage.addFileFromBuffer(buffer, targetPath);
   }
 
-  async addFileFromPath(origPath: string, targetPath: string): Promise<boolean> {
+  async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
     return this.storage.addFileFromPath(origPath, targetPath);
   }
 
-  async createBucket(name?: string): Promise<boolean> {
+  async createBucket(name?: string): Promise<void> {
     return this.storage.createBucket(name);
   }
 
-  async clearBucket(name?: string): Promise<boolean> {
+  async clearBucket(name?: string): Promise<void> {
     return this.storage.clearBucket(name);
   }
 
-  async deleteBucket(name?: string): Promise<boolean> {
+  async deleteBucket(name?: string): Promise<void> {
     return this.storage.deleteBucket(name);
   }
 
@@ -52,7 +52,7 @@ export class Storage implements IStorage {
     return this.storage.getFileAsReadable(name);
   }
 
-  async removeFile(fileName: string): Promise<boolean> {
+  async removeFile(fileName: string): Promise<void> {
     return this.storage.removeFile(fileName);
   }
 
@@ -60,7 +60,7 @@ export class Storage implements IStorage {
     return this.storage.listFiles();
   }
 
-  async selectBucket(name: string): Promise<boolean> {
+  async selectBucket(name: string): Promise<void> {
     return this.storage.selectBucket(name);
   }
 

@@ -37,29 +37,27 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     return this.storage.getObject(params).createReadStream();
   }
 
-  async removeFile(fileName: string): Promise<boolean> {
+  async removeFile(fileName: string): Promise<void> {
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
     };
     await this.storage.deleteObject(params).promise();
-    return true;
   }
 
   // util members
 
-  async createBucket(name: string): Promise<boolean> {
+  async createBucket(name: string): Promise<void> {
     const n = slugify(name);
     // console.log('createBucket', n);
     if (super.checkBucket(n)) {
       // console.log('CHECK BUCKET', n);
-      return true;
+      return;
     }
     try {
       const data = await this.storage.headBucket({ Bucket: n }).promise();
       // console.log('HEAD BUCKET', n, data);
       this.buckets.push(n);
-      return true;
     } catch (e) {
       if (e.code === 'Forbidden') {
         // BucketAlreadyExists: The requested bucket name is not available.
@@ -70,17 +68,15 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       const data = await this.storage.createBucket({ Bucket: n }).promise();
       // console.log('CREATE BUCKET', n, data);
       this.buckets.push(n);
-      return true;
     }
   }
 
-  async selectBucket(name: string): Promise<boolean> {
+  async selectBucket(name: string): Promise<void> {
     await this.createBucket(name);
     this.bucketName = name;
-    return true;
   }
 
-  async clearBucket(name?: string): Promise<boolean> {
+  async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
     n = slugify(n);
     // console.log('clearBucket', n);
@@ -90,7 +86,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     };
     const { Contents: content } = await this.storage.listObjects(params1).promise();
     if (content.length === 0) {
-      return true;
+      return;
     }
 
     const params2 = {
@@ -101,10 +97,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       },
     };
     await this.storage.deleteObjects(params2).promise();
-    return true;
   }
 
-  async deleteBucket(name?: string): Promise<boolean> {
+  async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
     n = slugify(n);
     // try {
@@ -125,10 +120,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       }
       this.buckets = this.buckets.filter(b => b !== n);
       // console.log(this.buckets, result);
-      return true;
     } catch (e) {
       if (e.code === 'NoSuchBucket') {
-        return true;
+        return;
       }
       throw e;
     }
@@ -140,9 +134,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     return this.buckets;
   }
 
-  protected async store(origPath: string, targetPath: string): Promise<boolean>;
-  protected async store(buffer: Buffer, targetPath: string): Promise<boolean>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<boolean> {
+  protected async store(origPath: string, targetPath: string): Promise<void>;
+  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
+  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error('Please select a bucket first');
     }
@@ -162,7 +156,6 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Body: readable,
     };
     await this.storage.upload(params).promise();
-    return true;
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {

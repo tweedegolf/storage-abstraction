@@ -19,16 +19,14 @@ export abstract class AbstractStorage implements IStorage {
     }
   }
 
-  async addFileFromPath(origPath: string, targetPath: string): Promise<boolean> {
+  async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
     const paths = targetPath.split('/').map(d => slugify(d));
     await this.store(origPath, path.join(...paths));
-    return true;
   }
 
-  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<boolean> {
+  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
     const paths = targetPath.split('/').map(d => slugify(d));
     await this.store(buffer, path.join(...paths));
-    return true;
   }
 
   protected checkBucket(name: string): boolean {
@@ -42,23 +40,23 @@ export abstract class AbstractStorage implements IStorage {
 
   // stubs
 
-  protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>;
+  protected abstract async store(filePath: string, targetFileName: string): Promise<void>;
 
-  protected abstract async store(buffer: Buffer, targetFileName: string): Promise<boolean>;
+  protected abstract async store(buffer: Buffer, targetFileName: string): Promise<void>;
 
-  abstract async createBucket(name: string): Promise<boolean>;
+  abstract async createBucket(name: string): Promise<void>;
 
-  abstract async selectBucket(name: string): Promise<boolean>;
+  abstract async selectBucket(name: string): Promise<void>;
 
-  abstract async clearBucket(name?: string): Promise<boolean>;
+  abstract async clearBucket(name?: string): Promise<void>;
 
-  abstract async deleteBucket(name?: string): Promise<boolean>;
+  abstract async deleteBucket(name?: string): Promise<void>;
 
   abstract async listBuckets(): Promise<string[]>;
 
   abstract async getFileAsReadable(name: string): Promise<Readable>;
 
-  abstract async removeFile(fileName: string): Promise<boolean>;
+  abstract async removeFile(fileName: string): Promise<void>;
 
   abstract async listFiles(): Promise<[string, number][]>;
 }

@@ -70,23 +70,15 @@ describe(`testing ${type} storage`, () => {
   });
 
   it('create bucket', async () => {
-    await expectAsync(storage.createBucket(bucketName)).toBeResolvedTo(true);
+    await expectAsync(storage.createBucket(bucketName)).toBeResolved();
   });
 
-  // if (type === Storage.TYPE_AMAZON_S3) {
-  //   it('wait a bit', async () => {
-  //     await new Promise((resolve) => {
-  //       setTimeout(resolve, 1000);
-  //     });
-  //   });
-  // }
-
   it('clear bucket', async () => {
-    await expectAsync(storage.clearBucket()).toBeResolvedTo(true);
+    await expectAsync(storage.clearBucket()).toBeResolved();
   });
 
   it('add file success', async () => {
-    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', 'image1.jpg')).toBeResolvedTo(true);
+    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', 'image1.jpg')).toBeResolved();
   });
 
   it('add file error', async () => {
@@ -99,17 +91,14 @@ describe(`testing ${type} storage`, () => {
     //   name: 'renamed.jpg',
     // }));
 
-    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', 'subdir/renamed.jpg')).toBeResolvedTo(true);
+    await expectAsync(storage.addFileFromPath('./tests/data/image1.jpg', 'subdir/renamed.jpg')).toBeResolved();
   });
 
-  // necessary for Google and Amazon
-  if (type !== Storage.TYPE_LOCAL) {
-    it('wait a bit', async () => {
-      await new Promise((resolve) => {
-        setTimeout(resolve, 5000);
-      });
-    });
-  }
+  // it('wait a bit', async () => {
+  //   await new Promise((resolve) => {
+  //     setTimeout(resolve, 1000);
+  //   });
+  // });
 
   it('list files 1', async () => {
     const expectedResult: [string, number][] = [['image1.jpg', 32201], ['subdir/renamed.jpg', 32201]];
@@ -119,11 +108,11 @@ describe(`testing ${type} storage`, () => {
   it('remove file success', async () => {
     // const [err, result] = await to(storage.removeFile('subdir/renamed.jpg'));
     // console.log(err, result);
-    await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeResolvedTo(true);
+    await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeResolved();
   });
 
   it('remove file again', async () => {
-    await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeResolvedTo(true);
+    await expectAsync(storage.removeFile('subdir/renamed.jpg')).toBeResolved();
   });
 
   it('list files 2', async () => {
@@ -145,15 +134,26 @@ describe(`testing ${type} storage`, () => {
       const filePath = path.join(localDir, 'test.jpg');
       const writeStream = fs.createWriteStream(filePath);
       await new Promise((resolve, reject) => {
-        readStream.pipe(writeStream);
-        writeStream.on('error', (e: Error) => {
-          console.log(e.message);
-          reject();
-        });
-        writeStream.on('finish', () => {
-          console.log('FINISHED');
-          resolve();
-        });
+        readStream
+          .pipe(writeStream)
+          .on('error', (e: Error) => {
+            // console.log('read', e.message);
+            reject();
+          })
+          .on('finish', () => {
+            // console.log('read finish');
+            resolve();
+          });
+
+        writeStream
+          .on('error', (e: Error) => {
+            // console.log('write', e.message);
+            reject();
+          })
+          .on('finish', () => {
+            // console.log('write finish');
+            resolve();
+          });
       });
     } catch (e) {
       console.log(e);

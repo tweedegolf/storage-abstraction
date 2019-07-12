@@ -53,20 +53,18 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   }
 
   // not in use
-  async downloadFile(fileName: string, downloadPath: string): Promise<boolean> {
+  async downloadFile(fileName: string, downloadPath: string): Promise<void> {
     const file = await this.storage.bucket(this.bucketName).file(fileName);
     const localFilename = path.join(downloadPath, fileName);
     await file.download({ destination: localFilename });
-    return true;
   }
 
-  async removeFile(fileName: string): Promise<boolean> {
+  async removeFile(fileName: string): Promise<void> {
     try {
       await this.storage.bucket(this.bucketName).file(fileName).delete();
-      return true;
     } catch (e) {
       if (e.message.indexOf('No such object') !== -1) {
-        return true;
+        return;
       }
       // console.log(e.message);
       throw e;
@@ -75,73 +73,73 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   // util members
 
-  protected async store(buffer: Buffer, targetPath: string): Promise<boolean>;
-  protected async store(origPath: string, targetPath: string): Promise<boolean>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<boolean> {
+  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
+  protected async store(origPath: string, targetPath: string): Promise<void>;
+  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error('Please select a bucket first');
     }
     await this.createBucket(this.bucketName);
+
     let readStream: Readable;
     if (typeof arg === 'string') {
+      await fs.promises.stat(arg); // throws error if path doesn't exist
       readStream = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readStream._read = () => { }; // _read is required but you can noop it
-      readStream.push(arg); readStream.push(null);
+      readStream.push(arg);
       readStream.push(null);
     }
     const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
-
     return new Promise((resolve, reject) => {
-      readStream.on('end', resolve);
-      readStream.on('error', reject);
-      readStream.pipe(writeStream);
-      writeStream.on('error', reject);
+      readStream
+        .pipe(writeStream)
+        .on('error', reject)
+        .on('finish', resolve);
+      writeStream
+        .on('error', reject)
     });
   }
 
-  async createBucket(name: string): Promise<boolean> {
+  async createBucket(name: string): Promise<void> {
     const n = slugify(name);
     if (super.checkBucket(n)) {
-      return true;
+      return;
     }
     const bucket = this.storage.bucket(n);
     const [exists] = await bucket.exists();
     if (exists) {
-      return true;
+      return;
     }
 
     try {
       await this.storage.createBucket(n);
       this.buckets.push(n);
-      return true;
     } catch (e) {
       if (e.code === 409) {
         // error code 409 is 'You already own this bucket. Please select another name.'
         // so we can safely return true if this error occurs
-        return true;
+        return;
       }
       throw new Error(e.message);
     }
   }
 
-  async selectBucket(name: string): Promise<boolean> {
+  async selectBucket(name: string): Promise<void> {
     const [error] = await to(this.createBucket(name));
     if (error !== null) {
       throw error;
     }
     this.bucketName = name;
-    return true;
   }
 
-  async clearBucket(name?: string): Promise<boolean> {
+  async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
     n = slugify(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
-    return true;
   }
 
-  async deleteBucket(name?: string): Promise<boolean> {
+  async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
     n = slugify(n);
     await this.clearBucket(n);
@@ -151,7 +149,6 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       this.bucketName = null;
     }
     this.buckets = this.buckets.filter(b => b !== n);
-    return true;
   }
 
   async listBuckets(): Promise<string[]> {

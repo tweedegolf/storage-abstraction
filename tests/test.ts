@@ -49,18 +49,10 @@ const test = async (storage: IStorage) => {
   r = await storage.selectBucket('fnaap1');
   r = await storage.addFileFromPath('./tests/data/image1.jpg', 'subdir/sub subdir/new name.jpg');
 
-  await new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  });
-
   r = await storage.listFiles();
   console.log('list files', r);
 
   r = await storage.clearBucket();
-
-  await new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  });
 
   r = await storage.listFiles();
   console.log('list files', r);
@@ -80,11 +72,13 @@ const test = async (storage: IStorage) => {
     const p = path.join(__dirname, 'test.jpg');
     // console.log(p);
     const writeStream = fs.createWriteStream(p);
-    readStream.on('end', resolve);
-    readStream.on('error', reject);
-    writeStream.on('error', reject);
-    // writeStream.on('finish', () => { console.log('write finished'); });
-    readStream.pipe(writeStream);
+    readStream
+      .pipe(writeStream)
+      .on('error', reject)
+      .on('finish', resolve);
+    writeStream
+      .on('error', reject)
+      .on('finish', () => { console.log('write finished'); });
   });
   console.log('readstream error:', typeof r !== 'undefined');
 
@@ -94,6 +88,11 @@ const test = async (storage: IStorage) => {
 
 // const storage = new StorageLocal(configLocal);
 // const storage = new StorageAmazonS3(configS3);
-const storage = new StorageGoogleCloud(configGoogle);
-// storage.listBuckets().then(data => { console.log(data); });
-test(storage);
+// const storage = new StorageGoogleCloud(configGoogle);
+// test(storage);
+
+test(new StorageLocal(configLocal))
+  .then(() => test(new StorageAmazonS3(configS3)))
+  .then(() => test(new StorageGoogleCloud(configGoogle)))
+  .then(() => { console.log('done'); })
+  .catch((e) => { console.log(e); });

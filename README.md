@@ -50,25 +50,25 @@ type config = {
 
 ### createBucket
 ```typescript
-createBucket(name: string): Promise<boolean>;
+createBucket(name: string): Promise<void>;
 ```
-Once the bucket has been created `true` will be returned; if the bucket already existed `true` will be returned as well.
+Creates a new bucket, does not fail if the bucket already exists.
 
 ### selectBucket
 ```typescript
-selectBucket(name: string): Promise<boolean>;
+selectBucket(name: string): Promise<void>;
 ```
 Select another bucket for storing files, the bucket will be created automatically if it doesn't exist.
 
 ### clearBucket
 ```typescript
-clearBucket(name?: string): Promise<boolean>;
+clearBucket(name?: string): Promise<void>;
 ```
 Removes all files in the bucket. If you omit the `name` parameter all files in the currently selected bucket will be removed. If no bucket is selected an error will be thrown.
 
 ### deleteBucket
 ```typescript
-deleteBucket(name?: string): Promise<boolean>;
+deleteBucket(name?: string): Promise<void>;
 ```
 Deletes the bucket and all files in it. If you omit the `name` parameter the currently selected bucket will be deleted. If no bucket is selected an error will be thrown.
 
@@ -86,13 +86,13 @@ Returns the name of the currently selected bucket or `null` if no bucket has bee
 
 ### addFileFromPath
 ```typescript
-addFileFromPath(filePath: string, targetPath: string): Promise<boolean>;
+addFileFromPath(filePath: string, targetPath: string): Promise<void>;
 ```
 Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name plus extension; the value will be slugified automatically.
 
 ### addFileFromBuffer
 ```typescript
-addFileFromUpload(buffer: Buffer, targetPath: string): Promise<boolean>;
+addFileFromUpload(buffer: Buffer, targetPath: string): Promise<void>;
 ```
 Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name plus extension; the value will be slugified automatically. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with DiskStorage.
 
@@ -104,9 +104,9 @@ Returns a file in the storage as a readable stream.
 
 ### removeFile
 ```typescript
-removeFile(name: string): Promise<boolean>;
+removeFile(name: string): Promise<void>;
 ```
-Removes a file from the bucket. Returns `true` if the file didn't exist.
+Removes a file from the bucket. Does not fail if the file didn't exist.
 
 ### listFiles
 ```typescript
