@@ -20,7 +20,7 @@ import { MediaFile } from '../entities/MediaFile';
 
 @Service()
 export class MediaFileService implements OnInit {
-  private storage: Storage;
+  private storage: Storage | null = null;
 
   constructor() {
     const type = getStorageType();
@@ -49,13 +49,15 @@ export class MediaFileService implements OnInit {
     }
   }
 
-  async $onInit(): Promise<boolean> {
+  async $onInit(): Promise<void> {
+    if (this.storage !== null || this.storage.getSelectedBucket() === null) {
+      return;
+    }
     try {
-      await this.storage.createBucket();
+      await this.storage.createBucket(this.storage.getSelectedBucket());
     } catch (e) {
       throw e;
     }
-    return true;
   }
 
   public setStorage(config: StorageConfig): void {

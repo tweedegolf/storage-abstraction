@@ -44,6 +44,10 @@ export class Storage implements IStorage {
     return this.storage.listBuckets();
   }
 
+  public getSelectedBucket(): string | null {
+    return this.storage.getSelectedBucket();
+  }
+
   async getFileAsReadable(name: string): Promise<Readable> {
     return this.storage.getFileAsReadable(name);
   }
@@ -60,7 +64,7 @@ export class Storage implements IStorage {
     return this.storage.selectBucket(name);
   }
 
-  switchStorage(config: StorageConfig): void {
+  public switchStorage(config: StorageConfig): void {
     if (typeof (config as ConfigLocal).directory !== 'undefined') {
       this.storage = new StorageLocal(config as ConfigLocal);
     } else if (typeof (config as ConfigAmazonS3).accessKeyId !== 'undefined') {

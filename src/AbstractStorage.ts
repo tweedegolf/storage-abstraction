@@ -36,6 +36,10 @@ export abstract class AbstractStorage implements IStorage {
     return this.buckets.indexOf(name) !== -1;
   }
 
+  public getSelectedBucket(): string | null {
+    return this.bucketName;
+  }
+
   // stubs
 
   protected abstract async store(filePath: string, targetFileName: string): Promise<boolean>;

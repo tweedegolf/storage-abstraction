@@ -32,6 +32,11 @@ export interface IStorage {
   listBuckets(): Promise<string[]>;
 
   /**
+  * Returns the name of the currently selected bucket or `null` if no bucket has been selected yet
+  */
+  getSelectedBucket(): string | null;
+
+  /**
    * @param origPath: path of the file to be copied
    * @param targetPath: path to copy the file to, folders will be created automatically
    */

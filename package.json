@@ -1,6 +1,6 @@
 {
   "name": "storage-abstraction",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,21 +11,21 @@
   "dependencies": {
     "@google-cloud/storage": "^2.5.0",
     "@types/ramda": "^0.26.12",
+    "@types/rimraf": "^2.0.2",
     "await-to-js": "^2.1.1",
     "aws-sdk": "^2.479.0",
     "dotenv": "^8.0.0",
     "glob": "^7.1.4",
     "ramda": "^0.26.1",
     "slugify": "^1.3.4",
+    "rimraf": "^2.6.3",
     "uniquid": "^1.1.4"
   },
   "devDependencies": {
     "@types/jasmine": "^3.3.13",
     "@types/node": "^11.13.15",
-    "@types/rimraf": "^2.0.2",
     "jasmine": "^3.4.0",
     "jasmine-ts": "^0.3.0",
-    "rimraf": "^2.6.3",
     "ts-node": "^8.3.0",
     "tsc-watch": "^2.2.1",
     "tslint": "^5.18.0",

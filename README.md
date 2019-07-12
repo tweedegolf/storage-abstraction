@@ -78,6 +78,12 @@ listBuckets(): Promise<string[]>
 ```
 Returns a list with the names of all buckets in the storage.
 
+### getSelectedBucket
+```typescript
+getSelectedBucket(): string | null
+```
+Returns the name of the currently selected bucket or `null` if no bucket has been selected yet.
+
 ### addFileFromPath
 ```typescript
 addFileFromPath(filePath: string, targetPath: string): Promise<boolean>;
@@ -159,4 +165,11 @@ You can find some additional non-Jasmine tests in the file `tests/test.ts`. Unco
 
 ## Example application
 
-There is sample application that uses the storage abstraction and TsED and TypeORM. More documentation about this soon.
+There is sample application that uses the storage abstraction and TsED and TypeORM. 
+
+- ```cd ./example```
+- ```docker-compose run backend npm i```
+- ```docker-compose up```
+
+Application available at https://localhost
+
