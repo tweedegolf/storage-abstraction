@@ -1,14 +1,11 @@
 {
   "name": "storage-abstraction",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist/*",
-    "tests/data/*",
-    "tests/test.ts",
-    "tests/test.jasmine.ts"
+    "dist/*"
   ],
   "dependencies": {
     "@google-cloud/storage": "^2.5.0",
@@ -39,9 +36,11 @@
     "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./tests/*.ts",
     "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
     "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
-    "test": "npm run test-local",
-    "test2": "ts-node ./tests/test",
-    "test-all": "npm run test-local && npm run test-google && npm run test-amazon",
+    "test": "npm run test-local && npm run test-google && npm run test-amazon",
+    "test2-google": "TYPE='TYPE_GOOGLE_CLOUD' ts-node ./tests/test",
+    "test2-amazon": "TYPE='TYPE_AMAZON_S3' ts-node ./tests/test",
+    "test2-local": "TYPE='TYPE_LOCAL' ts-node ./tests/test",
+    "test2": "npm run test2-local && npm run test2-google && npm run test2-amazon",
     "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
     "copy": "cd ./example/backend && ./copy.sh",
     "tsc": "node_modules/.bin/tsc",

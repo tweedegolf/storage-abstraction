@@ -149,13 +149,9 @@ More functional classes can be added for different storage types, note however t
 
 ## Tests
 
-You can run a Jasmine test suite that tests the local storage type:
+If you want to run the tests you have to checkout the repository from github and install all dependencies with ```npm install```. The tests test all storage types; for Google Cloud and Amazon S3 you need add your credentials to a `.env` file, see the file `.env.default` for more explanation. To run the Jasmine tests use this command:
 
 ```npm test```
-
-You can perform the same tests on a Google Cloud and Amazon S3 storage if you add your secret data to a `.env` file, see the file `.env.default` for more explanation. To run all 3 tests use this command:
-
-```npm run test-all```
 
 You can find some additional non-Jasmine tests in the file `tests/test.ts`. Uncomment the type of storage you want to test and run:
 
