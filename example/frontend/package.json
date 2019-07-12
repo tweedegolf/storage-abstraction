@@ -24,7 +24,7 @@
     "@types/reactstrap": "^8.0.1",
     "@types/redux": "^3.6.0",
     "@types/redux-logger": "^3.0.7",
-    "axios": "^0.18.0",
+    "axios": ">=0.18.1",
     "bootstrap": "^4.3.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
