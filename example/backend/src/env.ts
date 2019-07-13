@@ -8,7 +8,8 @@ const getEnvOrDie = (key: string): string => {
 };
 
 export const getStorageType = (): string => getEnvOrDie('STORAGE_TYPE');
-export const getStorageBucketName = (): string => getEnvOrDie('STORAGE_BUCKETNAME');
+export const getStorageTypes = (): string => getEnvOrDie('STORAGE_TYPES');
+export const getStorageBucketName = (): string => process.env.STORAGE_BUCKETNAME;
 // storage local
 export const getLocalStorageDir = (): string => getEnvOrDie('STORAGE_LOCAL_DIRECTORY');
 // storage Google Cloud

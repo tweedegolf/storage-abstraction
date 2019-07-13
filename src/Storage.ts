@@ -12,6 +12,11 @@ export class Storage implements IStorage {
   public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD';
   public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3';
   public static TYPE_LOCAL: string = 'TYPE_LOCAL';
+  public static friendlyNames = {
+    TYPE_GOOGLE_CLOUD: 'Google Cloud',
+    TYPE_AMAZON_S3: 'Amazon S3',
+    TYPE_LOCAL: 'Local',
+  };
   public storage: IStorage;
   protected bucketName: string;
   protected bucketCreated: boolean = false;

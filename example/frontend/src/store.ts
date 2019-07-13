@@ -7,6 +7,10 @@ import { RootState } from './types';
 const initialState: RootState = {
   message: null,
   files: [],
+  types: [],
+  selectedStorageType: null,
+  selectedBucket: null,
+  buckets: [],
 };
 
 const getStore = () => {

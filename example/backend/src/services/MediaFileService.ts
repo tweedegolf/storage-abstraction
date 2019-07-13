@@ -23,8 +23,10 @@ export class MediaFileService implements OnInit {
   private storage: Storage | null = null;
 
   constructor() {
+    // You can create a storage here for instance by using environment variables or you
+    // can create a storage after initialization using `setStorage`.
     const type = getStorageType();
-    let config: StorageConfig;
+    let config: StorageConfig | null;
     if (type === Storage.TYPE_LOCAL) {
       config = {
         bucketName: getStorageBucketName(),
@@ -43,9 +45,8 @@ export class MediaFileService implements OnInit {
         secretAccessKey: getAmazonS3SecretAccessKey(),
       };
     }
-    this.setStorage(config);
-    if (typeof this.storage === 'undefined') {
-      throw new Error(`Storage is undefined: ${type}`);
+    if (config !== null) {
+      this.setStorage(config);
     }
   }
 
@@ -94,13 +95,9 @@ export class MediaFileService implements OnInit {
 
   /**
    * @param filePath: path to the file to be copied
-   * @param location?: the directory to save this file into, directory will be created if it doesn't exist
-   * @param config?: setting for processing this file by the permanent storage
-   * @param config.path?: the directory to save this file into, directory will be created if it doesn't exist
-   * @param config.newName?: the name of the file in the storage
-   * @param config.remove?: whether or not to remove the file after it has been copied to the storage
+   * @param targetPath: path to copy the file to, must include file name, directories will be created if it doesn't exist
    */
-  public async copyFile(filePath: string, targetPath: string): Promise<boolean> {
+  public async copyFile(filePath: string, targetPath: string): Promise<void> {
     return this.storage.addFileFromPath(filePath, targetPath);
   }
 
@@ -108,11 +105,15 @@ export class MediaFileService implements OnInit {
     return this.storage.getFileAsReadable(filePath);
   }
 
-  public async unlinkMediaFile(path: string): Promise<boolean> {
+  public async unlinkMediaFile(path: string): Promise<void> {
     return this.storage.removeFile(path);
   }
 
   public async getStoredFiles(): Promise<[string, number][]> {
     return this.storage.listFiles();
+  }
+
+  public async getBuckets(): Promise<string[]> {
+    return this.storage.listBuckets();
   }
 }

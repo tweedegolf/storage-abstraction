@@ -176,6 +176,18 @@ export class MediaFileController {
     };
   }
 
+  @Get('/list/:id')
+  @Returns(200, { type: Array })
+  public async listFiles2(
+    @PathParams('id') id: number,
+  ): Promise<ResSuccess<MediaFile[]>> {
+    const files = await this.mediaFileRepository.find();
+    return {
+      error: null,
+      data: files,
+    };
+  }
+
   @Delete('/:id')
   @Returns(200, { type: Boolean })
   @Returns(404, { description: 'File not found' })
@@ -214,7 +226,7 @@ export class MediaFileController {
     }
     return {
       error: null,
-      data: result,
+      data: true,
     };
   }
 
