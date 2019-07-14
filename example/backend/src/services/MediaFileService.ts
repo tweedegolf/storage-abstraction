@@ -24,32 +24,32 @@ export class MediaFileService implements OnInit {
       'Local disk storage': {
         type: Storage.TYPE_LOCAL,
         config: {
-          bucketName: getEnv('STORAGE_1_DIRECTORY'),
-          directory: getEnv('STORAGE_1_BUCKETNAME'),
+          bucketName: getEnv('STORAGE_1_BUCKETNAME'),
+          directory: getEnv('STORAGE_1_DIRECTORY'),
         },
       },
       'Amazon S3': {
         type: Storage.TYPE_AMAZON_S3,
         config: {
           bucketName: getEnv('STORAGE_2_BUCKETNAME'),
-          projectId: getEnvOrDie('STORAGE_2_KEY_ID'),
-          keyFilename: getEnvOrDie('STORAGE_2_ACCESS_KEY'),
+          accessKeyId: getEnvOrDie('STORAGE_2_KEY_ID'),
+          secretAccessKey: getEnvOrDie('STORAGE_2_ACCESS_KEY'),
         },
       },
       'Google Cloud 1': {
-        type: Storage.TYPE_LOCAL,
+        type: Storage.TYPE_GOOGLE_CLOUD,
         config: {
           bucketName: getEnv('STORAGE_3_BUCKETNAME'),
-          accessKeyId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
-          secretAccessKey: getEnvOrDie('STORAGE_3_KEYFILE'),
+          projectId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
+          keyFilename: getEnvOrDie('STORAGE_3_KEYFILE'),
         },
       },
       'Google Cloud 2': {
-        type: Storage.TYPE_LOCAL,
+        type: Storage.TYPE_GOOGLE_CLOUD,
         config: {
           bucketName: getEnv('STORAGE_4_BUCKETNAME'),
-          accessKeyId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
-          secretAccessKey: getEnvOrDie('STORAGE_4_KEYFILE'),
+          projectId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
+          keyFilename: getEnvOrDie('STORAGE_4_KEYFILE'),
         },
       },
     };
@@ -65,7 +65,7 @@ export class MediaFileService implements OnInit {
   }
 
   async $onInit(): Promise<void> {
-    if (this.storage !== null || this.storage.getSelectedBucket() === null) {
+    if (this.storage === null || this.storage.getSelectedBucket() === null) {
       return;
     }
     try {

@@ -22,10 +22,9 @@ export class StorageController {
   @Returns(200, { type: String })
   @Returns(500, { description: 'Internal server error' })
   public async getTypes(
-  ): Promise<ResResult<{ types: string[] }>> {
+  ): Promise<{ data: { types: string[] } }> {
     // await new Promise((resolve) => { setTimeout(resolve, 1000); });
     return {
-      error: false,
       data: { types: this.mediaFileService.types },
     };
   }
@@ -34,12 +33,11 @@ export class StorageController {
   @Returns(200, { type: String })
   public async getBuckets(
     @PathParams('storage') storage: string,
-  ): Promise<ResResult<{ buckets: string[] }>> {
+  ): Promise<{ data: { buckets: string[] } }> {
     this.mediaFileService.setStorageById(storage);
     await this.mediaFileRepository.synchronize();
     const buckets = await this.mediaFileService.getBuckets();
     return {
-      error: false,
       data: { buckets },
     };
   }

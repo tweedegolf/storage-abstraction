@@ -74,14 +74,14 @@ export function rootReducer(state: RootState, action: AnyAction) {
   }
 
   if (action.type === BUCKET_NAMES_RECEIVED) {
-    const { error, data: { buckets }, selectedStorageType } = action.payload;
+    const { error, data: { buckets }, storageType } = action.payload;
     if (error) {
       // show error
     } else {
       return {
         ...state,
-        selectedStorageType,
         buckets,
+        selectedStorageType: storageType,
         message: null,
       };
     }
@@ -133,7 +133,7 @@ export function rootReducer(state: RootState, action: AnyAction) {
     return {
       ...state,
       message: null,
-    }
+    };
   }
 
   return state;

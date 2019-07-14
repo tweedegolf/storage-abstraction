@@ -77,6 +77,7 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     if (super.checkBucket(bn)) {
       return;
     }
+    // try {
     const storagePath = path.join(this.directory, bn);
     return fs.promises.stat(storagePath)
       .then(() => true)
@@ -84,6 +85,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
       .then(() => {
         this.buckets.push(bn);
       });
+    // } catch (e) {
+    //   throw new Error(`StorageLocal.ts line 89: ${e.message}`);
+    // }
   }
 
   async clearBucket(name?: string): Promise<void> {
