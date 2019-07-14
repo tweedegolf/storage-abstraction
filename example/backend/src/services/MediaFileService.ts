@@ -100,12 +100,15 @@ export class MediaFileService implements OnInit {
    * @param tempFile: uploaded file in temporary Multer storage
    * @param location?: the directory to save this file into, directory will be created if it doesn't exist
    */
-  public async moveUploadedFile(tempFile: Express.Multer.File, location: string): Promise<MediaFile> {
+  public async moveUploadedFile(tempFile: Express.Multer.File, location?: string): Promise<MediaFile> {
     try {
       const slugName = `${uniquid()}_${slugify(tempFile.originalname)}`;
-      const slugPath = location.split('/').map(d => slugify(d));
-      slugPath.push(slugName);
-      const targetPath = slugPath.join('/');
+      let targetPath = slugName;
+      if (location) {
+        const slugPath = location.split('/').map(d => slugify(d));
+        slugPath.push(slugName);
+        targetPath = slugPath.join('/');
+      }
 
       if (typeof tempFile.buffer !== 'undefined') {
         await this.storage.addFileFromBuffer(tempFile.buffer, targetPath);

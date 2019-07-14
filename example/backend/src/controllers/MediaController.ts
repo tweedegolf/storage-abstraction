@@ -183,11 +183,13 @@ export class MediaFileController {
   }
 
   @Post('/delete')
+  @Returns(200, { type: Boolean })
   public async deleteFile2(
     @Required @BodyParams('filePath') filePath: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     await to(this.mediaFileService.unlinkMediaFile(filePath));
-    return;
+    // TODO: remove file from repository
+    return true;
   }
 
   @Get('/thumbnail/:format/:width/:id')

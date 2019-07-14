@@ -17,6 +17,7 @@ const parseResult = <T>(url: string, axiosResponse: AxiosResponse) => {
   const response: ResResult<T> = axiosResponse.data;
 
   if (response.error === undefined) {
+    console.log('no error in response');
     throw new Error(`Response for '${url}' does not correspond to standard`);
   }
 
