@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { Dropdown, DropdownToggle, DropdownItem, DropdownMenu } from 'reactstrap';
 
 const SelectStorage = (props: {
-  types: string[][],
+  types: string[],
   selectedStorageType: string | null
-  onSelectStorageType: (type: string[]) => void,
+  onSelectStorageType: (type: string) => void,
 }) => {
   const [collapsed, openDropdown] = useState(false);
   const handleToggle = () => {
     openDropdown(!collapsed);
   };
-  const items = props.types.map(([type, alias]) => <DropdownItem onClick={(e) => {
-    props.onSelectStorageType([type, alias]);
-  }} key={type}>{alias}</DropdownItem>);
+  const items = props.types.map((alias, i) => <DropdownItem onClick={(e) => {
+    props.onSelectStorageType(alias);
+  }} key={`${alias}_${i}`}>{alias}</DropdownItem>);
 
-  const label = props.selectedStorageType === null ? 'select storage type' : props.selectedStorageType[1];
+  const label = props.selectedStorageType === null ? 'select storage type' : props.selectedStorageType;
 
   return (
     <Dropdown isOpen={collapsed} toggle={handleToggle}>

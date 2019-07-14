@@ -10,12 +10,21 @@ import {
   TYPES_RECEIVED,
   BUCKET_NAMES_RECEIVED,
   SELECT_STORAGE_TYPE,
+  ERROR,
+  RESET_ERROR,
 } from './actions';
 import { AnyAction } from 'redux';
 import { RootState } from './types';
 
 export function rootReducer(state: RootState, action: AnyAction) {
-  if (action.type === GET_BUCKET_CONTENTS || action.type === SYNCHRONIZING_WITH_STORAGE) {
+  if (action.type === ERROR) {
+    return {
+      ...state,
+      message: action.payload.error,
+    };
+  }
+
+  if (action.type === SYNCHRONIZING_WITH_STORAGE) {
     return {
       ...state,
       message: 'retrieving file list from server',
@@ -23,12 +32,13 @@ export function rootReducer(state: RootState, action: AnyAction) {
   }
 
   if (action.type === LIST_RECEIVED) {
-    const { error, data } = action.payload;
+    const { error, data, selectedBucket } = action.payload;
     if (error !== null) {
       // show error
     } else {
       return {
         ...state,
+        selectedBucket,
         files: data,
         message: null,
       };
@@ -58,22 +68,31 @@ export function rootReducer(state: RootState, action: AnyAction) {
   if (action.type === SELECT_STORAGE_TYPE) {
     return {
       ...state,
-      selectedStorageType: action.payload.storageType,
-      message: `getting bucket names for type ${action.payload.storageType[1]}`,
+      files: [],
+      message: `getting bucket names for type ${action.payload.storageType}`,
     };
   }
 
   if (action.type === BUCKET_NAMES_RECEIVED) {
-    const { error, data: { buckets } } = action.payload;
+    const { error, data: { buckets }, selectedStorageType } = action.payload;
     if (error) {
       // show error
     } else {
       return {
         ...state,
+        selectedStorageType,
         buckets,
         message: null,
       };
     }
+  }
+
+  if (action.type === GET_BUCKET_CONTENTS) {
+    return {
+      ...state,
+      selectedBucket: action.payload.bucketName,
+      message: `getting contents of bucket ${action.payload.bucketName}`,
+    };
   }
 
   if (action.type === UPLOADING_FILES) {
@@ -108,6 +127,13 @@ export function rootReducer(state: RootState, action: AnyAction) {
       files,
       message: null,
     };
+  }
+
+  if (action.type === RESET_ERROR) {
+    return {
+      ...state,
+      message: null,
+    }
   }
 
   return state;

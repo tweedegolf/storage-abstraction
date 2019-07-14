@@ -3,6 +3,8 @@ import { uploadMediaFiles, deleteMediaFile } from './api';
 import axios from 'axios';
 import { MediaFile } from '../../backend/src/entities/MediaFile';
 
+export const ERROR = 'ERROR';
+export const RESET_ERROR = 'RESET_ERROR';
 export const SYNCHRONIZING_WITH_STORAGE = 'SYNCHRONIZING_WITH_STORAGE';
 export const GET_BUCKET_CONTENTS = 'GET_BUCKET_CONTENTS';
 export const LIST_RECEIVED = 'LIST_RECEIVED';
@@ -15,22 +17,31 @@ export const FILES_UPLOADED = 'FILES_UPLOADED';
 export const DELETING_FILE = 'DELETING_FILE';
 export const FILE_DELETED = 'FILE_DELETED';
 
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error.response.data.message);
+  });
+
 export const synchronizeWithStorage = async (dispatch: Dispatch) => {
   dispatch({
     type: SYNCHRONIZING_WITH_STORAGE,
   });
 
-  const payload = await axios.get('/api/v1/media/list')
+  await axios.get('/api/v1/media/list')
     .then((response) => {
-      return response.data;
+      dispatch({
+        payload: response.data,
+        type: LIST_RECEIVED,
+      });
     }).catch((error: string) => {
-      return { error };
+      dispatch({
+        payload: { error },
+        type: ERROR,
+      });
     });
-
-  dispatch({
-    payload,
-    type: LIST_RECEIVED,
-  });
 };
 
 export const getBucketContents = (bucketName: string) => async (dispatch: Dispatch) => {
@@ -41,17 +52,21 @@ export const getBucketContents = (bucketName: string) => async (dispatch: Dispat
     type: GET_BUCKET_CONTENTS,
   });
 
-  const payload = await axios.get(`/api/v1/media/list/${bucketName}`)
+  await axios.get(`/api/v1/media/list/${bucketName}`)
     .then((response) => {
-      return response.data;
+      dispatch({
+        payload: {
+          ...response.data,
+          bucketName,
+        },
+        type: LIST_RECEIVED,
+      });
     }).catch((error: string) => {
-      return { error };
+      dispatch({
+        payload: { error },
+        type: ERROR,
+      });
     });
-
-  dispatch({
-    payload,
-    type: LIST_RECEIVED,
-  });
 };
 
 export const getStorageTypes = async (dispatch: Dispatch) => {
@@ -59,17 +74,18 @@ export const getStorageTypes = async (dispatch: Dispatch) => {
     type: GET_STORAGE_TYPES,
   });
 
-  const payload = await axios.get('/api/v1/storage/types')
+  await axios.get('/api/v1/storage/types')
     .then((response) => {
-      return response.data;
+      dispatch({
+        payload: response.data,
+        type: TYPES_RECEIVED,
+      });
     }).catch((error: string) => {
-      return { error };
+      dispatch({
+        payload: { error },
+        type: ERROR,
+      });
     });
-
-  dispatch({
-    payload,
-    type: TYPES_RECEIVED,
-  });
 };
 
 export const selectStorageType = (storageType: string) => async (dispatch: Dispatch) => {
@@ -81,17 +97,21 @@ export const selectStorageType = (storageType: string) => async (dispatch: Dispa
   });
 
   // get the available buckets for this storage
-  const payload = await axios.get(`/api/v1/storage/buckets/${storageType[0]}`)
+  await axios.get(`/api/v1/storage/buckets/${storageType}`)
     .then((response) => {
-      return response.data;
+      dispatch({
+        payload: {
+          ...response.data,
+          storageType,
+        },
+        type: BUCKET_NAMES_RECEIVED,
+      });
     }).catch((error: string) => {
-      return { error };
+      dispatch({
+        payload: { error },
+        type: ERROR,
+      });
     });
-
-  dispatch({
-    payload,
-    type: BUCKET_NAMES_RECEIVED,
-  });
 };
 
 export const uploadFiles = (files: FileList, location?: string) => async (dispatch: Dispatch) => {
@@ -120,4 +140,10 @@ export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
   };
 
   dispatch(event);
+};
+
+export const resetError = () => (dispatch: Dispatch) => {
+  dispatch({
+    type: RESET_ERROR,
+  });
 };

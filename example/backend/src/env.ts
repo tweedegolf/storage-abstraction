@@ -1,4 +1,4 @@
-const getEnvOrDie = (key: string): string => {
+export const getEnvOrDie = (key: string): string => {
   const value = process.env[key];
   // console.log(value, process.env[key]);
   if (value === undefined) {
@@ -7,17 +7,15 @@ const getEnvOrDie = (key: string): string => {
   return value;
 };
 
-export const getStorageType = (): string => getEnvOrDie('STORAGE_TYPE');
-export const getStorageTypes = (): string => getEnvOrDie('STORAGE_TYPES');
-export const getStorageBucketName = (): string => process.env.STORAGE_BUCKETNAME;
-// storage local
-export const getLocalStorageDir = (): string => getEnvOrDie('STORAGE_LOCAL_DIRECTORY');
-// storage Google Cloud
-export const getGoogleStorageProjectId = (): string => getEnvOrDie('STORAGE_GOOGLE_CLOUD_PROJECT_ID');
-export const getGoogleStorageKeyFile = (): string => getEnvOrDie('STORAGE_GOOGLE_CLOUD_KEYFILE');
-// storage Amazon S3
-export const getAmazonS3AccessKeyId = (): string => getEnvOrDie('STORAGE_AWS_ACCESS_KEY_ID');
-export const getAmazonS3SecretAccessKey = (): string => getEnvOrDie('STORAGE_AWS_SECRET_ACCESS_KEY');
+export const getEnv = (key: string): string | null => {
+  const value = process.env[key];
+  // console.log(value, process.env[key]);
+  if (value === undefined) {
+    return null;
+  }
+  return value;
+};
+
 // multer
 export const getMediaUploadDir = (): string => getEnvOrDie('MEDIA_UPLOAD_DIR');
 // thumbnailservice

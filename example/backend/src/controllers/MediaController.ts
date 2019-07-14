@@ -21,7 +21,7 @@ import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
 import { ThumbnailService } from '../services/ThumbnailService';
-import { ResError, ResSuccess, ResResult } from '../../../common/types';
+import { ResSuccess, ResResult } from '../../../common/types';
 
 export const SUPPORTED_MIME_TYPES = [
   'image/png',
@@ -166,9 +166,14 @@ export class MediaFileController {
     return this.download(res, id, filePath);
   }
 
-  @Get('/list')
+  @Get('/list/:bucket')
   @Returns(200, { type: Array })
-  public async listFiles(): Promise<ResSuccess<MediaFile[]>> {
+  @Returns(500, { description: 'Internal server error' })
+  public async listFiles2(
+    @PathParams('bucket') bucket: string,
+  ): Promise<ResResult<MediaFile[]>> {
+    await this.mediaFileService.selectBucket(bucket);
+    await this.mediaFileRepository.synchronize();
     const files = await this.mediaFileRepository.find();
     return {
       error: null,
@@ -176,11 +181,9 @@ export class MediaFileController {
     };
   }
 
-  @Get('/list/:id')
+  @Get('/list')
   @Returns(200, { type: Array })
-  public async listFiles2(
-    @PathParams('id') id: number,
-  ): Promise<ResSuccess<MediaFile[]>> {
+  public async listFiles(): Promise<ResSuccess<MediaFile[]>> {
     const files = await this.mediaFileRepository.find();
     return {
       error: null,

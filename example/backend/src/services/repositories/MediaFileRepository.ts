@@ -11,7 +11,7 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
 
   public constructor(
     private typeORMService: TypeORMService,
-    private mediaFileServer: MediaFileService,
+    private mediaFileService: MediaFileService,
   ) {
   }
 
@@ -27,10 +27,14 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
   public $onInit() {
   }
 
-  public async $afterRoutesInit(): Promise<boolean> {
+  public async $afterRoutesInit(): Promise<void> {
+    return this.synchronize();
+  }
+
+  public async synchronize(): Promise<void> {
     this.repository = this.typeORMService.get('tg').getRepository(MediaFile);
     // synchronize storage with database
-    const storageFiles = await this.mediaFileServer.getStoredFiles();
+    const storageFiles = await this.mediaFileService.getStoredFiles();
     const repositoryFiles = await this.repository.find();
     const notInRepository = [];
     storageFiles.forEach((data) => {
@@ -55,7 +59,6 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
     });
     // console.log('NOT IN STORAGE', notInStorage);
     await this.repository.remove(notInStorage);
-    return true;
   }
 
   public async create(args: { name: string, path: string, size: number }[]): Promise<MediaFile[]> {

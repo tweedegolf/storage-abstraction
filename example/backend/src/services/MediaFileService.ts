@@ -8,44 +8,58 @@ import uniquid from 'uniquid';
 import { Service, OnInit } from '@tsed/di';
 import { Readable } from 'stream';
 import {
-  getStorageType,
-  getStorageBucketName,
-  getGoogleStorageProjectId,
-  getGoogleStorageKeyFile,
-  getAmazonS3AccessKeyId,
-  getAmazonS3SecretAccessKey,
-  getLocalStorageDir,
+  getEnv,
+  getEnvOrDie,
 } from '../env';
 import { MediaFile } from '../entities/MediaFile';
 
 @Service()
 export class MediaFileService implements OnInit {
+  private _types: string[] = [];
+  private _configs: { [id: string]: { type: string, config: StorageConfig } } = {};
   private storage: Storage | null = null;
 
   constructor() {
+    this._configs = {
+      'Local disk storage': {
+        type: Storage.TYPE_LOCAL,
+        config: {
+          bucketName: getEnv('STORAGE_1_DIRECTORY'),
+          directory: getEnv('STORAGE_1_BUCKETNAME'),
+        },
+      },
+      'Amazon S3': {
+        type: Storage.TYPE_AMAZON_S3,
+        config: {
+          bucketName: getEnv('STORAGE_2_BUCKETNAME'),
+          projectId: getEnvOrDie('STORAGE_2_KEY_ID'),
+          keyFilename: getEnvOrDie('STORAGE_2_ACCESS_KEY'),
+        },
+      },
+      'Google Cloud 1': {
+        type: Storage.TYPE_LOCAL,
+        config: {
+          bucketName: getEnv('STORAGE_3_BUCKETNAME'),
+          accessKeyId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
+          secretAccessKey: getEnvOrDie('STORAGE_3_KEYFILE'),
+        },
+      },
+      'Google Cloud 2': {
+        type: Storage.TYPE_LOCAL,
+        config: {
+          bucketName: getEnv('STORAGE_4_BUCKETNAME'),
+          accessKeyId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
+          secretAccessKey: getEnvOrDie('STORAGE_4_KEYFILE'),
+        },
+      },
+    };
+
+    this._types = Object.keys(this._configs);
+
     // You can create a storage here for instance by using environment variables or you
     // can create a storage after initialization using `setStorage`.
-    const type = getStorageType();
-    let config: StorageConfig | null;
-    if (type === Storage.TYPE_LOCAL) {
-      config = {
-        bucketName: getStorageBucketName(),
-        directory: getLocalStorageDir(),
-      };
-    } else if (type === Storage.TYPE_GOOGLE_CLOUD) {
-      config = {
-        bucketName: getStorageBucketName(),
-        projectId: getGoogleStorageProjectId(),
-        keyFilename: getGoogleStorageKeyFile(),
-      };
-    } else if (type === Storage.TYPE_AMAZON_S3) {
-      config = {
-        bucketName: getStorageBucketName(),
-        accessKeyId: getAmazonS3AccessKeyId(),
-        secretAccessKey: getAmazonS3SecretAccessKey(),
-      };
-    }
-    if (config !== null) {
+    if (this._types.length > 0) {
+      const config = this._configs[this._types[0]].config;
       this.setStorage(config);
     }
   }
@@ -63,6 +77,23 @@ export class MediaFileService implements OnInit {
 
   public setStorage(config: StorageConfig): void {
     this.storage = new Storage(config);
+  }
+
+  public setStorageById(id: string): void {
+    const config = this.configs[id].config;
+    this.storage = new Storage(config);
+  }
+
+  public async selectBucket(bucket: string): Promise<void> {
+    return this.storage.selectBucket(bucket);
+  }
+
+  get types() {
+    return this._types;
+  }
+
+  get configs() {
+    return this._configs;
   }
 
   /**
@@ -110,6 +141,9 @@ export class MediaFileService implements OnInit {
   }
 
   public async getStoredFiles(): Promise<[string, number][]> {
+    if (this.storage === null || this.storage.getSelectedBucket() === null) {
+      return [];
+    }
     return this.storage.listFiles();
   }
 

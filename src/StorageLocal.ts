@@ -70,6 +70,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async createBucket(name: string): Promise<void> {
+    if (name === null) {
+      throw new Error('Can not use `null` as bucket name');
+    }
     const bn = slugify(name);
     if (super.checkBucket(bn)) {
       return;

@@ -97,11 +97,14 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
         .on('error', reject)
         .on('finish', resolve);
       writeStream
-        .on('error', reject)
+        .on('error', reject);
     });
   }
 
   async createBucket(name: string): Promise<void> {
+    if (name === null) {
+      throw new Error('Can not use `null` as bucket name');
+    }
     const n = slugify(name);
     if (super.checkBucket(n)) {
       return;

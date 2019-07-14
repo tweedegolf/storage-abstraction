@@ -16,7 +16,7 @@ render(
   document.getElementById('container'),
 );
 
-const fixedStorage = true;
+const fixedStorage = false;
 if (fixedStorage) {
   synchronizeWithStorage(store.dispatch);
 } else {

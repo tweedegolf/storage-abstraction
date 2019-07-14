@@ -48,6 +48,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   // util members
 
   async createBucket(name: string): Promise<void> {
+    if (name === null) {
+      throw new Error('Can not use `null` as bucket name');
+    }
     const n = slugify(name);
     // console.log('createBucket', n);
     if (super.checkBucket(n)) {

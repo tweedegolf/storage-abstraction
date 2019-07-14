@@ -14,7 +14,7 @@ export abstract class AbstractStorage implements IStorage {
   protected buckets: string[] = [];
 
   constructor(config: StorageConfig) {
-    if (typeof config.bucketName !== 'undefined') {
+    if (typeof config.bucketName !== 'undefined' && config.bucketName !== null) {
       this.bucketName = slugify(config.bucketName);
     }
   }

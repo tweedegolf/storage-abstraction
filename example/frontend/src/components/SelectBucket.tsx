@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dropdown, DropdownToggle, DropdownItem, DropdownMenu } from 'reactstrap';
 
 const SelectBucket = (props: {
+  enabled: boolean,
   buckets: string[],
   selectedBucket: string | null
   onSelectBucket: (type: string) => void,
@@ -16,7 +17,7 @@ const SelectBucket = (props: {
 
   return (
     <Dropdown isOpen={collapsed} toggle={handleToggle}>
-      <DropdownToggle caret>
+      <DropdownToggle disabled={!props.enabled} caret>
         {props.selectedBucket || 'select bucket'}
       </DropdownToggle>
       <DropdownMenu>
