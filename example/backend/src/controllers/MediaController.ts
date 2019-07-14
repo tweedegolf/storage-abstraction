@@ -15,13 +15,12 @@ import { Returns, ReturnsArray } from '@tsed/swagger';
 import { NotFound, UnsupportedMediaType, InternalServerError } from 'ts-httpexceptions';
 import { Request, Response } from 'express';
 import mime from 'mime';
-import { pipeline } from 'stream';
+import { pipeline, Readable } from 'stream';
 
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFile } from '../entities/MediaFile';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
 import { ThumbnailService } from '../services/ThumbnailService';
-import { ResSuccess, ResResult } from '../../../common/types';
 
 export const SUPPORTED_MIME_TYPES = [
   'image/png',
@@ -64,13 +63,9 @@ export class MediaFileController {
     return mediaFile;
   }
 
-  private async download(res: Response, id: number, filePath?: string) {
+  private async download(res: Response, id: number, filePath?: string): Promise<void> {
     const mediaFile = await this.getMediaFile(id, filePath);
-    const [error, stream] = await to(this.mediaFileService.getFileReadStream(mediaFile.path));
-
-    if (error !== null) {
-      throw new NotFound('File not found in Storage');
-    }
+    const stream = await this.mediaFileService.getFileReadStream(mediaFile.path);
 
     res.set('Content-Type', mime.getType(mediaFile.path));
     res.set('Content-Disposition', 'inline');
@@ -113,13 +108,13 @@ export class MediaFileController {
   }
 
   @Post('/')
-  @Returns(200, { type: Array })
+  @ReturnsArray(200, { type: MediaFile })
   @Returns(415, { description: 'Unsupported file type' })
   @Returns(500, { description: 'Internal server error' })
   public async uploadFile(
     @MultipartFile('files', 10) tmpFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
-  ): Promise<ResResult<{ files: MediaFile[] }>> {
+  ): Promise<MediaFile[]> {
     if (!tmpFiles) {
       throw new UnsupportedMediaType('Unsupported file type');
     }
@@ -128,20 +123,9 @@ export class MediaFileController {
     for (let i = 0; i < tmpFiles.length; i += 1) {
       promises.push(this.mediaFileService.moveUploadedFile(tmpFiles[i], location));
     }
-    let [error, result] = await to(Promise.all(promises));
-    if (error !== null) {
-      throw new InternalServerError(error.message);
-    }
 
-    [error, result] = await to(this.mediaFileRepository.create(result));
-    if (error !== null) {
-      throw new InternalServerError(error.message);
-    }
-
-    return {
-      error: false,
-      data: { files: result },
-    };
+    const result = await Promise.all(promises);
+    return this.mediaFileRepository.create(result);
   }
 
   @Get('/download/:id')
@@ -167,70 +151,43 @@ export class MediaFileController {
   }
 
   @Get('/list/:bucket')
-  @Returns(200, { type: Array })
-  @Returns(500, { description: 'Internal server error' })
+  @ReturnsArray(200, { type: MediaFile })
   public async listFiles2(
     @PathParams('bucket') bucket: string,
-  ): Promise<ResResult<MediaFile[]>> {
+  ): Promise<MediaFile[]> {
     await this.mediaFileService.selectBucket(bucket);
     await this.mediaFileRepository.synchronize();
     const files = await this.mediaFileRepository.find();
-    return {
-      error: null,
-      data: files,
-    };
+    return files;
   }
 
   @Get('/list')
-  @Returns(200, { type: Array })
-  public async listFiles(): Promise<ResSuccess<MediaFile[]>> {
-    const files = await this.mediaFileRepository.find();
-    return {
-      error: null,
-      data: files,
-    };
+  @ReturnsArray(200, { type: MediaFile })
+  public async listFiles(): Promise<MediaFile[]> {
+    return await this.mediaFileRepository.find();
   }
 
   @Delete('/:id')
-  @Returns(200, { type: Boolean })
+  @Returns(200, { type: Number })
   @Returns(404, { description: 'File not found' })
   public async deleteFile(
     @Required @PathParams('id') id: number,
-  ): Promise<ResSuccess<{ id: number }>> {
+  ): Promise<number> {
     const file = await this.mediaFileRepository.findOne(id);
     if (!file) {
       throw new NotFound('File not found');
     }
-    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(file.path));
-    if (error) {
-      return {
-        error: error.message,
-        data: null,
-      };
-    }
+    await this.mediaFileService.unlinkMediaFile(file.path);
     await this.mediaFileRepository.remove([file]);
-    return {
-      error: null,
-      data: { id },
-    };
+    return id;
   }
 
   @Post('/delete')
-  @Returns(200, { type: Boolean })
   public async deleteFile2(
     @Required @BodyParams('filePath') filePath: string,
-  ): Promise<ResSuccess<boolean>> {
-    const [error, result] = await to(this.mediaFileService.unlinkMediaFile(filePath));
-    if (error) {
-      return {
-        error: error.message,
-        data: null,
-      };
-    }
-    return {
-      error: null,
-      data: true,
-    };
+  ): Promise<void> {
+    await to(this.mediaFileService.unlinkMediaFile(filePath));
+    return;
   }
 
   @Get('/thumbnail/:format/:width/:id')

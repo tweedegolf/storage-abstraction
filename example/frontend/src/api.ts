@@ -36,7 +36,7 @@ const put = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Pro
 );
 
 const post = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Promise<U> => {
-  return parseResult<U>(url, await axios.post(url, data, { ...baseConfig(), ...config }))
+  return parseResult<U>(url, await axios.post(url, data, { ...baseConfig(), ...config }));
 };
 
 const doDelete = async <T>(

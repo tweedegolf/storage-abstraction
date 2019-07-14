@@ -33,7 +33,9 @@ export const synchronizeWithStorage = async (dispatch: Dispatch) => {
   await axios.get('/api/v1/media/list')
     .then((response) => {
       dispatch({
-        payload: response.data,
+        payload: {
+          files: response.data,
+        },
         type: LIST_RECEIVED,
       });
     }).catch((error: string) => {
@@ -56,8 +58,8 @@ export const getBucketContents = (bucketName: string) => async (dispatch: Dispat
     .then((response) => {
       dispatch({
         payload: {
-          ...response.data,
           bucketName,
+          files: response.data,
         },
         type: LIST_RECEIVED,
       });
@@ -77,7 +79,9 @@ export const getStorageTypes = async (dispatch: Dispatch) => {
   await axios.get('/api/v1/storage/types')
     .then((response) => {
       dispatch({
-        payload: response.data,
+        payload: {
+          types: response.data,
+        },
         type: TYPES_RECEIVED,
       });
     }).catch((error: string) => {
@@ -101,8 +105,8 @@ export const selectStorageType = (storageType: string) => async (dispatch: Dispa
     .then((response) => {
       dispatch({
         payload: {
-          ...response.data,
           storageType,
+          buckets: response.data,
         },
         type: BUCKET_NAMES_RECEIVED,
       });

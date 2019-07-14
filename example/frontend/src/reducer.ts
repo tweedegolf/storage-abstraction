@@ -32,17 +32,13 @@ export function rootReducer(state: RootState, action: AnyAction) {
   }
 
   if (action.type === LIST_RECEIVED) {
-    const { error, data, selectedBucket } = action.payload;
-    if (error !== null) {
-      // show error
-    } else {
-      return {
-        ...state,
-        selectedBucket,
-        files: data,
-        message: null,
-      };
-    }
+    const { files, selectedBucket } = action.payload;
+    return {
+      ...state,
+      selectedBucket,
+      files,
+      message: null,
+    };
   }
 
   if (action.type === GET_STORAGE_TYPES) {
@@ -53,16 +49,12 @@ export function rootReducer(state: RootState, action: AnyAction) {
   }
 
   if (action.type === TYPES_RECEIVED) {
-    const { error, data: { types } } = action.payload;
-    if (error) {
-      // show error
-    } else {
-      return {
-        ...state,
-        types,
-        message: null,
-      };
-    }
+    const { types } = action.payload;
+    return {
+      ...state,
+      types,
+      message: null,
+    };
   }
 
   if (action.type === SELECT_STORAGE_TYPE) {
@@ -74,17 +66,13 @@ export function rootReducer(state: RootState, action: AnyAction) {
   }
 
   if (action.type === BUCKET_NAMES_RECEIVED) {
-    const { error, data: { buckets }, storageType } = action.payload;
-    if (error) {
-      // show error
-    } else {
-      return {
-        ...state,
-        buckets,
-        selectedStorageType: storageType,
-        message: null,
-      };
-    }
+    const { buckets, storageType } = action.payload;
+    return {
+      ...state,
+      buckets,
+      selectedStorageType: storageType,
+      message: null,
+    };
   }
 
   if (action.type === GET_BUCKET_CONTENTS) {
