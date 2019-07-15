@@ -1,5 +1,5 @@
 import { Dispatch, Action } from 'redux';
-import { uploadMediaFiles, deleteMediaFile } from './api';
+import { uploadMediaFiles, deleteMediaFile, getList } from './api';
 import axios from 'axios';
 import { MediaFile } from '../../backend/src/entities/MediaFile';
 
@@ -53,22 +53,17 @@ export const getBucketContents = (bucketName: string) => async (dispatch: Dispat
     },
     type: GET_BUCKET_CONTENTS,
   });
-
-  await axios.get(`/api/v1/media/list/${bucketName}`)
-    .then((response) => {
-      dispatch({
-        payload: {
-          bucketName,
-          files: response.data,
-        },
-        type: LIST_RECEIVED,
-      });
-    }).catch((error: string) => {
-      dispatch({
-        payload: { error },
-        type: ERROR,
-      });
-    });
+  const payload = await getList(bucketName);
+  dispatch({
+    payload,
+    type: LIST_RECEIVED,
+  });
+  // }).catch((error: string) => {
+  //   dispatch({
+  //     payload: { error },
+  //     type: ERROR,
+  //   });
+  // });
 };
 
 export const getStorageTypes = async (dispatch: Dispatch) => {

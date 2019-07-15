@@ -13,13 +13,21 @@ const baseConfig = () => ({
   timeout: 10000,
 });
 
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error.response.data.message);
+  });
+
 const parseResult = <T>(url: string, axiosResponse: AxiosResponse) => {
   const response: ResResult<T> = axiosResponse.data;
 
-  if (response.error === undefined) {
-    console.log('no error in response');
-    throw new Error(`Response for '${url}' does not correspond to standard`);
-  }
+  // if (response.error === undefined) {
+  //   console.log('no error in response');
+  //   throw new Error(`Response for '${url}' does not correspond to standard`);
+  // }
 
   if (response.error) {
     throw new Error(response.message);
@@ -60,6 +68,12 @@ export const uploadMediaFiles = (files: FileList, location?: string): Promise<Me
     headers: { 'content-type': 'multipart/form-data' },
     timeout: 10000,
   });
+};
+
+export const getList = async (bucketName: string) => {
+  await axios.get(`/api/v1/media/list${bucketName}`)
+    .then(response => response.data)
+    .catch((error: string) => { console.log(error); });
 };
 
 export const getMediaThumbnailUrl = (mf: MediaFile) => `${baseUrl}/media/thumbnail/png/100/${mf.id}/${mf.path}`;
