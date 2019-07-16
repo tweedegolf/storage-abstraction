@@ -34,11 +34,12 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
   }
 
   if (action.type === INIT_DATA_RECEIVED) {
-    const { files, types, selectedStorageId, selectedBucket } = action.payload as StorageInitData;
+    const { files, types, buckets, selectedStorageId, selectedBucket } = action.payload as StorageInitData;
     return {
       ...state,
       files,
       types,
+      buckets,
       selectedBucket,
       selectedStorageId,
       message: null,
@@ -64,7 +65,6 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
   if (action.type === SELECT_STORAGE) {
     return {
       ...state,
-      files: [],
       message: `getting bucket names for type ${action.payload.storageId}`,
     };
   }
@@ -74,6 +74,8 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
     return {
       ...state,
       buckets,
+      files: [],
+      selectedBucket: null,
       selectedStorageId: storageId,
       message: null,
     };

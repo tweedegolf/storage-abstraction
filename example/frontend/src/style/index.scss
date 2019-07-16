@@ -17,7 +17,8 @@ body {
   background-color: lavender;
   display         : flex;
   flex-direction  : row;
-  justify-content : center;
+  margin          : 20px;
+  justify-content : flex-start;
 }
 
 #form {
@@ -38,5 +39,14 @@ body {
 
   .input-group {
     margin-top: 10px;
+  }
+}
+
+#dropdowns {
+  display       : flex;
+  flex-direction: row;
+
+  .dropdown {
+    margin: 10px 10px 15px 0;
   }
 }

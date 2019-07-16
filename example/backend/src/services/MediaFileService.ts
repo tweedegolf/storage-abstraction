@@ -86,14 +86,22 @@ export class MediaFileService implements OnInit {
     const config = this.configs[id].config;
     this.storageId = id;
     this.storage = new Storage(config);
+    console.log('STORAGE CREATED', this.storage);
   }
 
-  public getInitData(): StorageInitData {
+  public async getInitData(): Promise<StorageInitData> {
+    let selectedBucket = null;
+    let buckets = [];
+    if (this.storage !== null) {
+      selectedBucket = this.storage.getSelectedBucket();
+      buckets = await this.getBuckets();
+    }
     return {
+      buckets,
+      selectedBucket,
       files: [],
       types: this._types,
       selectedStorageId: this.storageId,
-      selectedBucket: this.storage ? this.storage.getSelectedBucket() : null,
     };
   }
 

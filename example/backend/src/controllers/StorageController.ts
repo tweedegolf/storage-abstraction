@@ -21,7 +21,7 @@ export class StorageController {
   @Returns(500, { description: 'Internal server error' })
   public async init(
   ): Promise<StorageInitData> {
-    const data = this.mediaFileService.getInitData();
+    const data = await this.mediaFileService.getInitData();
     data.files = await this.mediaFileRepository.find();
     return data;
   }
@@ -35,13 +35,13 @@ export class StorageController {
     return this.mediaFileService.types;
   }
 
-  @Get('/buckets/:storage')
+  @Get('/buckets/:id')
   @ReturnsArray(200, { type: String })
   @Returns(500, { description: 'Internal server error' })
   public async getBuckets(
-    @PathParams('storage') storage: string,
+    @PathParams('id') id: string,
   ): Promise<string[]> {
-    this.mediaFileService.setStorageById(storage);
+    this.mediaFileService.setStorageById(id);
     await this.mediaFileRepository.synchronize();
     return this.mediaFileService.getBuckets();
   }

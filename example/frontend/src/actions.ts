@@ -71,7 +71,7 @@ export const getStorageTypes = async (dispatch: Dispatch) => {
   });
 };
 
-export const selectStorageType = (storageId: string) => async (dispatch: Dispatch) => {
+export const selectStorage = (storageId: string) => async (dispatch: Dispatch) => {
   dispatch({
     payload: {
       storageId,

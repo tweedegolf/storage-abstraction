@@ -5,27 +5,30 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { ListUI as List } from './List';
 import { SelectStorage } from './SelectStorage';
 import { SelectBucket } from './SelectBucket';
-import { uploadFiles, deleteFile, selectStorageType, getBucketContents, resetError } from '../actions';
+import { uploadFiles, deleteFile, selectStorage, getBucketContents, resetError } from '../actions';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 const App = (props) => {
+  const uploadEnabled = props.message === null && props.selecteStorageId !== null && props.selectedBucket !== null;
   return (
     <ErrorBoundary>
       <Message message={props.message} resetError={props.resetError}></Message>
-      <Form uploadFiles={props.uploadFiles} enabled={props.message === null}></Form>
+      <div id="dropdowns">
+        <SelectStorage
+          types={props.types}
+          selectedStorageId={props.selectedStorageId}
+          onSelectStorageType={props.selectStorageType}
+        ></SelectStorage>
+        <SelectBucket
+          enabled={props.selectedStorageType !== null}
+          buckets={props.buckets}
+          selectedBucket={props.selectedBucket}
+          onSelectBucket={props.getBucketContents}
+        ></SelectBucket>
+      </div>
       <List deleteFile={props.deleteFile} files={props.files}></List>
-      <SelectStorage
-        types={props.types}
-        selectedStorageId={props.selectedStorageId}
-        onSelectStorageType={props.selectStorageType}
-      ></SelectStorage>
-      <SelectBucket
-        enabled={props.selectedStorageType !== null}
-        buckets={props.buckets}
-        selectedBucket={props.selectedBucket}
-        onSelectBucket={props.getBucketContents}
-      ></SelectBucket>
+      <Form uploadFiles={props.uploadFiles} enabled={uploadEnabled}></Form>
     </ErrorBoundary>
   );
 };
@@ -46,7 +49,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
     uploadFiles,
     deleteFile,
     resetError,
-    selectStorageType,
+    selectStorageType: selectStorage,
     getBucketContents,
     // tslint:disable-next-line: align
   }, dispatch);

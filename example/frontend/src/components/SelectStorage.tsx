@@ -11,7 +11,9 @@ const SelectStorage = (props: {
     openDropdown(!collapsed);
   };
   const items = props.types.map((alias, i) => <DropdownItem onClick={(e) => {
-    props.onSelectStorageType(alias);
+    if (alias !== props.selectedStorageId) {
+      props.onSelectStorageType(alias);
+    }
   }} key={`${alias}_${i}`}>{alias}</DropdownItem>);
 
   const label = props.selectedStorageId === null ? 'select storage type' : props.selectedStorageId;

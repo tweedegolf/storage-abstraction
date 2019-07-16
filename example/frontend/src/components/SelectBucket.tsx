@@ -12,7 +12,9 @@ const SelectBucket = (props: {
     openDropdown(!collapsed);
   };
   const items = props.buckets.map(bucket => <DropdownItem onClick={(e) => {
-    props.onSelectBucket(bucket);
+    if (bucket !== props.selectedBucket) {
+      props.onSelectBucket(bucket);
+    }
   }} key={bucket}>{bucket}</DropdownItem>);
 
   return (

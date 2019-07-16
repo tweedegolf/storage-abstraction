@@ -30,15 +30,15 @@ export const ListUI = (props: {
   files: MediaFile[],
   deleteFile: (mf: MediaFile) => void,
 }) => {
-  if (typeof props.files === 'undefined' || props.files.length === 0) {
-    return null;
-  }
+  // if (typeof props.files === 'undefined' || props.files.length === 0) {
+  //   return null;
+  // }
   props.files.sort(sortDateUpdated);
 
   const body = [<tr key="header">
     <th>name</th>
     <th>size</th>
-    <th>path</th>
+    {/* <th>path</th> */}
     <th>thumb</th>
   </tr>];
   props.files.forEach((file, i) => {
