@@ -32,10 +32,7 @@ class GlobalJsonErrorHandlerMiddleware implements IMiddlewareError {
 
     response
       .status(description.status)
-      .send({
-        ...responseData,
-        error: true,
-      });
+      .send(responseData);
 
     if (description.status === 500) {
       Sentry.captureEvent({

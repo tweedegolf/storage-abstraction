@@ -11,20 +11,20 @@ const baseConfig = () => ({
   timeout: 10000,
 });
 
-// axios.interceptors.response.use(
-//   (response) => {
-//     return response;
-//   },
-//   (error) => {
-//     return Promise.reject(error.response.data.message);
-//   });
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error.response.data);
+  });
 
 const parseResult = async<T>(axiosPromise: Promise<AxiosResponse>): Promise<T | ServerError> => {
   try {
     const response = await axiosPromise;
     return response.data as T;
   } catch (e) {
-    return { error: e.message };
+    return { error: e.message || e.code || e };
   }
 };
 
