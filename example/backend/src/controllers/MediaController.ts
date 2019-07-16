@@ -131,6 +131,7 @@ export class MediaFileController {
   @Get('/download/:id')
   @Returns(200, { description: 'File contents' })
   @Returns(404, { description: 'File not found' })
+  @Returns(500, { description: 'Internal server error' })
   public async getMediaDownload(
     @Res() res: Response,
     @PathParams('id') id: number,
@@ -141,6 +142,7 @@ export class MediaFileController {
   @Get('/download/:id/*')
   @Returns(200, { description: 'File contents' })
   @Returns(404, { description: 'File not found' })
+  @Returns(500, { description: 'Internal server error' })
   public async getMediaDownloadWithCheckPath(
     @Req() req: Request,
     @Res() res: Response,
@@ -152,6 +154,7 @@ export class MediaFileController {
 
   @Get('/list/:bucket')
   @ReturnsArray(200, { type: MediaFile })
+  @Returns(500, { description: 'Internal server error' })
   public async listFiles2(
     @PathParams('bucket') bucket: string,
   ): Promise<MediaFile[]> {
@@ -163,6 +166,7 @@ export class MediaFileController {
 
   @Get('/list')
   @ReturnsArray(200, { type: MediaFile })
+  @Returns(500, { description: 'Internal server error' })
   public async listFiles(): Promise<MediaFile[]> {
     return await this.mediaFileRepository.find();
   }
@@ -170,20 +174,22 @@ export class MediaFileController {
   @Delete('/:id')
   @Returns(200, { type: Number })
   @Returns(404, { description: 'File not found' })
+  @Returns(500, { description: 'Internal server error' })
   public async deleteFile(
     @Required @PathParams('id') id: number,
-  ): Promise<number> {
+  ): Promise<{ id: number }> {
     const file = await this.mediaFileRepository.findOne(id);
     if (!file) {
       throw new NotFound('File not found');
     }
     await this.mediaFileService.unlinkMediaFile(file.path);
     await this.mediaFileRepository.remove([file]);
-    return id;
+    return { id };
   }
 
   @Post('/delete')
   @Returns(200, { type: Boolean })
+  @Returns(500, { description: 'Internal server error' })
   public async deleteFile2(
     @Required @BodyParams('filePath') filePath: string,
   ): Promise<boolean> {
@@ -194,6 +200,7 @@ export class MediaFileController {
 
   @Get('/thumbnail/:format/:width/:id')
   @Returns(404, { description: 'File not found' })
+  @Returns(500, { description: 'Internal server error' })
   public async getMediaThumbnail(
     @PathParams('format') format: 'png' | 'pjpeg',
     @PathParams('width') width: number,
@@ -206,6 +213,7 @@ export class MediaFileController {
 
   @Get('/thumbnail/:format/:width/:id/*')
   @Returns(404, { description: 'File not found' })
+  @Returns(500, { description: 'Internal server error' })
   public async getMediaThumbnailWithCheckPath(
     @PathParams('format') format: 'png' | 'pjpeg',
     @PathParams('width') width: number,

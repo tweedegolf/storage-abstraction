@@ -1,6 +1,6 @@
 import { Property, Required } from '@tsed/common';
 import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
-import { BaseMediaFile } from '../types/BaseMediaFile';
+import { BaseMediaFile } from '../types';
 import { When } from './When';
 
 @Entity()

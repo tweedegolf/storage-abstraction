@@ -10,7 +10,7 @@ import {
   Response,
 } from '@tsed/common';
 import { Exception } from 'ts-httpexceptions';
-import { DescribedError } from '../../../common/types';
+import { DescribedError } from '../types';
 import { isProduction } from '../env';
 
 @OverrideProvider(GlobalErrorHandlerMiddleware)

@@ -3,6 +3,7 @@ import {
   MediaFile,
 } from '../../backend/src/entities/MediaFile';
 import { ServerError } from './types';
+import { StorageInitData } from '../../common/types';
 
 const baseUrl = '/api/v1';
 const baseConfig = () => ({
@@ -72,15 +73,18 @@ export const uploadMediaFiles = (files: FileList, location?: string): Promise<Me
   });
 };
 
-export const getMediaThumbnailUrl = (mf: MediaFile) => `${baseUrl}/media/thumbnail/png/100/${mf.id}/${mf.path}`;
-
-export const getMediaDownloadUrl = (mf: MediaFile) => `${baseUrl}/media/download/${mf.id}/${mf.path}`;
-
-export const deleteMediaFile = (id: number): Promise<MediaFile[] | ServerError> => doDelete(`/media/${id}`);
+export const getInitData = (): Promise<StorageInitData | ServerError> => get('/storage/init');
 
 export const getTypes = (): Promise<string[] | ServerError> => get('storage/types');
+
+export const getBuckets = (storageType: string): Promise<string[] | ServerError> => get(`/storage/buckets/${storageType}`);
 
 export const getList = (bucketName?: string): Promise<[string, number] | ServerError> =>
   bucketName ? get(`media/list/${bucketName}`) : get('media/list');
 
-export const getBuckets = (storageType: string): Promise<string[] | ServerError> => get(`/storage/buckets/${storageType}`);
+export const getMediaThumbnailUrl = (mf: MediaFile) => `${baseUrl}/media/thumbnail/png/100/${mf.id}/${mf.path}`;
+
+export const getMediaDownloadUrl = (mf: MediaFile) => `${baseUrl}/media/download/${mf.id}/${mf.path}`;
+
+export const deleteMediaFile = (id: number): Promise<{ [id: string]: number } | ServerError> => doDelete(`/media/${id}`);
+

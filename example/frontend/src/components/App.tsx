@@ -17,7 +17,7 @@ const App = (props) => {
       <List deleteFile={props.deleteFile} files={props.files}></List>
       <SelectStorage
         types={props.types}
-        selectedStorageType={props.selectedStorageType}
+        selectedStorageId={props.selectedStorageId}
         onSelectStorageType={props.selectStorageType}
       ></SelectStorage>
       <SelectBucket
@@ -35,7 +35,7 @@ const mapStateToProps = (state) => {
     files: state.files,
     types: state.types,
     buckets: state.buckets,
-    selectedStorageType: state.selectedStorageType,
+    selectedStorageId: state.selectedStorageId,
     selectedBucket: state.selectedBucket,
     message: state.message,
   };

@@ -5,7 +5,7 @@ export type RootState = {
   types: string[],
   buckets: string[],
   message: string | null,
-  selectedStorageType: string[] | null,
+  selectedStorageId: string | null,
   selectedBucket: string | null,
 };
 

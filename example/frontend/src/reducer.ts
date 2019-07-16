@@ -1,6 +1,6 @@
 import {
   GET_BUCKET_CONTENTS,
-  SYNCHRONIZING_WITH_STORAGE,
+  GET_STORAGE_INIT_DATA,
   LIST_RECEIVED,
   UPLOADING_FILES,
   FILES_UPLOADED,
@@ -9,14 +9,16 @@ import {
   GET_STORAGE_TYPES,
   TYPES_RECEIVED,
   BUCKET_NAMES_RECEIVED,
-  SELECT_STORAGE_TYPE,
+  SELECT_STORAGE,
   ERROR,
   RESET_ERROR,
+  INIT_DATA_RECEIVED,
 } from './actions';
 import { AnyAction } from 'redux';
 import { RootState } from './types';
+import { StorageInitData } from '../../common/types';
 
-export function rootReducer(state: RootState, action: AnyAction) {
+export function rootReducer(state: RootState, action: AnyAction): RootState {
   if (action.type === ERROR) {
     return {
       ...state,
@@ -24,19 +26,21 @@ export function rootReducer(state: RootState, action: AnyAction) {
     };
   }
 
-  if (action.type === SYNCHRONIZING_WITH_STORAGE) {
+  if (action.type === GET_STORAGE_INIT_DATA) {
     return {
       ...state,
-      message: 'retrieving file list from server',
+      message: 'retrieving storage init data from server',
     };
   }
 
-  if (action.type === LIST_RECEIVED) {
-    const { files, selectedBucket } = action.payload;
+  if (action.type === INIT_DATA_RECEIVED) {
+    const { files, types, selectedStorageId, selectedBucket } = action.payload as StorageInitData;
     return {
       ...state,
-      selectedBucket,
       files,
+      types,
+      selectedBucket,
+      selectedStorageId,
       message: null,
     };
   }
@@ -57,20 +61,20 @@ export function rootReducer(state: RootState, action: AnyAction) {
     };
   }
 
-  if (action.type === SELECT_STORAGE_TYPE) {
+  if (action.type === SELECT_STORAGE) {
     return {
       ...state,
       files: [],
-      message: `getting bucket names for type ${action.payload.storageType}`,
+      message: `getting bucket names for type ${action.payload.storageId}`,
     };
   }
 
   if (action.type === BUCKET_NAMES_RECEIVED) {
-    const { buckets, storageType } = action.payload;
+    const { buckets, storageId } = action.payload;
     return {
       ...state,
       buckets,
-      selectedStorageType: storageType,
+      selectedStorageId: storageId,
       message: null,
     };
   }
@@ -80,6 +84,15 @@ export function rootReducer(state: RootState, action: AnyAction) {
       ...state,
       selectedBucket: action.payload.bucketName,
       message: `getting contents of bucket ${action.payload.bucketName}`,
+    };
+  }
+
+  if (action.type === LIST_RECEIVED) {
+    const { files } = action.payload;
+    return {
+      ...state,
+      files,
+      message: null,
     };
   }
 

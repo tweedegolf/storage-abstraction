@@ -3,7 +3,7 @@ import { Dropdown, DropdownToggle, DropdownItem, DropdownMenu } from 'reactstrap
 
 const SelectStorage = (props: {
   types: string[],
-  selectedStorageType: string | null
+  selectedStorageId: string | null
   onSelectStorageType: (type: string) => void,
 }) => {
   const [collapsed, openDropdown] = useState(false);
@@ -14,7 +14,7 @@ const SelectStorage = (props: {
     props.onSelectStorageType(alias);
   }} key={`${alias}_${i}`}>{alias}</DropdownItem>);
 
-  const label = props.selectedStorageType === null ? 'select storage type' : props.selectedStorageType;
+  const label = props.selectedStorageId === null ? 'select storage type' : props.selectedStorageId;
 
   return (
     <Dropdown isOpen={collapsed} toggle={handleToggle}>

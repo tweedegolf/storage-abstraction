@@ -7,6 +7,7 @@ import { Returns, ReturnsArray } from '@tsed/swagger';
 
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
+import { StorageInitData } from '../../../common/types';
 
 @Controller('/storage')
 export class StorageController {
@@ -14,6 +15,16 @@ export class StorageController {
     private readonly mediaFileService: MediaFileService,
     private readonly mediaFileRepository: MediaFileRepository,
   ) { }
+
+  @Get('/init')
+  @ReturnsArray(200, { type: String })
+  @Returns(500, { description: 'Internal server error' })
+  public async init(
+  ): Promise<StorageInitData> {
+    const data = this.mediaFileService.getInitData();
+    data.files = await this.mediaFileRepository.find();
+    return data;
+  }
 
   @Get('/types')
   @ReturnsArray(200, { type: String })
@@ -26,6 +37,7 @@ export class StorageController {
 
   @Get('/buckets/:storage')
   @ReturnsArray(200, { type: String })
+  @Returns(500, { description: 'Internal server error' })
   public async getBuckets(
     @PathParams('storage') storage: string,
   ): Promise<string[]> {

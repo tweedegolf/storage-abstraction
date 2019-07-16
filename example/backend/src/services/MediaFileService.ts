@@ -12,12 +12,14 @@ import {
   getEnvOrDie,
 } from '../env';
 import { MediaFile } from '../entities/MediaFile';
+import { StorageInitData } from '../../../common/types';
 
 @Service()
 export class MediaFileService implements OnInit {
   private _types: string[] = [];
   private _configs: { [id: string]: { type: string, config: StorageConfig } } = {};
   private storage: Storage | null = null;
+  private storageId: string | null = null;
 
   constructor() {
     this._configs = {
@@ -58,10 +60,11 @@ export class MediaFileService implements OnInit {
 
     // You can create a storage here for instance by using environment variables or you
     // can create a storage after initialization using `setStorage`.
-    if (this._types.length > 0) {
-      const config = this._configs[this._types[0]].config;
-      this.setStorage(config);
-    }
+    // if (this._types.length > 0) {
+    //   this.storageId = this._types[0];
+    //   const config = this._configs[this.storageId].config;
+    //   this.setStorage(config);
+    // }
   }
 
   async $onInit(): Promise<void> {
@@ -81,7 +84,17 @@ export class MediaFileService implements OnInit {
 
   public setStorageById(id: string): void {
     const config = this.configs[id].config;
+    this.storageId = id;
     this.storage = new Storage(config);
+  }
+
+  public getInitData(): StorageInitData {
+    return {
+      files: [],
+      types: this._types,
+      selectedStorageId: this.storageId,
+      selectedBucket: this.storage ? this.storage.getSelectedBucket() : null,
+    };
   }
 
   public async selectBucket(bucket: string): Promise<void> {

@@ -8,7 +8,7 @@ const initialState: RootState = {
   message: null,
   files: [],
   types: [],
-  selectedStorageType: null,
+  selectedStorageId: null,
   selectedBucket: null,
   buckets: [],
 };

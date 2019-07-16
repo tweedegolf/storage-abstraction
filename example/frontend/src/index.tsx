@@ -5,7 +5,7 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import getStore from './store';
 import App from './components/App';
-import { synchronizeWithStorage, getStorageTypes } from './actions';
+import { getStorageInitData } from './actions';
 
 const store = getStore();
 
@@ -16,9 +16,4 @@ render(
   document.getElementById('container'),
 );
 
-const fixedStorage = false;
-if (fixedStorage) {
-  synchronizeWithStorage(store.dispatch);
-} else {
-  getStorageTypes(store.dispatch);
-}
+getStorageInitData(store.dispatch);

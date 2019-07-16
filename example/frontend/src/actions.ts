@@ -5,12 +5,13 @@ import { ServerError } from './types';
 
 export const ERROR = 'ERROR';
 export const RESET_ERROR = 'RESET_ERROR';
-export const SYNCHRONIZING_WITH_STORAGE = 'SYNCHRONIZING_WITH_STORAGE';
+export const GET_STORAGE_INIT_DATA = 'GET_STORAGE_INIT_DATA';
+export const INIT_DATA_RECEIVED = 'INIT_DATA_RECEIVED';
 export const GET_BUCKET_CONTENTS = 'GET_BUCKET_CONTENTS';
 export const LIST_RECEIVED = 'LIST_RECEIVED';
 export const GET_STORAGE_TYPES = 'GET_STORAGE_TYPES';
 export const TYPES_RECEIVED = 'TYPES_RECEIVED';
-export const SELECT_STORAGE_TYPE = 'SELECT_STORAGE_TYPE';
+export const SELECT_STORAGE = 'SELECT_STORAGE';
 export const BUCKET_NAMES_RECEIVED = 'BUCKET_NAMES_RECEIVED';
 export const UPLOADING_FILES = 'UPLOADING_FILES';
 export const FILES_UPLOADED = 'FILES_UPLOADED';
@@ -28,15 +29,15 @@ const filterError = <T>(payload: T | ServerError, dispatch: Dispatch, callback: 
   }
 };
 
-export const synchronizeWithStorage = async (dispatch: Dispatch) => {
+export const getStorageInitData = async (dispatch: Dispatch) => {
   dispatch({
-    type: SYNCHRONIZING_WITH_STORAGE,
+    type: GET_STORAGE_INIT_DATA,
   });
 
-  filterError(await API.getList(), dispatch, (files) => {
+  filterError(await API.getInitData(), dispatch, (payload) => {
     dispatch({
-      type: LIST_RECEIVED,
-      payload: { files },
+      payload,
+      type: INIT_DATA_RECEIVED,
     });
   });
 };
@@ -70,19 +71,19 @@ export const getStorageTypes = async (dispatch: Dispatch) => {
   });
 };
 
-export const selectStorageType = (storageType: string) => async (dispatch: Dispatch) => {
+export const selectStorageType = (storageId: string) => async (dispatch: Dispatch) => {
   dispatch({
     payload: {
-      storageType,
+      storageId,
     },
-    type: SELECT_STORAGE_TYPE,
+    type: SELECT_STORAGE,
   });
 
   // get the available buckets for this storage
-  filterError(await API.getBuckets(storageType), dispatch, (buckets) => {
+  filterError(await API.getBuckets(storageId), dispatch, (buckets) => {
     dispatch({
       type: BUCKET_NAMES_RECEIVED,
-      payload: { storageType, buckets },
+      payload: { storageId, buckets },
     });
   });
 };
@@ -92,9 +93,9 @@ export const uploadFiles = (files: FileList, location?: string) => async (dispat
     type: UPLOADING_FILES,
   });
 
-  filterError(await API.uploadMediaFiles(files, location), dispatch, (payload) => {
+  filterError(await API.uploadMediaFiles(files, location), dispatch, (files) => {
     dispatch({
-      payload,
+      payload: { files },
       type: FILES_UPLOADED,
     });
   });
@@ -105,7 +106,7 @@ export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
     type: DELETING_FILE,
   });
 
-  filterError(await API.deleteMediaFile(mf.id), dispatch, (payload) => {
+  filterError(await API.deleteMediaFile(mf.id), dispatch, (payload: { [id: string]: number }) => {
     dispatch({
       payload,
       type: FILE_DELETED,
