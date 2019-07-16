@@ -1,7 +1,7 @@
 import { Dispatch, Action } from 'redux';
-import { uploadMediaFiles, deleteMediaFile, getList } from './api';
-import axios from 'axios';
+import * as API from './api';
 import { MediaFile } from '../../backend/src/entities/MediaFile';
+import { ServerError } from './types';
 
 export const ERROR = 'ERROR';
 export const RESET_ERROR = 'RESET_ERROR';
@@ -17,33 +17,28 @@ export const FILES_UPLOADED = 'FILES_UPLOADED';
 export const DELETING_FILE = 'DELETING_FILE';
 export const FILE_DELETED = 'FILE_DELETED';
 
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    return Promise.reject(error.response.data.message);
-  });
+const filterError = <T>(payload: T | ServerError, dispatch: Dispatch, callback: (arg0: T) => void) => {
+  if ((payload as ServerError).error) {
+    dispatch({
+      payload,
+      type: ERROR,
+    });
+  } else {
+    callback(payload as T);
+  }
+};
 
 export const synchronizeWithStorage = async (dispatch: Dispatch) => {
   dispatch({
     type: SYNCHRONIZING_WITH_STORAGE,
   });
 
-  await axios.get('/api/v1/media/list')
-    .then((response) => {
-      dispatch({
-        payload: {
-          files: response.data,
-        },
-        type: LIST_RECEIVED,
-      });
-    }).catch((error: string) => {
-      dispatch({
-        payload: { error },
-        type: ERROR,
-      });
+  filterError(await API.getList(), dispatch, (files) => {
+    dispatch({
+      type: LIST_RECEIVED,
+      payload: { files },
     });
+  });
 };
 
 export const getBucketContents = (bucketName: string) => async (dispatch: Dispatch) => {
@@ -53,17 +48,13 @@ export const getBucketContents = (bucketName: string) => async (dispatch: Dispat
     },
     type: GET_BUCKET_CONTENTS,
   });
-  const payload = await getList(bucketName);
-  dispatch({
-    payload,
-    type: LIST_RECEIVED,
+
+  filterError(await API.getList(bucketName), dispatch, (files) => {
+    dispatch({
+      type: LIST_RECEIVED,
+      payload: { files },
+    });
   });
-  // }).catch((error: string) => {
-  //   dispatch({
-  //     payload: { error },
-  //     type: ERROR,
-  //   });
-  // });
 };
 
 export const getStorageTypes = async (dispatch: Dispatch) => {
@@ -71,20 +62,12 @@ export const getStorageTypes = async (dispatch: Dispatch) => {
     type: GET_STORAGE_TYPES,
   });
 
-  await axios.get('/api/v1/storage/types')
-    .then((response) => {
-      dispatch({
-        payload: {
-          types: response.data,
-        },
-        type: TYPES_RECEIVED,
-      });
-    }).catch((error: string) => {
-      dispatch({
-        payload: { error },
-        type: ERROR,
-      });
+  filterError(await API.getTypes(), dispatch, (types) => {
+    dispatch({
+      type: TYPES_RECEIVED,
+      payload: { types },
     });
+  });
 };
 
 export const selectStorageType = (storageType: string) => async (dispatch: Dispatch) => {
@@ -96,21 +79,12 @@ export const selectStorageType = (storageType: string) => async (dispatch: Dispa
   });
 
   // get the available buckets for this storage
-  await axios.get(`/api/v1/storage/buckets/${storageType}`)
-    .then((response) => {
-      dispatch({
-        payload: {
-          storageType,
-          buckets: response.data,
-        },
-        type: BUCKET_NAMES_RECEIVED,
-      });
-    }).catch((error: string) => {
-      dispatch({
-        payload: { error },
-        type: ERROR,
-      });
+  filterError(await API.getBuckets(storageType), dispatch, (buckets) => {
+    dispatch({
+      type: BUCKET_NAMES_RECEIVED,
+      payload: { storageType, buckets },
     });
+  });
 };
 
 export const uploadFiles = (files: FileList, location?: string) => async (dispatch: Dispatch) => {
@@ -118,13 +92,12 @@ export const uploadFiles = (files: FileList, location?: string) => async (dispat
     type: UPLOADING_FILES,
   });
 
-  const payload = await uploadMediaFiles(files, location);
-  const event = {
-    payload,
-    type: FILES_UPLOADED,
-  };
-
-  dispatch(event);
+  filterError(await API.uploadMediaFiles(files, location), dispatch, (payload) => {
+    dispatch({
+      payload,
+      type: FILES_UPLOADED,
+    });
+  });
 };
 
 export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
@@ -132,13 +105,12 @@ export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
     type: DELETING_FILE,
   });
 
-  const payload = await deleteMediaFile(mf.id);
-  const event = {
-    payload,
-    type: FILE_DELETED,
-  };
-
-  dispatch(event);
+  filterError(await API.deleteMediaFile(mf.id), dispatch, (payload) => {
+    dispatch({
+      payload,
+      type: FILE_DELETED,
+    });
+  });
 };
 
 export const resetError = () => (dispatch: Dispatch) => {

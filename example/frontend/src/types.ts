@@ -8,3 +8,7 @@ export type RootState = {
   selectedStorageType: string[] | null,
   selectedBucket: string | null,
 };
+
+export type ServerError = {
+  error: string;
+};

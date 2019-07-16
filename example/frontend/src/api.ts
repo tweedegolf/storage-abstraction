@@ -2,10 +2,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
   MediaFile,
 } from '../../backend/src/entities/MediaFile';
-import {
-  ResResult,
-  ResSuccess,
-} from '../../common/types';
+import { ServerError } from './types';
 
 const baseUrl = '/api/v1';
 const baseConfig = () => ({
@@ -13,49 +10,54 @@ const baseConfig = () => ({
   timeout: 10000,
 });
 
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    return Promise.reject(error.response.data.message);
-  });
+// axios.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   (error) => {
+//     return Promise.reject(error.response.data.message);
+//   });
 
-const parseResult = <T>(url: string, axiosResponse: AxiosResponse) => {
-  const response: ResResult<T> = axiosResponse.data;
-
-  // if (response.error === undefined) {
-  //   console.log('no error in response');
-  //   throw new Error(`Response for '${url}' does not correspond to standard`);
-  // }
-
-  if (response.error) {
-    throw new Error(response.message);
+const parseResult = async<T>(axiosPromise: Promise<AxiosResponse>): Promise<T | ServerError> => {
+  try {
+    const response = await axiosPromise;
+    return response.data as T;
+  } catch (e) {
+    return { error: e.message };
   }
-
-  return (response as ResSuccess<T>).data;
 };
 
-const get = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => (
-  parseResult<T>(url, await axios.get(url, { ...baseConfig(), ...config }))
-);
+const get = async <T>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<T | ServerError> => {
+  return parseResult<T>(axios.get(url, { ...baseConfig(), ...config }));
+};
 
-const put = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Promise<U> => (
-  parseResult<U>(url, await axios.put(url, data, { ...baseConfig(), ...config }))
-);
+const put = async <T, U>(
+  url: string,
+  data: T,
+  config?: AxiosRequestConfig,
+): Promise<U | ServerError> => {
+  return parseResult<U>(axios.put(url, data, { ...baseConfig(), ...config }));
+};
 
-const post = async <T, U>(url: string, data: T, config?: AxiosRequestConfig): Promise<U> => {
-  return parseResult<U>(url, await axios.post(url, data, { ...baseConfig(), ...config }));
+const post = async <T, U>(
+  url: string,
+  data: T,
+  config?: AxiosRequestConfig,
+): Promise<U | ServerError> => {
+  return parseResult<U>(axios.post(url, data, { ...baseConfig(), ...config }));
 };
 
 const doDelete = async <T>(
   url: string,
   config?: AxiosRequestConfig,
-): Promise<T> => {
-  return parseResult<T>(url, await axios.delete(url, { ...baseConfig(), ...config }));
+): Promise<T | ServerError> => {
+  return parseResult<T>(axios.delete(url, { ...baseConfig(), ...config }));
 };
 
-export const uploadMediaFiles = (files: FileList, location?: string): Promise<MediaFile> => {
+export const uploadMediaFiles = (files: FileList, location?: string): Promise<MediaFile | ServerError> => {
   const data = new FormData();
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];
@@ -70,12 +72,15 @@ export const uploadMediaFiles = (files: FileList, location?: string): Promise<Me
   });
 };
 
-export const getList = async (bucketName: string) => {
-  await axios.get(`/api/v1/media/list${bucketName}`)
-    .then(response => response.data)
-    .catch((error: string) => { console.log(error); });
-};
-
 export const getMediaThumbnailUrl = (mf: MediaFile) => `${baseUrl}/media/thumbnail/png/100/${mf.id}/${mf.path}`;
+
 export const getMediaDownloadUrl = (mf: MediaFile) => `${baseUrl}/media/download/${mf.id}/${mf.path}`;
-export const deleteMediaFile = (id: number): Promise<MediaFile[]> => doDelete(`/media/${id}`);
+
+export const deleteMediaFile = (id: number): Promise<MediaFile[] | ServerError> => doDelete(`/media/${id}`);
+
+export const getTypes = (): Promise<string[] | ServerError> => get('storage/types');
+
+export const getList = (bucketName?: string): Promise<[string, number] | ServerError> =>
+  bucketName ? get(`media/list/${bucketName}`) : get('media/list');
+
+export const getBuckets = (storageType: string): Promise<string[] | ServerError> => get(`/storage/buckets/${storageType}`);
