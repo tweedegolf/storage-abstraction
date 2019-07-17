@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   PathParams,
+  Post,
+  Delete,
 } from '@tsed/common';
 import { Returns, ReturnsArray } from '@tsed/swagger';
 
@@ -22,6 +24,9 @@ export class StorageController {
   public async init(
   ): Promise<StorageInitData> {
     const data = await this.mediaFileService.getInitData();
+    if (data.selectedBucket !== null) {
+      await this.mediaFileRepository.synchronize();
+    }
     data.files = await this.mediaFileRepository.find();
     return data;
   }
@@ -44,5 +49,23 @@ export class StorageController {
     this.mediaFileService.setStorageById(id);
     await this.mediaFileRepository.synchronize();
     return this.mediaFileService.getBuckets();
+  }
+
+  @Post('/bucket/:bucketname')
+  @ReturnsArray(200, { type: String })
+  @Returns(500, { description: 'Internal server error' })
+  public async createBucket(
+    @PathParams('bucketname') bucketname: string,
+  ): Promise<string[]> {
+    return this.mediaFileService.createBucket(bucketname);
+  }
+
+  @Delete('/bucket/:bucketname')
+  @ReturnsArray(200, { type: String })
+  @Returns(500, { description: 'Internal server error' })
+  public async deleteBucket(
+    @PathParams('bucketname') bucketname: string,
+  ): Promise<string[]> {
+    return this.mediaFileService.deleteBucket(bucketname);
   }
 }

@@ -1,7 +1,7 @@
 import path from 'path';
 import { Service, AfterRoutesInit, OnInit } from '@tsed/common';
 import { TypeORMService } from '@tsed/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DeleteResult } from 'typeorm';
 import { MediaFile } from '../../entities/MediaFile';
 import { MediaFileService } from '../MediaFileService';
 
@@ -37,8 +37,7 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
     const storageFiles = await this.mediaFileService.getStoredFiles();
     const repositoryFiles = await this.repository.find();
     const notInRepository = [];
-    storageFiles.forEach((data) => {
-      const [path, size] = data;
+    storageFiles.forEach(([path, size]) => {
       if (repositoryFiles.findIndex((f: MediaFile) => f.path === path) === -1) {
         const mf = new MediaFile();
         mf.path = path;
@@ -86,6 +85,10 @@ export class MediaFileRepository implements AfterRoutesInit, OnInit {
 
   public async remove(files: MediaFile[]): Promise<MediaFile[]> {
     return this.repository.remove(files);
+  }
+
+  public async deleteWhere(condition: {}): Promise<DeleteResult> {
+    return this.repository.delete(condition);
   }
 
   public async findOne(id: number): Promise<MediaFile | undefined> {

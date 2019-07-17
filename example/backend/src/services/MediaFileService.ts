@@ -13,10 +13,11 @@ import {
 } from '../env';
 import { MediaFile } from '../entities/MediaFile';
 import { StorageInitData } from '../../../common/types';
+import { NotFound } from 'ts-httpexceptions';
 
 @Service()
 export class MediaFileService implements OnInit {
-  private _types: string[] = [];
+  private _configIds: string[] = [];
   private _configs: { [id: string]: { type: string, config: StorageConfig } } = {};
   private storage: Storage | null = null;
   private storageId: string | null = null;
@@ -30,36 +31,34 @@ export class MediaFileService implements OnInit {
           directory: getEnv('STORAGE_1_DIRECTORY'),
         },
       },
-      'Amazon S3': {
-        type: Storage.TYPE_AMAZON_S3,
-        config: {
-          bucketName: getEnv('STORAGE_2_BUCKETNAME'),
-          accessKeyId: getEnvOrDie('STORAGE_2_KEY_ID'),
-          secretAccessKey: getEnvOrDie('STORAGE_2_ACCESS_KEY'),
-        },
-      },
-      'Google Cloud 1': {
-        type: Storage.TYPE_GOOGLE_CLOUD,
-        config: {
-          bucketName: getEnv('STORAGE_3_BUCKETNAME'),
-          projectId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
-          keyFilename: getEnvOrDie('STORAGE_3_KEYFILE'),
-        },
-      },
-      'Google Cloud 2': {
-        type: Storage.TYPE_GOOGLE_CLOUD,
-        config: {
-          bucketName: getEnv('STORAGE_4_BUCKETNAME'),
-          projectId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
-          keyFilename: getEnvOrDie('STORAGE_4_KEYFILE'),
-        },
-      },
+      // 'Amazon S3': {
+      //   type: Storage.TYPE_AMAZON_S3,
+      //   config: {
+      //     bucketName: getEnv('STORAGE_2_BUCKETNAME'),
+      //     accessKeyId: getEnvOrDie('STORAGE_2_KEY_ID'),
+      //     secretAccessKey: getEnvOrDie('STORAGE_2_ACCESS_KEY'),
+      //   },
+      // },
+      // 'Google Cloud 1': {
+      //   type: Storage.TYPE_GOOGLE_CLOUD,
+      //   config: {
+      //     bucketName: getEnv('STORAGE_3_BUCKETNAME'),
+      //     projectId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
+      //     keyFilename: getEnvOrDie('STORAGE_3_KEYFILE'),
+      //   },
+      // },
+      // 'Google Cloud 2': {
+      //   type: Storage.TYPE_GOOGLE_CLOUD,
+      //   config: {
+      //     bucketName: getEnv('STORAGE_4_BUCKETNAME'),
+      //     projectId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
+      //     keyFilename: getEnvOrDie('STORAGE_4_KEYFILE'),
+      //   },
+      // },
     };
 
-    this._types = Object.keys(this._configs);
+    this._configIds = Object.keys(this._configs);
 
-    // You can create a storage here for instance by using environment variables or you
-    // can create a storage after initialization using `setStorage`.
     // if (this._types.length > 0) {
     //   this.storageId = this._types[0];
     //   const config = this._configs[this.storageId].config;
@@ -89,24 +88,45 @@ export class MediaFileService implements OnInit {
   }
 
   public async getInitData(): Promise<StorageInitData> {
+    const numConfigs = Object.keys(this._configs).length;
+    if (numConfigs === 0) {
+      throw new NotFound('no storage configuration found');
+    }
+
+    if (numConfigs === 1 && this.storage === null) {
+      this.storageId = this._configIds[0];
+      this.storage = new Storage(this._configs[this.storageId].config);
+    }
+
+    let selectedStorageId = this.storageId;
     let selectedBucket = null;
     let buckets = [];
     if (this.storage !== null) {
       try {
-        selectedBucket = this.storage.getSelectedBucket();
         buckets = await this.getBuckets();
+        if (buckets.length === 1 && numConfigs === 1) {
+          selectedBucket = buckets[0];
+          this.storage.selectBucket(selectedBucket);
+        }
       } catch (e) {
+        // if it fails, there is an error with the storage
         selectedBucket = null;
+        selectedStorageId = null;
         this.storage = null;
         this.storageId = null;
       }
+      try {
+        selectedBucket = this.storage.getSelectedBucket();
+      } catch (e) {
+        selectedBucket = null;
+      }
     }
     return {
-      buckets,
+      selectedStorageId,
       selectedBucket,
+      buckets,
       files: [],
-      types: this._types,
-      selectedStorageId: this.storageId,
+      types: this._configIds,
     };
   }
 
@@ -115,7 +135,7 @@ export class MediaFileService implements OnInit {
   }
 
   get types() {
-    return this._types;
+    return this._configIds;
   }
 
   get configs() {
@@ -178,5 +198,25 @@ export class MediaFileService implements OnInit {
 
   public async getBuckets(): Promise<string[]> {
     return this.storage.listBuckets();
+  }
+
+  public async createBucket(bucketName: string): Promise<string[]> {
+    if (this.storage === null) {
+      throw new NotFound('no storage selected yet');
+    }
+    await this.storage.createBucket(bucketName);
+    return this.storage.listBuckets();
+  }
+
+  public async deleteBucket(bucketName: string): Promise<string[]> {
+    if (this.storage === null) {
+      throw new NotFound('no storage selected yet');
+    }
+    await this.storage.deleteBucket(bucketName);
+    const buckets = await this.storage.listBuckets();
+    if (buckets.length === 1) {
+      await this.storage.selectBucket(buckets[0]);
+    }
+    return buckets;
   }
 }

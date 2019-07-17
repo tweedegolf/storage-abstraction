@@ -13,6 +13,10 @@ import {
   ERROR,
   RESET_ERROR,
   INIT_DATA_RECEIVED,
+  BUCKET_CREATED,
+  CREATING_BUCKET,
+  BUCKET_DELETED,
+  DELETING_BUCKET,
 } from './actions';
 import { AnyAction } from 'redux';
 import { RootState } from './types';
@@ -128,6 +132,41 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
     return {
       ...state,
       files,
+      message: null,
+    };
+  }
+
+  if (action.type === CREATING_BUCKET) {
+    const { bucketName } = action.payload;
+    return {
+      ...state,
+      message: `creating bucket ${bucketName}`,
+    };
+  }
+
+  if (action.type === BUCKET_CREATED) {
+    const { buckets } = action.payload;
+    return {
+      ...state,
+      buckets,
+      message: null,
+    };
+  }
+
+  if (action.type === DELETING_BUCKET) {
+    const { bucketName } = action.payload;
+    return {
+      ...state,
+      message: `deleting bucket ${bucketName}`,
+    };
+  }
+
+  if (action.type === BUCKET_DELETED) {
+    const { buckets } = action.payload;
+    return {
+      ...state,
+      buckets,
+      selectedBucket: null,
       message: null,
     };
   }

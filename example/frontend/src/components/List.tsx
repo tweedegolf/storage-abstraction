@@ -13,7 +13,7 @@ const sortDateUpdated = (mfA: MediaFile, mfB: MediaFile): number => {
     return -1;
   }
   return 0;
-}
+};
 
 // const createImg = (mf: MediaFile): JSX.Element => <img
 //   src={getMediaThumbnailUrl(mf)}

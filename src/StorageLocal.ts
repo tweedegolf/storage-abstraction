@@ -119,6 +119,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
         if (e !== null) {
           throw e;
         }
+        if (bn === this.bucketName) {
+          this.bucketName = null;
+        }
         resolve();
       });
     });
@@ -132,9 +135,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   async listBuckets(): Promise<string[]> {
     const files = await fs.promises.readdir(this.directory);
     const stats = await Promise.all(files.map(f => fs.promises.stat(path.join(this.directory, f))));
-    const folders = files.filter((f, i) => stats[i].isDirectory());
+    this.buckets = files.filter((f, i) => stats[i].isDirectory());
     // console.log(files);
-    return folders;
+    return this.buckets;
   }
 
   private async globFiles(folder: string): Promise<string[]> {

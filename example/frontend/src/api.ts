@@ -16,6 +16,9 @@ axios.interceptors.response.use(
     return response;
   },
   (error) => {
+    // if (typeof error.response.data.message === 'undefined') {
+    //   return Promise.resolve(error);
+    // }
     return Promise.reject(error.response.data);
   });
 
@@ -88,3 +91,6 @@ export const getMediaDownloadUrl = (mf: MediaFile) => `${baseUrl}/media/download
 
 export const deleteMediaFile = (id: number): Promise<{ [id: string]: number } | ServerError> => doDelete(`/media/${id}`);
 
+export const createBucket = (name: string): Promise<string[] | ServerError> => post(`/storage/bucket/${name}`, null);
+
+export const deleteBucket = (name: string): Promise<string[] | ServerError> => doDelete(`/storage/bucket/${name}`);

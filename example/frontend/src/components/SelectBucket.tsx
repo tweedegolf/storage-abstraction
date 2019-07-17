@@ -11,6 +11,11 @@ const SelectBucket = (props: {
   const handleToggle = () => {
     openDropdown(!collapsed);
   };
+
+  if (props.buckets.length <= 1) {
+    return null;
+  }
+
   const items = props.buckets.map(bucket => <DropdownItem onClick={(e) => {
     if (bucket !== props.selectedBucket) {
       props.onSelectBucket(bucket);
@@ -18,7 +23,7 @@ const SelectBucket = (props: {
   }} key={bucket}>{bucket}</DropdownItem>);
 
   return (
-    <Dropdown isOpen={collapsed} toggle={handleToggle}>
+    <Dropdown className="topmenuitem" isOpen={collapsed} toggle={handleToggle}>
       <DropdownToggle disabled={!props.enabled} caret>
         {props.selectedBucket || 'select bucket'}
       </DropdownToggle>

@@ -10,6 +10,11 @@ const SelectStorage = (props: {
   const handleToggle = () => {
     openDropdown(!collapsed);
   };
+
+  if (props.types.length <= 1) {
+    return null;
+  }
+
   const items = props.types.map((alias, i) => <DropdownItem onClick={(e) => {
     if (alias !== props.selectedStorageId) {
       props.onSelectStorageType(alias);
@@ -19,7 +24,7 @@ const SelectStorage = (props: {
   const label = props.selectedStorageId === null ? 'select storage type' : props.selectedStorageId;
 
   return (
-    <Dropdown isOpen={collapsed} toggle={handleToggle}>
+    <Dropdown className="topmenuitem" isOpen={collapsed} toggle={handleToggle}>
       <DropdownToggle caret>
         {label}
       </DropdownToggle>

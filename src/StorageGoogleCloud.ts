@@ -156,7 +156,8 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   async listBuckets(): Promise<string[]> {
     const [buckets] = await this.storage.getBuckets();
-    return buckets.map(b => b.metadata.id);
+    this.buckets = buckets.map(b => b.metadata.id);
+    return this.buckets;
   }
 
   private async getMetaData(files: string[]) {

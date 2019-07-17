@@ -194,7 +194,7 @@ export class MediaFileController {
     @Required @BodyParams('filePath') filePath: string,
   ): Promise<boolean> {
     await to(this.mediaFileService.unlinkMediaFile(filePath));
-    // TODO: remove file from repository
+    await this.mediaFileRepository.deleteWhere({ path: filePath });
     return true;
   }
 

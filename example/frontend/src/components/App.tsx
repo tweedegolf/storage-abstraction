@@ -5,9 +5,10 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { ListUI as List } from './List';
 import { SelectStorage } from './SelectStorage';
 import { SelectBucket } from './SelectBucket';
-import { uploadFiles, deleteFile, selectStorage, getBucketContents, resetError } from '../actions';
+import { uploadFiles, deleteFile, selectStorage, getBucketContents, resetError, createBucket, deleteBucket } from '../actions';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
+import { CreateAndDeleteBucket } from './CreateAndDeleteBucket';
 
 const App = (props) => {
   const uploadEnabled = props.message === null && props.selecteStorageId !== null && props.selectedBucket !== null;
@@ -26,6 +27,11 @@ const App = (props) => {
           selectedBucket={props.selectedBucket}
           onSelectBucket={props.getBucketContents}
         ></SelectBucket>
+        <CreateAndDeleteBucket
+          selectedBucket={props.selectedBucket}
+          onCreateBucket={props.createBucket}
+          onDeleteBucket={props.deleteBucket}
+        />
       </div>
       <List deleteFile={props.deleteFile} files={props.files}></List>
       <Form uploadFiles={props.uploadFiles} enabled={uploadEnabled}></Form>
@@ -49,8 +55,10 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
     uploadFiles,
     deleteFile,
     resetError,
-    selectStorageType: selectStorage,
     getBucketContents,
+    selectStorageType: selectStorage,
+    createBucket,
+    deleteBucket,
     // tslint:disable-next-line: align
   }, dispatch);
 };

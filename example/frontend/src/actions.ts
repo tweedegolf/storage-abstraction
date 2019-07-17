@@ -17,6 +17,10 @@ export const UPLOADING_FILES = 'UPLOADING_FILES';
 export const FILES_UPLOADED = 'FILES_UPLOADED';
 export const DELETING_FILE = 'DELETING_FILE';
 export const FILE_DELETED = 'FILE_DELETED';
+export const CREATING_BUCKET = 'CREATING_BUCKET';
+export const BUCKET_CREATED = 'BUCKET_CREATED';
+export const DELETING_BUCKET = 'DELETING_BUCKET';
+export const BUCKET_DELETED = 'BUCKET_DELETED';
 
 const filterError = <T>(payload: T | ServerError, dispatch: Dispatch, callback: (arg0: T) => void) => {
   if ((payload as ServerError).error) {
@@ -110,6 +114,42 @@ export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
     dispatch({
       payload,
       type: FILE_DELETED,
+    });
+  });
+};
+
+export const createBucket = (bucketName: string) => async (dispatch: Dispatch) => {
+  dispatch({
+    payload: {
+      bucketName,
+    },
+    type: CREATING_BUCKET,
+  });
+
+  filterError(await API.createBucket(bucketName), dispatch, (buckets) => {
+    dispatch({
+      payload: {
+        buckets,
+      },
+      type: BUCKET_CREATED,
+    });
+  });
+};
+
+export const deleteBucket = (bucketName: string) => async (dispatch: Dispatch) => {
+  dispatch({
+    payload: {
+      bucketName,
+    },
+    type: DELETING_BUCKET,
+  });
+
+  filterError(await API.deleteBucket(bucketName), dispatch, (buckets) => {
+    dispatch({
+      payload: {
+        buckets,
+      },
+      type: BUCKET_DELETED,
     });
   });
 };
