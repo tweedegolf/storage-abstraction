@@ -46,7 +46,7 @@ export abstract class AbstractStorage implements IStorage {
 
   abstract async createBucket(name: string): Promise<void>;
 
-  abstract async selectBucket(name: string): Promise<void>;
+  abstract async selectBucket(name: string | null): Promise<void>;
 
   abstract async clearBucket(name?: string): Promise<void>;
 

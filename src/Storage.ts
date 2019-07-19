@@ -60,7 +60,7 @@ export class Storage implements IStorage {
     return this.storage.listFiles();
   }
 
-  async selectBucket(name: string): Promise<void> {
+  async selectBucket(name: string | null): Promise<void> {
     return this.storage.selectBucket(name);
   }
 

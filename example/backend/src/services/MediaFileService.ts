@@ -9,7 +9,6 @@ import { Service, OnInit } from '@tsed/di';
 import { Readable } from 'stream';
 import {
   getEnv,
-  getEnvOrDie,
 } from '../env';
 import { MediaFile } from '../entities/MediaFile';
 import { StorageInitData } from '../../../common/types';
@@ -216,6 +215,8 @@ export class MediaFileService implements OnInit {
     const buckets = await this.storage.listBuckets();
     if (buckets.length === 1) {
       await this.storage.selectBucket(buckets[0]);
+    } else {
+      this.storage.selectBucket(null);
     }
     return buckets;
   }

@@ -74,7 +74,11 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     }
   }
 
-  async selectBucket(name: string): Promise<void> {
+  async selectBucket(name: string | null): Promise<void> {
+    if (name === null) {
+      this.bucketName = null;
+      return;
+    }
     await this.createBucket(name);
     this.bucketName = name;
   }

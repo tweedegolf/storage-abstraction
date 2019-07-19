@@ -144,11 +144,9 @@ export const deleteBucket = (bucketName: string) => async (dispatch: Dispatch) =
     type: DELETING_BUCKET,
   });
 
-  filterError(await API.deleteBucket(bucketName), dispatch, (buckets) => {
+  filterError(await API.deleteBucket(bucketName), dispatch, (payload) => {
     dispatch({
-      payload: {
-        buckets,
-      },
+      payload,
       type: BUCKET_DELETED,
     });
   });

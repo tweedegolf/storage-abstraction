@@ -7,3 +7,9 @@ export type StorageInitData = {
   selectedStorageId: null | string;
   selectedBucket: null | string;
 };
+
+export type DeleteBucketData = {
+  buckets: string[];
+  files: MediaFile[];
+  selectedBucket: null | string;
+};

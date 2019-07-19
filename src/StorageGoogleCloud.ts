@@ -128,7 +128,12 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     }
   }
 
-  async selectBucket(name: string): Promise<void> {
+  async selectBucket(name: string | null): Promise<void> {
+    if (name === null) {
+      this.bucketName = null;
+      return;
+    }
+
     const [error] = await to(this.createBucket(name));
     if (error !== null) {
       throw error;

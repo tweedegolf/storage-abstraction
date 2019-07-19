@@ -162,11 +162,12 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
   }
 
   if (action.type === BUCKET_DELETED) {
-    const { buckets } = action.payload;
+    const { buckets, files, selectedBucket } = action.payload;
     return {
       ...state,
       buckets,
-      selectedBucket: null,
+      files,
+      selectedBucket,
       message: null,
     };
   }

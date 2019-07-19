@@ -9,7 +9,7 @@ import { Returns, ReturnsArray } from '@tsed/swagger';
 
 import { MediaFileService } from '../services/MediaFileService';
 import { MediaFileRepository } from '../services/repositories/MediaFileRepository';
-import { StorageInitData } from '../../../common/types';
+import { StorageInitData, DeleteBucketData } from '../../../common/types';
 
 @Controller('/storage')
 export class StorageController {
@@ -65,7 +65,21 @@ export class StorageController {
   @Returns(500, { description: 'Internal server error' })
   public async deleteBucket(
     @PathParams('bucketname') bucketname: string,
-  ): Promise<string[]> {
-    return this.mediaFileService.deleteBucket(bucketname);
+  ): Promise<DeleteBucketData> {
+    const buckets = await this.mediaFileService.deleteBucket(bucketname);
+    let selectedBucket: string | null = null;
+    let files = [];
+    if (buckets.length === 1) {
+      selectedBucket = buckets[0];
+      await this.mediaFileService.selectBucket(selectedBucket);
+      await this.mediaFileRepository.synchronize();
+      files = await this.mediaFileRepository.find();
+    }
+    const data: DeleteBucketData = {
+      files,
+      buckets,
+      selectedBucket,
+    };
+    return data;
   }
 }

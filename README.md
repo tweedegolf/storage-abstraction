@@ -56,9 +56,9 @@ Creates a new bucket, does not fail if the bucket already exists.
 
 ### selectBucket
 ```typescript
-selectBucket(name: string): Promise<void>;
+selectBucket(name: string | null): Promise<void>;
 ```
-Select another bucket for storing files, the bucket will be created automatically if it doesn't exist.
+Select another bucket for storing files, the bucket will be created automatically if it doesn't exist.If you pass `null` the currently selected bucket will be deselected.
 
 ### clearBucket
 ```typescript
