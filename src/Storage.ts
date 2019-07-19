@@ -20,6 +20,10 @@ export class Storage implements IStorage {
     this.switchStorage(config);
   }
 
+  async test(): Promise<void> {
+    return this.storage.test();
+  }
+
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
     return this.storage.addFileFromBuffer(buffer, targetPath);
   }

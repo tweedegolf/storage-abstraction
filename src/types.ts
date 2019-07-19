@@ -2,6 +2,12 @@ import { Readable } from 'stream';
 
 export interface IStorage {
   /**
+   * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
+   * if it fails and if so, it throws an error.
+   */
+  test(): Promise<void>;
+
+  /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but
    * also when the bucket already exists. Note that the provided name will be slugified. Also note that
    * you have to use `selectBucket` to start using the newly created bucket

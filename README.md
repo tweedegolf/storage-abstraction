@@ -48,6 +48,13 @@ type config = {
 
 ## API methods
 
+### test
+```typescript
+test():Promise<void>;
+```
+
+Runs a simple test to test the storage configuration: calls `listBuckets` only to check if it fails and if so, it throws an error.
+
 ### createBucket
 ```typescript
 createBucket(name: string): Promise<void>;
@@ -157,11 +164,22 @@ More functional classes can be added for different storage types, note however t
 
 If you want to run the tests you have to checkout the repository from github and install all dependencies with ```npm install```. The tests test all storage types; for Google Cloud and Amazon S3 you need add your credentials to a `.env` file, see the file `.env.default` for more explanation. To run the Jasmine tests use this command:
 
+```npm run test-jasmine```
+
+You can run tests per storage type using on of these commands, see also the file `package.json`:
+
+```bash
+# test local disk
+npm run test-local
+# test google storage
+npm run test-google
+# test amazon s3
+npm run test-amazon
+```
+
+You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:
+
 ```npm test```
-
-You can find some additional non-Jasmine tests in the file `tests/test.ts`. Uncomment the type of storage you want to test and run:
-
-```npm run test2```
 
 ## Example application
 

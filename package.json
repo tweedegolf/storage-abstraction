@@ -1,12 +1,13 @@
 {
   "name": "storage-abstraction",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "files": [
-    "dist/*"
+    "dist/*",
+    "tests/test.ts"
   ],
   "dependencies": {
     "@google-cloud/storage": "^2.5.0",
@@ -37,8 +38,8 @@
     "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./tests/*.ts",
     "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
     "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
-    "test": "npm run test-local && npm run test-google && npm run test-amazon",
-    "test2": "ts-node ./tests/test.ts",
+    "test-jasmine": "npm run test-local && npm run test-google && npm run test-amazon",
+    "test": "ts-node ./tests/test.ts",
     "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
     "copy": "cd ./example/backend && ./copy.sh",
     "tsc": "node_modules/.bin/tsc",

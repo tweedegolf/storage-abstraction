@@ -41,6 +41,7 @@ if (type === Storage.TYPE_LOCAL) {
     secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
   };
 }
+
 storage = new Storage(config);
 
 describe(`testing ${type} storage`, () => {
@@ -66,6 +67,15 @@ describe(`testing ${type} storage`, () => {
           }
         });
       });
+    }
+  });
+
+  it('test', async () => {
+    try {
+      await storage.test();
+    } catch (e) {
+      console.error(e);
+      return;
     }
   });
 

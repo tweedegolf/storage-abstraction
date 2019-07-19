@@ -22,8 +22,16 @@ const configLocal = {
   directory: process.env.STORAGE_LOCAL_DIRECTORY,
 };
 
-const test = async (storage: IStorage) => {
+const test = async (storage: IStorage, message: string) => {
+  console.log('=>', message);
   let r: any;
+
+  try {
+    await storage.test();
+  } catch (e) {
+    console.log(e.message, '\n');
+    return;
+  }
 
   r = await storage.listBuckets();
   console.log('list buckets', r);
@@ -84,15 +92,18 @@ const test = async (storage: IStorage) => {
 
   r = await storage.deleteBucket('fnaap1');
   r = await storage.deleteBucket('fnaap2');
+  console.log('\n');
 };
 
-// const storage = new StorageLocal(configLocal);
+/* uncomment one of the following lines to test a single storage type: */
+const storage = new StorageLocal(configLocal);
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
 // test(storage);
 
-test(new StorageLocal(configLocal))
-  .then(() => test(new StorageAmazonS3(configS3)))
-  .then(() => test(new StorageGoogleCloud(configGoogle)))
+/* or run all tests */
+test(new StorageLocal(configLocal), 'test local')
+  .then(() => test(new StorageAmazonS3(configS3), 'test amazon'))
+  .then(() => test(new StorageGoogleCloud(configGoogle), 'test google'))
   .then(() => { console.log('done'); })
   .catch((e) => { console.log(e); });

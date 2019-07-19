@@ -19,6 +19,14 @@ export abstract class AbstractStorage implements IStorage {
     }
   }
 
+  async test(): Promise<void> {
+    try {
+      await this.listBuckets();
+    } catch (e) {
+      throw new Error('Looks like the storage configuration is not correct');
+    }
+  }
+
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
     const paths = targetPath.split('/').map(d => slugify(d));
     await this.store(origPath, path.join(...paths));
