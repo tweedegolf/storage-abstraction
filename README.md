@@ -223,7 +223,7 @@ The backend also stores some metadata of the uploaded images in a Postgres datab
 - date created
 - date updated
 
-This data is (partly) used to populate the file list on the frontend.
+This data is (partly) used to populate the file list on the frontend. You can see the Swagger documentation on <https://localhost/docs> if the application is running.
 
 ### Configuration of the backend
 

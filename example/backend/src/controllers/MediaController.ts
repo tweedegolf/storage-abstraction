@@ -11,7 +11,7 @@ import {
   Required,
 } from '@tsed/common';
 import { MultipartFile } from '@tsed/multipartfiles';
-import { Returns, ReturnsArray } from '@tsed/swagger';
+import { Returns, ReturnsArray, Summary, Description } from '@tsed/swagger';
 import { NotFound, UnsupportedMediaType, InternalServerError } from 'ts-httpexceptions';
 import { Request, Response } from 'express';
 import mime from 'mime';
@@ -111,8 +111,10 @@ export class MediaFileController {
   @ReturnsArray(200, { type: MediaFile })
   @Returns(415, { description: 'Unsupported file type' })
   @Returns(500, { description: 'Internal server error' })
+  @Description('Upload one or more images to the server and add them to the selected storage, a thumbnail of the image will be created and its metadata will be stored in the database')
+  // @Summary('Upload one or more images to the server and add them to the selected storage, a thumbnail of the image will be created and its metadata will be stored in the database')
   public async uploadFile(
-    @MultipartFile('files', 10) tmpFiles: Express.Multer.File[],
+    @Required @MultipartFile('files', 10) tmpFiles: Express.Multer.File[],
     @BodyParams('location') location: string,
   ): Promise<MediaFile[]> {
     if (!tmpFiles) {
@@ -134,7 +136,7 @@ export class MediaFileController {
   @Returns(500, { description: 'Internal server error' })
   public async getMediaDownload(
     @Res() res: Response,
-    @PathParams('id') id: number,
+    @Required @PathParams('id') id: number,
   ): Promise<void> {
     return this.download(res, id);
   }
@@ -175,7 +177,7 @@ export class MediaFileController {
   @Returns(200, { type: Number })
   @Returns(404, { description: 'File not found' })
   @Returns(500, { description: 'Internal server error' })
-  public async deleteFile(
+  public async deleteFileById(
     @Required @PathParams('id') id: number,
   ): Promise<{ id: number }> {
     const file = await this.mediaFileRepository.findOne(id);
@@ -190,7 +192,7 @@ export class MediaFileController {
   @Post('/delete')
   @Returns(200, { type: Boolean })
   @Returns(500, { description: 'Internal server error' })
-  public async deleteFile2(
+  public async deleteFileByPath(
     @Required @BodyParams('filePath') filePath: string,
   ): Promise<boolean> {
     await to(this.mediaFileService.unlinkMediaFile(filePath));

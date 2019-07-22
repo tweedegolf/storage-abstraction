@@ -1,6 +1,8 @@
 import { Column, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { Format, Property } from '@tsed/common';
+import { Description } from '@tsed/swagger';
 
+@Description('Timestamp for item creation and modification')
 export class When {
   @Column()
   @Property()
