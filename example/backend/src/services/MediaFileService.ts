@@ -9,6 +9,7 @@ import { Service, OnInit } from '@tsed/di';
 import { Readable } from 'stream';
 import {
   getEnv,
+  getEnvOrDie,
 } from '../env';
 import { MediaFile } from '../entities/MediaFile';
 import { StorageInitData } from '../../../common/types';
@@ -30,39 +31,39 @@ export class MediaFileService implements OnInit {
           directory: getEnv('STORAGE_1_DIRECTORY'),
         },
       },
-      // 'Amazon S3': {
-      //   type: Storage.TYPE_AMAZON_S3,
-      //   config: {
-      //     bucketName: getEnv('STORAGE_2_BUCKETNAME'),
-      //     accessKeyId: getEnvOrDie('STORAGE_2_KEY_ID'),
-      //     secretAccessKey: getEnvOrDie('STORAGE_2_ACCESS_KEY'),
-      //   },
-      // },
-      // 'Google Cloud 1': {
-      //   type: Storage.TYPE_GOOGLE_CLOUD,
-      //   config: {
-      //     bucketName: getEnv('STORAGE_3_BUCKETNAME'),
-      //     projectId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
-      //     keyFilename: getEnvOrDie('STORAGE_3_KEYFILE'),
-      //   },
-      // },
-      // 'Google Cloud 2': {
-      //   type: Storage.TYPE_GOOGLE_CLOUD,
-      //   config: {
-      //     bucketName: getEnv('STORAGE_4_BUCKETNAME'),
-      //     projectId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
-      //     keyFilename: getEnvOrDie('STORAGE_4_KEYFILE'),
-      //   },
-      // },
+      'Amazon S3': {
+        type: Storage.TYPE_AMAZON_S3,
+        config: {
+          bucketName: getEnv('STORAGE_2_BUCKETNAME'),
+          accessKeyId: getEnv('STORAGE_2_KEY_ID'),
+          secretAccessKey: getEnv('STORAGE_2_ACCESS_KEY'),
+        },
+      },
+      'Google Cloud 1': {
+        type: Storage.TYPE_GOOGLE_CLOUD,
+        config: {
+          bucketName: getEnv('STORAGE_3_BUCKETNAME'),
+          projectId: getEnvOrDie('STORAGE_3_PROJECT_ID'),
+          keyFilename: getEnvOrDie('STORAGE_3_KEYFILE'),
+        },
+      },
+      'Google Cloud 2': {
+        type: Storage.TYPE_GOOGLE_CLOUD,
+        config: {
+          bucketName: getEnv('STORAGE_4_BUCKETNAME'),
+          projectId: getEnvOrDie('STORAGE_4_PROJECT_ID'),
+          keyFilename: getEnvOrDie('STORAGE_4_KEYFILE'),
+        },
+      },
     };
 
     this._configIds = Object.keys(this._configs);
 
-    // if (this._types.length > 0) {
-    //   this.storageId = this._types[0];
-    //   const config = this._configs[this.storageId].config;
-    //   this.setStorage(config);
-    // }
+    if (this._configIds.length > 0) {
+      this.storageId = this._configIds[0];
+      const config = this._configs[this.storageId].config;
+      this.setStorage(config);
+    }
   }
 
   async $onInit(): Promise<void> {
