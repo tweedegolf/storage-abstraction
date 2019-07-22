@@ -206,11 +206,11 @@ The frontend shows a listing of images. You can:
 - View a full-screen version of the image by clicking on the thumbnail
 - Remove images from the storage
 
-You can create new buckets or delete buckets in the storage as well. Also you can switch between different storages if you have added multiple storage configurations to the backend configuration.
+You can create new buckets or delete buckets in the storage as well. Also you can switch between different storages if you have added multiple storage configurations in the backend.
 
 ### Backend
 
-The backend provides an API that the frontend can talk to. It created thumbnails from the uploaded images and it maintains a connection to the selected or configured storage:
+The backend provides an API that the frontend talks to. It creates thumbnails from the uploaded images and it maintains a connection to the selected storage:
 
 - Add and delete the images to the storage
 - Create, select and remove buckets in the storage
@@ -223,19 +223,19 @@ The backend also stores some metadata of the uploaded images in a Postgres datab
 - date created
 - date updated
 
-This data is (partly) used to populate the file list at the frontend.
+This data is (partly) used to populate the file list on the frontend.
 
 ### Configuration of the backend
 
 You can use the local storage type without any configuration but to be able to use the Google Cloud and Amazon S3 storage types you need provide some credentials, see the documentation on this here: [Google](https://cloud.google.com/storage/docs/) and [Amazon](https://aws.amazon.com/s3/). In both cases you need to create an account first.
 
-In the example the credentials are read as environment variables. You can use the file `.env.default` as a starting point for your creating your own `.env` file. Note that you may change the names of the environment variables to your liking, the only concern is that after you've changed them in the `.env` file you have to change them in the code as well.
+In the example the credentials are read as environment variables. You can use the file `.env.default` as a starting point for creating your own `.env` file. Note that you may change the names of the environment variables to your liking but if you've changed them in the `.env` file you have to change them in the code as well.
 
-In the constructor of [`MediaFileService`](https://github.com/tweedegolf/storage-abstraction/blob/master/example/backend/src/services/MediaFileService.ts) the storage configurations are read from the environment variables. In this example 4 different storage configurations are added to the backend and on line 65 an instance of `Storage` gets created using the first configurations. 
+In the constructor of [`MediaFileService`](https://github.com/tweedegolf/storage-abstraction/blob/master/example/backend/src/services/MediaFileService.ts) the storage configurations are read from the environment variables. In this example 4 different storage configurations are added to the backend and on line 65 an instance of `Storage` gets created using the first configuration. 
 
-In the method `getInitData` a list of the ids of the storage configurations is sent to the frontend where it populates a dropdown menu that allows the user to quickly switch between the configured storages. If you have added only 1 storage configuration the dropdown menu is not shown. 
+In the method `getInitData` a list of the storage configuration ids is sent to the frontend where it populates a dropdown menu that allows the user to quickly switch between the configured storages. If you have added only 1 storage configuration the dropdown menu is not shown. 
 
-If a default storage configuration is set, `getInitData` also sends a list of buckets in that storage and if a default bucket is set a list of files is sent along as well. The list of files gets added to the init data in the [`StorageController`](https://github.com/tweedegolf/storage-abstraction/blob/master/example/backend/src/controllers/StorageController.ts#L21). From here the method `synchronize` on the `MediaFileService` is called to synchronize the content of the database with the content of the bucket. The content of the bucket is leading.
+If a default storage configuration is set, `getInitData` also sends a list of buckets in that storage and if a default bucket is set a list of files in that bucket is sent along as well. The list of files gets added to the init data in the [`StorageController`](https://github.com/tweedegolf/storage-abstraction/blob/master/example/backend/src/controllers/StorageController.ts#L21). From here the method `synchronize` on the `MediaFileService` is called to synchronize the content of the database with the content of the bucket. The content of the bucket is leading.
 
 ### Basic setup
 
@@ -243,4 +243,4 @@ The example aims to show all functionality of the storage abstraction package bu
 
 ## Questions and requests
 
-Please let us know if you have any questions and/or request by filing an issue on [Github](https://github.com/tweedegolf/storage-abstraction/issues)
+Please let us know if you have any questions and/or request by creating an issue on [Github](https://github.com/tweedegolf/storage-abstraction/issues).
