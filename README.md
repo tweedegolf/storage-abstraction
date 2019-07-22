@@ -241,10 +241,6 @@ If a default storage configuration is set, `getInitData` also sends a list of bu
 
 The example aims to show all functionality of the storage abstraction package but in most cases you probable need only one single bucket in one single storage. Then you can simply instantiate a storage and provide a bucket name in the config as described [above](#instantiate-a-storage).
 
-## Questions and requests
-
-Please let us know if you have any questions and/or request by creating an issue on [Github](https://github.com/tweedegolf/storage-abstraction/issues).
-
 ## Something else
 
 When looking into the code of the example you may notice that the TypeORM backend [entities](https://github.com/tweedegolf/storage-abstraction/tree/master/example/backend/src/entities) are used on the frontend as well. This is accomplished by shims that are part of the TypeORM library and that you can use on the frontend. These shims contain all decorator functions that are available in TypeORM, only they don't actually do anything, they are just stub functions. 
@@ -265,3 +261,6 @@ More information about this can be found here:
 - <https://github.com/typeorm/typeorm/issues/2841>
 - <https://github.com/typeorm/typeorm/issues/62>
 
+## Questions and requests
+
+Please let us know if you have any questions and/or request by creating an issue on [Github](https://github.com/tweedegolf/storage-abstraction/issues).

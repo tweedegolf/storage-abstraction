@@ -1,6 +1,6 @@
 {
-  "name": "storage-abstraction",
-  "version": "1.1.10",
+  "name": "@tweedegolf/storage-abstraction",
+  "version": "1.1.11",
   "description": "Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -53,5 +53,8 @@
     "amazon s3"
   ],
   "author": "daniel@tweedegolf.nl",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }
