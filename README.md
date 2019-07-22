@@ -223,7 +223,7 @@ The backend also stores some metadata of the uploaded images in a Postgres datab
 - date created
 - date updated
 
-This data is (partly) used to populate the file list on the frontend. You can see the Swagger documentation on <https://localhost/docs> if the application is running.
+This data is (partly) used to populate the file list on the frontend. You can find the Swagger documentation at <https://localhost/docs> if the application is running.
 
 ### Configuration of the backend
 
@@ -244,3 +244,24 @@ The example aims to show all functionality of the storage abstraction package bu
 ## Questions and requests
 
 Please let us know if you have any questions and/or request by creating an issue on [Github](https://github.com/tweedegolf/storage-abstraction/issues).
+
+## Something else
+
+When looking into the code of the example you may notice that the TypeORM backend [entities](https://github.com/tweedegolf/storage-abstraction/tree/master/example/backend/src/entities) are used on the frontend as well. This is accomplished by shims that are part of the TypeORM library and that you can use on the frontend. These shims contain all decorator functions that are available in TypeORM, only they don't actually do anything, they are just stub functions. 
+
+The shims are stored in the folder `example/frontend/shim` and in this folder you also find a small shim for the Ts.ED decorators that are used by the models. If you need more decorators you can simply add extra stub functions.
+
+For compiling the frontend you have to add the path to these shims to the `browser` key in your `package.json` file; this instructs Parcel to use the shim files instead of looking for the modules in the `node_modules` folder when it encounters an import from TypeORM or Ts.ED, e.g. `import { Entity } from 'typeorm'`:
+
+```
+  "browser": {
+    "typeorm": "./shim/typeorm.js",
+    "@tsed/common": "./shim/tsed.js"
+  },
+```
+
+More information about this can be found here:
+
+- <https://github.com/typeorm/typeorm/issues/2841>
+- <https://github.com/typeorm/typeorm/issues/62>
+
