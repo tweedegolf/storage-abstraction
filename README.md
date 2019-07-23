@@ -263,4 +263,4 @@ More information about this can be found here:
 
 ## Questions and requests
 
-Please let us know if you have any questions and/or request by creating an issue on [Github](https://github.com/tweedegolf/storage-abstraction/issues).
+Please let us know if you have any questions and/or request by creating an [issue](https://github.com/tweedegolf/storage-abstraction/issues).

@@ -8,7 +8,7 @@ import {
   FILE_DELETED,
   GET_STORAGE_TYPES,
   TYPES_RECEIVED,
-  BUCKET_NAMES_RECEIVED,
+  BUCKET_DATA_RECEIVED,
   SELECT_STORAGE,
   ERROR,
   RESET_ERROR,
@@ -73,13 +73,13 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
     };
   }
 
-  if (action.type === BUCKET_NAMES_RECEIVED) {
-    const { buckets, storageId } = action.payload;
+  if (action.type === BUCKET_DATA_RECEIVED) {
+    const { buckets, files, storageId, selectedBucket } = action.payload;
     return {
       ...state,
       buckets,
-      files: [],
-      selectedBucket: null,
+      files,
+      selectedBucket,
       selectedStorageId: storageId,
       message: null,
     };
@@ -128,7 +128,8 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
 
   if (action.type === FILE_DELETED) {
     const { payload: { id } } = action;
-    const files = state.files.filter(f => f.id !== id);
+    const tmp = parseInt(id, 10);
+    const files = state.files.filter(f => f.id !== tmp);
     return {
       ...state,
       files,
@@ -145,10 +146,12 @@ export function rootReducer(state: RootState, action: AnyAction): RootState {
   }
 
   if (action.type === BUCKET_CREATED) {
-    const { buckets } = action.payload;
+    const { buckets, files, selectedBucket } = action.payload;
     return {
       ...state,
       buckets,
+      files,
+      selectedBucket,
       message: null,
     };
   }

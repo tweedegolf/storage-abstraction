@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TARGET="./node_modules/storage-abstraction"
+TARGET="./node_modules/@tweedegolf/storage-abstraction"
 SOURCE="../.."
 
 mkdir -p $TARGET

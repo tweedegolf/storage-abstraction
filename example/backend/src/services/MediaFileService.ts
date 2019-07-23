@@ -2,7 +2,7 @@ import fs from 'fs';
 import {
   Storage,
   StorageConfig,
-} from 'storage-abstraction';
+} from '@tweedegolf/storage-abstraction';
 import slugify from 'slugify';
 import uniquid from 'uniquid';
 import { Service, OnInit } from '@tsed/di';

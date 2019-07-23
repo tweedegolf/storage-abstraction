@@ -3,7 +3,7 @@ import {
   MediaFile,
 } from '../../backend/src/entities/MediaFile';
 import { ServerError } from './types';
-import { StorageInitData, DeleteBucketData } from '../../common/types';
+import { StorageInitData, BucketData } from '../../common/types';
 
 const baseUrl = '/api/v1';
 const baseConfig = () => ({
@@ -89,8 +89,8 @@ export const getMediaThumbnailUrl = (mf: MediaFile) => `${baseUrl}/media/thumbna
 
 export const getMediaDownloadUrl = (mf: MediaFile) => `${baseUrl}/media/download/${mf.id}/${mf.path}`;
 
-export const deleteMediaFile = (id: number): Promise<{ [id: string]: number } | ServerError> => doDelete(`/media/${id}`);
+export const deleteMediaFile = (id: number): Promise<{ [id: string]: string } | ServerError> => doDelete(`/media/${id}`);
 
 export const createBucket = (name: string): Promise<string[] | ServerError> => post(`/storage/bucket/${name}`, null);
 
-export const deleteBucket = (name: string): Promise<DeleteBucketData | ServerError> => doDelete(`/storage/bucket/${name}`);
+export const deleteBucket = (name: string): Promise<BucketData | ServerError> => doDelete(`/storage/bucket/${name}`);

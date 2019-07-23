@@ -188,29 +188,29 @@ export class MediaFileController {
     await this.mediaFileRepository.remove([file]);
     return { id };
   }
-
-  @Post('/delete')
-  @Returns(200, { type: Boolean })
-  @Returns(500, { description: 'Internal server error' })
-  public async deleteFileByPath(
-    @Required @BodyParams('filePath') filePath: string,
-  ): Promise<boolean> {
-    await to(this.mediaFileService.unlinkMediaFile(filePath));
-    await this.mediaFileRepository.deleteWhere({ path: filePath });
-    return true;
-  }
-
+  /*
+    @Post('/delete')
+    @Returns(200, { type: Boolean })
+    @Returns(500, { description: 'Internal server error' })
+    public async deleteFileByPath(
+      @Required @BodyParams('filePath') filePath: string,
+    ): Promise<boolean> {
+      await to(this.mediaFileService.unlinkMediaFile(filePath));
+      await this.mediaFileRepository.deleteWhere({ path: filePath });
+      return true;
+    }
+  */
   @Get('/thumbnail/:format/:width/:id')
   @Returns(404, { description: 'File not found' })
   @Returns(500, { description: 'Internal server error' })
   public async getMediaThumbnail(
     @PathParams('format') format: 'png' | 'pjpeg',
-    @PathParams('width') width: number,
-    @PathParams('id') id: number,
+    @PathParams('width') width: string,
+    @PathParams('id') id: string,
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    return this.getThumb(res, id, format, width);
+    return this.getThumb(res, parseInt(id, 10), format, parseInt(width, 10));
   }
 
   @Get('/thumbnail/:format/:width/:id/*')
@@ -218,12 +218,12 @@ export class MediaFileController {
   @Returns(500, { description: 'Internal server error' })
   public async getMediaThumbnailWithCheckPath(
     @PathParams('format') format: 'png' | 'pjpeg',
-    @PathParams('width') width: number,
-    @PathParams('id') id: number,
+    @PathParams('width') width: string,
+    @PathParams('id') id: string,
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
     const filePath = req.params[0];
-    return this.getThumb(res, id, format, width, filePath);
+    return this.getThumb(res, parseInt(id, 10), format, parseInt(width, 10), filePath);
   }
 }

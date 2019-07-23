@@ -12,7 +12,7 @@ export const LIST_RECEIVED = 'LIST_RECEIVED';
 export const GET_STORAGE_TYPES = 'GET_STORAGE_TYPES';
 export const TYPES_RECEIVED = 'TYPES_RECEIVED';
 export const SELECT_STORAGE = 'SELECT_STORAGE';
-export const BUCKET_NAMES_RECEIVED = 'BUCKET_NAMES_RECEIVED';
+export const BUCKET_DATA_RECEIVED = 'BUCKET_DATA_RECEIVED';
 export const UPLOADING_FILES = 'UPLOADING_FILES';
 export const FILES_UPLOADED = 'FILES_UPLOADED';
 export const DELETING_FILE = 'DELETING_FILE';
@@ -84,10 +84,13 @@ export const selectStorage = (storageId: string) => async (dispatch: Dispatch) =
   });
 
   // get the available buckets for this storage
-  filterError(await API.getBuckets(storageId), dispatch, (buckets) => {
+  filterError(await API.getBuckets(storageId), dispatch, (data) => {
     dispatch({
-      type: BUCKET_NAMES_RECEIVED,
-      payload: { storageId, buckets },
+      type: BUCKET_DATA_RECEIVED,
+      payload: {
+        ...data,
+        storageId,
+      },
     });
   });
 };
@@ -110,7 +113,7 @@ export const deleteFile = (mf: MediaFile) => async (dispatch: Dispatch) => {
     type: DELETING_FILE,
   });
 
-  filterError(await API.deleteMediaFile(mf.id), dispatch, (payload: { [id: string]: number }) => {
+  filterError(await API.deleteMediaFile(mf.id), dispatch, (payload: { [id: string]: string }) => {
     dispatch({
       payload,
       type: FILE_DELETED,
@@ -126,11 +129,9 @@ export const createBucket = (bucketName: string) => async (dispatch: Dispatch) =
     type: CREATING_BUCKET,
   });
 
-  filterError(await API.createBucket(bucketName), dispatch, (buckets) => {
+  filterError(await API.createBucket(bucketName), dispatch, (payload) => {
     dispatch({
-      payload: {
-        buckets,
-      },
+      payload,
       type: BUCKET_CREATED,
     });
   });

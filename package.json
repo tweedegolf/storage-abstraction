@@ -1,7 +1,7 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "1.1.11",
-  "description": "Provides an API for storing and retrieving files from a storage; this storage can be local or in the cloud.",
+  "version": "1.1.12",
+  "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
@@ -49,6 +49,8 @@
   },
   "keywords": [
     "storage",
+    "storage abstraction",
+    "cloud filesystem",
     "google cloud",
     "amazon s3"
   ],

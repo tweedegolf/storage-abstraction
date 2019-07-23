@@ -28,6 +28,7 @@ const createImg = (mf: MediaFile): JSX.Element => <Media
 
 export const ListUI = (props: {
   files: MediaFile[],
+  selectedBucket: string,
   deleteFile: (mf: MediaFile) => void,
 }) => {
   // if (typeof props.files === 'undefined' || props.files.length === 0) {
@@ -51,9 +52,10 @@ export const ListUI = (props: {
     </tr>);
   });
 
+  const header = props.selectedBucket === null ? 'No bucket selected' : `Files in bucket "${props.selectedBucket}"`;
   return (
     <div>
-      <h2>Files</h2>
+      <h2>{header}</h2>
       <Table>
         <tbody>
           {body}

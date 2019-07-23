@@ -33,7 +33,11 @@ const App = (props) => {
           onDeleteBucket={props.deleteBucket}
         />
       </div>
-      <List deleteFile={props.deleteFile} files={props.files}></List>
+      <List
+        files={props.files}
+        deleteFile={props.deleteFile}
+        selectedBucket={props.selectedBucket}
+      ></List>
       <Form uploadFiles={props.uploadFiles} enabled={uploadEnabled}></Form>
     </ErrorBoundary>
   );
@@ -55,10 +59,10 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
     uploadFiles,
     deleteFile,
     resetError,
-    getBucketContents,
-    selectStorageType: selectStorage,
     createBucket,
     deleteBucket,
+    getBucketContents,
+    selectStorageType: selectStorage,
     // tslint:disable-next-line: align
   }, dispatch);
 };
