@@ -48,5 +48,11 @@ body {
 
   .topmenuitem {
     margin: 10px 10px 15px 0;
+
+    &.input-group {
+      .btn:nth-child(2) {
+        margin-right: 10px;
+      }
+    }
   }
 }

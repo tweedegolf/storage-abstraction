@@ -86,6 +86,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       await fs.promises.stat(arg); // throws error if path doesn't exist
       readStream = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
+      readStream = new Readable();
       readStream._read = () => { }; // _read is required but you can noop it
       readStream.push(arg);
       readStream.push(null);

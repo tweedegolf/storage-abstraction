@@ -20,6 +20,12 @@ const CreateAndDeleteBucket = (props: {
   };
 
   return <InputGroup className="topmenuitem">
+    <Input
+      type="text"
+      placeholder="enter name of new bucket"
+      value={bucketName}
+      onChange={onChange}
+    ></Input>
     <Button
       name="createbucket"
       type="button"
@@ -29,12 +35,6 @@ const CreateAndDeleteBucket = (props: {
         setBucketName('');
       }}
     >create new bucket</Button>
-    <Input
-      type="text"
-      placeholder="enter bucket name"
-      value={bucketName}
-      onChange={onChange}
-    ></Input>
     <Button
       name="deletebucket"
       type="button"

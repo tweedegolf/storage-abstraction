@@ -75,6 +75,7 @@ export class StorageController {
     @PathParams('bucketname') bucketName: string,
   ): Promise<BucketData> {
     const buckets = await this.mediaFileService.createBucket(bucketName);
+    await this.mediaFileService.selectBucket(bucketName);
     return {
       buckets,
       files: [],
