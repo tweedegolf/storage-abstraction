@@ -11,7 +11,7 @@
     "@tsed/multipartfiles": "^5.18.0",
     "@tsed/swagger": "^5.10.0",
     "@tsed/typeorm": "^5.10.0",
-    "@tweedegolf/storage-abstraction": ">=1.1.11",
+    "@tweedegolf/storage-abstraction": "1.1.14",
     "@types/dotenv": "^6.1.1",
     "@types/glob": "^7.1.1",
     "@types/mime": "^2.0.1",
