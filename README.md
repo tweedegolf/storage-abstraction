@@ -2,6 +2,8 @@
 
 Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. For cloud storage currently Google Cloud and Amazon S3 and compliant cloud services are supported.
 
+Because the API only provides basic storage operations (see [below](#api)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
+
 <a name="instantiate-a-storage"></a> 
 
 ## Instantiate a storage
@@ -47,6 +49,7 @@ type config = {
   secretAccessKey: string,
 }
 ```
+<a name="api"></a>
 
 ## API methods
 
