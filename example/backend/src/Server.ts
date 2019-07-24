@@ -29,6 +29,8 @@ if (sentryDsn) {
 const rootDir = __dirname;
 @ServerSettings({
   rootDir,
+  // uncomment the following line if you want to use Multer with DiskStorage
+  // see: https://github.com/expressjs/multer#diskstorage
   // uploadDir: `${getMediaUploadDir()}`,
   acceptMimes: ['application/json'],
   port: 3000,
@@ -58,6 +60,8 @@ const rootDir = __dirname;
     fileFilter: (req: Request, file: Express.Multer.File, cb) => {
       cb(null, SUPPORTED_MIME_TYPES.includes(file.mimetype));
     },
+    // comment the following line if you want to use Multer with MemoryStorage
+    // see: https://github.com/expressjs/multer#memorystorage
     storage: multer.memoryStorage(),
   },
   swagger: [{
