@@ -55,7 +55,7 @@ type config = {
 test():Promise<void>;
 ```
 
-Runs a simple test to test the storage configuration: calls `listBuckets` only to check if it fails and if so, it throws an error.
+Runs a simple test to test the storage configuration. The test is a call to `listBuckets` and if it fails it throws an error.
 
 ### createBucket
 ```typescript
@@ -67,7 +67,7 @@ Creates a new bucket, does not fail if the bucket already exists.
 ```typescript
 selectBucket(name: string | null): Promise<void>;
 ```
-Select another bucket for storing files, the bucket will be created automatically if it doesn't exist.If you pass `null` the currently selected bucket will be deselected.
+Select a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` the currently selected bucket will be deselected.
 
 ### clearBucket
 ```typescript
@@ -97,13 +97,13 @@ Returns the name of the currently selected bucket or `null` if no bucket has bee
 ```typescript
 addFileFromPath(filePath: string, targetPath: string): Promise<void>;
 ```
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name plus extension; the value will be slugified automatically.
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically.
 
 ### addFileFromBuffer
 ```typescript
 addFileFromUpload(buffer: Buffer, targetPath: string): Promise<void>;
 ```
-Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name plus extension; the value will be slugified automatically. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with DiskStorage.
+Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 ### getFileAsReadable
 ```typescript
@@ -115,7 +115,7 @@ Returns a file in the storage as a readable stream.
 ```typescript
 removeFile(name: string): Promise<void>;
 ```
-Removes a file from the bucket. Does not fail if the file didn't exist.
+Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 ### listFiles
 ```typescript
@@ -140,7 +140,7 @@ When you create a `Storage` instance you create a thin wrapper around one of the
 
 Let's call these classes the functional classes because they actually define the functionality of the API methods. The wrapper creates an instance of one of these functional classes based on the provided config object and then forwards every API call to this instance. 
 
-This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except for the last one, `switchStorage`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchStorage`; it is called by the constructor as well. 
+This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except for the last one, `switchStorage`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchStorage` which is called by the constructor as well. 
 
 The functional classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer` and `addFileFromPath`. For the rest it contains stub methods that need to be overruled or extended by the functional subclasses.
 
@@ -153,14 +153,15 @@ const config = {
   projectId: 'id-of-your-project',
   keyFilename: 'path/to/json/key-file',
 }
+// creates wrapper with `switchStorage` function
 const s1 = new Storage(config); 
 
-// or directly:
+// creates an instance directly:
 const s2 = new StorageGoogleCloud(config);
 ```
 Note that `s1` and `s2` are not the same; the `s1` instance has a private member `storage` that is an instance of `StorageGoogleCloud`. 
 
-More functional classes can be added for different storage types, note however that there are many storage vendors that keep their API compliant with Amazon S3.
+More functional classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
 
 ## Tests
 
@@ -168,7 +169,7 @@ If you want to run the tests you have to checkout the repository from github and
 
 ```npm run test-jasmine```
 
-You can run tests per storage type using on of these commands, see also the file `package.json`:
+You can run tests per storage type using one of these commands, see also the file `package.json`:
 
 ```bash
 # test local disk
@@ -185,7 +186,7 @@ You can find some additional non-Jasmine tests in the file `tests/test.ts`. You 
 
 ## Example application
 
-In the `example` folder you'll find a simple application that shows how you can use the storage abstraction package. It uses and TsED and TypeORM and it consists of both a backend and a frontend. 
+In the `example` folder you'll find a simple application that shows how you can use the storage abstraction package. It uses and Ts.ED and TypeORM and it consists of both a backend and a frontend. 
 
 ```bash
 cd ./example
@@ -212,7 +213,7 @@ You can create new buckets or delete buckets in the storage as well. Also you ca
 
 The backend provides an API that the frontend talks to. It creates thumbnails from the uploaded images and it maintains a connection to the selected storage:
 
-- Add and delete the images to the storage
+- Add/delete the images to/from the storage
 - Create, select and remove buckets in the storage
 
 The backend also stores some metadata of the uploaded images in a Postgres database:
@@ -223,7 +224,7 @@ The backend also stores some metadata of the uploaded images in a Postgres datab
 - date created
 - date updated
 
-This data is (partly) used to populate the file list on the frontend. You can find the Swagger documentation at <https://localhost/docs> if the application is running.
+This data is (partly) used to populate the file list on the frontend. Additionally you can find the Swagger documentation of the API at <https://localhost/docs> if the application is running.
 
 ### Configuration of the backend
 
@@ -245,7 +246,7 @@ The example aims to show all functionality of the storage abstraction package bu
 
 When looking into the code of the example you may notice that the TypeORM backend [entities](https://github.com/tweedegolf/storage-abstraction/tree/master/example/backend/src/entities) are used on the frontend as well. This is accomplished by shims that are part of the TypeORM library and that you can use on the frontend. These shims contain all decorator functions that are available in TypeORM, only they don't actually do anything, they are just stub functions. 
 
-The shims are stored in the folder `example/frontend/shim` and in this folder you also find a small shim for the Ts.ED decorators that are used by the models. If you need more decorators you can simply add extra stub functions.
+The shims are stored in the folder `example/frontend/shim` and in this folder you also find a small shim for the Ts.ED decorators that are used by the models. If your code needs more decorators you can simply add extra stub functions.
 
 For compiling the frontend you have to add the path to these shims to the `browser` key in your `package.json` file; this instructs Parcel to use the shim files instead of looking for the modules in the `node_modules` folder when it encounters an import from TypeORM or Ts.ED, e.g. `import { Entity } from 'typeorm'`:
 
