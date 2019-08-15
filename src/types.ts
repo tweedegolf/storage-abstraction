@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import {bool} from 'aws-sdk/clients/signer';
 
 export interface IStorage {
   /**
@@ -76,6 +77,12 @@ export type ConfigAmazonS3 = {
   bucketName?: string,
   accessKeyId: string,
   secretAccessKey: string,
+  endpoint?: string,
+  useDualstack?: boolean,
+  region?: string,
+  maxRetries?: number,
+  maxRedirects?: number,
+  sslEnabled?: boolean,
 };
 
 export type ConfigGoogleCloud = {

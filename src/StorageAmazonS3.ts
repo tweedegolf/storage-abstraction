@@ -19,8 +19,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       throw new Error('provide both an accessKeyId and a secretAccessKey!');
     }
     this.storage = new S3({
-      accessKeyId,
-      secretAccessKey,
+      ...config,
       apiVersion: '2006-03-01',
     });
     // console.log(config, this.bucketName);
