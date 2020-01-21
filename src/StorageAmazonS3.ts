@@ -22,7 +22,6 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       ...config,
       apiVersion: '2006-03-01',
     });
-    // console.log(config, this.bucketName);
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
@@ -30,9 +29,25 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Bucket: this.bucketName,
       Key: fileName,
     };
-    // check if exists
-    await this.storage.getObject(params).promise();
-    // then return stream
+    await this.storage.headObject(params).promise();
+    return this.storage.getObject(params).createReadStream();
+  }
+
+  async getFileByteRangeAsReadable(fileName: string, start: number, length?: number) : Promise<Readable> {
+    let readLength = length;
+    if (readLength == null) {
+      readLength = await this.sizeOf(fileName);
+    }else{
+      readLength += start;
+    }
+
+    const params = {
+      Bucket: this.bucketName,
+      Key: fileName,
+      Range: `bytes=${start}-${readLength}`,
+    };
+
+    await this.storage.headObject(params).promise();
     return this.storage.getObject(params).createReadStream();
   }
 
@@ -174,5 +189,13 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     };
     const { Contents: content } = await this.storage.listObjects(params).promise();
     return content.map(o => [o.Key, o.Size]) as [string, number][];
+  }
+
+  async sizeOf(name: string) : Promise<number> {
+    const params = {
+      Bucket: this.bucketName,
+      Key: name,
+    };
+    return await this.storage.headObject(params).promise().then(res => res.ContentLength);
   }
 }

@@ -42,7 +42,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       return this.getFile(fileName, r);
     }
     if (!exists) {
-      throw new Error(`File ${fileName} could not be retreived from bucket ${this.bucketName}`);
+      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
     }
     return file;
   }
@@ -187,18 +187,24 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     return zip(names, sizes) as [string, number][];
   }
 
-  // async getFile(fileName: string) {
-  //   const file = this.storage.bucket(this.bucketName).file(fileName)
-  //   file.get().then(async (data) => {
-  //     const apiResponse: any = data[1];
-  //     const bin = axios.request({
-  //       url: apiResponse.selfLink,
-  //       headers: {
-  //         'x-goog-project-id': '',
-  //       }
-  //     })
-  //       .then(data => console.log(data))
-  //       .catch(e => console.error(e));
-  //   });
-  // }
+  async sizeOf(name: string): Promise<number> {
+    if (this.bucketName === null) {
+      throw new Error('Please select a bucket first');
+    }
+    const file = this.storage.bucket(this.bucketName).file(name);
+    const [metadata] = await file.getMetadata();
+    return parseInt(metadata.size, 10);
+  }
+
+  async getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable> {
+    let readLength = length;
+    if (readLength == null) {
+      readLength = await this.sizeOf(name);
+    }else {
+      readLength += start;
+    }
+
+    const file = await this.getFile(name);
+    return file.createReadStream({start, end: readLength });
+  }
 }

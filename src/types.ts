@@ -62,6 +62,13 @@ export interface IStorage {
   getFileAsReadable(name: string): Promise<Readable>;
 
   /**
+   * @param name: name of the file to be returned as a readable stream
+   * @param start: the first byte to return from
+   * @param length?: the number of bytes to return from the start
+   */
+  getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable>;
+
+  /**
    * @param name: name of the file to be removed
    */
   removeFile(name: string): Promise<void>;
@@ -71,6 +78,12 @@ export interface IStorage {
    * selected bucket. If no bucket is selected an error will be thrown.
    */
   listFiles(): Promise<[string, number][]>;
+
+  /**
+   * Returns the size in bytes of the file
+   * @param name
+   */
+  sizeOf(name: string): Promise<number>;
 }
 
 export type ConfigAmazonS3 = {
