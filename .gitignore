@@ -8,3 +8,4 @@ dist
 .vscode
 tests/test.jpg
 tests/tmp/
+.idea

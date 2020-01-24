@@ -56,6 +56,10 @@ export class Storage implements IStorage {
     return this.storage.getFileAsReadable(name);
   }
 
+  async getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable> {
+    return this.storage.getFileByteRangeAsReadable(name, start, length);
+  }
+
   async removeFile(fileName: string): Promise<void> {
     return this.storage.removeFile(fileName);
   }
@@ -78,5 +82,9 @@ export class Storage implements IStorage {
     } else {
       throw new Error('Not a supported configuration');
     }
+  }
+
+  async sizeOf(name: string) : Promise<number> {
+    return this.storage.sizeOf(name);
   }
 }

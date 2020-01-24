@@ -178,6 +178,19 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     return fs.createReadStream(p);
   }
 
+  async getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable> {
+    let readLength = length;
+    if (readLength == null) {
+      readLength = await this.sizeOf(name);
+    }else {
+      readLength += start;
+    }
+
+    const p = path.join(this.directory, this.bucketName, name);
+    await fs.promises.stat(p);
+    return fs.createReadStream(p, { start, end: readLength });
+  }
+
   async removeFile(fileName: string): Promise<void> {
     const p = path.join(this.directory, this.bucketName, fileName);
     const [err] = await to(fs.promises.unlink(p));
@@ -188,5 +201,11 @@ export class StorageLocal extends AbstractStorage implements IStorage {
       }
       throw new Error(err.message);
     }
+  }
+
+  async sizeOf(name: string): Promise<number> {
+    const p = path.join(this.directory, this.bucketName, name);
+    const stat = await fs.promises.stat(p);
+    return stat.size;
   }
 }

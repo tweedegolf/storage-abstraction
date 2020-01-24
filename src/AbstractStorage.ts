@@ -64,7 +64,11 @@ export abstract class AbstractStorage implements IStorage {
 
   abstract async getFileAsReadable(name: string): Promise<Readable>;
 
+  abstract async getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable>;
+
   abstract async removeFile(fileName: string): Promise<void>;
 
   abstract async listFiles(): Promise<[string, number][]>;
+
+  abstract async sizeOf(name: string): Promise<number>;
 }
