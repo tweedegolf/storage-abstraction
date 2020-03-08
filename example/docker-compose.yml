@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   frontend:
     image: docker.tgrep.nl/docker/node-10-stretch:latest
@@ -11,8 +11,8 @@ services:
     command: [npm, run, frontend-watch]
     working_dir: /app/frontend
     environment:
-        NODE_ENV: development
-        PARCEL_AUTOINSTALL: "false"
+      NODE_ENV: development
+      PARCEL_AUTOINSTALL: "false"
     ports: ["1234:1234", "8080:8080"]
     networks: [default]
 
@@ -31,14 +31,14 @@ services:
       TZ: Europe/Amsterdam
     networks: [default]
 
-  psql:
-    image: postgres:10
-    environment:
-      POSTGRES_USER: tg
-    volumes:
-      - "/etc/localtime:/etc/localtime:ro"
-    ports: ["5432:5432"]
-    networks: [default]
+   psql:
+     image: postgres:10
+     environment:
+       POSTGRES_USER: tg
+     volumes:
+       - "/etc/localtime:/etc/localtime:ro"
+     ports: ["5432:5432"]
+     networks: [default]
 
   nginx:
     image: nginx:1.14
