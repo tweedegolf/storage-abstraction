@@ -1,12 +1,12 @@
-import fs from 'fs';
-import path from 'path';
-import { zip } from 'ramda';
-import to from 'await-to-js';
-import { Readable } from 'stream';
-import { Storage as GoogleCloudStorage, File } from '@google-cloud/storage';
-import { AbstractStorage } from './AbstractStorage';
-import { IStorage, ConfigGoogleCloud } from './types';
-import slugify from 'slugify';
+import fs from "fs";
+import path from "path";
+import { zip } from "ramda";
+import to from "await-to-js";
+import { Readable } from "stream";
+import { Storage as GoogleCloudStorage, File } from "@google-cloud/storage";
+import { AbstractStorage } from "./AbstractStorage";
+import { IStorage, ConfigGoogleCloud } from "./types";
+import slugify from "slugify";
 
 export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   private storage: GoogleCloudStorage;
@@ -14,17 +14,14 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   constructor(config: ConfigGoogleCloud) {
     super(config);
-    const {
-      projectId,
-      keyFilename,
-    } = config;
+    const { projectId, keyFilename } = config;
     if (!projectId || !keyFilename) {
-      throw new Error('provide both an accessKeyId and a secretAccessKey!');
+      throw new Error("provide both an accessKeyId and a secretAccessKey!");
     }
 
     this.storage = new GoogleCloudStorage({
       projectId,
-      keyFilename,
+      keyFilename
     });
   }
 
@@ -35,14 +32,16 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     const [exists] = await file.exists();
     if (!exists && retries !== 0) {
       const r = retries - 1;
-      await new Promise((res) => {
+      await new Promise(res => {
         setTimeout(res, 250);
       });
       // console.log('RETRY', r, fileName);
       return this.getFile(fileName, r);
     }
     if (!exists) {
-      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
+      throw new Error(
+        `File ${fileName} could not be retrieved from bucket ${this.bucketName}`
+      );
     }
     return file;
   }
@@ -61,9 +60,12 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   async removeFile(fileName: string): Promise<void> {
     try {
-      await this.storage.bucket(this.bucketName).file(fileName).delete();
+      await this.storage
+        .bucket(this.bucketName)
+        .file(fileName)
+        .delete();
     } catch (e) {
-      if (e.message.indexOf('No such object') !== -1) {
+      if (e.message.indexOf("No such object") !== -1) {
         return;
       }
       // console.log(e.message);
@@ -75,36 +77,41 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
+  protected async store(
+    arg: string | Buffer,
+    targetPath: string
+  ): Promise<void> {
     if (this.bucketName === null) {
-      throw new Error('Please select a bucket first');
+      throw new Error("Please select a bucket first");
     }
     await this.createBucket(this.bucketName);
 
     let readStream: Readable;
-    if (typeof arg === 'string') {
+    if (typeof arg === "string") {
       await fs.promises.stat(arg); // throws error if path doesn't exist
       readStream = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readStream = new Readable();
-      readStream._read = () => { }; // _read is required but you can noop it
+      readStream._read = () => {}; // _read is required but you can noop it
       readStream.push(arg);
       readStream.push(null);
     }
-    const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
+    const writeStream = this.storage
+      .bucket(this.bucketName)
+      .file(targetPath)
+      .createWriteStream();
     return new Promise((resolve, reject) => {
       readStream
         .pipe(writeStream)
-        .on('error', reject)
-        .on('finish', resolve);
-      writeStream
-        .on('error', reject);
+        .on("error", reject)
+        .on("finish", resolve);
+      writeStream.on("error", reject);
     });
   }
 
   async createBucket(name: string): Promise<void> {
     if (name === null) {
-      throw new Error('Can not use `null` as bucket name');
+      throw new Error("Can not use `null` as bucket name");
     }
     const n = slugify(name);
     if (super.checkBucket(n)) {
@@ -179,7 +186,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
     if (this.bucketName === null) {
-      throw new Error('Please select a bucket first');
+      throw new Error("Please select a bucket first");
     }
     const data = await this.storage.bucket(this.bucketName).getFiles();
     const names = data[0].map(f => f.name);
@@ -189,22 +196,26 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   async sizeOf(name: string): Promise<number> {
     if (this.bucketName === null) {
-      throw new Error('Please select a bucket first');
+      throw new Error("Please select a bucket first");
     }
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();
     return parseInt(metadata.size, 10);
   }
 
-  async getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable> {
+  async getFileByteRangeAsReadable(
+    name: string,
+    start: number,
+    length?: number
+  ): Promise<Readable> {
     let readLength = length;
     if (readLength == null) {
       readLength = await this.sizeOf(name);
-    }else {
+    } else {
       readLength += start;
     }
 
     const file = await this.getFile(name);
-    return file.createReadStream({start, end: readLength });
+    return file.createReadStream({ start, end: readLength });
   }
 }

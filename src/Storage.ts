@@ -1,17 +1,17 @@
-import { Readable } from 'stream';
+import { Readable } from "stream";
 import {
   IStorage,
   StorageConfig,
   ConfigLocal,
   ConfigAmazonS3,
-  ConfigGoogleCloud,
-} from './types';
-import { StorageLocal, StorageAmazonS3, StorageGoogleCloud } from '.';
+  ConfigGoogleCloud
+} from "./types";
+import { StorageLocal, StorageAmazonS3, StorageGoogleCloud } from ".";
 
 export class Storage implements IStorage {
-  public static TYPE_GOOGLE_CLOUD: string = 'TYPE_GOOGLE_CLOUD';
-  public static TYPE_AMAZON_S3: string = 'TYPE_AMAZON_S3';
-  public static TYPE_LOCAL: string = 'TYPE_LOCAL';
+  public static TYPE_GOOGLE_CLOUD: string = "TYPE_GOOGLE_CLOUD";
+  public static TYPE_AMAZON_S3: string = "TYPE_AMAZON_S3";
+  public static TYPE_LOCAL: string = "TYPE_LOCAL";
   public storage: IStorage;
   protected bucketName: string;
   protected bucketCreated: boolean = false;
@@ -56,7 +56,11 @@ export class Storage implements IStorage {
     return this.storage.getFileAsReadable(name);
   }
 
-  async getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable> {
+  async getFileByteRangeAsReadable(
+    name: string,
+    start: number,
+    length?: number
+  ): Promise<Readable> {
     return this.storage.getFileByteRangeAsReadable(name, start, length);
   }
 
@@ -73,18 +77,20 @@ export class Storage implements IStorage {
   }
 
   public switchStorage(config: StorageConfig): void {
-    if (typeof (config as ConfigLocal).directory !== 'undefined') {
+    if (typeof (config as ConfigLocal).directory !== "undefined") {
       this.storage = new StorageLocal(config as ConfigLocal);
-    } else if (typeof (config as ConfigAmazonS3).accessKeyId !== 'undefined') {
+    } else if (typeof (config as ConfigAmazonS3).accessKeyId !== "undefined") {
       this.storage = new StorageAmazonS3(config as ConfigAmazonS3);
-    } else if (typeof (config as ConfigGoogleCloud).keyFilename !== 'undefined') {
+    } else if (
+      typeof (config as ConfigGoogleCloud).keyFilename !== "undefined"
+    ) {
       this.storage = new StorageGoogleCloud(config as ConfigGoogleCloud);
     } else {
-      throw new Error('Not a supported configuration');
+      throw new Error("Not a supported configuration");
     }
   }
 
-  async sizeOf(name: string) : Promise<number> {
+  async sizeOf(name: string): Promise<number> {
     return this.storage.sizeOf(name);
   }
 }

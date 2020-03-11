@@ -1,9 +1,9 @@
-import fs from 'fs';
-import slugify from 'slugify';
-import { Readable } from 'stream';
-import S3 from 'aws-sdk/clients/s3';
-import { AbstractStorage } from './AbstractStorage';
-import { ConfigAmazonS3, IStorage } from './types';
+import fs from "fs";
+import slugify from "slugify";
+import { Readable } from "stream";
+import S3 from "aws-sdk/clients/s3";
+import { AbstractStorage } from "./AbstractStorage";
+import { ConfigAmazonS3, IStorage } from "./types";
 
 export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   private storage: S3;
@@ -11,40 +11,41 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
 
   constructor(config: ConfigAmazonS3) {
     super(config);
-    const {
-      accessKeyId,
-      secretAccessKey,
-    } = config;
+    const { accessKeyId, secretAccessKey } = config;
     if (!accessKeyId || !secretAccessKey) {
-      throw new Error('provide both an accessKeyId and a secretAccessKey!');
+      throw new Error("provide both an accessKeyId and a secretAccessKey!");
     }
     this.storage = new S3({
       ...config,
-      apiVersion: '2006-03-01',
+      apiVersion: "2006-03-01"
     });
   }
 
   async getFileAsReadable(fileName: string): Promise<Readable> {
     const params = {
       Bucket: this.bucketName,
-      Key: fileName,
+      Key: fileName
     };
     await this.storage.headObject(params).promise();
     return this.storage.getObject(params).createReadStream();
   }
 
-  async getFileByteRangeAsReadable(fileName: string, start: number, length?: number) : Promise<Readable> {
+  async getFileByteRangeAsReadable(
+    fileName: string,
+    start: number,
+    length?: number
+  ): Promise<Readable> {
     let readLength = length;
     if (readLength == null) {
       readLength = await this.sizeOf(fileName);
-    }else{
+    } else {
       readLength += start;
     }
 
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${start}-${readLength}`,
+      Range: `bytes=${start}-${readLength}`
     };
 
     await this.storage.headObject(params).promise();
@@ -54,7 +55,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   async removeFile(fileName: string): Promise<void> {
     const params = {
       Bucket: this.bucketName,
-      Key: fileName,
+      Key: fileName
     };
     await this.storage.deleteObject(params).promise();
   }
@@ -63,7 +64,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
 
   async createBucket(name: string): Promise<void> {
     if (name === null) {
-      throw new Error('Can not use `null` as bucket name');
+      throw new Error("Can not use `null` as bucket name");
     }
     const n = slugify(name);
     // console.log('createBucket', n);
@@ -76,7 +77,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       // console.log('HEAD BUCKET', n, data);
       this.buckets.push(n);
     } catch (e) {
-      if (e.code === 'Forbidden') {
+      if (e.code === "Forbidden") {
         // BucketAlreadyExists: The requested bucket name is not available.
         // The bucket namespace is shared by all users of the system.
         // Please select a different name and try again.
@@ -103,9 +104,11 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
-      MaxKeys: 1000,
+      MaxKeys: 1000
     };
-    const { Contents: content } = await this.storage.listObjects(params1).promise();
+    const { Contents: content } = await this.storage
+      .listObjects(params1)
+      .promise();
     if (content.length === 0) {
       return;
     }
@@ -114,8 +117,8 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Bucket: n,
       Delete: {
         Objects: content.map(value => ({ Key: value.Key })),
-        Quiet: false,
-      },
+        Quiet: false
+      }
     };
     await this.storage.deleteObjects(params2).promise();
   }
@@ -133,16 +136,18 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     // console.log('deleteBucket', n);
     try {
       await this.clearBucket(name);
-      const result = await this.storage.deleteBucket({
-        Bucket: n,
-      }).promise();
+      const result = await this.storage
+        .deleteBucket({
+          Bucket: n
+        })
+        .promise();
       if (n === this.bucketName) {
         this.bucketName = null;
       }
       this.buckets = this.buckets.filter(b => b !== n);
       // console.log(this.buckets, result);
     } catch (e) {
-      if (e.code === 'NoSuchBucket') {
+      if (e.code === "NoSuchBucket") {
         return;
       }
       throw e;
@@ -157,45 +162,53 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
 
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
+  protected async store(
+    arg: string | Buffer,
+    targetPath: string
+  ): Promise<void> {
     if (this.bucketName === null) {
-      throw new Error('Please select a bucket first');
+      throw new Error("Please select a bucket first");
     }
     await this.createBucket(this.bucketName);
     let readable: Readable;
-    if (typeof arg === 'string') {
+    if (typeof arg === "string") {
       readable = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readable = new Readable();
-      readable._read = () => { }; // _read is required but you can noop it
+      readable._read = () => {}; // _read is required but you can noop it
       readable.push(arg);
       readable.push(null);
     }
     const params = {
       Bucket: this.bucketName,
       Key: targetPath,
-      Body: readable,
+      Body: readable
     };
     await this.storage.upload(params).promise();
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
     if (this.bucketName === null) {
-      throw new Error('Please select a bucket first');
+      throw new Error("Please select a bucket first");
     }
     const params = {
       Bucket: this.bucketName,
-      MaxKeys: maxFiles,
+      MaxKeys: maxFiles
     };
-    const { Contents: content } = await this.storage.listObjects(params).promise();
+    const { Contents: content } = await this.storage
+      .listObjects(params)
+      .promise();
     return content.map(o => [o.Key, o.Size]) as [string, number][];
   }
 
-  async sizeOf(name: string) : Promise<number> {
+  async sizeOf(name: string): Promise<number> {
     const params = {
       Bucket: this.bucketName,
-      Key: name,
+      Key: name
     };
-    return await this.storage.headObject(params).promise().then(res => res.ContentLength);
+    return await this.storage
+      .headObject(params)
+      .promise()
+      .then(res => res.ContentLength);
   }
 }

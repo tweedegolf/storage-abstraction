@@ -1,5 +1,5 @@
-import { Readable } from 'stream';
-import {bool} from 'aws-sdk/clients/signer';
+import { Readable } from "stream";
+import { bool } from "aws-sdk/clients/signer";
 
 export interface IStorage {
   /**
@@ -17,7 +17,7 @@ export interface IStorage {
 
   /**
    * @param name: name of the bucket that will be used to store files, if the bucket does not exist it
-   * will be created. Note that the provided name will be slugified. If you pass `null` the currently 
+   * will be created. Note that the provided name will be slugified. If you pass `null` the currently
    * selected bucket will be deselected.
    */
   selectBucket(name: string | null): Promise<void>;
@@ -40,8 +40,8 @@ export interface IStorage {
   listBuckets(): Promise<string[]>;
 
   /**
-  * Returns the name of the currently selected bucket or `null` if no bucket has been selected yet
-  */
+   * Returns the name of the currently selected bucket or `null` if no bucket has been selected yet
+   */
   getSelectedBucket(): string | null;
 
   /**
@@ -66,7 +66,11 @@ export interface IStorage {
    * @param start: the first byte to return from
    * @param length?: the number of bytes to return from the start
    */
-  getFileByteRangeAsReadable(name: string, start: number, length?: number): Promise<Readable>;
+  getFileByteRangeAsReadable(
+    name: string,
+    start: number,
+    length?: number
+  ): Promise<Readable>;
 
   /**
    * @param name: name of the file to be removed
@@ -87,29 +91,26 @@ export interface IStorage {
 }
 
 export type ConfigAmazonS3 = {
-  bucketName?: string,
-  accessKeyId: string,
-  secretAccessKey: string,
-  endpoint?: string,
-  useDualstack?: boolean,
-  region?: string,
-  maxRetries?: number,
-  maxRedirects?: number,
-  sslEnabled?: boolean,
+  bucketName?: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  endpoint?: string;
+  useDualstack?: boolean;
+  region?: string;
+  maxRetries?: number;
+  maxRedirects?: number;
+  sslEnabled?: boolean;
 };
 
 export type ConfigGoogleCloud = {
-  bucketName?: string,
-  projectId: string,
-  keyFilename: string,
+  bucketName?: string;
+  projectId: string;
+  keyFilename: string;
 };
 
 export type ConfigLocal = {
-  bucketName?: string,
-  directory?: string,
+  bucketName?: string;
+  directory?: string;
 };
 
-export type StorageConfig =
-  ConfigLocal |
-  ConfigAmazonS3 |
-  ConfigGoogleCloud;
+export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud;
