@@ -191,7 +191,7 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     length?: number
   ): Promise<Readable> {
     let readLength = length;
-    if (readLength == null) {
+    if (typeof readLength === "undefined") {
       readLength = await this.sizeOf(name);
     } else {
       readLength += start;
@@ -215,6 +215,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async sizeOf(name: string): Promise<number> {
+    if (this.bucketName === null) {
+      throw new Error("Please select a bucket first");
+    }
     const p = path.join(this.directory, this.bucketName, name);
     const stat = await fs.promises.stat(p);
     return stat.size;

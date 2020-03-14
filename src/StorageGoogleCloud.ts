@@ -209,7 +209,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     length?: number
   ): Promise<Readable> {
     let readLength = length;
-    if (readLength == null) {
+    if (typeof readLength === "undefined") {
       readLength = await this.sizeOf(name);
     } else {
       readLength += start;

@@ -36,7 +36,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     length?: number
   ): Promise<Readable> {
     let readLength = length;
-    if (readLength == null) {
+    if (typeof readLength === "undefined") {
       readLength = await this.sizeOf(fileName);
     } else {
       readLength += start;
@@ -202,6 +202,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   }
 
   async sizeOf(name: string): Promise<number> {
+    if (this.bucketName === null) {
+      throw new Error("Please select a bucket first");
+    }
     const params = {
       Bucket: this.bucketName,
       Key: name

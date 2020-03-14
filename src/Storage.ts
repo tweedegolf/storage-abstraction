@@ -61,6 +61,12 @@ export class Storage implements IStorage {
     start: number,
     length?: number
   ): Promise<Readable> {
+    // let readLength = length;
+    // if (typeof readLength === "undefined") {
+    //   readLength = await this.sizeOf(name);
+    // } else {
+    //   readLength += start;
+    // }
     return this.storage.getFileByteRangeAsReadable(name, start, length);
   }
 
@@ -93,4 +99,9 @@ export class Storage implements IStorage {
   async sizeOf(name: string): Promise<number> {
     return this.storage.sizeOf(name);
   }
+
+  async addFileFromReadStream(
+    stream: Readable,
+    targetPath: string
+  ): Promise<void> {}
 }
