@@ -9,45 +9,28 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   private storage: S3;
   protected bucketName: string;
 
-  constructor(config: ConfigAmazonS3) {
+  constructor(config: String) {
     super(config);
-    const { accessKeyId, secretAccessKey } = config;
-    if (!accessKeyId || !secretAccessKey) {
-      throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    }
+    // const { accessKeyId, secretAccessKey } = config;
+    // if (!accessKeyId || !secretAccessKey) {
+    //   throw new Error("provide both an accessKeyId and a secretAccessKey!");
+    // }
     this.storage = new S3({
       ...config,
       apiVersion: "2006-03-01"
     });
   }
 
-  async getFileAsReadable(fileName: string): Promise<Readable> {
-    const params = {
-      Bucket: this.bucketName,
-      Key: fileName
-    };
-    await this.storage.headObject(params).promise();
-    return this.storage.getObject(params).createReadStream();
-  }
-
-  async getFileByteRangeAsReadable(
+  async getFileAsReadable(
     fileName: string,
-    start: number,
-    length?: number
+    options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
-    let readLength = length;
-    if (typeof readLength === "undefined") {
-      readLength = await this.sizeOf(fileName);
-    } else {
-      readLength += start;
-    }
-
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${start}-${readLength}`
+      Range: `bytes=${options.start}-${options.end}`
     };
-
+    console.log(`bytes=${options.start}-${options.end}`);
     await this.storage.headObject(params).promise();
     return this.storage.getObject(params).createReadStream();
   }

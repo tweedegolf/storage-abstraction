@@ -1,5 +1,4 @@
 import { Readable } from "stream";
-import { bool } from "aws-sdk/clients/signer";
 
 export interface IStorage {
   /**
@@ -58,18 +57,15 @@ export interface IStorage {
 
   /**
    * @param name: name of the file to be returned as a readable stream
+   * @param start?: the byte of the file where the stream starts (default: 0)
+   * @param end?: the byte in the file where the stream ends (default: last byte of file)
    */
-  getFileAsReadable(name: string): Promise<Readable>;
-
-  /**
-   * @param name: name of the file to be returned as a readable stream
-   * @param start: the first byte to return from
-   * @param length?: the number of bytes to return from the start
-   */
-  getFileByteRangeAsReadable(
+  getFileAsReadable(
     name: string,
-    start: number,
-    length?: number
+    options?: {
+      start?: number;
+      end?: number;
+    }
   ): Promise<Readable>;
 
   /**

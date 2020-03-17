@@ -16,7 +16,7 @@ export class Storage implements IStorage {
   protected bucketName: string;
   protected bucketCreated: boolean = false;
 
-  constructor(config: StorageConfig) {
+  constructor(config: String) {
     this.switchStorage(config);
   }
 
@@ -52,22 +52,13 @@ export class Storage implements IStorage {
     return this.storage.getSelectedBucket();
   }
 
-  async getFileAsReadable(name: string): Promise<Readable> {
-    return this.storage.getFileAsReadable(name);
-  }
-
-  async getFileByteRangeAsReadable(
+  async getFileAsReadable(
     name: string,
-    start: number,
-    length?: number
+    options: { start?: number; end?: number }
   ): Promise<Readable> {
-    // let readLength = length;
-    // if (typeof readLength === "undefined") {
-    //   readLength = await this.sizeOf(name);
-    // } else {
-    //   readLength += start;
-    // }
-    return this.storage.getFileByteRangeAsReadable(name, start, length);
+    const { start = 0, end } = options;
+    console.log(start, end);
+    return this.storage.getFileAsReadable(name, { start, end });
   }
 
   async removeFile(fileName: string): Promise<void> {
@@ -82,15 +73,15 @@ export class Storage implements IStorage {
     return this.storage.selectBucket(name);
   }
 
-  public switchStorage(config: StorageConfig): void {
-    if (typeof (config as ConfigLocal).directory !== "undefined") {
-      this.storage = new StorageLocal(config as ConfigLocal);
-    } else if (typeof (config as ConfigAmazonS3).accessKeyId !== "undefined") {
-      this.storage = new StorageAmazonS3(config as ConfigAmazonS3);
-    } else if (
-      typeof (config as ConfigGoogleCloud).keyFilename !== "undefined"
-    ) {
-      this.storage = new StorageGoogleCloud(config as ConfigGoogleCloud);
+  public switchStorage(url: String): void {
+    const type = url.substring(0, url.indexOf("://"));
+    const config = url.substring(url.indexOf("://") + 3);
+    if (type === "local") {
+      this.storage = new StorageLocal(config);
+    } else if (type === "s3") {
+      this.storage = new StorageAmazonS3(config);
+    } else if (type === "gcs") {
+      this.storage = new StorageGoogleCloud(config);
     } else {
       throw new Error("Not a supported configuration");
     }

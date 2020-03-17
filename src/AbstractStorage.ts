@@ -1,7 +1,7 @@
 import path from "path";
 import { Readable } from "stream";
 import slugify from "slugify";
-import { IStorage, StorageConfig } from "./types";
+import { IStorage } from "./types";
 
 export abstract class AbstractStorage implements IStorage {
   public static TYPE_GOOGLE_CLOUD: string = "TYPE_GOOGLE_CLOUD";
@@ -10,13 +10,13 @@ export abstract class AbstractStorage implements IStorage {
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
 
-  constructor(config: StorageConfig) {
-    if (
-      typeof config.bucketName !== "undefined" &&
-      config.bucketName !== null
-    ) {
-      this.bucketName = slugify(config.bucketName);
-    }
+  constructor(config: String) {
+    // if (
+    //   typeof config.bucketName !== "undefined" &&
+    //   config.bucketName !== null
+    // ) {
+    //   this.bucketName = slugify(config.bucketName);
+    // }
   }
 
   async test(): Promise<void> {
@@ -68,12 +68,9 @@ export abstract class AbstractStorage implements IStorage {
 
   abstract async listBuckets(): Promise<string[]>;
 
-  abstract async getFileAsReadable(name: string): Promise<Readable>;
-
-  abstract async getFileByteRangeAsReadable(
+  abstract async getFileAsReadable(
     name: string,
-    start: number,
-    length?: number
+    options?: { start?: number; end?: number }
   ): Promise<Readable>;
 
   abstract async removeFile(fileName: string): Promise<void>;

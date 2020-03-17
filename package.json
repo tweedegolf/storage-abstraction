@@ -15,6 +15,7 @@
     "@types/rimraf": "^2.0.3",
     "await-to-js": "^2.1.1",
     "aws-sdk": "^2.592.0",
+    "fast-crc32c": "^2.0.0",
     "glob": "^7.1.6",
     "ramda": "^0.26.1",
     "rimraf": "^3.0.0",

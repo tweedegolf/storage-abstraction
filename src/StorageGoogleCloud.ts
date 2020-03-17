@@ -3,7 +3,11 @@ import path from "path";
 import { zip } from "ramda";
 import to from "await-to-js";
 import { Readable } from "stream";
-import { Storage as GoogleCloudStorage, File } from "@google-cloud/storage";
+import {
+  Storage as GoogleCloudStorage,
+  File,
+  CreateReadStreamOptions
+} from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
 import { IStorage, ConfigGoogleCloud } from "./types";
 import slugify from "slugify";
@@ -12,16 +16,18 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   private storage: GoogleCloudStorage;
   protected bucketName: string;
 
-  constructor(config: ConfigGoogleCloud) {
+  constructor(config: string) {
     super(config);
-    const { projectId, keyFilename } = config;
-    if (!projectId || !keyFilename) {
-      throw new Error("provide both an accessKeyId and a secretAccessKey!");
+    if (!config) {
+      throw new Error("please provide a keyFilename");
     }
 
+    // const o = JSON.parse(config);
+    // console.log(o);
+
     this.storage = new GoogleCloudStorage({
-      projectId,
-      keyFilename
+      // projectId: "default-demo-app-35b34",
+      keyFilename: config
     });
   }
 
@@ -46,9 +52,18 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     return file;
   }
 
-  async getFileAsReadable(fileName: string): Promise<Readable> {
-    const file = await this.getFile(fileName);
-    return file.createReadStream();
+  async getFileAsReadable(
+    fileName: string,
+    options: CreateReadStreamOptions = { start: 0 }
+  ): Promise<Readable> {
+    const file = this.storage.bucket(this.bucketName).file(fileName);
+    const [exists] = await file.exists();
+    if (exists) {
+      return file.createReadStream(options);
+    }
+    throw new Error(
+      `File ${fileName} could not be retrieved from bucket ${this.bucketName}`
+    );
   }
 
   // not in use
@@ -201,21 +216,5 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();
     return parseInt(metadata.size, 10);
-  }
-
-  async getFileByteRangeAsReadable(
-    name: string,
-    start: number,
-    length?: number
-  ): Promise<Readable> {
-    let readLength = length;
-    if (typeof readLength === "undefined") {
-      readLength = await this.sizeOf(name);
-    } else {
-      readLength += start;
-    }
-
-    const file = await this.getFile(name);
-    return file.createReadStream({ start, end: readLength });
   }
 }

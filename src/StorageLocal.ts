@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
-import to from "await-to-js";
 import path from "path";
+import to from "await-to-js";
 import glob from "glob";
 import rimraf from "rimraf";
 import slugify from "slugify";
@@ -13,14 +13,14 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   protected bucketName: string;
   private directory: string;
 
-  constructor(config: ConfigLocal) {
+  constructor(config: String) {
     super(config);
-    const { directory } = config;
-    this.directory = directory;
-    if (!directory) {
+    if (!config) {
       // throw new Error('provide a directory!');
       this.directory = os.tmpdir();
     }
+    const directory = path.join(...config.split("/"));
+    this.directory = directory;
   }
 
   private async createDestination(targetPath: string): Promise<string> {
