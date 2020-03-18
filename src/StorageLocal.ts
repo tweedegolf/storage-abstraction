@@ -6,21 +6,21 @@ import glob from "glob";
 import rimraf from "rimraf";
 import slugify from "slugify";
 import { Readable } from "stream";
-import { IStorage, ConfigLocal } from "./types";
+import { IStorage, ConfigLocal, StorageConfig } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
 
 export class StorageLocal extends AbstractStorage implements IStorage {
   protected bucketName: string;
   private directory: string;
 
-  constructor(config: String) {
+  constructor(config: StorageConfig) {
     super(config);
-    if (!config) {
+    const { directory } = config as ConfigLocal;
+    this.directory = directory;
+    if (!directory) {
       // throw new Error('provide a directory!');
       this.directory = os.tmpdir();
     }
-    const directory = path.join(...config.split("/"));
-    this.directory = directory;
   }
 
   private async createDestination(targetPath: string): Promise<string> {

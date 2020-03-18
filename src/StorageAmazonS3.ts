@@ -3,22 +3,15 @@ import slugify from "slugify";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigAmazonS3, IStorage } from "./types";
+import { ConfigAmazonS3, IStorage, StorageConfig } from "./types";
 
 export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   private storage: S3;
   protected bucketName: string;
 
-  constructor(config: String) {
+  constructor(config: StorageConfig) {
     super(config);
-    // const { accessKeyId, secretAccessKey } = config;
-    // if (!accessKeyId || !secretAccessKey) {
-    //   throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    // }
-    this.storage = new S3({
-      ...config,
-      apiVersion: "2006-03-01"
-    });
+    this.storage = new S3(config as ConfigAmazonS3);
   }
 
   async getFileAsReadable(
@@ -28,7 +21,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${options.start}-${options.end}`
+      Range: `bytes=${options.start}-${options.end}`,
     };
     console.log(`bytes=${options.start}-${options.end}`);
     await this.storage.headObject(params).promise();
@@ -38,7 +31,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   async removeFile(fileName: string): Promise<void> {
     const params = {
       Bucket: this.bucketName,
-      Key: fileName
+      Key: fileName,
     };
     await this.storage.deleteObject(params).promise();
   }
@@ -87,7 +80,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
-      MaxKeys: 1000
+      MaxKeys: 1000,
     };
     const { Contents: content } = await this.storage
       .listObjects(params1)
@@ -100,8 +93,8 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Bucket: n,
       Delete: {
         Objects: content.map(value => ({ Key: value.Key })),
-        Quiet: false
-      }
+        Quiet: false,
+      },
     };
     await this.storage.deleteObjects(params2).promise();
   }
@@ -121,7 +114,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       await this.clearBucket(name);
       const result = await this.storage
         .deleteBucket({
-          Bucket: n
+          Bucket: n,
         })
         .promise();
       if (n === this.bucketName) {
@@ -165,7 +158,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     const params = {
       Bucket: this.bucketName,
       Key: targetPath,
-      Body: readable
+      Body: readable,
     };
     await this.storage.upload(params).promise();
   }
@@ -176,7 +169,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     }
     const params = {
       Bucket: this.bucketName,
-      MaxKeys: maxFiles
+      MaxKeys: maxFiles,
     };
     const { Contents: content } = await this.storage
       .listObjects(params)
@@ -190,7 +183,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     }
     const params = {
       Bucket: this.bucketName,
-      Key: name
+      Key: name,
     };
     return await this.storage
       .headObject(params)

@@ -6,29 +6,19 @@ import { Readable } from "stream";
 import {
   Storage as GoogleCloudStorage,
   File,
-  CreateReadStreamOptions
+  CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage, ConfigGoogleCloud } from "./types";
+import { IStorage, ConfigGoogleCloud, StorageConfig } from "./types";
 import slugify from "slugify";
 
 export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   private storage: GoogleCloudStorage;
   protected bucketName: string;
 
-  constructor(config: string) {
+  constructor(config: StorageConfig) {
     super(config);
-    if (!config) {
-      throw new Error("please provide a keyFilename");
-    }
-
-    // const o = JSON.parse(config);
-    // console.log(o);
-
-    this.storage = new GoogleCloudStorage({
-      // projectId: "default-demo-app-35b34",
-      keyFilename: config
-    });
+    this.storage = new GoogleCloudStorage(config as ConfigGoogleCloud);
   }
 
   // After uploading a file to Google Storage it may take a while before the file
@@ -188,7 +178,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     return this.buckets;
   }
 
-  private async getMetaData(files: string[]) {
+  private async getMetaData(files: string[]): Promise<number[]> {
     const sizes: number[] = [];
     for (let i = 0; i < files.length; i += 1) {
       const file = this.storage.bucket(this.bucketName).file(files[i]);

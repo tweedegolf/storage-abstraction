@@ -1,22 +1,16 @@
 import { Readable } from "stream";
-import {
-  IStorage,
-  StorageConfig,
-  ConfigLocal,
-  ConfigAmazonS3,
-  ConfigGoogleCloud
-} from "./types";
-import { StorageLocal, StorageAmazonS3, StorageGoogleCloud } from ".";
+import { IStorage, StorageConfig } from "./types";
+import { StorageLocal } from "./StorageLocal";
+import { StorageAmazonS3 } from "./StorageAmazonS3";
+import { StorageGoogleCloud } from "./StorageGoogleCloud";
+import { parseUrlString } from "./util";
 
 export class Storage implements IStorage {
-  public static TYPE_GOOGLE_CLOUD: string = "TYPE_GOOGLE_CLOUD";
-  public static TYPE_AMAZON_S3: string = "TYPE_AMAZON_S3";
-  public static TYPE_LOCAL: string = "TYPE_LOCAL";
   public storage: IStorage;
   protected bucketName: string;
-  protected bucketCreated: boolean = false;
+  protected bucketCreated = false;
 
-  constructor(config: String) {
+  constructor(config: string | StorageConfig) {
     this.switchStorage(config);
   }
 
@@ -73,17 +67,19 @@ export class Storage implements IStorage {
     return this.storage.selectBucket(name);
   }
 
-  public switchStorage(url: String): void {
-    const type = url.substring(0, url.indexOf("://"));
-    const config = url.substring(url.indexOf("://") + 3);
-    if (type === "local") {
-      this.storage = new StorageLocal(config);
-    } else if (type === "s3") {
-      this.storage = new StorageAmazonS3(config);
-    } else if (type === "gcs") {
-      this.storage = new StorageGoogleCloud(config);
-    } else {
-      throw new Error("Not a supported configuration");
+  public switchStorage(args: string | StorageConfig): void {
+    if (typeof args === "string") {
+      const config = parseUrlString(args);
+      const { type } = config;
+      if (type === "local") {
+        this.storage = new StorageLocal(config);
+      } else if (type === "s3") {
+        this.storage = new StorageAmazonS3(config);
+      } else if (type === "gcs") {
+        this.storage = new StorageGoogleCloud(config);
+      } else {
+        throw new Error("Not a supported configuration");
+      }
     }
   }
 
@@ -94,5 +90,7 @@ export class Storage implements IStorage {
   async addFileFromReadStream(
     stream: Readable,
     targetPath: string
-  ): Promise<void> {}
+  ): Promise<void> {
+    // to be implemented
+  }
 }

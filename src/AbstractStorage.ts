@@ -1,7 +1,7 @@
 import path from "path";
 import { Readable } from "stream";
 import slugify from "slugify";
-import { IStorage } from "./types";
+import { IStorage, StorageConfig } from "./types";
 
 export abstract class AbstractStorage implements IStorage {
   public static TYPE_GOOGLE_CLOUD: string = "TYPE_GOOGLE_CLOUD";
@@ -10,13 +10,13 @@ export abstract class AbstractStorage implements IStorage {
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
 
-  constructor(config: String) {
-    // if (
-    //   typeof config.bucketName !== "undefined" &&
-    //   config.bucketName !== null
-    // ) {
-    //   this.bucketName = slugify(config.bucketName);
-    // }
+  constructor(config: StorageConfig) {
+    if (
+      typeof config.bucketName !== "undefined" &&
+      config.bucketName !== null
+    ) {
+      this.bucketName = slugify(config.bucketName);
+    }
   }
 
   async test(): Promise<void> {

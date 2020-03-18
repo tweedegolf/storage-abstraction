@@ -40,7 +40,7 @@ const test = async (storage: IStorage, message: string) => {
 
   try {
     const readStream = await storage.getFileAsReadable("test.jpg", {
-      end: 4000
+      end: 4000,
     });
     const p = path.join(__dirname, "test.jpg");
     // console.log(p);
@@ -143,8 +143,9 @@ const test = async (storage: IStorage, message: string) => {
 // const storage = new StorageLocal(configLocal);
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
-const storage = new Storage("gcs://da2719acad70.json");
-test(storage, "test s3");
+
+const storage = new Storage(process.env.URL_GCS_4);
+// test(storage, urls[0]);
 
 /* or run all tests */
 // test(new StorageLocal(configLocal), "test local")
