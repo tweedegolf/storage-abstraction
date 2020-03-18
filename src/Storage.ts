@@ -1,17 +1,26 @@
 import { Readable } from "stream";
-import { IStorage, StorageConfig } from "./types";
+import {
+  IStorage,
+  StorageConfig,
+  StorageType,
+  ConfigLocal,
+  ConfigGoogleCloud,
+  ConfigAmazonS3,
+} from "./types";
 import { StorageLocal } from "./StorageLocal";
 import { StorageAmazonS3 } from "./StorageAmazonS3";
 import { StorageGoogleCloud } from "./StorageGoogleCloud";
 import { parseUrlString } from "./util";
 
 export class Storage implements IStorage {
-  public storage: IStorage;
-  protected bucketName: string;
-  protected bucketCreated = false;
+  private storage: IStorage;
 
-  constructor(config: string | StorageConfig) {
+  constructor(config?: string | StorageConfig) {
     this.switchStorage(config);
+  }
+
+  getType(): StorageType {
+    return this.storage.getType();
   }
 
   async test(): Promise<void> {
@@ -67,19 +76,27 @@ export class Storage implements IStorage {
     return this.storage.selectBucket(name);
   }
 
-  public switchStorage(args: string | StorageConfig): void {
-    if (typeof args === "string") {
+  public switchStorage(args?: string | StorageConfig): void {
+    if (typeof args === "string" || typeof args === "undefined") {
       const config = parseUrlString(args);
       const { type } = config;
-      if (type === "local") {
+      if (type === StorageType.LOCAL) {
         this.storage = new StorageLocal(config);
-      } else if (type === "s3") {
+      } else if (type === StorageType.S3) {
         this.storage = new StorageAmazonS3(config);
-      } else if (type === "gcs") {
+      } else if (type === StorageType.GCS) {
         this.storage = new StorageGoogleCloud(config);
       } else {
         throw new Error("Not a supported configuration");
       }
+    } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
+      this.storage = new StorageLocal(args as ConfigLocal);
+    } else if ((args as ConfigGoogleCloud).keyFilename) {
+      this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
+    } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
+      this.storage = new StorageAmazonS3(args as ConfigAmazonS3);
+    } else {
+      throw new Error("Not a supported configuration");
     }
   }
 
@@ -87,10 +104,7 @@ export class Storage implements IStorage {
     return this.storage.sizeOf(name);
   }
 
-  async addFileFromReadStream(
-    stream: Readable,
-    targetPath: string
-  ): Promise<void> {
+  async addFileFromReadStream(stream: Readable, targetPath: string): Promise<void> {
     // to be implemented
   }
 }

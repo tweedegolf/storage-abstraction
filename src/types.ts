@@ -8,6 +8,11 @@ export interface IStorage {
   test(): Promise<void>;
 
   /**
+   * Returns the type of storage which is one of enum StorageType
+   */
+  getType(): StorageType;
+
+  /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but
    * also when the bucket already exists. Note that the provided name will be slugified. Also note that
    * you have to use `selectBucket` to start using the newly created bucket
@@ -89,7 +94,7 @@ export interface IStorage {
 export enum StorageType {
   GCS = "gcs",
   S3 = "s3",
-  LOCAL = "local"
+  LOCAL = "local",
 }
 
 export type ConfigAmazonS3 = {
@@ -103,6 +108,7 @@ export type ConfigAmazonS3 = {
   maxRetries?: number;
   maxRedirects?: number;
   sslEnabled?: boolean;
+  apiVersion?: string;
 };
 
 export type ConfigGoogleCloud = {

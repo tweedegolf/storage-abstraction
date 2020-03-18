@@ -8,9 +8,9 @@ import slugify from "slugify";
 import { Readable } from "stream";
 import { IStorage, ConfigLocal, StorageConfig } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
+import { StorageType } from "aws-sdk/clients/workdocs";
 
 export class StorageLocal extends AbstractStorage implements IStorage {
-  protected bucketName: string;
   private directory: string;
 
   constructor(config: StorageConfig) {
@@ -18,9 +18,13 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     const { directory } = config as ConfigLocal;
     this.directory = directory;
     if (!directory) {
-      // throw new Error('provide a directory!');
       this.directory = os.tmpdir();
     }
+    if (!this.bucketName) {
+      this.bucketName = this.directory.substring(this.directory.lastIndexOf("/") + 1);
+      this.directory = this.directory.substring(0, this.directory.lastIndexOf("/"));
+    }
+    // console.log("[DIR]", this.directory, "[B]", this.bucketName);
   }
 
   private async createDestination(targetPath: string): Promise<string> {
@@ -34,9 +38,7 @@ export class StorageLocal extends AbstractStorage implements IStorage {
       await this.createBucket(this.bucketName);
       await fs.promises.stat(path.dirname(dest));
     } catch (e) {
-      const [error] = await to(
-        fs.promises.mkdir(path.dirname(dest), { recursive: true })
-      );
+      const [error] = await to(fs.promises.mkdir(path.dirname(dest), { recursive: true }));
       if (error !== null) {
         throw error;
       }
@@ -47,17 +49,14 @@ export class StorageLocal extends AbstractStorage implements IStorage {
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(filePath: string, targetPath: string): Promise<void>;
-  protected async store(
-    arg: string | Buffer,
-    targetPath: string
-  ): Promise<void> {
+  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
     const dest = await this.createDestination(targetPath);
     if (typeof arg === "string") {
       await fs.promises.copyFile(arg, dest);
     } else if (arg instanceof Buffer) {
       const writeStream = fs.createWriteStream(dest);
       const readStream = new Readable();
-      readStream._read = () => {}; // _read is required but you can noop it
+      readStream._read = (): void => {}; // _read is required but you can noop it
       readStream.push(arg);
       readStream.push(null); // close stream
 
@@ -84,9 +83,7 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     return fs.promises
       .stat(storagePath)
       .then(() => true)
-      .catch(() =>
-        fs.promises.mkdir(storagePath, { recursive: true, mode: 0o777 })
-      )
+      .catch(() => fs.promises.mkdir(storagePath, { recursive: true, mode: 0o777 }))
       .then(() => {
         this.buckets.push(bn);
       });
@@ -143,9 +140,7 @@ export class StorageLocal extends AbstractStorage implements IStorage {
 
   async listBuckets(): Promise<string[]> {
     const files = await fs.promises.readdir(this.directory);
-    const stats = await Promise.all(
-      files.map(f => fs.promises.stat(path.join(this.directory, f)))
-    );
+    const stats = await Promise.all(files.map(f => fs.promises.stat(path.join(this.directory, f))));
     this.buckets = files.filter((f, i) => stats[i].isDirectory());
     // console.log(files);
     return this.buckets;

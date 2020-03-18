@@ -82,19 +82,13 @@ const test = async (storage: IStorage, message: string) => {
   console.log("list buckets", r);
 
   try {
-    await storage.addFileFromPath(
-      "./tests/data/image1.jpg",
-      "subdir/sub subdir/new name.jpg"
-    );
+    await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
   } catch (e) {
     console.log(e.message);
   }
 
   r = await storage.selectBucket("fnaap1");
-  r = await storage.addFileFromPath(
-    "./tests/data/image1.jpg",
-    "subdir/sub subdir/new name.jpg"
-  );
+  r = await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
 
   r = await storage.listFiles();
   console.log("list files", r);
@@ -104,10 +98,7 @@ const test = async (storage: IStorage, message: string) => {
   r = await storage.listFiles();
   console.log("list files", r);
 
-  await storage.addFileFromPath(
-    "./tests/data/image1.jpg",
-    "subdir/sub subdir/new name.jpg"
-  );
+  await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
   r = await storage.listFiles();
   console.log("add file", r);
 
@@ -144,8 +135,9 @@ const test = async (storage: IStorage, message: string) => {
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
 
-const storage = new Storage(process.env.URL_GCS_4);
-// test(storage, urls[0]);
+const storage = new Storage(process.env.URL_AWS_4);
+// const storage = new Storage();
+test(storage, storage.getType());
 
 /* or run all tests */
 // test(new StorageLocal(configLocal), "test local")

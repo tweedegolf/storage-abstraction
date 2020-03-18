@@ -14,7 +14,6 @@ import slugify from "slugify";
 
 export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   private storage: GoogleCloudStorage;
-  protected bucketName: string;
 
   constructor(config: StorageConfig) {
     super(config);
@@ -35,9 +34,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       return this.getFile(fileName, r);
     }
     if (!exists) {
-      throw new Error(
-        `File ${fileName} could not be retrieved from bucket ${this.bucketName}`
-      );
+      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
     }
     return file;
   }
@@ -51,9 +48,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     if (exists) {
       return file.createReadStream(options);
     }
-    throw new Error(
-      `File ${fileName} could not be retrieved from bucket ${this.bucketName}`
-    );
+    throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
   }
 
   // not in use
@@ -82,10 +77,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(
-    arg: string | Buffer,
-    targetPath: string
-  ): Promise<void> {
+  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }

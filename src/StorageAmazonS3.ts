@@ -7,7 +7,6 @@ import { ConfigAmazonS3, IStorage, StorageConfig } from "./types";
 
 export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   private storage: S3;
-  protected bucketName: string;
 
   constructor(config: StorageConfig) {
     super(config);
@@ -82,9 +81,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Bucket: n,
       MaxKeys: 1000,
     };
-    const { Contents: content } = await this.storage
-      .listObjects(params1)
-      .promise();
+    const { Contents: content } = await this.storage.listObjects(params1).promise();
     if (content.length === 0) {
       return;
     }
@@ -138,10 +135,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
 
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(
-    arg: string | Buffer,
-    targetPath: string
-  ): Promise<void> {
+  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }
@@ -171,9 +165,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Bucket: this.bucketName,
       MaxKeys: maxFiles,
     };
-    const { Contents: content } = await this.storage
-      .listObjects(params)
-      .promise();
+    const { Contents: content } = await this.storage.listObjects(params).promise();
     return content.map(o => [o.Key, o.Size]) as [string, number][];
   }
 

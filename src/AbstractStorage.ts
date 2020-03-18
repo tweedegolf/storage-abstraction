@@ -1,22 +1,23 @@
 import path from "path";
 import { Readable } from "stream";
 import slugify from "slugify";
-import { IStorage, StorageConfig } from "./types";
+import { IStorage, StorageConfig, StorageType } from "./types";
+import { Storage } from ".";
 
 export abstract class AbstractStorage implements IStorage {
-  public static TYPE_GOOGLE_CLOUD: string = "TYPE_GOOGLE_CLOUD";
-  public static TYPE_AMAZON_S3: string = "TYPE_AMAZON_S3";
-  public static TYPE_LOCAL: string = "TYPE_LOCAL";
+  protected type: StorageType;
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
 
   constructor(config: StorageConfig) {
-    if (
-      typeof config.bucketName !== "undefined" &&
-      config.bucketName !== null
-    ) {
+    if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
       this.bucketName = slugify(config.bucketName);
     }
+    this.type = config.type;
+  }
+
+  getType(): StorageType {
+    return this.type;
   }
 
   async test(): Promise<void> {
@@ -48,15 +49,9 @@ export abstract class AbstractStorage implements IStorage {
 
   // stubs
 
-  protected abstract async store(
-    filePath: string,
-    targetFileName: string
-  ): Promise<void>;
+  protected abstract async store(filePath: string, targetFileName: string): Promise<void>;
 
-  protected abstract async store(
-    buffer: Buffer,
-    targetFileName: string
-  ): Promise<void>;
+  protected abstract async store(buffer: Buffer, targetFileName: string): Promise<void>;
 
   abstract async createBucket(name: string): Promise<void>;
 

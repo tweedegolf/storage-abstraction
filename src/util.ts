@@ -13,16 +13,62 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
   });
 
 export const parseUrlString = (url: string): StorageConfig => {
-  const type = url.substring(0, url.indexOf("://"));
-  let config = url.substring(url.indexOf("://") + 3);
+  let type = "";
+  let config = "";
+  if (url === "" || typeof url === "undefined") {
+    type = StorageType.LOCAL;
+  } else {
+    type = url.substring(0, url.indexOf("://"));
+    config = url.substring(url.indexOf("://") + 3);
+  }
   console.log("[URL]", url);
-  if (type === "local") {
-  } else if (type === "s3") {
-    // const { accessKeyId, secretAccessKey } = config;
-    // if (!accessKeyId || !secretAccessKey) {
-    //   throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    // }
-    // apiVersion: "2006-03-01"
+  if (type === StorageType.LOCAL) {
+    if (config === "") {
+      return { type };
+    }
+    return {
+      type,
+      bucketName: url.substring(url.lastIndexOf("/") + 1),
+      directory: url.substring(0, url.lastIndexOf("/")),
+    };
+  } else if (type === StorageType.S3) {
+    // s3://key:secret@eu-west-2/the-buck
+    const credentials = config.substring(0, config.indexOf("@")).split(":");
+    const [accessKeyId, secretAccessKey] = credentials;
+    // remove credentials
+    config = config.substring(config.indexOf("@") + 1);
+    const end = config.length;
+    const slash = config.indexOf("/");
+    const questionMark = config.indexOf("?");
+    const region = config.substring(0, slash !== -1 ? slash : end);
+    let bucketName = "";
+    let options: { [key: string]: string } = {};
+    if (slash !== -1) {
+      bucketName = config.substring(slash + 1, questionMark !== -1 ? questionMark : end);
+    }
+    if (questionMark !== -1) {
+      options = config
+        .substring(questionMark + 1)
+        .split("&")
+        .map(pair => pair.split("="))
+        .reduce((acc, val) => {
+          acc[val[0]] = val[1];
+          return acc;
+        }, {});
+    }
+    // console.log(accessKeyId, secretAccessKey, region, bucket, options);
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error("provide both an accessKeyId and a secretAccessKey!");
+    }
+    return {
+      accessKeyId,
+      secretAccessKey,
+      bucketName,
+      region,
+      type: StorageType.S3,
+      apiVersion: "2006-03-01",
+      ...options,
+    };
   } else if (type === StorageType.GCS) {
     const slash = config.indexOf("/");
     const colon = config.indexOf(":");
