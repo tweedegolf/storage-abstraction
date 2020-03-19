@@ -8,21 +8,21 @@ import slugify from "slugify";
 import { Readable } from "stream";
 import { IStorage, ConfigLocal, StorageConfig } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
-import { StorageType } from "aws-sdk/clients/workdocs";
 
 export class StorageLocal extends AbstractStorage implements IStorage {
   private directory: string;
 
   constructor(config: StorageConfig) {
     super(config);
-    const { directory } = config as ConfigLocal;
+    const { directory, bucketName } = config as ConfigLocal;
     this.directory = directory;
-    if (!directory) {
+    if (typeof directory === "undefined" || directory === "") {
       this.directory = os.tmpdir();
-    }
-    if (!this.bucketName) {
+    } else if (typeof bucketName === "undefined" || bucketName === "") {
       this.bucketName = this.directory.substring(this.directory.lastIndexOf("/") + 1);
       this.directory = this.directory.substring(0, this.directory.lastIndexOf("/"));
+    } else {
+      this.bucketName = bucketName;
     }
     // console.log("[DIR]", this.directory, "[B]", this.bucketName);
   }
@@ -48,26 +48,31 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
+  protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(filePath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     const dest = await this.createDestination(targetPath);
     if (typeof arg === "string") {
       await fs.promises.copyFile(arg, dest);
-    } else if (arg instanceof Buffer) {
-      const writeStream = fs.createWriteStream(dest);
-      const readStream = new Readable();
+      return;
+    }
+    const writeStream = fs.createWriteStream(dest);
+    let readStream: Readable = null;
+    if (arg instanceof Buffer) {
+      readStream = new Readable();
       readStream._read = (): void => {}; // _read is required but you can noop it
       readStream.push(arg);
       readStream.push(null); // close stream
-
-      return new Promise((resolve, reject) => {
-        readStream
-          .pipe(writeStream)
-          .on("error", reject)
-          .on("finish", resolve);
-        writeStream.on("error", reject);
-      });
+    } else if (arg instanceof Readable) {
+      readStream = arg;
     }
+    return new Promise((resolve, reject) => {
+      readStream
+        .pipe(writeStream)
+        .on("error", reject)
+        .on("finish", resolve);
+      writeStream.on("error", reject);
+    });
   }
 
   async createBucket(name: string): Promise<void> {
@@ -174,27 +179,13 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     return result;
   }
 
-  async getFileAsReadable(name: string): Promise<Readable> {
-    const p = path.join(this.directory, this.bucketName, name);
-    await fs.promises.stat(p);
-    return fs.createReadStream(p);
-  }
-
-  async getFileByteRangeAsReadable(
+  async getFileAsReadable(
     name: string,
-    start: number,
-    length?: number
+    options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
-    let readLength = length;
-    if (typeof readLength === "undefined") {
-      readLength = await this.sizeOf(name);
-    } else {
-      readLength += start;
-    }
-
     const p = path.join(this.directory, this.bucketName, name);
     await fs.promises.stat(p);
-    return fs.createReadStream(p, { start, end: readLength });
+    return fs.createReadStream(p, options);
   }
 
   async removeFile(fileName: string): Promise<void> {

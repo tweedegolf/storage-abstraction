@@ -38,6 +38,11 @@ export abstract class AbstractStorage implements IStorage {
     await this.store(buffer, path.join(...paths));
   }
 
+  async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
+    const paths = targetPath.split("/").map(d => slugify(d));
+    await this.store(stream, path.join(...paths));
+  }
+
   protected checkBucket(name: string): boolean {
     // console.log(name, this.buckets, this.buckets.indexOf(name));
     return this.buckets.indexOf(name) !== -1;
@@ -52,6 +57,8 @@ export abstract class AbstractStorage implements IStorage {
   protected abstract async store(filePath: string, targetFileName: string): Promise<void>;
 
   protected abstract async store(buffer: Buffer, targetFileName: string): Promise<void>;
+
+  protected abstract async store(stream: Readable, targetFileName: string): Promise<void>;
 
   abstract async createBucket(name: string): Promise<void>;
 

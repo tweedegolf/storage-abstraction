@@ -76,8 +76,9 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   // util members
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
+  protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }
@@ -89,9 +90,11 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       readStream = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readStream = new Readable();
-      readStream._read = () => {}; // _read is required but you can noop it
+      readStream._read = (): void => {}; // _read is required but you can noop it
       readStream.push(arg);
       readStream.push(null);
+    } else if (arg instanceof Readable) {
+      readStream = arg;
     }
     const writeStream = this.storage
       .bucket(this.bucketName)

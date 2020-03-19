@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-import fs from "fs";
+import os from "os";
+import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage } from "../src/types";
@@ -37,6 +38,15 @@ const test = async (storage: IStorage, message: string) => {
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
+
+  try {
+    const readStream = createReadStream(path.join(os.tmpdir(), "the-buck", "test.jpg"));
+    r = await storage.addFileFromReadable(readStream, "streamed-image.jpg");
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+  }
+
+  return;
 
   try {
     const readStream = await storage.getFileAsReadable("test.jpg", {
@@ -135,7 +145,7 @@ const test = async (storage: IStorage, message: string) => {
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
 
-const storage = new Storage(process.env.URL_AWS_4);
+const storage = new Storage(process.env.URL_AWS_1);
 // const storage = new Storage();
 test(storage, storage.getType());
 

@@ -133,9 +133,10 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     return this.buckets;
   }
 
-  protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer, targetPath: string): Promise<void> {
+  protected async store(stream: Readable, targetPath: string): Promise<void>;
+  protected async store(origPath: string, targetPath: string): Promise<void>;
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }
@@ -145,9 +146,11 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       readable = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readable = new Readable();
-      readable._read = () => {}; // _read is required but you can noop it
+      readable._read = (): void => {}; // _read is required but you can noop it
       readable.push(arg);
       readable.push(null);
+    } else if (arg instanceof Readable) {
+      readable = arg;
     }
     const params = {
       Bucket: this.bucketName,

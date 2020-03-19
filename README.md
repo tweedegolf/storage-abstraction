@@ -28,7 +28,7 @@ Example:
 ```typescript
 const config = {
   bucketName: "images",
-  directory: "/home/user/domains/my-site"
+  directory: "/home/user/domains/my-site",
 };
 const s = new Storage(config);
 ```
@@ -134,10 +134,24 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 ### getFileAsReadable
 
 ```typescript
-getFileAsReadable(name: string): Promise<Readable>;
+getFileAsReadable(name: string, options?: {start?: number, end?: number}): Promise<Readable>;
 ```
 
-Returns a file in the storage as a readable stream.
+Returns a file in the storage as a readable stream. You can specify a byte range by using the `options` argument, see these examples:
+
+```typescript
+getFileAsReadable("image.png"); // &rarr; reads whole file
+
+getFileAsReadable("image.png", {}); // &rarr; reads whole file
+
+getFileAsReadable("image.png", { start: 0 }); // &rarr; reads whole file
+
+getFileAsReadable("image.png", { start: 0, end: 2000 }); // &rarr; reads first 2000 bytes
+
+getFileAsReadable("image.png", { end: 2000 }); // &rarr; reads first 2000 bytes
+
+getFileAsReadable("image.png", { start: 2000 }); // &rarr; reads file from byte 2001
+```
 
 ### removeFile
 
@@ -161,7 +175,7 @@ Returns a list of all files in the currently selected bucket; for each file a tu
 switchStorage(config: StorageConfig): void;
 ```
 
-Switch to another storage type in an existing `Storage` instance at runtime. The config object is the same type of object that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances.
+Switch to another storage type in an existing `Storage` instance at runtime. The config object is the same type of object that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
 
 ## How it works
 
@@ -173,27 +187,9 @@ When you create a `Storage` instance you create a thin wrapper around one of the
 
 Let's call these classes the functional classes because they actually define the functionality of the API methods. The wrapper creates an instance of one of these functional classes based on the provided config object and then forwards every API call to this instance.
 
-This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except for the last one, `switchStorage`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchStorage` which is called by the constructor as well.
+This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except `switchStorage` and `getType`; these methods are implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from the named 2 extra functions.
 
 The functional classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer` and `addFileFromPath`. For the rest it contains stub methods that need to be overruled or extended by the functional subclasses.
-
-If your application doesn't need `switchStorage` you can also instantiate a functional class directly:
-
-```typescript
-// config is for Google Cloud storage
-const config = {
-  bucketName: "images",
-  projectId: "id-of-your-project",
-  keyFilename: "path/to/json/key-file"
-};
-// creates wrapper with `switchStorage` function
-const s1 = new Storage(config);
-
-// creates an instance directly:
-const s2 = new StorageGoogleCloud(config);
-```
-
-Note that `s1` and `s2` are not the same; the `s1` instance has a private member `storage` that is an instance of `StorageGoogleCloud`.
 
 More functional classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
 

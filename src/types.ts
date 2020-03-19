@@ -1,5 +1,13 @@
 import { Readable } from "stream";
 
+export type UploadOptions = {
+  gzip?: boolean;
+  contentType?: string;
+  metadata?: {
+    [key: string]: string;
+  };
+};
+
 export interface IStorage {
   /**
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
@@ -59,6 +67,12 @@ export interface IStorage {
    * @param targetPath: path to the file to save the buffer to, folders will be created automatically
    */
   addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void>;
+
+  /**
+   * @param stream: a read stream
+   * @param targetPath: path to the file to save the stream to, folders will be created automatically
+   */
+  addFileFromReadable(stream: Readable, targetPath: string, options?: UploadOptions): Promise<void>;
 
   /**
    * @param name: name of the file to be returned as a readable stream

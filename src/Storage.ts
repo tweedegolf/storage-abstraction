@@ -23,6 +23,32 @@ export class Storage implements IStorage {
     return this.storage.getType();
   }
 
+  public switchStorage(args?: string | StorageConfig): void {
+    if (typeof args === "string" || typeof args === "undefined") {
+      const config = parseUrlString(args);
+      const { type } = config;
+      if (type === StorageType.LOCAL) {
+        this.storage = new StorageLocal(config);
+      } else if (type === StorageType.S3) {
+        this.storage = new StorageAmazonS3(config);
+      } else if (type === StorageType.GCS) {
+        this.storage = new StorageGoogleCloud(config);
+      } else {
+        throw new Error("Not a supported configuration");
+      }
+    } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
+      this.storage = new StorageLocal(args as ConfigLocal);
+    } else if ((args as ConfigGoogleCloud).keyFilename) {
+      this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
+    } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
+      this.storage = new StorageAmazonS3(args as ConfigAmazonS3);
+    } else {
+      throw new Error("Not a supported configuration");
+    }
+  }
+
+  // all methods below are implementing IStorage
+
   async test(): Promise<void> {
     return this.storage.test();
   }
@@ -33,6 +59,10 @@ export class Storage implements IStorage {
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
     return this.storage.addFileFromPath(origPath, targetPath);
+  }
+
+  async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
+    return this.storage.addFileFromReadable(stream, targetPath);
   }
 
   async createBucket(name?: string): Promise<void> {
@@ -74,30 +104,6 @@ export class Storage implements IStorage {
 
   async selectBucket(name: string | null): Promise<void> {
     return this.storage.selectBucket(name);
-  }
-
-  public switchStorage(args?: string | StorageConfig): void {
-    if (typeof args === "string" || typeof args === "undefined") {
-      const config = parseUrlString(args);
-      const { type } = config;
-      if (type === StorageType.LOCAL) {
-        this.storage = new StorageLocal(config);
-      } else if (type === StorageType.S3) {
-        this.storage = new StorageAmazonS3(config);
-      } else if (type === StorageType.GCS) {
-        this.storage = new StorageGoogleCloud(config);
-      } else {
-        throw new Error("Not a supported configuration");
-      }
-    } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
-      this.storage = new StorageLocal(args as ConfigLocal);
-    } else if ((args as ConfigGoogleCloud).keyFilename) {
-      this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
-    } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
-      this.storage = new StorageAmazonS3(args as ConfigAmazonS3);
-    } else {
-      throw new Error("Not a supported configuration");
-    }
   }
 
   async sizeOf(name: string): Promise<number> {
