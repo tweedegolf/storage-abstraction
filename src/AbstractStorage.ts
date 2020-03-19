@@ -5,7 +5,7 @@ import { IStorage, StorageConfig, StorageType } from "./types";
 import { Storage } from ".";
 
 export abstract class AbstractStorage implements IStorage {
-  protected type: StorageType;
+  protected config: StorageConfig;
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
 
@@ -13,11 +13,13 @@ export abstract class AbstractStorage implements IStorage {
     if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
       this.bucketName = slugify(config.bucketName);
     }
-    this.type = config.type;
   }
 
-  getType(): StorageType {
-    return this.type;
+  introspect(key?: string): StorageConfig | StorageType | string {
+    if (key) {
+      return this.config[key];
+    }
+    return this.config;
   }
 
   async test(): Promise<void> {

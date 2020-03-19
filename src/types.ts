@@ -16,9 +16,11 @@ export interface IStorage {
   test(): Promise<void>;
 
   /**
-   * Returns the type of storage which is one of enum StorageType
+   * Returns an key value object that contains configuration information; can be used for
+   * debugging. Sensitive data is not listed. If you provide a value for `key` only the
+   * value of that will be returned
    */
-  getType(): StorageType;
+  introspect(key?: string): StorageConfig | StorageType | string;
 
   /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but

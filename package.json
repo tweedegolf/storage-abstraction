@@ -40,6 +40,7 @@
   },
   "scripts": {
     "test-await": "ts-node ./tests/test-await.ts",
+    "test-urls": "jasmine-ts",
     "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./tests/*.ts",
     "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
     "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
@@ -74,7 +75,8 @@
     "env": {
       "node": true,
       "browser": true,
-      "es6": true
+      "es6": true,
+      "jasmine": true
     },
     "globals": {},
     "extends": [

@@ -18,6 +18,9 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   constructor(config: StorageConfig) {
     super(config);
     this.storage = new GoogleCloudStorage(config as ConfigGoogleCloud);
+    const clone = { ...(config as ConfigGoogleCloud) };
+    // clone.keyFilename = "keyFilename present but hidden";
+    this.config = clone;
   }
 
   // After uploading a file to Google Storage it may take a while before the file

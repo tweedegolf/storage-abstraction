@@ -19,8 +19,8 @@ export class Storage implements IStorage {
     this.switchStorage(config);
   }
 
-  getType(): StorageType {
-    return this.storage.getType();
+  introspect(key?: string): StorageConfig | StorageType | string {
+    return this.storage.introspect(key);
   }
 
   public switchStorage(args?: string | StorageConfig): void {
@@ -87,7 +87,7 @@ export class Storage implements IStorage {
 
   async getFileAsReadable(
     name: string,
-    options: { start?: number; end?: number }
+    options?: { start?: number; end?: number }
   ): Promise<Readable> {
     const { start = 0, end } = options;
     console.log(start, end);

@@ -14,7 +14,8 @@ export class StorageLocal extends AbstractStorage implements IStorage {
 
   constructor(config: StorageConfig) {
     super(config);
-    const { directory, bucketName } = config as ConfigLocal;
+    this.config = config as ConfigLocal;
+    const { directory, bucketName } = this.config;
     this.directory = directory;
     if (typeof directory === "undefined" || directory === "") {
       this.directory = os.tmpdir();

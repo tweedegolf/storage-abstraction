@@ -21,7 +21,7 @@ export const parseUrlString = (url: string): StorageConfig => {
     type = url.substring(0, url.indexOf("://"));
     config = url.substring(url.indexOf("://") + 3);
   }
-  console.log("[URL]", url);
+  // console.log("[URL]", url);
   if (type === StorageType.LOCAL) {
     if (config === "") {
       return { type };
@@ -70,7 +70,7 @@ export const parseUrlString = (url: string): StorageConfig => {
       ...options,
     };
   } else if (type === StorageType.GCS) {
-    const slash = config.indexOf("/");
+    const slash = config.lastIndexOf("/");
     const colon = config.indexOf(":");
     let bucketName = "";
     let keyFilename = "";
@@ -83,12 +83,12 @@ export const parseUrlString = (url: string): StorageConfig => {
       keyFilename = config.substring(0, colon);
       projectId = config.substring(colon + 1, config.length);
     } else {
-      keyFilename = config.substring(0, config.length);
       const data = fs.readFileSync(config).toString("utf-8");
       const json = JSON.parse(data);
       projectId = json.project_id;
+      keyFilename = config.substring(0, config.length);
     }
-    console.log("[KF]", keyFilename, "[PI]", projectId, "[B]", bucketName);
+    // console.log("[KF]", keyFilename, "[PI]", projectId, "[B]", bucketName);
     return { type, keyFilename, projectId, bucketName };
   } else {
     throw new Error("Not a supported configuration");
