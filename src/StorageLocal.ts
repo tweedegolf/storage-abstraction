@@ -15,17 +15,8 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   constructor(config: StorageConfig) {
     super(config);
     this.config = config as ConfigLocal;
-    const { directory, bucketName } = this.config;
-    this.directory = directory;
-    if (typeof directory === "undefined" || directory === "") {
-      this.directory = os.tmpdir();
-    } else if (typeof bucketName === "undefined" || bucketName === "") {
-      this.bucketName = this.directory.substring(this.directory.lastIndexOf("/") + 1);
-      this.directory = this.directory.substring(0, this.directory.lastIndexOf("/"));
-    } else {
-      this.bucketName = bucketName;
-    }
-    // console.log("[DIR]", this.directory, "[B]", this.bucketName);
+    this.directory = this.config.directory;
+    this.bucketName = this.config.bucketName;
   }
 
   private async createDestination(targetPath: string): Promise<string> {
@@ -147,8 +138,7 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   async listBuckets(): Promise<string[]> {
     const files = await fs.promises.readdir(this.directory);
     const stats = await Promise.all(files.map(f => fs.promises.stat(path.join(this.directory, f))));
-    this.buckets = files.filter((f, i) => stats[i].isDirectory());
-    // console.log(files);
+    this.buckets = files.filter((_, i) => stats[i].isDirectory());
     return this.buckets;
   }
 

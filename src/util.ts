@@ -1,5 +1,18 @@
 import fs from "fs";
+import os from "os";
+import path from "path";
 import { StorageConfig, StorageType } from "./types";
+
+const allowedOptionsAmazonS3 = {
+  bucketName: "string",
+  endpoint: "string",
+  useDualstack: "boolean",
+  region: "string",
+  maxRetries: "number",
+  maxRedirects: "number",
+  sslEnabled: "boolean",
+  apiVersion: "string",
+};
 
 export const readFilePromise = (path: string): Promise<Buffer> =>
   new Promise(function(resolve, reject) {
@@ -24,35 +37,45 @@ export const parseUrlString = (url: string): StorageConfig => {
   // console.log("[URL]", url);
   if (type === StorageType.LOCAL) {
     if (config === "") {
-      return { type };
+      config = path.join(os.tmpdir(), "local-bucket");
     }
+    const directory = config.substring(0, config.lastIndexOf("/") + 1);
+    const bucketName = config.substring(config.lastIndexOf("/") + 1);
     return {
       type,
-      bucketName: url.substring(url.lastIndexOf("/") + 1),
-      directory: url.substring(0, url.lastIndexOf("/")),
+      directory,
+      bucketName,
     };
   } else if (type === StorageType.S3) {
-    // s3://key:secret@eu-west-2/the-buck
-    const credentials = config.substring(0, config.indexOf("@")).split(":");
+    const questionMark = config.indexOf("?");
+    const credentials = config
+      .substring(0, questionMark === -1 ? config.length : questionMark)
+      .split(":");
     const [accessKeyId, secretAccessKey] = credentials;
     // remove credentials
-    config = config.substring(config.indexOf("@") + 1);
-    const end = config.length;
-    const slash = config.indexOf("/");
-    const questionMark = config.indexOf("?");
-    const region = config.substring(0, slash !== -1 ? slash : end);
-    let bucketName = "";
     let options: { [key: string]: string } = {};
-    if (slash !== -1) {
-      bucketName = config.substring(slash + 1, questionMark !== -1 ? questionMark : end);
-    }
     if (questionMark !== -1) {
       options = config
         .substring(questionMark + 1)
         .split("&")
         .map(pair => pair.split("="))
         .reduce((acc, val) => {
-          acc[val[0]] = val[1];
+          const type = allowedOptionsAmazonS3[val[0]];
+          if (typeof type !== "undefined") {
+            const value = val[1];
+            if (type === "boolean") {
+              if (value === "true" || value === "false") {
+                acc[val[0]] = value === "true";
+              }
+            } else if (type === "number") {
+              const intVal = parseInt(value, 10);
+              if (!isNaN(intVal)) {
+                acc[val[0]] = intVal;
+              }
+            } else {
+              acc[val[0]] = val[1];
+            }
+          }
           return acc;
         }, {});
     }
@@ -63,8 +86,6 @@ export const parseUrlString = (url: string): StorageConfig => {
     return {
       accessKeyId,
       secretAccessKey,
-      bucketName,
-      region,
       type: StorageType.S3,
       apiVersion: "2006-03-01",
       ...options,
@@ -80,8 +101,7 @@ export const parseUrlString = (url: string): StorageConfig => {
       config = config.substring(0, slash);
     }
     if (colon !== -1) {
-      keyFilename = config.substring(0, colon);
-      projectId = config.substring(colon + 1, config.length);
+      [keyFilename, projectId] = config.split(":");
     } else {
       const data = fs.readFileSync(config).toString("utf-8");
       const json = JSON.parse(data);

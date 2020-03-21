@@ -32,16 +32,16 @@ const test = async (storage: IStorage, message: string) => {
     return;
   }
 
-  try {
-    r = await storage.selectBucket("the-buck");
-    console.log('select bucket "the-buck"');
-  } catch (e) {
-    console.error("\x1b[31m", e, "\n");
-  }
+  // try {
+  //   r = await storage.selectBucket("the-buck");
+  //   console.log('select bucket "the-buck"');
+  // } catch (e) {
+  //   console.error("\x1b[31m", e, "\n");
+  // }
 
   try {
     const readStream = createReadStream(path.join(os.tmpdir(), "the-buck", "test.jpg"));
-    r = await storage.addFileFromReadable(readStream, "streamed-image.jpg");
+    r = await storage.addFileFromReadable(readStream, "/streamed/streamed-image.jpg");
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
@@ -145,9 +145,10 @@ const test = async (storage: IStorage, message: string) => {
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
 
-const storage = new Storage(process.env.URL_AWS_1);
+const storage = new Storage(process.env.URL_LOC_3);
 // const storage = new Storage();
-test(storage, storage.getType());
+console.log(storage.introspect());
+test(storage, storage.introspect("type") as string);
 
 /* or run all tests */
 // test(new StorageLocal(configLocal), "test local")

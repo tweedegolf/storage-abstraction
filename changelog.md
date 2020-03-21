@@ -18,3 +18,4 @@
 - Optimized `getFileAsReadable` for Google Cloud
 - Implemented `addFileFromReadable`
 - Added config urls
+- When using `new Storage()` without config a local storage instance will be created that creates a folder called `local-bucket` the os' tmp folder and uses this folder as its selected bucket
