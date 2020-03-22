@@ -17,6 +17,10 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     this.config = config as ConfigLocal;
     this.directory = this.config.directory;
     this.bucketName = this.config.bucketName;
+    const exists = fs.existsSync(this.directory);
+    if (!exists) {
+      fs.mkdirSync(this.directory);
+    }
   }
 
   private async createDestination(targetPath: string): Promise<string> {

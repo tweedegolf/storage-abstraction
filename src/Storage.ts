@@ -87,10 +87,10 @@ export class Storage implements IStorage {
 
   async getFileAsReadable(
     name: string,
-    options?: { start?: number; end?: number }
+    options: { start?: number; end?: number } = {}
   ): Promise<Readable> {
     const { start = 0, end } = options;
-    console.log(start, end);
+    // console.log(start, end, options);
     return this.storage.getFileAsReadable(name, { start, end });
   }
 

@@ -1,4 +1,5 @@
 import "jasmine";
+import os from "os";
 import { Storage } from "../src/Storage";
 import { StorageType } from "../src/types";
 
@@ -169,21 +170,28 @@ describe(`testing local urls`, () => {
   it("[0]", () => {
     this.storage = new Storage("local://tests/tmp/the-buck");
     expect(this.storage.introspect("type")).toBe(StorageType.LOCAL);
-    expect(this.storage.introspect("directory")).toBe("tests/tmp/");
+    expect(this.storage.introspect("directory")).toBe("tests/tmp");
     expect(this.storage.introspect("bucketName")).toBe("the-buck");
   });
 
   it("[1]", () => {
     this.storage = new Storage("local://tests/tmp");
     expect(this.storage.introspect("type")).toBe(StorageType.LOCAL);
-    expect(this.storage.introspect("directory")).toBe("tests/");
+    expect(this.storage.introspect("directory")).toBe("tests");
     expect(this.storage.introspect("bucketName")).toBe("tmp");
   });
 
-  it("[2] no config", () => {
+  it("[2] store in tmp folder", () => {
+    this.storage = new Storage(`local://${os.tmpdir()}/the-buck`);
+    expect(this.storage.introspect("type")).toBe(StorageType.LOCAL);
+    expect(this.storage.introspect("directory")).toBe(os.tmpdir());
+    expect(this.storage.introspect("bucketName")).toBe("the-buck");
+  });
+
+  it("[3] no config", () => {
     this.storage = new Storage();
     expect(this.storage.introspect("type")).toBe(StorageType.LOCAL);
-    expect(this.storage.introspect("directory")).toBe("/tmp/");
+    expect(this.storage.introspect("directory")).toBe("/tmp");
     expect(this.storage.introspect("bucketName")).toBe("local-bucket");
   });
 });

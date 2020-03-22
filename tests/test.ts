@@ -4,7 +4,27 @@ import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage } from "../src/types";
+import { Readable, Writable } from "stream";
 dotenv.config();
+
+const copyFile = (readStream: Readable, writeStream: Writable): void => {
+  readStream
+    .pipe(writeStream)
+    .on("error", e => {
+      console.error("\x1b[31m", e, "\n");
+    })
+    .on("finish", () => {
+      console.log("read finished");
+    });
+  writeStream
+    .on("error", e => {
+      console.error("\x1b[31m", e, "\n");
+    })
+    .on("finish", () => {
+      console.log("write finished");
+    });
+};
+
 /*
 const configS3 = {
   // bucketName: process.env.STORAGE_BUCKETNAME,
@@ -16,14 +36,16 @@ const configGoogle = {
   projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
   keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE
 };
-const configLocal = {
-  // bucketName: process.env.STORAGE_BUCKETNAME,
-  directory: process.env.STORAGE_LOCAL_DIRECTORY
-};
 */
-const test = async (storage: IStorage, message: string) => {
+const configLocal = {
+  bucketName: "the-buck", //process.env.STORAGE_BUCKETNAME,
+  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+};
+
+const test = async (storage: IStorage, message: string): Promise<void> => {
   console.log("=>", message);
-  let r: any;
+  let r: any = "";
+  const bucket = storage.introspect("bucketName") as string;
 
   try {
     await storage.test();
@@ -32,49 +54,41 @@ const test = async (storage: IStorage, message: string) => {
     return;
   }
 
-  // try {
-  //   r = await storage.selectBucket("the-buck");
-  //   console.log('select bucket "the-buck"');
-  // } catch (e) {
-  //   console.error("\x1b[31m", e, "\n");
-  // }
-
   try {
-    const readStream = createReadStream(path.join(os.tmpdir(), "the-buck", "test.jpg"));
-    r = await storage.addFileFromReadable(readStream, "/streamed/streamed-image.jpg");
+    r = await storage.selectBucket(bucket);
+    console.log(`select bucket "${bucket}"`);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
 
-  return;
+  try {
+    const readStream = createReadStream(path.join("tests", "data", "image1.jpg"));
+    r = await storage.addFileFromReadable(readStream, "/test.jpg");
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+  }
 
   try {
     const readStream = await storage.getFileAsReadable("test.jpg", {
       end: 4000,
     });
     const p = path.join(__dirname, "test.jpg");
-    // console.log(p);
     const writeStream = fs.createWriteStream(p);
-    readStream
-      .pipe(writeStream)
-      .on("error", e => {
-        console.error("\x1b[31m", e, "\n");
-      })
-      .on("finish", () => {
-        console.log("read finished");
-      });
-    writeStream
-      .on("error", e => {
-        console.error("\x1b[31m", e, "\n");
-      })
-      .on("finish", () => {
-        console.log("write finished");
-      });
+    copyFile(readStream, writeStream);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
 
-  return;
+  try {
+    const readStream = await storage.getFileAsReadable("test.jpg");
+    const p = path.join(__dirname, "test.jpg");
+    const writeStream = fs.createWriteStream(p);
+    copyFile(readStream, writeStream);
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+  }
+
+  await fs.promises.unlink(path.join(__dirname, "test.jpg"));
 
   r = await storage.listBuckets();
   console.log("list buckets", r);
@@ -118,25 +132,9 @@ const test = async (storage: IStorage, message: string) => {
 
   await storage.addFileFromPath("./tests/data/image1.jpg", "tmp.jpg");
 
-  r = await new Promise(
-    async (resolve, reject): Promise<void> => {
-      const readStream = await storage.getFileAsReadable("tmp.jpg");
-      const p = path.join(__dirname, "test.jpg");
-      // console.log(p);
-      const writeStream = fs.createWriteStream(p);
-      readStream
-        .pipe(writeStream)
-        .on("error", reject)
-        .on("finish", resolve);
-      writeStream.on("error", reject).on("finish", () => {
-        console.log("write finished");
-      });
-    }
-  );
-  console.log("readstream error:", typeof r !== "undefined");
-
   r = await storage.deleteBucket("fnaap1");
   r = await storage.deleteBucket("fnaap2");
+  r = await storage.deleteBucket(bucket);
   console.log("\n");
 };
 
@@ -145,8 +143,7 @@ const test = async (storage: IStorage, message: string) => {
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
 
-const storage = new Storage(process.env.URL_LOC_3);
-// const storage = new Storage();
+const storage = new Storage(process.env.STORAGE_URL);
 console.log(storage.introspect());
 test(storage, storage.introspect("type") as string);
 
