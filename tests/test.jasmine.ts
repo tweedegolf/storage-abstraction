@@ -1,5 +1,4 @@
 import fs from "fs";
-import os from "os";
 import path from "path";
 import rimraf from "rimraf";
 import slugify from "slugify";
@@ -8,7 +7,6 @@ import { Storage } from "../src/Storage";
 import to from "await-to-js";
 import "jasmine";
 import {
-  IStorage,
   StorageConfig,
   StorageType,
   ConfigLocal,
@@ -63,6 +61,7 @@ xdescribe(`testing ${type} storage`, () => {
         fs.promises.unlink(path.join(localDir, "test.jpg"));
         rimraf(path.join(localDir, slugify(bucketName)), (e: Error) => {
           if (e) {
+            reject();
             throw e;
           } else {
             resolve();

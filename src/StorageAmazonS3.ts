@@ -15,6 +15,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     clone.accessKeyId = "key present but hidden";
     clone.secretAccessKey = "secret present but hidden";
     this.config = clone;
+    // console.log(config);
   }
 
   async getFileAsReadable(

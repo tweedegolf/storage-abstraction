@@ -47,13 +47,37 @@ export const parseUrlString = (url: string): StorageConfig => {
       bucketName,
     };
   } else if (type === StorageType.S3) {
-    const questionMark = config.indexOf("?");
-    const credentials = config
-      .substring(0, questionMark === -1 ? config.length : questionMark)
-      .split(":");
-    const [accessKeyId, secretAccessKey] = credentials;
-    // remove credentials
+    const at = config.indexOf("@");
+    let questionMark = config.indexOf("?");
+    let credentials: string[] = [];
+    let region = "";
+    let bucketName = "";
     let options: { [key: string]: string } = {};
+
+    if (at !== -1) {
+      credentials = config.substring(0, config.indexOf("@")).split(":");
+    } else {
+      const end = questionMark === -1 ? config.length : questionMark;
+      credentials = config.substring(0, end).split(":");
+    }
+    const [accessKeyId, secretAccessKey] = credentials;
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error("provide both an accessKeyId and a secretAccessKey!");
+    }
+
+    if (at !== -1) {
+      // remove credentials
+      config = config.substring(at + 1);
+      // position of question mark has shifted
+      questionMark = config.indexOf("?");
+      const end = config.length;
+      const slash = config.indexOf("/");
+      region = config.substring(0, slash !== -1 ? slash : end);
+      if (slash !== -1) {
+        bucketName = config.substring(slash + 1, questionMark !== -1 ? questionMark : end);
+      }
+    }
+
     if (questionMark !== -1) {
       options = config
         .substring(questionMark + 1)
@@ -80,14 +104,14 @@ export const parseUrlString = (url: string): StorageConfig => {
         }, {});
     }
     // console.log(accessKeyId, secretAccessKey, region, bucket, options);
-    if (!accessKeyId || !secretAccessKey) {
-      throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    }
     return {
       accessKeyId,
       secretAccessKey,
       type: StorageType.S3,
       apiVersion: "2006-03-01",
+      region,
+      bucketName,
+      // note: if region and bucketName are present in the options object they will overrule the earlier set values
       ...options,
     };
   } else if (type === StorageType.GCS) {
