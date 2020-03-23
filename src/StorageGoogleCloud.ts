@@ -9,10 +9,11 @@ import {
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage, ConfigGoogleCloud, StorageConfig } from "./types";
+import { IStorage, ConfigGoogleCloud, StorageConfig, StorageType } from "./types";
 import slugify from "slugify";
 
 export class StorageGoogleCloud extends AbstractStorage implements IStorage {
+  protected type = StorageType.GCS as string;
   private storage: GoogleCloudStorage;
 
   constructor(config: StorageConfig) {

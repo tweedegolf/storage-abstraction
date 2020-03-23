@@ -45,7 +45,7 @@ if (type === StorageType.LOCAL) {
 
 const storage = new Storage(config);
 
-xdescribe(`testing ${type} storage`, () => {
+describe(`testing ${type} storage`, () => {
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
   });

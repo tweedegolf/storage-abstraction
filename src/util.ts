@@ -25,7 +25,7 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
     });
   });
 
-export const parseUrlString = (url: string): StorageConfig => {
+export const parseUrlString = (url: string): [string, StorageConfig] => {
   let type = "";
   let config = "";
   if (url === "" || typeof url === "undefined") {
@@ -41,11 +41,13 @@ export const parseUrlString = (url: string): StorageConfig => {
     }
     const directory = config.substring(0, config.lastIndexOf("/"));
     const bucketName = config.substring(config.lastIndexOf("/") + 1);
-    return {
+    return [
       type,
-      directory,
-      bucketName,
-    };
+      {
+        directory,
+        bucketName,
+      },
+    ];
   } else if (type === StorageType.S3) {
     const at = config.indexOf("@");
     let questionMark = config.indexOf("?");
@@ -104,16 +106,18 @@ export const parseUrlString = (url: string): StorageConfig => {
         }, {});
     }
     // console.log(accessKeyId, secretAccessKey, region, bucket, options);
-    return {
-      accessKeyId,
-      secretAccessKey,
-      type: StorageType.S3,
-      apiVersion: "2006-03-01",
-      region,
-      bucketName,
-      // note: if region and bucketName are present in the options object they will overrule the earlier set values
-      ...options,
-    };
+    return [
+      type,
+      {
+        accessKeyId,
+        secretAccessKey,
+        apiVersion: "2006-03-01", // will be overruled if apiVersion is provided in the config
+        region,
+        bucketName,
+        // note: if region and bucketName are present in the options object they will overrule the earlier set values
+        ...options,
+      },
+    ];
   } else if (type === StorageType.GCS) {
     const slash = config.lastIndexOf("/");
     const colon = config.indexOf(":");
@@ -133,7 +137,7 @@ export const parseUrlString = (url: string): StorageConfig => {
       keyFilename = config.substring(0, config.length);
     }
     // console.log("[KF]", keyFilename, "[PI]", projectId, "[B]", bucketName);
-    return { type, keyFilename, projectId, bucketName };
+    return [type, { keyFilename, projectId, bucketName }];
   } else {
     throw new Error("Not a supported configuration");
   }

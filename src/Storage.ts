@@ -25,8 +25,7 @@ export class Storage implements IStorage {
 
   public switchStorage(args?: string | StorageConfig): void {
     if (typeof args === "string" || typeof args === "undefined") {
-      const config = parseUrlString(args);
-      const { type } = config;
+      const [type, config] = parseUrlString(args);
       if (type === StorageType.LOCAL) {
         this.storage = new StorageLocal(config);
       } else if (type === StorageType.S3) {

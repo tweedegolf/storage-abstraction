@@ -114,7 +114,6 @@ export enum StorageType {
 }
 
 export type ConfigAmazonS3 = {
-  type: StorageType.S3;
   bucketName?: string;
   accessKeyId: string;
   secretAccessKey: string;
@@ -128,14 +127,12 @@ export type ConfigAmazonS3 = {
 };
 
 export type ConfigGoogleCloud = {
-  type: StorageType.GCS;
   bucketName?: string;
   projectId: string;
   keyFilename: string;
 };
 
 export type ConfigLocal = {
-  type: StorageType.LOCAL;
   bucketName?: string;
   directory?: string;
 };

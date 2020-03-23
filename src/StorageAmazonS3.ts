@@ -3,9 +3,10 @@ import slugify from "slugify";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigAmazonS3, IStorage, StorageConfig } from "./types";
+import { ConfigAmazonS3, IStorage, StorageConfig, StorageType } from "./types";
 
 export class StorageAmazonS3 extends AbstractStorage implements IStorage {
+  protected type = StorageType.S3 as string;
   private storage: S3;
 
   constructor(config: StorageConfig) {

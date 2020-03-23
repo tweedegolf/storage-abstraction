@@ -5,6 +5,7 @@ import { IStorage, StorageConfig, StorageType } from "./types";
 import { Storage } from ".";
 
 export abstract class AbstractStorage implements IStorage {
+  protected type: string;
   protected config: StorageConfig;
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
@@ -15,8 +16,11 @@ export abstract class AbstractStorage implements IStorage {
     }
   }
 
-  introspect(key?: string): StorageConfig | StorageType | string {
+  introspect(key?: string): StorageConfig | string {
     if (key) {
+      if (key === "type") {
+        return this.type;
+      }
       return this.config[key];
     }
     return this.config;

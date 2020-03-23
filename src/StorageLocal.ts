@@ -6,10 +6,11 @@ import glob from "glob";
 import rimraf from "rimraf";
 import slugify from "slugify";
 import { Readable } from "stream";
-import { IStorage, ConfigLocal, StorageConfig } from "./types";
+import { IStorage, ConfigLocal, StorageConfig, StorageType } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
 
 export class StorageLocal extends AbstractStorage implements IStorage {
+  protected type = StorageType.LOCAL as string;
   private directory: string;
 
   constructor(config: StorageConfig) {

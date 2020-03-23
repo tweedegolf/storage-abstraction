@@ -17,7 +17,7 @@ Each type of storage requires a different configuration. You can provide the con
 1. as a configuration object
 2. as a url
 
-The only key that the configurations have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing files. If you don't set a value for `bucketName` you can only store and read files after you have selected a bucket by using `selectBucket`, see below.
+The only key that the configurations have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing and reading files. If you don't set a value for `bucketName` you can only store and read files after you have selected a bucket by using `selectBucket`, see below.
 
 All configuration urls start with a protocol:
 
@@ -27,11 +27,21 @@ All configuration urls start with a protocol:
 
 What follows after this protocol is the part that contains the configuration of the storage.
 
+Each storage instance has a member `type` whose value is one of the enum members of `StorageType`. You can query this value using the `introspect` method which is described below.
+
+```typescript
+enum StorageType {
+  GCS = "gcs",
+  S3 = "s3",
+  LOCAL = "local",
+}
+```
+
 ### Local storage
 
 ```typescript
-type config = {
-  bucketName?: string;
+type ConfigLocal = {
+  bucketName?: string; // if omitted this will be 'local-bucket'
   directory?: string; // if omitted the default TMP dir of the os will be used
 };
 ```
@@ -52,32 +62,31 @@ const s = new Storage(url);
 
 Files will be stored in `/home/user/domains/my-site/images`, folders will be created if necessary.
 
-Note that the configuration url contains 3 consecutive slashes; this is because the configuration tells us to store files in a subdirectory of the root directory. The same url with 2 slashes would store the files in a directory relative to the directory where the process that uses the storage abstraction runs:
+Note that the configuration url contains 3 consecutive slashes; this is because the configuration tells us to store files in a subdirectory of the root directory. The same url with 2 slashes would store the files in a directory relative to the directory where the process that uses the storage abstraction module runs, let's assume the process runs in `/usr/bin/node`:
 
 ```typescript
-// process runs in /usr/bin/node
 const url = "local://home/user/domains/my-site/images";
 const s = new Storage(url);
 ```
 
-Files will be stored in `/usr/bin/node/home/user/domains/my-site/images`.
+Files will now be stored in `/usr/bin/node/home/user/domains/my-site/images`.
 
-You can also create a local storage by not providing any configuration:
+You can also create a local storage by not providing any configuration at all:
 
 ```typescript
 const s = new Storage();
-console.log(s.introspect("type") as string); // logs: 'local'
+console.log(s.introspect("type")); // logs: 'local'
 console.log(s.introspect("bucketName")); // logs: 'local-bucket'
 ```
 
-Note that we have to cast `type` to `string` because the type of `type` is one of the enum `StorageType`. Also note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide any configuration this folder will be created in the tmp directory of your os. This way the contents of the bucket stays separated from the other files that might reside in the tmp folder.
+Note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide a bucket name this folder will be created for you in the tmp directory of your os. This way the contents of the bucket stays separated from the other files that might reside in the tmp folder.
 
 ### Google Cloud
 
 Config object:
 
 ```typescript
-type config = {
+type ConfigGoogleCloud = {
   bucketName?: string;
   projectId: string;
   keyFilename: string; // path to key-file.json,
@@ -103,10 +112,18 @@ console.log(s.introspect("projectId")); // logs the project id
 Config object:
 
 ```typescript
-type config = {
+type ConfigAmazonS3 = {
   bucketName?: string;
   accessKeyId: string;
   secretAccessKey: string;
+  // additional parameters
+  endpoint?: string;
+  useDualstack?: boolean;
+  region?: string;
+  maxRetries?: number;
+  maxRedirects?: number;
+  sslEnabled?: boolean;
+  apiVersion?: string;
 };
 ```
 
@@ -123,21 +140,7 @@ const url = "s3://key:secret@eu-west-2/the-buck?sslEnabled=true&useDualstack=tru
 const url = "s3://key:secret?region=eu-west-2&bucket=the-buck&sslEnabled=true&useDualstack=true";
 ```
 
-The additional parameters and their types are:
-
-```typescript
-const allowedOptionsAmazonS3  = {
-  endpoint: "string";
-  useDualstack: "boolean";
-  region: "string";
-  maxRetries: "number";
-  maxRedirects: "number";
-  sslEnabled: "boolean";
-  apiVersion: "string";
-};
-```
-
-All provided parameters will be typo- and type-checked:
+All provided additional parameters will be typo- and type-checked:
 
 ```typescript
 const url = "s3://key:secret?bucket=the-buck&endPoint=https://kms-fips.us-west-2.amazonaws.com";
@@ -294,11 +297,9 @@ Retrieves configuration settings from a storage. If you use it without arguments
 
 ```typescript
 const s = new Storage("local://my-folder/my-bucket");
-const type = s.introspect("type") as string; // local
+const type = s.introspect("type"); // local
 const bucketName = s.introspect("bucket"); // my-bucket
 ```
-
-Note that we have to cast `type` to `string` because the type of `type` is one of the enum `StorageType`.
 
 ### listFiles
 
