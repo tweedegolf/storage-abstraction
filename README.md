@@ -12,7 +12,20 @@ Because the API only provides basic storage operations (see [below](#api)) the A
 const s = new Storage(config);
 ```
 
-Each type of storage requires a different config object, the only key that these config objects have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing files. If you don't set a value for `bucketName` you can only store files after you have selected a bucket by using `selectBucket`, see below.
+Each type of storage requires a different configuration. You can provide the configuration in 2 forms:
+
+1. as a configuration object
+2. as a url
+
+The only key that the configurations have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing files. If you don't set a value for `bucketName` you can only store and read files after you have selected a bucket by using `selectBucket`, see below.
+
+All configuration urls start with a protocol:
+
+- `local://` for local storage
+- `gcs://` for Google Cloud
+- `s3://` for Amazon S3
+
+What follows after this protocol is the part that contains the configuration of the storage.
 
 ### Local storage
 
@@ -31,11 +44,37 @@ const config = {
   directory: "/home/user/domains/my-site",
 };
 const s = new Storage(config);
+
+// or
+const url = "local:///home/user/domains/my-site/images";
+const s = new Storage(url);
 ```
 
 Files will be stored in `/home/user/domains/my-site/images`, folders will be created if necessary.
 
+Note that the configuration url contains 3 consecutive slashes; this is because the configuration tells us to store files in a subdirectory of the root directory. The same url with 2 slashes would store the files in a directory relative to the directory where the process that uses the storage abstraction runs:
+
+```typescript
+// process runs in /usr/bin/node
+const url = "local://home/user/domains/my-site/images";
+const s = new Storage(url);
+```
+
+Files will be stored in `/usr/bin/node/home/user/domains/my-site/images`.
+
+You can also create a local storage by not providing any configuration:
+
+```typescript
+const s = new Storage();
+console.log(s.introspect("type") as string); // logs: 'local'
+console.log(s.introspect("bucketName")); // logs: 'local-bucket'
+```
+
+Note that we have to cast `type` to `string` because the type of `type` is one of the enum `StorageType`. Also note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide any configuration this folder will be created in the tmp directory of your os. This way the contents of the bucket stays separated from the other files that might reside in the tmp folder.
+
 ### Google Cloud
+
+Config object:
 
 ```typescript
 type config = {
@@ -45,7 +84,23 @@ type config = {
 };
 ```
 
+Configuration url:
+
+```typescript
+const url = "gcs://path/to/key_file.json:project_id/bucket_name";
+```
+
+If you omit the value for project id, the id will be read from the key file:
+
+```typescript
+const url = "gcs://path/to/key_file.json/bucket_name";
+const s = new Storage(url);
+console.log(s.introspect("projectId")); // logs the project id
+```
+
 ### Amazon S3
+
+Config object:
 
 ```typescript
 type config = {
@@ -53,6 +108,58 @@ type config = {
   accessKeyId: string;
   secretAccessKey: string;
 };
+```
+
+Configuration url:
+
+```typescript
+// basic
+const url = "s3://key:secret@eu-west-2/the-buck";
+
+// with additional parameters in query string
+const url = "s3://key:secret@eu-west-2/the-buck?sslEnabled=true&useDualstack=true";
+
+// using query string for all parameters
+const url = "s3://key:secret?region=eu-west-2&bucket=the-buck&sslEnabled=true&useDualstack=true";
+```
+
+The additional parameters and their types are:
+
+```typescript
+const allowedOptionsAmazonS3  = {
+  endpoint: "string";
+  useDualstack: "boolean";
+  region: "string";
+  maxRetries: "number";
+  maxRedirects: "number";
+  sslEnabled: "boolean";
+  apiVersion: "string";
+};
+```
+
+All provided parameters will be typo- and type-checked:
+
+```typescript
+const url = "s3://key:secret?bucket=the-buck&endPoint=https://kms-fips.us-west-2.amazonaws.com";
+const s = new Storage(s);
+console.log(s.introspect("endpoint")); // undefined because of typo: endPoint !== endpoint
+```
+
+If you provide a value for region or bucket name using both the `@` and the query string in your url, the latter values will prevail:
+
+```typescript
+const url = "s3://key:secret@us-east-1/bucket1?region=eu-west-2&bucketName=bucket2";
+const s = new Storage(url);
+// last values overrule earlier values:
+console.log(s.introspect("region")); // 'eu-west-2' (not 'us-east-1')
+console.log(s.introspect("bucketName")); // 'bucket2' (not 'bucket1')
+```
+
+You can omit the region in the `@` notation variant but you have to add a slash after the `@` because a secretAccessKey can contain slashes:
+
+```typescript
+const url1 = "s3://key:secret/can/contain/slashes@/the-buck"; // works!
+const url2 = "s3://key:secret/can/contain/slashes@the-buck"; // error
 ```
 
 <a name="api"></a>
@@ -126,10 +233,18 @@ Copies a file from a local path to the provided path in the storage. The value f
 ### addFileFromBuffer
 
 ```typescript
-addFileFromUpload(buffer: Buffer, targetPath: string): Promise<void>;
+addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void>;
 ```
 
 Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
+
+### addFileFromReadable
+
+```typescript
+addFileFromReadable(stream: Readable, targetPath: string): Promise<void>;
+```
+
+Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage.
 
 ### getFileAsReadable
 
@@ -160,6 +275,30 @@ removeFile(name: string): Promise<void>;
 ```
 
 Removes a file from the bucket. Does not fail if the file doesn't exist.
+
+### sizeOf
+
+```typescript
+sizeOf(name: string): number;
+```
+
+Returns the size of a file in the currently selected bucket and throws an error if no bucket has been selected.
+
+### introspect
+
+```typescript
+introspect(key?: string): string | StorageType | StorageConfig;
+```
+
+Retrieves configuration settings from a storage. If you use it without arguments it will return the complete configuration object. Sensitive values will not be shown. If you do provide an argument you can retrieve a specific value of the configuration.
+
+```typescript
+const s = new Storage("local://my-folder/my-bucket");
+const type = s.introspect("type") as string; // local
+const bucketName = s.introspect("bucket"); // my-bucket
+```
+
+Note that we have to cast `type` to `string` because the type of `type` is one of the enum `StorageType`.
 
 ### listFiles
 

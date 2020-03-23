@@ -56,7 +56,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
 
   // not in use
   async downloadFile(fileName: string, downloadPath: string): Promise<void> {
-    const file = await this.storage.bucket(this.bucketName).file(fileName);
+    const file = this.storage.bucket(this.bucketName).file(fileName);
     const localFilename = path.join(downloadPath, fileName);
     await file.download({ destination: localFilename });
   }

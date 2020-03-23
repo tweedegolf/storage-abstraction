@@ -8,14 +8,17 @@
 
 (Pull request #3)[https://github.com/tweedegolf/storage-abstraction/pull/3]
 
-- Implemented sizeOf, getFileByteRangeAsReadable
+- Implemented `sizeOf`, `getFileByteRangeAsReadable`
 - Improved AWS performance
 
 # 1.3.0
 
-- Merged `getFileByteRangeAsReadable` in `getFileAsReadable` by adding a range parameter
-- Removed option to instantiate a specific storage type; all instantiating must be done with `new Storage(config)`.
-- Optimized `getFileAsReadable` for Google Cloud
-- Implemented `addFileFromReadable`
-- Added config urls
-- When using `new Storage()` without config a local storage instance will be created that creates a folder called `local-bucket` the os' tmp folder and uses this folder as its selected bucket
+- Removed `getFileByteRangeAsReadable` and merged the functionality in `getFileAsReadable` by adding a range parameter `{start: number, end: number}`
+- Removed the option to instantiate a specific storage type directly; all instantiating must be done with `new Storage(config)`.
+- Optimized `getFileAsReadable` for Google Cloud.
+- Implemented `addFileFromReadable`, fixes [issue#2](https://github.com/tweedegolf/storage-abstraction/issues/2)
+- Added configuration urls: all configuration options in a single string.
+- When using `new Storage()` without configuration a local storage instance will be created that creates a folder called `local-bucket` in the os' tmp folder and uses this folder as its selected bucket.
+- Updated documentation.
+- Updated dependency version.
+- Added yarn.lock.
