@@ -39,12 +39,12 @@
     "typescript": "^3.7.3"
   },
   "scripts": {
-    "jasmine": "jasmine-ts",
     "test-await": "ts-node ./tests/test-await.ts",
-    "test-jasmine": "npm run test-urls && npm run test-local && npm run test-google && npm run test-amazon",
-    "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts",
-    "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts",
-    "test-local": "TYPE='TYPE_LOCAL' jasmine-ts",
+    "test-jasmine": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3",
+    "test-urls-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test-urls.jasmine.ts",
+    "test-local": "TYPE='local' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test": "ts-node ./tests/test.ts",
     "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",

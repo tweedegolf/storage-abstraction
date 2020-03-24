@@ -28,7 +28,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Key: fileName,
       Range: `bytes=${options.start}-${options.end}`,
     };
-    console.log(`bytes=${options.start}-${options.end}`);
+    // console.log(`bytes=${options.start}-${options.end}`);
     await this.storage.headObject(params).promise();
     return this.storage.getObject(params).createReadStream();
   }

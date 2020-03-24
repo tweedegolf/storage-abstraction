@@ -18,7 +18,9 @@
 - Optimized `getFileAsReadable` for Google Cloud.
 - Implemented `addFileFromReadable`, fixes [issue#2](https://github.com/tweedegolf/storage-abstraction/issues/2)
 - Added configuration urls: all configuration options in a single string.
-- When using `new Storage()` without configuration a local storage instance will be created that creates a folder called `local-bucket` in the os' tmp folder and uses this folder as its selected bucket.
+- When creating a local storage without specifying a directory, the directory where the process runs will be used (in earlier versions the os' tmp folder was used)
+- When creating a local storage without specifying a bucket name, a directory named `local-bucket` will be created and used as selected bucket.
+- When using `new Storage()` without configuration you create a local storage instance with the default configuration (as described in the 2 bullets above).
 - Updated documentation.
 - Updated dependency version.
 - Added yarn.lock.

@@ -10,7 +10,7 @@ import {
 import { StorageLocal } from "./StorageLocal";
 import { StorageAmazonS3 } from "./StorageAmazonS3";
 import { StorageGoogleCloud } from "./StorageGoogleCloud";
-import { parseUrlString } from "./util";
+import { parseUrlString, getGCSProjectId } from "./util";
 
 export class Storage implements IStorage {
   private storage: IStorage;
@@ -36,11 +36,37 @@ export class Storage implements IStorage {
         throw new Error("Not a supported configuration");
       }
     } else if ((args as ConfigGoogleCloud).keyFilename) {
-      this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
+      if (!(args as ConfigGoogleCloud).projectId) {
+        const { bucketName, keyFilename } = args as ConfigGoogleCloud;
+        const clone: ConfigGoogleCloud = {
+          bucketName,
+          keyFilename,
+          projectId: getGCSProjectId(keyFilename),
+        };
+        this.storage = new StorageGoogleCloud(clone);
+      } else {
+        this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
+      }
     } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
       this.storage = new StorageAmazonS3(args as ConfigAmazonS3);
     } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
-      this.storage = new StorageLocal(args as ConfigLocal);
+      let { directory, bucketName } = args as ConfigLocal;
+      if (!bucketName && !directory) {
+        directory = __dirname;
+        bucketName = "local-bucket";
+      } else if (!bucketName) {
+        if (directory.indexOf("/") !== -1) {
+          bucketName = directory.substring(directory.lastIndexOf("/") + 1);
+          directory = directory.substring(0, directory.lastIndexOf("/"));
+        } else {
+          directory = __dirname;
+          bucketName = directory;
+        }
+        if (directory === "") {
+          directory === __dirname;
+        }
+      }
+      this.storage = new StorageLocal({ directory, bucketName });
     } else {
       throw new Error("Not a supported configuration");
     }

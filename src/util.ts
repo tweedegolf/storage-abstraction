@@ -14,6 +14,12 @@ const allowedOptionsAmazonS3 = {
   apiVersion: "string",
 };
 
+export const getGCSProjectId = (config: string): string => {
+  const data = fs.readFileSync(config).toString("utf-8");
+  const json = JSON.parse(data);
+  return json.project_id;
+};
+
 export const readFilePromise = (path: string): Promise<Buffer> =>
   new Promise(function(resolve, reject) {
     fs.readFile(path, function(err, data) {
@@ -37,10 +43,10 @@ export const parseUrlString = (url: string): [string, StorageConfig] => {
   // console.log("[URL]", url);
   if (type === StorageType.LOCAL) {
     if (config === "") {
-      config = path.join(__dirname, "local-bucket");
+      config = path.join(".", "local-bucket");
     }
-    const directory = config.substring(0, config.lastIndexOf("/"));
-    const bucketName = config.substring(config.lastIndexOf("/") + 1);
+    const bucketName = path.basename(config);
+    const directory = path.dirname(config);
     return [
       type,
       {
@@ -131,9 +137,7 @@ export const parseUrlString = (url: string): [string, StorageConfig] => {
     if (colon !== -1) {
       [keyFilename, projectId] = config.split(":");
     } else {
-      const data = fs.readFileSync(config).toString("utf-8");
-      const json = JSON.parse(data);
-      projectId = json.project_id;
+      projectId = getGCSProjectId(config);
       keyFilename = config.substring(0, config.length);
     }
     // console.log("[KF]", keyFilename, "[PI]", projectId, "[B]", bucketName);

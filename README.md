@@ -31,9 +31,9 @@ Each storage instance has a member `type` whose value is one of the enum members
 
 ```typescript
 enum StorageType {
+  LOCAL = "local",
   GCS = "gcs",
   S3 = "s3",
-  LOCAL = "local",
 }
 ```
 
@@ -41,8 +41,8 @@ enum StorageType {
 
 ```typescript
 type ConfigLocal = {
-  bucketName?: string; // if omitted this will be 'local-bucket'
-  directory?: string; // if omitted the default TMP dir of the os will be used
+  bucketName?: string;
+  directory?: string;
 };
 ```
 
@@ -73,13 +73,45 @@ Files will now be stored in `/usr/bin/node/home/user/domains/my-site/images`.
 
 You can also create a local storage by not providing any configuration at all:
 
+bucketName?: string; // if omitted this will be the last folder of the provided directory
+directory?: string; // if omitted this will be the folder where the process runs
+
 ```typescript
 const s = new Storage();
 console.log(s.introspect("type")); // logs: 'local'
 console.log(s.introspect("bucketName")); // logs: 'local-bucket'
 ```
 
-Note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide a bucket name this folder will be created for you in the tmp directory of your os. This way the contents of the bucket stays separated from the other files that might reside in the tmp folder.
+Note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide a bucket name this folder will be created for you in the directory where the process runs.
+
+If you use a config object and you omit a value for `bucketName`, the last folder of the provided directory will be used. If you don't provide a value for `directory` either, you will get the same result as when you don't specify any configuration at all.
+
+```typescript
+const s = new Storage {
+  directory: "path/to/my/files",
+};
+s.introspect("directory"); // 'path/to/my/'
+s.introspect("bucketName"); // 'files'
+
+const s = new Storage {
+  directory: "files",
+};
+s.introspect("directory"); // folder where the process runs
+s.introspect("bucketName"); // 'files'
+
+const s = new Storage {
+  directory: "/files",
+};
+s.introspect("directory"); // '/'
+s.introspect("bucketName"); // 'files'
+
+const s = new Storage {
+  directory: "",
+  bucketName: "",
+};
+s.introspect("directory"); // folder where the process runs
+s.introspect("bucketName"); // 'local-bucket'
+```
 
 ### Google Cloud
 
