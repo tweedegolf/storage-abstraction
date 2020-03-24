@@ -15,51 +15,49 @@ import {
 } from "../src/types";
 dotenv.config();
 
-const type = process.env["TYPE"];
-if (!type) {
-  process.exit(1);
-}
 let config: StorageConfig;
-const localDir = __dirname;
-const bucketName = process.env.STORAGE_BUCKETNAME;
+const type = process.env["TYPE"];
 
 if (type === StorageType.LOCAL) {
   config = {
-    bucketName,
-    // directory: process.env.STORAGE_LOCAL_DIRECTORY,
-    directory: localDir,
+    bucketName: process.env.STORAGE_BUCKETNAME,
+    directory: process.env.STORAGE_LOCAL_DIRECTORY,
   } as ConfigLocal;
 } else if (type === StorageType.GCS) {
   config = {
-    bucketName,
+    bucketName: process.env.STORAGE_BUCKETNAME,
     projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
     keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
   } as ConfigGoogleCloud;
 } else if (type === StorageType.S3) {
   config = {
-    bucketName,
+    bucketName: process.env.STORAGE_BUCKETNAME,
     accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
   } as ConfigAmazonS3;
 }
 
 const storage = new Storage(config);
+console.log(storage.introspect());
+console.log();
 
-describe(`testing ${type} storage`, () => {
+describe(`testing ${storage.introspect()} storage`, () => {
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
   });
 
   afterAll(async () => {
-    // fs.promises.stat('tmp.jpg')
-    //   .then(() => fs.promises.unlink('tmp.jpg'))
-    //   .catch(e => {
-    //     throw e;
-    //   });
+    const testFile = path.join(__dirname, "test.jpg");
+    fs.promises
+      .stat(path.join(testFile))
+      .then(() => fs.promises.unlink(testFile))
+      .catch(e => {
+        console.log(e);
+      });
     if (storage.introspect("type") === StorageType.LOCAL) {
       await new Promise((resolve, reject) => {
-        fs.promises.unlink(path.join(localDir, "test.jpg"));
-        rimraf(path.join(localDir, slugify(bucketName)), (e: Error) => {
+        const dir = storage.introspect("directory") as string;
+        rimraf(path.join(dir, slugify(storage.introspect("bucketName") as string)), (e: Error) => {
           if (e) {
             reject();
             throw e;
@@ -81,7 +79,9 @@ describe(`testing ${type} storage`, () => {
   });
 
   it("create bucket", async () => {
-    await expectAsync(storage.createBucket(bucketName)).toBeResolved();
+    await expectAsync(
+      storage.createBucket(storage.introspect("bucketName") as string)
+    ).toBeResolved();
   });
 
   it("clear bucket", async () => {
@@ -151,7 +151,7 @@ describe(`testing ${type} storage`, () => {
   it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(localDir, "test.jpg");
+      const filePath = path.join(__dirname, "test.jpg");
       const writeStream = fs.createWriteStream(filePath);
       await new Promise((resolve, reject) => {
         readStream

@@ -1,6 +1,6 @@
 {
   "spec_dir": "spec",
-  "spec_files": ["../tests/test-urls.jasmine.ts"],
+  "spec_files": ["../tests/test.jasmine.ts", "../tests/test-urls.jasmine.ts"],
   "helpers": ["helpers/**/*.js"],
   "stopSpecOnExpectationFailure": false,
   "random": false

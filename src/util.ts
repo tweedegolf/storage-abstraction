@@ -37,7 +37,7 @@ export const parseUrlString = (url: string): [string, StorageConfig] => {
   // console.log("[URL]", url);
   if (type === StorageType.LOCAL) {
     if (config === "") {
-      config = path.join(os.tmpdir(), "local-bucket");
+      config = path.join(__dirname, "local-bucket");
     }
     const directory = config.substring(0, config.lastIndexOf("/"));
     const bucketName = config.substring(config.lastIndexOf("/") + 1);

@@ -41,17 +41,13 @@
   "scripts": {
     "test-await": "ts-node ./tests/test-await.ts",
     "test-jasmine": "npm run test-urls && npm run test-local && npm run test-google && npm run test-amazon",
-    "test-urls": "jasmine-ts",
-    "test-urls2": "ts-node ./tests/test-urls.ts",
-    "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts ./tests/*.ts",
-    "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts ./tests/*.ts",
-    "test-local": "TYPE='TYPE_LOCAL' jasmine-ts ./tests/*.ts",
+    "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts",
+    "test-amazon": "TYPE='TYPE_AMAZON_S3' jasmine-ts",
+    "test-local": "TYPE='TYPE_LOCAL' jasmine-ts",
     "test": "ts-node ./tests/test.ts",
-    "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
-    "copy": "cd ./example/backend && ./copy.sh",
+    "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",
-    "tsc:cp": "npm run tsc && npm run copy",
-    "tsc:watch": "tsc-watch --onSuccess 'npm run copy'",
+    "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
     "prepublishOnly": "npm run tsc"
   },
   "keywords": [
