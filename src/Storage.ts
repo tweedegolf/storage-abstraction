@@ -35,12 +35,12 @@ export class Storage implements IStorage {
       } else {
         throw new Error("Not a supported configuration");
       }
-    } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
-      this.storage = new StorageLocal(args as ConfigLocal);
     } else if ((args as ConfigGoogleCloud).keyFilename) {
       this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
     } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
       this.storage = new StorageAmazonS3(args as ConfigAmazonS3);
+    } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
+      this.storage = new StorageLocal(args as ConfigLocal);
     } else {
       throw new Error("Not a supported configuration");
     }

@@ -1,5 +1,4 @@
 import { Storage } from "../src/Storage";
-import { ConfigLocal } from "../src/types";
 
 const urlsGoogle = [
   "gcs://keyFile.json:appName/the-buck",
@@ -23,11 +22,8 @@ const urlsAmazon = [
 ];
 const urlsLocal = ["local://tests/tmp/the-buck", "local://tests/tmp", ""];
 
-const config: ConfigLocal = {
-  directory: "/tmp",
-  bucketName: "the-buck",
-};
-// const storage = new Storage(urlsAmazon[7]);
-const storage = new Storage(config);
+// replace with the url you want to test
+const url = urlsAmazon[7];
+const storage = new Storage(url);
 
 console.log(storage.introspect());

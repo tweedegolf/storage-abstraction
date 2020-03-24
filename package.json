@@ -39,6 +39,7 @@
     "typescript": "^3.7.3"
   },
   "scripts": {
+    "jasmine": "jasmine-ts",
     "test-await": "ts-node ./tests/test-await.ts",
     "test-jasmine": "npm run test-urls && npm run test-local && npm run test-google && npm run test-amazon",
     "test-google": "TYPE='TYPE_GOOGLE_CLOUD' jasmine-ts",
