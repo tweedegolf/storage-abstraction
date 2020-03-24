@@ -102,7 +102,7 @@ s.introspect("bucketName"); // 'files'
 const s = new Storage {
   directory: "/files",
 };
-s.introspect("directory"); // '/'
+s.introspect("directory"); // '/' root folder may require extra permissions
 s.introspect("bucketName"); // 'files'
 
 const s = new Storage {

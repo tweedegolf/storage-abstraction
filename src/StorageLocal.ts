@@ -16,13 +16,17 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   constructor(config: StorageConfig) {
     super(config);
     this.config = config as ConfigLocal;
-    console.log("constructor", config);
     this.directory = this.config.directory;
     this.bucketName = this.config.bucketName;
     const p = path.join(this.directory, this.bucketName);
     const exists = fs.existsSync(p);
+    // console.log("constructor", config, exists);
     if (!exists) {
-      fs.mkdirSync(p);
+      fs.mkdir(p, { recursive: true }, err => {
+        if (err) {
+          throw err;
+        }
+      });
     }
   }
 

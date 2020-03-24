@@ -71,23 +71,23 @@ const test = async (storage: IStorage): Promise<void> => {
     const readStream = await storage.getFileAsReadable("test.jpg", {
       end: 4000,
     });
-    const p = path.join(__dirname, "test-partial.jpg");
+    const p = path.join(process.cwd(), "test-partial.jpg");
     const writeStream = fs.createWriteStream(p);
     copyFile(readStream, writeStream);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
-  await fs.promises.unlink(path.join(__dirname, "test-partial.jpg"));
+  await fs.promises.unlink(path.join(process.cwd(), "test-partial.jpg"));
 
   try {
     const readStream = await storage.getFileAsReadable("test.jpg");
-    const p = path.join(__dirname, "test.jpg");
+    const p = path.join(process.cwd(), "test.jpg");
     const writeStream = fs.createWriteStream(p);
     copyFile(readStream, writeStream);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
-  await fs.promises.unlink(path.join(__dirname, "test.jpg"));
+  await fs.promises.unlink(path.join(process.cwd(), "test.jpg"));
 
   let buckets = await storage.listBuckets();
   console.log("list buckets", buckets);

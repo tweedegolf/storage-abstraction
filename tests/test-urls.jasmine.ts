@@ -182,9 +182,9 @@ describe(`testing local urls`, () => {
   });
 
   it("[2] store in folder where process runs", () => {
-    this.storage = new Storage(`local://${__dirname}/the-buck`);
+    this.storage = new Storage(`local://${process.cwd()}/the-buck`);
     expect(this.storage.introspect("type")).toBe(StorageType.LOCAL);
-    expect(this.storage.introspect("directory")).toBe(__dirname);
+    expect(this.storage.introspect("directory")).toBe(process.cwd());
     expect(this.storage.introspect("bucketName")).toBe("the-buck");
   });
 

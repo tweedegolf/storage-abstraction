@@ -71,7 +71,7 @@ describe(`testing ${storage.introspect("type")} storage`, () => {
 
   afterAll(async () => {
     // cleaning up test data
-    const testFile = path.join(__dirname, `test-${storage.introspect("type")}.jpg`);
+    const testFile = path.join(process.cwd(), `test-${storage.introspect("type")}.jpg`);
     fs.promises
       .stat(path.join(testFile))
       .then(() => fs.promises.unlink(testFile))
@@ -180,7 +180,7 @@ describe(`testing ${storage.introspect("type")} storage`, () => {
   it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(__dirname, `test-${storage.introspect("type")}.jpg`);
+      const filePath = path.join(process.cwd(), `test-${storage.introspect("type")}.jpg`);
       const writeStream = fs.createWriteStream(filePath);
       await new Promise((resolve, reject) => {
         readStream

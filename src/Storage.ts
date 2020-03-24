@@ -1,3 +1,4 @@
+import path from "path";
 import { Readable } from "stream";
 import {
   IStorage,
@@ -52,19 +53,13 @@ export class Storage implements IStorage {
     } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
       let { directory, bucketName } = args as ConfigLocal;
       if (!bucketName && !directory) {
-        directory = __dirname;
+        directory = process.cwd();
         bucketName = "local-bucket";
-      } else if (!bucketName) {
-        if (directory.indexOf("/") !== -1) {
-          bucketName = directory.substring(directory.lastIndexOf("/") + 1);
-          directory = directory.substring(0, directory.lastIndexOf("/"));
-        } else {
-          directory = __dirname;
-          bucketName = directory;
-        }
-        if (directory === "") {
-          directory === __dirname;
-        }
+      } else if (!bucketName && directory) {
+        bucketName = path.basename(directory);
+        directory = path.dirname(directory);
+      } else if (bucketName && !directory) {
+        directory = process.cwd();
       }
       this.storage = new StorageLocal({ directory, bucketName });
     } else {
