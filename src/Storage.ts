@@ -1,17 +1,10 @@
 import path from "path";
 import { Readable } from "stream";
-import {
-  IStorage,
-  StorageConfig,
-  StorageType,
-  ConfigLocal,
-  ConfigGoogleCloud,
-  ConfigAmazonS3,
-} from "./types";
+import { IStorage, StorageConfig, StorageType } from "./types";
 import { StorageLocal } from "./StorageLocal";
 import { StorageAmazonS3 } from "./StorageAmazonS3";
 import { StorageGoogleCloud } from "./StorageGoogleCloud";
-import { parseUrlString, getGCSProjectId } from "./util";
+import { parseConfig } from "./util";
 
 export class Storage implements IStorage {
   private storage: IStorage;
@@ -25,45 +18,13 @@ export class Storage implements IStorage {
   }
 
   public switchStorage(args?: string | StorageConfig): void {
-    if (typeof args === "string" || typeof args === "undefined") {
-      const [type, config] = parseUrlString(args);
-      if (type === StorageType.LOCAL) {
-        this.storage = new StorageLocal(config);
-      } else if (type === StorageType.S3) {
-        this.storage = new StorageAmazonS3(config);
-      } else if (type === StorageType.GCS) {
-        this.storage = new StorageGoogleCloud(config);
-      } else {
-        throw new Error("Not a supported configuration");
-      }
-    } else if ((args as ConfigGoogleCloud).keyFilename) {
-      if (!(args as ConfigGoogleCloud).projectId) {
-        const { bucketName, keyFilename } = args as ConfigGoogleCloud;
-        const clone: ConfigGoogleCloud = {
-          bucketName,
-          keyFilename,
-          projectId: getGCSProjectId(keyFilename),
-        };
-        this.storage = new StorageGoogleCloud(clone);
-      } else {
-        this.storage = new StorageGoogleCloud(args as ConfigGoogleCloud);
-      }
-    } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
-      this.storage = new StorageAmazonS3(args as ConfigAmazonS3);
-    } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
-      let { directory, bucketName } = args as ConfigLocal;
-      if (!bucketName && !directory) {
-        directory = process.cwd();
-        bucketName = "local-bucket";
-      } else if (!bucketName && directory) {
-        bucketName = path.basename(directory);
-        directory = path.dirname(directory);
-      } else if (bucketName && !directory) {
-        directory = process.cwd();
-      }
-      this.storage = new StorageLocal({ directory, bucketName });
-    } else {
-      throw new Error("Not a supported configuration");
+    const [type, config] = parseConfig(args);
+    if (type === StorageType.LOCAL) {
+      this.storage = new StorageLocal(config);
+    } else if (type === StorageType.S3) {
+      this.storage = new StorageAmazonS3(config);
+    } else if (type === StorageType.GCS) {
+      this.storage = new StorageGoogleCloud(config);
     }
   }
 
@@ -128,9 +89,5 @@ export class Storage implements IStorage {
 
   async sizeOf(name: string): Promise<number> {
     return this.storage.sizeOf(name);
-  }
-
-  async addFileFromReadStream(stream: Readable, targetPath: string): Promise<void> {
-    // to be implemented
   }
 }

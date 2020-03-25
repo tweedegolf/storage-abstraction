@@ -1,5 +1,4 @@
 import fs from "fs";
-import os from "os";
 import path from "path";
 import to from "await-to-js";
 import glob from "glob";
@@ -18,16 +17,6 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     this.config = config as ConfigLocal;
     this.directory = this.config.directory;
     this.bucketName = this.config.bucketName;
-    const p = path.join(this.directory, this.bucketName);
-    const exists = fs.existsSync(p);
-    // console.log("constructor", config, exists);
-    if (!exists) {
-      fs.mkdir(p, { recursive: true }, err => {
-        if (err) {
-          throw err;
-        }
-      });
-    }
   }
 
   private async createDestination(targetPath: string): Promise<string> {

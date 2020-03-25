@@ -1,7 +1,12 @@
 import fs from "fs";
-import os from "os";
 import path from "path";
-import { StorageConfig, StorageType } from "./types";
+import {
+  StorageConfig,
+  StorageType,
+  ConfigGoogleCloud,
+  ConfigAmazonS3,
+  ConfigLocal,
+} from "./types";
 
 const allowedOptionsAmazonS3 = {
   bucketName: "string",
@@ -14,22 +19,26 @@ const allowedOptionsAmazonS3 = {
   apiVersion: "string",
 };
 
-export const getGCSProjectId = (config: string): string => {
+// get the project_id from the keyFile
+const getGCSProjectId = (config: string): string => {
   const data = fs.readFileSync(config).toString("utf-8");
   const json = JSON.parse(data);
   return json.project_id;
 };
 
-export const readFilePromise = (path: string): Promise<Buffer> =>
-  new Promise(function(resolve, reject) {
-    fs.readFile(path, function(err, data) {
+// create local bucket if it doesn't exist
+const createLocalBucket = (directory: string, bucketName: string): void => {
+  const p = path.join(directory, bucketName);
+  const exists = fs.existsSync(p);
+  // console.log("constructor", config, exists);
+  if (!exists) {
+    fs.mkdir(p, { recursive: true }, err => {
       if (err) {
-        reject(err);
-      } else {
-        resolve(data);
+        throw err;
       }
     });
-  });
+  }
+};
 
 export const parseUrlString = (url: string): [string, StorageConfig] => {
   let type = "";
@@ -47,6 +56,7 @@ export const parseUrlString = (url: string): [string, StorageConfig] => {
     }
     const bucketName = path.basename(config);
     const directory = path.dirname(config);
+    createLocalBucket(directory, bucketName);
     return [
       type,
       {
@@ -146,3 +156,49 @@ export const parseUrlString = (url: string): [string, StorageConfig] => {
     throw new Error("Not a supported configuration");
   }
 };
+
+export const parseConfig = (args: string | StorageConfig): [string, StorageConfig] => {
+  if (typeof args === "string" || typeof args === "undefined") {
+    return parseUrlString(args);
+  }
+  if ((args as ConfigGoogleCloud).keyFilename) {
+    if (!(args as ConfigGoogleCloud).projectId) {
+      const { bucketName, keyFilename } = args as ConfigGoogleCloud;
+      const clone: ConfigGoogleCloud = {
+        bucketName,
+        keyFilename,
+        projectId: getGCSProjectId(keyFilename),
+      };
+      return [StorageType.GCS, clone];
+    }
+    return [StorageType.GCS, args];
+  } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
+    return [StorageType.S3, args];
+  } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
+    let { directory, bucketName } = args as ConfigLocal;
+    if (!bucketName && !directory) {
+      directory = process.cwd();
+      bucketName = "local-bucket";
+    } else if (!bucketName && directory) {
+      bucketName = path.basename(directory);
+      directory = path.dirname(directory);
+    } else if (bucketName && !directory) {
+      directory = process.cwd();
+    }
+    createLocalBucket(directory, bucketName);
+    return [StorageType.LOCAL, { directory, bucketName }];
+  } else {
+    throw new Error("Not a supported configuration");
+  }
+};
+
+export const readFilePromise = (path: string): Promise<Buffer> =>
+  new Promise(function(resolve, reject) {
+    fs.readFile(path, function(err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });

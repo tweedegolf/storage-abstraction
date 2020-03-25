@@ -25,3 +25,8 @@
 - Updated dependency version.
 - Added yarn.lock.
 - Renamed 'functional classes' to 'adapter classes'
+
+# 1.3.1
+
+- Removed sloppy code: parsing and validation of configuration is now done in one [place](https://github.com/tweedegolf/storage-abstraction/blob/master/src/util.ts).
+- Removed jasmine-ts dependency
