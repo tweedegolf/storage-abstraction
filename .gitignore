@@ -1,7 +1,8 @@
 .vscode
 dist
-node_modules/
-sensitive/
-tests/data/
+node_modules
+sensitive
+tests/data
+tests/tmp
 .env
 .idea

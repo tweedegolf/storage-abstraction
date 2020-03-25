@@ -1,5 +1,4 @@
 import "jasmine";
-import path from "path";
 import { Storage } from "../src/Storage";
 import { StorageType } from "../src/types";
 
@@ -191,7 +190,7 @@ describe(`testing local urls`, () => {
   it("[3] no config", () => {
     this.storage = new Storage();
     expect(this.storage.introspect("type")).toBe(StorageType.LOCAL);
-    expect(this.storage.introspect("directory")).toBe(path.resolve("src"));
+    expect(this.storage.introspect("directory")).toBe(process.cwd());
     expect(this.storage.introspect("bucketName")).toBe("local-bucket");
   });
 });
