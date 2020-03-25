@@ -1,11 +1,7 @@
-node_modules/
-example/frontend/.cache/
-example/frontend/public/
-**/.env
-example/backend/media/
-**/da2719acad70.json
-dist
 .vscode
-tests/test.jpg
-tests/tmp/
+dist
+node_modules/
+sensitive/
+tests/data/
+.env
 .idea

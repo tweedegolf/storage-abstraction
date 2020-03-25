@@ -1,5 +1,12 @@
 import { Readable } from "stream";
-import { bool } from "aws-sdk/clients/signer";
+
+export type UploadOptions = {
+  gzip?: boolean;
+  contentType?: string;
+  metadata?: {
+    [key: string]: string;
+  };
+};
 
 export interface IStorage {
   /**
@@ -7,6 +14,13 @@ export interface IStorage {
    * if it fails and if so, it throws an error.
    */
   test(): Promise<void>;
+
+  /**
+   * Returns an key value object that contains configuration information; can be used for
+   * debugging. Sensitive data is not listed. If you provide a value for `key` only the
+   * value of that will be returned
+   */
+  introspect(key?: string): StorageConfig | string;
 
   /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but
@@ -57,19 +71,22 @@ export interface IStorage {
   addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void>;
 
   /**
-   * @param name: name of the file to be returned as a readable stream
+   * @param stream: a read stream
+   * @param targetPath: path to the file to save the stream to, folders will be created automatically
    */
-  getFileAsReadable(name: string): Promise<Readable>;
+  addFileFromReadable(stream: Readable, targetPath: string, options?: UploadOptions): Promise<void>;
 
   /**
    * @param name: name of the file to be returned as a readable stream
-   * @param start: the first byte to return from
-   * @param length?: the number of bytes to return from the start
+   * @param start?: the byte of the file where the stream starts (default: 0)
+   * @param end?: the byte in the file where the stream ends (default: last byte of file)
    */
-  getFileByteRangeAsReadable(
+  getFileAsReadable(
     name: string,
-    start: number,
-    length?: number
+    options?: {
+      start?: number;
+      end?: number;
+    }
   ): Promise<Readable>;
 
   /**
@@ -90,6 +107,12 @@ export interface IStorage {
   sizeOf(name: string): Promise<number>;
 }
 
+export enum StorageType {
+  GCS = "gcs",
+  S3 = "s3",
+  LOCAL = "local",
+}
+
 export type ConfigAmazonS3 = {
   bucketName?: string;
   accessKeyId: string;
@@ -100,6 +123,7 @@ export type ConfigAmazonS3 = {
   maxRetries?: number;
   maxRedirects?: number;
   sslEnabled?: boolean;
+  apiVersion?: string;
 };
 
 export type ConfigGoogleCloud = {

@@ -1,12 +1,8 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "es2016"
-    ],
-    "types": [
-      "reflect-metadata",
-    ],
+    "lib": ["es2016"],
+    // "types": ["reflect-metadata"],
     "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
@@ -19,14 +15,6 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "examples",
-    "tests",
-    "spec",
-    "dist"
-  ]
+  "include": ["src/*.ts"],
+  "exclude": ["node_modules", "examples", "tests", "spec", "dist"]
 }

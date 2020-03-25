@@ -3,26 +3,25 @@ import path from "path";
 import { zip } from "ramda";
 import to from "await-to-js";
 import { Readable } from "stream";
-import { Storage as GoogleCloudStorage, File } from "@google-cloud/storage";
+import {
+  Storage as GoogleCloudStorage,
+  File,
+  CreateReadStreamOptions,
+} from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage, ConfigGoogleCloud } from "./types";
+import { IStorage, ConfigGoogleCloud, StorageConfig, StorageType } from "./types";
 import slugify from "slugify";
 
 export class StorageGoogleCloud extends AbstractStorage implements IStorage {
+  protected type = StorageType.GCS as string;
   private storage: GoogleCloudStorage;
-  protected bucketName: string;
 
-  constructor(config: ConfigGoogleCloud) {
+  constructor(config: StorageConfig) {
     super(config);
-    const { projectId, keyFilename } = config;
-    if (!projectId || !keyFilename) {
-      throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    }
-
-    this.storage = new GoogleCloudStorage({
-      projectId,
-      keyFilename
-    });
+    this.storage = new GoogleCloudStorage(config as ConfigGoogleCloud);
+    const clone = { ...(config as ConfigGoogleCloud) };
+    // clone.keyFilename = "keyFilename present but hidden";
+    this.config = clone;
   }
 
   // After uploading a file to Google Storage it may take a while before the file
@@ -39,21 +38,26 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       return this.getFile(fileName, r);
     }
     if (!exists) {
-      throw new Error(
-        `File ${fileName} could not be retrieved from bucket ${this.bucketName}`
-      );
+      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
     }
     return file;
   }
 
-  async getFileAsReadable(fileName: string): Promise<Readable> {
-    const file = await this.getFile(fileName);
-    return file.createReadStream();
+  async getFileAsReadable(
+    fileName: string,
+    options: CreateReadStreamOptions = { start: 0 }
+  ): Promise<Readable> {
+    const file = this.storage.bucket(this.bucketName).file(fileName);
+    const [exists] = await file.exists();
+    if (exists) {
+      return file.createReadStream(options);
+    }
+    throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
   }
 
   // not in use
   async downloadFile(fileName: string, downloadPath: string): Promise<void> {
-    const file = await this.storage.bucket(this.bucketName).file(fileName);
+    const file = this.storage.bucket(this.bucketName).file(fileName);
     const localFilename = path.join(downloadPath, fileName);
     await file.download({ destination: localFilename });
   }
@@ -76,11 +80,9 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   // util members
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
+  protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(
-    arg: string | Buffer,
-    targetPath: string
-  ): Promise<void> {
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }
@@ -92,9 +94,11 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       readStream = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readStream = new Readable();
-      readStream._read = () => {}; // _read is required but you can noop it
+      readStream._read = (): void => {}; // _read is required but you can noop it
       readStream.push(arg);
       readStream.push(null);
+    } else if (arg instanceof Readable) {
+      readStream = arg;
     }
     const writeStream = this.storage
       .bucket(this.bucketName)
@@ -173,7 +177,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     return this.buckets;
   }
 
-  private async getMetaData(files: string[]) {
+  private async getMetaData(files: string[]): Promise<number[]> {
     const sizes: number[] = [];
     for (let i = 0; i < files.length; i += 1) {
       const file = this.storage.bucket(this.bucketName).file(files[i]);
@@ -201,21 +205,5 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();
     return parseInt(metadata.size, 10);
-  }
-
-  async getFileByteRangeAsReadable(
-    name: string,
-    start: number,
-    length?: number
-  ): Promise<Readable> {
-    let readLength = length;
-    if (readLength == null) {
-      readLength = await this.sizeOf(name);
-    } else {
-      readLength += start;
-    }
-
-    const file = await this.getFile(name);
-    return file.createReadStream({ start, end: readLength });
   }
 }

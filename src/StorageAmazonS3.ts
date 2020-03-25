@@ -3,51 +3,32 @@ import slugify from "slugify";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigAmazonS3, IStorage } from "./types";
+import { ConfigAmazonS3, IStorage, StorageConfig, StorageType } from "./types";
 
 export class StorageAmazonS3 extends AbstractStorage implements IStorage {
+  protected type = StorageType.S3 as string;
   private storage: S3;
-  protected bucketName: string;
 
-  constructor(config: ConfigAmazonS3) {
+  constructor(config: StorageConfig) {
     super(config);
-    const { accessKeyId, secretAccessKey } = config;
-    if (!accessKeyId || !secretAccessKey) {
-      throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    }
-    this.storage = new S3({
-      ...config,
-      apiVersion: "2006-03-01"
-    });
+    this.storage = new S3(config as ConfigAmazonS3);
+    const clone = { ...(config as ConfigAmazonS3) };
+    clone.accessKeyId = "key present but hidden";
+    clone.secretAccessKey = "secret present but hidden";
+    this.config = clone;
+    // console.log(config);
   }
 
-  async getFileAsReadable(fileName: string): Promise<Readable> {
-    const params = {
-      Bucket: this.bucketName,
-      Key: fileName
-    };
-    await this.storage.headObject(params).promise();
-    return this.storage.getObject(params).createReadStream();
-  }
-
-  async getFileByteRangeAsReadable(
+  async getFileAsReadable(
     fileName: string,
-    start: number,
-    length?: number
+    options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
-    let readLength = length;
-    if (readLength == null) {
-      readLength = await this.sizeOf(fileName);
-    } else {
-      readLength += start;
-    }
-
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${start}-${readLength}`
+      Range: `bytes=${options.start}-${options.end}`,
     };
-
+    // console.log(`bytes=${options.start}-${options.end}`);
     await this.storage.headObject(params).promise();
     return this.storage.getObject(params).createReadStream();
   }
@@ -55,7 +36,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   async removeFile(fileName: string): Promise<void> {
     const params = {
       Bucket: this.bucketName,
-      Key: fileName
+      Key: fileName,
     };
     await this.storage.deleteObject(params).promise();
   }
@@ -104,11 +85,9 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
-      MaxKeys: 1000
+      MaxKeys: 1000,
     };
-    const { Contents: content } = await this.storage
-      .listObjects(params1)
-      .promise();
+    const { Contents: content } = await this.storage.listObjects(params1).promise();
     if (content.length === 0) {
       return;
     }
@@ -117,8 +96,8 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       Bucket: n,
       Delete: {
         Objects: content.map(value => ({ Key: value.Key })),
-        Quiet: false
-      }
+        Quiet: false,
+      },
     };
     await this.storage.deleteObjects(params2).promise();
   }
@@ -138,7 +117,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       await this.clearBucket(name);
       const result = await this.storage
         .deleteBucket({
-          Bucket: n
+          Bucket: n,
         })
         .promise();
       if (n === this.bucketName) {
@@ -160,12 +139,10 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     return this.buckets;
   }
 
-  protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(
-    arg: string | Buffer,
-    targetPath: string
-  ): Promise<void> {
+  protected async store(stream: Readable, targetPath: string): Promise<void>;
+  protected async store(origPath: string, targetPath: string): Promise<void>;
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }
@@ -175,14 +152,16 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       readable = fs.createReadStream(arg);
     } else if (arg instanceof Buffer) {
       readable = new Readable();
-      readable._read = () => {}; // _read is required but you can noop it
+      readable._read = (): void => {}; // _read is required but you can noop it
       readable.push(arg);
       readable.push(null);
+    } else if (arg instanceof Readable) {
+      readable = arg;
     }
     const params = {
       Bucket: this.bucketName,
       Key: targetPath,
-      Body: readable
+      Body: readable,
     };
     await this.storage.upload(params).promise();
   }
@@ -193,18 +172,19 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     }
     const params = {
       Bucket: this.bucketName,
-      MaxKeys: maxFiles
+      MaxKeys: maxFiles,
     };
-    const { Contents: content } = await this.storage
-      .listObjects(params)
-      .promise();
+    const { Contents: content } = await this.storage.listObjects(params).promise();
     return content.map(o => [o.Key, o.Size]) as [string, number][];
   }
 
   async sizeOf(name: string): Promise<number> {
+    if (this.bucketName === null) {
+      throw new Error("Please select a bucket first");
+    }
     const params = {
       Bucket: this.bucketName,
-      Key: name
+      Key: name,
     };
     return await this.storage
       .headObject(params)

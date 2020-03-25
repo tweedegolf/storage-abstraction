@@ -1,13 +1,14 @@
 import { Storage } from "./Storage";
-import { StorageLocal } from "./StorageLocal";
-import { StorageAmazonS3 } from "./StorageAmazonS3";
-import { StorageGoogleCloud } from "./StorageGoogleCloud";
-import { StorageConfig } from "./types";
+// import { StorageLocal } from "./StorageLocal";
+// import { StorageAmazonS3 } from "./StorageAmazonS3";
+// import { StorageGoogleCloud } from "./StorageGoogleCloud";
+import { StorageConfig, StorageType } from "./types";
 
 export {
   StorageConfig,
+  StorageType,
   Storage,
-  StorageLocal,
-  StorageAmazonS3,
-  StorageGoogleCloud
+  // StorageLocal,
+  // StorageAmazonS3,
+  // StorageGoogleCloud,
 };
