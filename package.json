@@ -47,8 +47,7 @@
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test": "ts-node ./tests/test.ts",
     "test-urls": "ts-node ./tests/test-urls.ts",
-    "tsc": "node_modules/.bin/tsc",
-    "tsc2": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist index.ts",
+    "tsc": "node_modules/.bin/tsc --module commonjs --esModuleInterop --declaration --outDir dist ./src/index.ts",
     "prepublishOnly": "npm run tsc"
   },
   "keywords": [

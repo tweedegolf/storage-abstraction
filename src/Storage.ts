@@ -20,7 +20,7 @@ export class Storage implements IStorage {
     this.switchStorage(config);
   }
 
-  introspect(key?: string): StorageConfig | StorageType | string {
+  introspect(key?: string): StorageConfig | string {
     return this.storage.introspect(key);
   }
 

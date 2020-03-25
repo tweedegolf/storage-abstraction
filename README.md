@@ -14,8 +14,8 @@ const s = new Storage(config);
 
 Each type of storage requires a different configuration. You can provide the configuration in 2 forms:
 
-1. as a configuration object
-2. as a url
+1. as a configuration object (js: `typeof === "object"` ts: `StorageConfig`)
+2. as a url (`typeof === "string"`)
 
 The only key that the configurations have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing and reading files. If you don't set a value for `bucketName` you can only store and read files after you have selected a bucket by using `selectBucket`, see below.
 
@@ -36,6 +36,8 @@ enum StorageType {
   S3 = "s3",
 }
 ```
+
+<a name="local-storage"></a>
 
 ### Local storage
 
@@ -73,45 +75,48 @@ Files will now be stored in `/usr/bin/node/home/user/domains/my-site/images`.
 
 You can also create a local storage by not providing any configuration at all:
 
-bucketName?: string; // if omitted this will be the last folder of the provided directory
-directory?: string; // if omitted this will be the folder where the process runs
-
 ```typescript
 const s = new Storage();
 console.log(s.introspect("type")); // logs: 'local'
 console.log(s.introspect("bucketName")); // logs: 'local-bucket'
 ```
 
-Note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide a bucket name this folder will be created for you in the directory where the process runs.
+Note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide a bucket name this folder will be created for you in the directory where the process runs (`process.cwd()`).
 
 If you use a config object and you omit a value for `bucketName`, the last folder of the provided directory will be used. If you don't provide a value for `directory` either, you will get the same result as when you don't specify any configuration at all.
 
 ```typescript
+// example #1
 const s = new Storage {
   directory: "path/to/my/files",
 };
-s.introspect("directory"); // 'path/to/my/'
+s.introspect("directory");  // 'path/to/my/'
 s.introspect("bucketName"); // 'files'
 
+// example #2
 const s = new Storage {
   directory: "files",
 };
-s.introspect("directory"); // folder where the process runs
+s.introspect("directory");  // folder where the process runs, process.cwd()
 s.introspect("bucketName"); // 'files'
 
+// example #3
 const s = new Storage {
   directory: "/files",
 };
-s.introspect("directory"); // '/' root folder may require extra permissions
+s.introspect("directory");  // '/' root folder (may require extra permissions)
 s.introspect("bucketName"); // 'files'
 
+// example #4
 const s = new Storage {
   directory: "",
   bucketName: "",
 };
-s.introspect("directory"); // folder where the process runs
+s.introspect("directory");  // folder where the process runs
 s.introspect("bucketName"); // 'local-bucket'
 ```
+
+<a name="google-cloud"></a>
 
 ### Google Cloud
 
@@ -120,7 +125,7 @@ Config object:
 ```typescript
 type ConfigGoogleCloud = {
   bucketName?: string;
-  projectId: string;
+  projectId?: string;
   keyFilename: string; // path to key-file.json,
 };
 ```
@@ -134,10 +139,16 @@ const url = "gcs://path/to/key_file.json:project_id/bucket_name";
 If you omit the value for project id, the id will be read from the key file:
 
 ```typescript
-const url = "gcs://path/to/key_file.json/bucket_name";
-const s = new Storage(url);
-console.log(s.introspect("projectId")); // logs the project id
+// url
+const s1 = new Storage("gcs://path/to/key_file.json/bucket_name");
+console.log(s1.introspect("projectId")); // logs the project id
+
+// config object
+const s2 = new Storage({ keyFilename: "path/to/key_file.json" });
+console.log(s2.introspect("projectId")); // logs the project id
 ```
+
+<a name="amazon-s3"></a>
 
 ### Amazon S3
 
@@ -162,10 +173,10 @@ type ConfigAmazonS3 = {
 Configuration url:
 
 ```typescript
-// basic
+// using @ notation
 const url = "s3://key:secret@eu-west-2/the-buck";
 
-// with additional parameters in query string
+// using @ notation with additional parameters in query string
 const url = "s3://key:secret@eu-west-2/the-buck?sslEnabled=true&useDualstack=true";
 
 // using query string for all parameters
@@ -175,12 +186,13 @@ const url = "s3://key:secret?region=eu-west-2&bucket=the-buck&sslEnabled=true&us
 All provided additional parameters will be typo- and type-checked:
 
 ```typescript
-const url = "s3://key:secret?bucket=the-buck&endPoint=https://kms-fips.us-west-2.amazonaws.com";
+const url = "s3://key:secret?endPoint=https://kms-fips.us-west-2.amazonaws.com&useDualStack=23";
 const s = new Storage(s);
 console.log(s.introspect("endpoint")); // undefined because of typo: endPoint !== endpoint
+console.log(s.introspect("useDualStack")); // undefined because type of useDualStack must be boolean
 ```
 
-If you provide a value for region or bucket name using both the `@` and the query string in your url, the latter values will prevail:
+If you provide a value for region or bucket name using both the `@` notation and the query string notation, the latter values will prevail:
 
 ```typescript
 const url = "s3://key:secret@us-east-1/bucket1?region=eu-west-2&bucketName=bucket2";
@@ -190,7 +202,7 @@ console.log(s.introspect("region")); // 'eu-west-2' (not 'us-east-1')
 console.log(s.introspect("bucketName")); // 'bucket2' (not 'bucket1')
 ```
 
-You can omit the region in the `@` notation variant but you have to add a slash after the `@` because a secretAccessKey can contain slashes:
+You can omit the region in the `@` notation variant but you have to add a slash after the `@` because a `secretAccessKey` can contain slashes:
 
 ```typescript
 const url1 = "s3://key:secret/can/contain/slashes@/the-buck"; // works!
@@ -223,7 +235,7 @@ Creates a new bucket, does not fail if the bucket already exists.
 selectBucket(name: string | null): Promise<void>;
 ```
 
-Select a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` the currently selected bucket will be deselected.
+Selects a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` the currently selected bucket will be deselected.
 
 ### clearBucket
 
@@ -279,7 +291,7 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 addFileFromReadable(stream: Readable, targetPath: string): Promise<void>;
 ```
 
-Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage.
+Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
 ### getFileAsReadable
 
@@ -344,10 +356,10 @@ Returns a list of all files in the currently selected bucket; for each file a tu
 ### switchStorage
 
 ```typescript
-switchStorage(config: StorageConfig): void;
+switchStorage(config: string | StorageConfig): void;
 ```
 
-Switch to another storage type in an existing `Storage` instance at runtime. The config object is the same type of object that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
+Switch to another storage type in an existing `Storage` instance at runtime. The config object or url is the same type of object or url that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
 
 ## How it works
 
@@ -357,17 +369,17 @@ When you create a `Storage` instance you create a thin wrapper around one of the
 - `StorageGoogleCloud`
 - `StorageAmazonS3`
 
-Let's call these classes the functional classes because they actually define the functionality of the API methods. The wrapper creates an instance of one of these functional classes based on the provided config object and then forwards every API call to this instance.
+Let's call these classes the adapter classes because they actually translate the general API methods to storage type specific functionality. The wrapper creates an instance of one of these adapter classes based on the provided configuration and then forwards every API call to this instance.
 
-This is possible because both the wrapper and the functional classes implement the interface `IStorage`. This interface declares all API methods listed above except `switchStorage` and `getType`; these methods are implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from the named 2 extra functions.
+This is possible because both the wrapper and the adapter classes implement the interface `IStorage`. This interface declares all API methods listed above except `switchStorage`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchStorage`.
 
-The functional classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer` and `addFileFromPath`. For the rest it contains stub methods that need to be overruled or extended by the functional subclasses.
+The adapter classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer`, `addFileFromPath` and `addFileFromReadable`. For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
 
-More functional classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
+More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
 
 ## Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install`. The tests test all storage types; for Google Cloud and Amazon S3 you need add your credentials to a `.env` file, see the file `.env.default` for more explanation. To run the Jasmine tests use this command:
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. The tests test all storage types; for Google Cloud and Amazon S3 you need add your credentials to a `.env` file, see the file `.env.default` for more explanation. To run the Jasmine tests use this command:
 
 `npm run test-jasmine`
 
@@ -376,10 +388,10 @@ You can run tests per storage type using one of these commands, see also the fil
 ```bash
 # test local disk
 npm run test-local
-# test google storage
-npm run test-google
-# test amazon s3
-npm run test-amazon
+# test Google Cloud Storage
+npm run test-gcs
+# test Amazon S3
+npm run test-s3
 ```
 
 You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:

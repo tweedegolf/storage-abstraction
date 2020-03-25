@@ -24,3 +24,4 @@
 - Updated documentation.
 - Updated dependency version.
 - Added yarn.lock.
+- Renamed 'functional classes' to 'adapter classes'

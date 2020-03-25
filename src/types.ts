@@ -20,7 +20,7 @@ export interface IStorage {
    * debugging. Sensitive data is not listed. If you provide a value for `key` only the
    * value of that will be returned
    */
-  introspect(key?: string): StorageConfig | StorageType | string;
+  introspect(key?: string): StorageConfig | string;
 
   /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but
