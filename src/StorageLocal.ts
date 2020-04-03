@@ -13,7 +13,8 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   private directory: string;
 
   constructor(config: StorageConfig) {
-    super(config);
+    // super(config);
+    super();
     this.config = config as ConfigLocal;
     this.directory = this.config.directory;
     this.bucketName = this.config.bucketName;

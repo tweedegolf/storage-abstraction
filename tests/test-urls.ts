@@ -20,6 +20,9 @@ const urlsAmazon = [
   "s3://key:secret/can/contain/slashes/the-buck?sslEnabled=true&endpoint=https://kms-fips.us-west-2.amazonaws.com", // error!
   "s3://key:secret/can/contain/slashes@us-east-1/not-here?region=eu-west-2&bucketName=the-buck&sslEnabled=true&useDualstack=23&nonExistentKey=true&endpoint=https://kms-fips.us-west-2.amazonaws.com", // last values overrule earlier values!
 ];
+
+const urlsBackBlaze = ["b2://key:secret/can/contain/slashes"];
+
 const urlsLocal = [
   "local://tests/tmp/the-buck",
   "local://tests/tmp",

@@ -10,11 +10,11 @@ export abstract class AbstractStorage implements IStorage {
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
 
-  constructor(config: StorageConfig) {
-    if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
-      this.bucketName = slugify(config.bucketName);
-    }
-  }
+  // constructor(config: StorageConfig) {
+  //   if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
+  //     this.bucketName = slugify(config.bucketName);
+  //   }
+  // }
 
   introspect(key?: string): StorageConfig | string {
     if (key) {

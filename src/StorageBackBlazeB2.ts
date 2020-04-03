@@ -1,52 +1,56 @@
 import fs from "fs";
 import path from "path";
+import slugify from "slugify";
 import { zip } from "ramda";
 import to from "await-to-js";
 import { Readable } from "stream";
-import {
-  Storage as GoogleCloudStorage,
-  File,
-  CreateReadStreamOptions,
-} from "@google-cloud/storage";
+import B2 from "backblaze-b2";
+require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage, ConfigGoogleCloud, StorageConfig, StorageType } from "./types";
-import slugify from "slugify";
+import { IStorage, StorageType, ConfigBackBlazeB2 } from "./types";
+import { parseUrlGeneric } from "./util";
 
-export class StorageGoogleCloud extends AbstractStorage implements IStorage {
+export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
   protected type = StorageType.GCS as string;
-  private storage: GoogleCloudStorage;
+  private storage: B2;
+  private authorized = false;
 
-  constructor(config: StorageConfig) {
-    // super(config);
+  constructor(config: string | ConfigBackBlazeB2) {
     super();
-    this.storage = new GoogleCloudStorage(config as ConfigGoogleCloud);
-    const clone = { ...(config as ConfigGoogleCloud) };
-    // clone.keyFilename = "keyFilename present but hidden";
-    this.config = clone;
+    const { applicationKey, applicationKeyId, bucketName } = this.parseConfig(config);
+    this.storage = new B2({ applicationKey, applicationKeyId });
+    this.bucketName = bucketName;
+    if (bucketName) {
+      this.buckets.push(bucketName);
+    }
   }
 
-  // After uploading a file to Google Storage it may take a while before the file
-  // can be discovered and downloaded; this function adds a little delay
-  async getFile(fileName: string, retries: number = 5): Promise<File> {
-    const file = this.storage.bucket(this.bucketName).file(fileName);
-    const [exists] = await file.exists();
-    if (!exists && retries !== 0) {
-      const r = retries - 1;
-      await new Promise(res => {
-        setTimeout(res, 250);
+  private parseConfig(config: string | ConfigBackBlazeB2): ConfigBackBlazeB2 {
+    if (typeof config === "string") {
+      const [, applicationKeyId, applicationKey, bucketName] = parseUrlGeneric(config);
+      return {
+        applicationKeyId,
+        applicationKey,
+        bucketName,
+      };
+    }
+    return config;
+  }
+
+  private async authorize(): Promise<boolean> {
+    if (this.authorized) {
+      return Promise.resolve(true);
+    }
+    B2.authorize()
+      .then(() => true)
+      .catch((e: Error) => {
+        throw new Error(e.message);
       });
-      // console.log('RETRY', r, fileName);
-      return this.getFile(fileName, r);
-    }
-    if (!exists) {
-      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
-    }
-    return file;
   }
 
   async getFileAsReadable(
     fileName: string,
-    options: CreateReadStreamOptions = { start: 0 }
+    options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
     const file = this.storage.bucket(this.bucketName).file(fileName);
     const [exists] = await file.exists();
@@ -173,6 +177,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
   }
 
   async listBuckets(): Promise<string[]> {
+    this.authorized = await this.authorize();
     const [buckets] = await this.storage.getBuckets();
     this.buckets = buckets.map(b => b.metadata.id);
     return this.buckets;

@@ -30,6 +30,7 @@ const getGCSProjectId = (config: string): string => {
 const createLocalBucket = (directory: string, bucketName: string): void => {
   const p = path.join(directory, bucketName);
   const exists = fs.existsSync(p);
+  // https://nodejs.org/api/fs.html#fs_fs_access_path_mode_callback
   // console.log("constructor", config, exists);
   if (!exists) {
     fs.mkdir(p, { recursive: true }, err => {
@@ -202,3 +203,24 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
       }
     });
   });
+
+export const parseUrlGeneric = (url: string): string[] => {
+  const type = url.substring(0, url.indexOf("://"));
+  let config = url.substring(url.indexOf("://") + 3);
+  const slash = config.lastIndexOf("/");
+  const colon = config.indexOf(":");
+  let part1 = "";
+  let part2 = "";
+  let part3 = "";
+  if (slash !== -1) {
+    part3 = config.substring(slash + 1);
+    config = config.substring(0, slash);
+  }
+  if (colon !== -1) {
+    [part1, part2] = config.split(":");
+  } else {
+    throw Error("url must be formatted as: type://part1:part2/part3");
+  }
+
+  return [type, part1, part2, part3];
+};

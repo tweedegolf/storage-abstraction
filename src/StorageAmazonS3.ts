@@ -10,7 +10,8 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
   private storage: S3;
 
   constructor(config: StorageConfig) {
-    super(config);
+    // super(config);
+    super();
     this.storage = new S3(config as ConfigAmazonS3);
     const clone = { ...(config as ConfigAmazonS3) };
     clone.accessKeyId = "key present but hidden";
