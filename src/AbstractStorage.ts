@@ -9,6 +9,7 @@ export abstract class AbstractStorage implements IStorage {
   protected config: StorageConfig;
   protected bucketName: null | string = null;
   protected buckets: string[] = [];
+  protected bucketsById: { [id: string]: string } = {};
 
   // constructor(config: StorageConfig) {
   //   if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
@@ -26,9 +27,10 @@ export abstract class AbstractStorage implements IStorage {
     return this.config;
   }
 
-  async test(): Promise<void> {
+  async test(): Promise<string> {
     try {
       await this.listBuckets();
+      return "ok";
     } catch (e) {
       throw new Error("Looks like the storage configuration is not correct");
     }

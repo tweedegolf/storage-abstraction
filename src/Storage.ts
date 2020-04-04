@@ -30,7 +30,7 @@ export class Storage implements IStorage {
 
   // all methods below are implementing IStorage
 
-  async test(): Promise<void> {
+  async test(): Promise<string> {
     return this.storage.test();
   }
 
@@ -79,8 +79,8 @@ export class Storage implements IStorage {
     return this.storage.removeFile(fileName);
   }
 
-  async listFiles(): Promise<[string, number][]> {
-    return this.storage.listFiles();
+  async listFiles(numFiles?: number): Promise<[string, number][]> {
+    return this.storage.listFiles(numFiles);
   }
 
   async selectBucket(name: string | null): Promise<void> {

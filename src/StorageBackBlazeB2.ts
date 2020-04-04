@@ -11,25 +11,89 @@ import { IStorage } from "./types";
 import { parseUrlGeneric } from "./util";
 
 export type ConfigBackBlazeB2 = {
-  bucketName?: string;
+  options?: { [id: string]: string };
   applicationKeyId: string;
   applicationKey: string;
 };
 
-export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
+export type BackBlazeB2Bucket = {
+  accountId: "string";
+  bucketId: "string";
+  bucketInfo: "object";
+  bucketName: "string";
+  bucketType: "string";
+  corsRules: string[];
+  lifecycleRules: string[];
+  options: string[];
+  revision: number;
+};
+
+export type BackBlazeB2File = {
+  accountId: string;
+  action: string;
+  bucketId: string;
+  contentLength: number;
+  contentMd5: string;
+  contentSha1: string;
+  contentType: string;
+  fileId: string;
+  fileInfo: [object];
+  fileName: string;
+  uploadTimestamp: number;
+};
+
+export class StorageBackBlazeB2 implements IStorage {
   protected type = "b2";
   private storage: B2;
-  private authorized = false;
+  private initialized = false;
+  private buckets: BackBlazeB2Bucket[] = [];
+  private files: BackBlazeB2File[] = [];
+  private bucketId: string;
+  private bucketName: string;
+  private nextFileName: string;
 
   constructor(config: string | ConfigBackBlazeB2) {
-    super();
-    const { applicationKey, applicationKeyId, bucketName } = this.parseConfig(config);
+    const { applicationKey, applicationKeyId, options } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
-    // console.log(this.storage.authorize);
-    this.bucketName = bucketName;
-    if (bucketName) {
-      this.buckets.push(bucketName);
+    this.bucketName = options.bucketName;
+  }
+
+  introspect(): string {
+    return "remove this function from interface!";
+  }
+
+  public async init(): Promise<boolean> {
+    if (this.initialized) {
+      return Promise.resolve(true);
     }
+    try {
+      await this.storage.authorize();
+    } catch (e) {
+      throw new Error(e.message);
+    }
+    if (this.bucketName)
+      try {
+        const {
+          data: { buckets },
+        } = await this.storage.getBucket({ bucketName: this.bucketName });
+        this.buckets = buckets;
+        this.getBucketId();
+      } catch (e) {
+        throw new Error(e.message);
+      }
+    return true;
+  }
+
+  public async test(): Promise<string> {
+    if (this.initialized === false) {
+      return Promise.reject("storage has not been initialized yet; call Storage.init() first");
+    }
+    try {
+      await this.storage.listBuckets();
+    } catch (e) {
+      throw new Error(e.message);
+    }
+    return Promise.resolve("ok");
   }
 
   private parseConfig(config: string | ConfigBackBlazeB2): ConfigBackBlazeB2 {
@@ -38,37 +102,22 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
       if (type !== this.type) {
         throw new Error(`expecting type "${this.type}" but found type "${type}"`);
       }
-      console.log(applicationKeyId, applicationKey);
       return {
         applicationKeyId,
         applicationKey,
-        ...options,
+        options,
       };
     }
     return config;
   }
 
-  private async authorize(): Promise<boolean> {
-    if (this.authorized) {
-      return Promise.resolve(true);
+  private getBucketId(): void {
+    const index = this.buckets.findIndex(
+      (b: BackBlazeB2Bucket) => b.bucketName === this.bucketName
+    );
+    if (index !== -1) {
+      this.bucketId = this.buckets[index].bucketId;
     }
-
-    try {
-      await this.storage.authorize();
-      return true;
-    } catch (e) {
-      throw new Error(e.message);
-    }
-
-    // this.storage
-    //   .authorize()
-    //   .then(e => {
-    //     console.log(e);
-    //     return true;
-    //   })
-    //   .catch((e: Error) => {
-    //     throw new Error(e.message);
-    //   });
   }
 
   async getFileAsReadable(
@@ -103,6 +152,29 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
       // console.log(e.message);
       throw e;
     }
+  }
+
+  async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
+    const paths = targetPath.split("/").map(d => slugify(d));
+    await this.store(origPath, path.join(...paths));
+  }
+
+  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
+    const paths = targetPath.split("/").map(d => slugify(d));
+    await this.store(buffer, path.join(...paths));
+  }
+
+  async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
+    const paths = targetPath.split("/").map(d => slugify(d));
+    await this.store(stream, path.join(...paths));
+  }
+
+  protected checkBucket(name: string): boolean {
+    return this.buckets.findIndex(b => b.bucketName === name) !== -1;
+  }
+
+  public getSelectedBucket(): string | null {
+    return this.bucketName;
   }
 
   // util members
@@ -146,7 +218,7 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
       throw new Error("Can not use `null` as bucket name");
     }
     const n = slugify(name);
-    if (super.checkBucket(n)) {
+    if (this.checkBucket(n)) {
       return;
     }
     const bucket = this.storage.bucket(n);
@@ -157,7 +229,7 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
 
     try {
       await this.storage.createBucket(n);
-      this.buckets.push(n);
+      // this.buckets.push(n);
     } catch (e) {
       if (e.code === 409) {
         // error code 409 is 'You already own this bucket. Please select another name.'
@@ -196,16 +268,19 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
     if (n === this.bucketName) {
       this.bucketName = null;
     }
-    this.buckets = this.buckets.filter(b => b !== n);
+    this.buckets = this.buckets.filter(b => b.bucketName !== n);
   }
 
   async listBuckets(): Promise<string[]> {
-    this.authorized = await this.authorize();
     const {
       data: { buckets },
     } = await this.storage.listBuckets();
-    this.buckets = buckets.map(b => b.bucketName);
-    return this.buckets;
+    // this.bucketsById = buckets.reduce((acc: { [id: string]: string }, val: BackBlazeB2Bucket) => {
+    //   acc[val.bucketId] = val.bucketName;
+    //   return acc;
+    // }, {});
+    this.buckets = buckets;
+    return this.buckets.map(b => b.bucketName);
   }
 
   private async getMetaData(files: string[]): Promise<number[]> {
@@ -223,10 +298,14 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
     if (this.bucketName === null) {
       throw new Error("Please select a bucket first");
     }
-    const data = await this.storage.bucket(this.bucketName).getFiles();
-    const names = data[0].map(f => f.name);
-    const sizes = await this.getMetaData(names);
-    return zip(names, sizes) as [string, number][];
+    const {
+      data: { files, nextFileName },
+    } = await this.storage.listFileNames({
+      bucketId: this.bucketId,
+    });
+    this.files = files;
+    this.nextFileName = nextFileName;
+    return this.files.map(f => [f.fileName, f.contentLength]);
   }
 
   async sizeOf(name: string): Promise<number> {

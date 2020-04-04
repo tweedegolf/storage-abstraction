@@ -13,7 +13,7 @@ export interface IStorage {
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
    * if it fails and if so, it throws an error.
    */
-  test(): Promise<void>;
+  test(): Promise<string>;
 
   /**
    * Returns an key value object that contains configuration information; can be used for
@@ -98,7 +98,7 @@ export interface IStorage {
    * Returns an array of tuples containing the file path and the file size of all files in the currently
    * selected bucket. If no bucket is selected an error will be thrown.
    */
-  listFiles(): Promise<[string, number][]>;
+  listFiles(numFiles?: number): Promise<[string, number][]>;
 
   /**
    * Returns the size in bytes of the file

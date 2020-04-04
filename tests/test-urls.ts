@@ -38,6 +38,12 @@ const urlsLocal = [
 const url = urlsBackBlaze[0];
 const storage = new StorageBackBlazeB2(process.env.BACKBLAZE_1);
 
-storage.listBuckets().then(b => {
+const test = async (): Promise<void> => {
+  await storage.init();
+  const b = await storage.listBuckets();
   console.log(b);
-});
+  const f = await storage.listFiles();
+  console.log(f);
+};
+
+test();

@@ -209,15 +209,15 @@ export const parseUrlGeneric = (
 ): [string, string, string, { [key: string]: string }] => {
   const type = url.substring(0, url.indexOf("://"));
   let config = url.substring(url.indexOf("://") + 3);
-  const questionMark = config.lastIndexOf("?");
+  const questionMark = config.indexOf("?");
   const colon = config.indexOf(":");
   let part1 = "";
   let part2 = "";
-  let options: { [key: string]: string };
+  let options: { [key: string]: string } = {};
   let optionsString = "";
   if (questionMark !== -1) {
-    config = config.substring(0, questionMark);
     optionsString = config.substring(questionMark + 1);
+    config = config.substring(0, questionMark);
   }
   if (colon !== -1) {
     [part1, part2] = config.split(":");
@@ -225,7 +225,7 @@ export const parseUrlGeneric = (
     // throw Error("url must be formatted as: type://part1:part2[?key1=value1&key2=value2]");
     part1 = config;
   }
-
+  // console.log(config, optionsString);
   if (questionMark !== -1) {
     options = optionsString
       .split("&")
@@ -250,6 +250,6 @@ export const parseUrlGeneric = (
         return acc;
       }, {});
   }
-
+  // console.log(type, part1, part2, options);
   return [type, part1, part2, options];
 };
