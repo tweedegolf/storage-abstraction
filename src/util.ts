@@ -204,23 +204,52 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
     });
   });
 
-export const parseUrlGeneric = (url: string): string[] => {
+export const parseUrlGeneric = (
+  url: string
+): [string, string, string, { [key: string]: string }] => {
   const type = url.substring(0, url.indexOf("://"));
   let config = url.substring(url.indexOf("://") + 3);
-  const slash = config.lastIndexOf("/");
+  const questionMark = config.lastIndexOf("?");
   const colon = config.indexOf(":");
   let part1 = "";
   let part2 = "";
-  let part3 = "";
-  if (slash !== -1) {
-    part3 = config.substring(slash + 1);
-    config = config.substring(0, slash);
+  let options: { [key: string]: string };
+  let optionsString = "";
+  if (questionMark !== -1) {
+    config = config.substring(0, questionMark);
+    optionsString = config.substring(questionMark + 1);
   }
   if (colon !== -1) {
     [part1, part2] = config.split(":");
   } else {
-    throw Error("url must be formatted as: type://part1:part2/part3");
+    // throw Error("url must be formatted as: type://part1:part2[?key1=value1&key2=value2]");
+    part1 = config;
   }
 
-  return [type, part1, part2, part3];
+  if (questionMark !== -1) {
+    options = optionsString
+      .split("&")
+      .map(pair => pair.split("="))
+      .reduce((acc, val) => {
+        const type = allowedOptionsAmazonS3[val[0]];
+        if (typeof type !== "undefined") {
+          const value = val[1];
+          if (type === "boolean") {
+            if (value === "true" || value === "false") {
+              acc[val[0]] = value === "true";
+            }
+          } else if (type === "number") {
+            const intVal = parseInt(value, 10);
+            if (!isNaN(intVal)) {
+              acc[val[0]] = intVal;
+            }
+          } else {
+            acc[val[0]] = val[1];
+          }
+        }
+        return acc;
+      }, {});
+  }
+
+  return [type, part1, part2, options];
 };

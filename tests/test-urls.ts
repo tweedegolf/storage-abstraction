@@ -1,4 +1,7 @@
+import dotenv from "dotenv";
 import { Storage } from "../src/Storage";
+import { StorageBackBlazeB2 } from "../src";
+dotenv.config();
 
 const urlsGoogle = [
   "gcs://keyFile.json:appName/the-buck",
@@ -32,7 +35,9 @@ const urlsLocal = [
 ];
 
 // replace with the url you want to test
-const url = urlsLocal[3];
-const storage = new Storage(url);
+const url = urlsBackBlaze[0];
+const storage = new StorageBackBlazeB2(process.env.BACKBLAZE_1);
 
-console.log(storage.introspect());
+storage.listBuckets().then(b => {
+  console.log(b);
+});

@@ -132,15 +132,9 @@ export type ConfigGoogleCloud = {
   keyFilename: string;
 };
 
-export type ConfigBackBlazeB2 = {
-  bucketName?: string;
-  applicationKeyId: string;
-  applicationKey: string;
-};
-
 export type ConfigLocal = {
   bucketName?: string;
   directory?: string;
 };
 
-export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;
+export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud;

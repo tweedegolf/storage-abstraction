@@ -5,13 +5,19 @@ import { zip } from "ramda";
 import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
-require("@gideo-llc/backblaze-b2-upload-any").install(B2);
+// require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage, StorageType, ConfigBackBlazeB2 } from "./types";
+import { IStorage } from "./types";
 import { parseUrlGeneric } from "./util";
 
+export type ConfigBackBlazeB2 = {
+  bucketName?: string;
+  applicationKeyId: string;
+  applicationKey: string;
+};
+
 export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
-  protected type = StorageType.GCS as string;
+  protected type = "b2";
   private storage: B2;
   private authorized = false;
 
@@ -19,6 +25,7 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
     super();
     const { applicationKey, applicationKeyId, bucketName } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
+    // console.log(this.storage.authorize);
     this.bucketName = bucketName;
     if (bucketName) {
       this.buckets.push(bucketName);
@@ -27,11 +34,15 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
 
   private parseConfig(config: string | ConfigBackBlazeB2): ConfigBackBlazeB2 {
     if (typeof config === "string") {
-      const [, applicationKeyId, applicationKey, bucketName] = parseUrlGeneric(config);
+      const [type, applicationKeyId, applicationKey, options] = parseUrlGeneric(config);
+      if (type !== this.type) {
+        throw new Error(`expecting type "${this.type}" but found type "${type}"`);
+      }
+      console.log(applicationKeyId, applicationKey);
       return {
         applicationKeyId,
         applicationKey,
-        bucketName,
+        ...options,
       };
     }
     return config;
@@ -41,11 +52,23 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
     if (this.authorized) {
       return Promise.resolve(true);
     }
-    B2.authorize()
-      .then(() => true)
-      .catch((e: Error) => {
-        throw new Error(e.message);
-      });
+
+    try {
+      await this.storage.authorize();
+      return true;
+    } catch (e) {
+      throw new Error(e.message);
+    }
+
+    // this.storage
+    //   .authorize()
+    //   .then(e => {
+    //     console.log(e);
+    //     return true;
+    //   })
+    //   .catch((e: Error) => {
+    //     throw new Error(e.message);
+    //   });
   }
 
   async getFileAsReadable(
@@ -178,8 +201,10 @@ export class StorageBackBlazeB2 extends AbstractStorage implements IStorage {
 
   async listBuckets(): Promise<string[]> {
     this.authorized = await this.authorize();
-    const [buckets] = await this.storage.getBuckets();
-    this.buckets = buckets.map(b => b.metadata.id);
+    const {
+      data: { buckets },
+    } = await this.storage.listBuckets();
+    this.buckets = buckets.map(b => b.bucketName);
     return this.buckets;
   }
 
