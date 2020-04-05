@@ -121,39 +121,29 @@ export enum StorageType {
   B2 = "b2", // BackBlaze B2
 }
 
-export type ConfigAmazonS3 = {
+interface IConfig {
   type: string;
+  options?: { [id: string]: string | number | boolean };
+}
+
+export interface ConfigAmazonS3 extends IConfig {
   accessKeyId: string;
   secretAccessKey: string;
-  options: { [id: string]: string | number | boolean };
-  // bucketName?: string;
-  // endpoint?: string;
-  // useDualstack?: boolean;
-  // region?: string;
-  // maxRetries?: number;
-  // maxRedirects?: number;
-  // sslEnabled?: boolean;
-  // apiVersion?: string;
-};
+}
 
-export type ConfigGoogleCloud = {
-  type: string;
+export interface ConfigGoogleCloud extends IConfig {
   keyFilename: string;
   projectId?: string;
-  options: { [id: string]: string | number | boolean };
-};
+}
 
-export type ConfigLocal = {
-  type: string;
+export interface ConfigLocal extends IConfig {
   path: string;
-};
+}
 
-export type ConfigBackBlazeB2 = {
-  type: string;
+export interface ConfigBackBlazeB2 extends IConfig {
   applicationKeyId: string;
   applicationKey: string;
-  options: { [id: string]: string | number | boolean };
-};
+}
 
 export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;
 

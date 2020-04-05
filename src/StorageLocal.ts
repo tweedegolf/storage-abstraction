@@ -5,46 +5,70 @@ import glob from "glob";
 import rimraf from "rimraf";
 import slugify from "slugify";
 import { Readable } from "stream";
-import { IStorage, ConfigLocal, StorageConfig, StorageType } from "./types";
+import { ConfigLocal, StorageType } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
+import { parseUrl } from "./util";
 
-export class StorageLocal extends AbstractStorage implements IStorage {
+export class StorageLocal extends AbstractStorage {
   protected type = StorageType.LOCAL as string;
+  // protected bucketName: string;
   private directory: string;
+  private path: string;
+  private buckets: string[] = [];
 
-  constructor(config: StorageConfig) {
-    // super(config);
+  constructor(config: ConfigLocal) {
     super();
-    this.config = config as ConfigLocal;
-    this.directory = this.config.directory;
-    this.bucketName = this.config.bucketName;
+    const { path: p } = this.parseConfig(config);
+    this.bucketName = path.basename(p);
+    this.directory = path.dirname(p);
+    this.path = p;
   }
 
-  private async createDestination(targetPath: string): Promise<string> {
-    if (this.bucketName === null) {
-      throw new Error("Please select a bucket first");
+  async init(): Promise<boolean> {
+    await this.createDirectory(this.path);
+    this.initialized = true;
+    return true;
+  }
+
+  private parseConfig(config: string | ConfigLocal): ConfigLocal {
+    let cfg: ConfigLocal;
+    if (typeof config === "string") {
+      const [type, path] = parseUrl(config);
+      cfg = {
+        type,
+        path,
+      };
+    } else {
+      cfg = config;
     }
-    const storagePath = path.join(this.directory, this.bucketName);
-    // const dest = path.join(storagePath, ...targetPath.split('/'));
-    const dest = path.join(storagePath, targetPath);
-    try {
-      await this.createBucket(this.bucketName);
-      await fs.promises.stat(path.dirname(dest));
-    } catch (e) {
-      const [error] = await to(fs.promises.mkdir(path.dirname(dest), { recursive: true }));
-      if (error !== null) {
-        throw error;
-      }
-      return dest;
+    if (!cfg.path) {
+      throw new Error("You must specify a value for 'path' for storage type 'local'");
     }
-    return dest;
+    return cfg;
+  }
+
+  /**
+   * @param path
+   * creates a directory if it doesn't exist
+   */
+  private async createDirectory(path: string): Promise<boolean> {
+    const exists = await fs.promises.stat(path);
+    if (!exists) {
+      await fs.promises.mkdir(path, { recursive: true, mode: 0o777 }).catch(e => {
+        console.error(`\x1b[31m${e.message}`);
+        return false;
+      });
+      return true;
+    }
+    return true;
   }
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(filePath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
-    const dest = await this.createDestination(targetPath);
+    const dest = path.join(this.path, targetPath);
+    await this.createDirectory(dest);
     if (typeof arg === "string") {
       await fs.promises.copyFile(arg, dest);
       return;
@@ -69,25 +93,14 @@ export class StorageLocal extends AbstractStorage implements IStorage {
   }
 
   async createBucket(name: string): Promise<void> {
-    if (name === null) {
+    if (!name === null) {
       throw new Error("Can not use `null` as bucket name");
     }
     const bn = slugify(name);
-    if (super.checkBucket(bn)) {
-      return;
+    const created = await this.createDirectory(path.join(this.directory, bn));
+    if (created) {
+      this.buckets.push(bn);
     }
-    // try {
-    const storagePath = path.join(this.directory, bn);
-    return fs.promises
-      .stat(storagePath)
-      .then(() => true)
-      .catch(() => fs.promises.mkdir(storagePath, { recursive: true, mode: 0o777 }))
-      .then(() => {
-        this.buckets.push(bn);
-      });
-    // } catch (e) {
-    //   throw new Error(`StorageLocal.ts line 89: ${e.message}`);
-    // }
   }
 
   async clearBucket(name?: string): Promise<void> {
@@ -96,9 +109,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     if (!bn) {
       return;
     }
-    const storagePath = path.join(this.directory, bn);
+    const p = path.join(this.directory, bn);
     return new Promise(resolve => {
-      rimraf(storagePath, e => {
+      rimraf(p, e => {
         if (e !== null) {
           throw e;
         }
@@ -113,9 +126,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     if (!bn) {
       return;
     }
-    const storagePath = path.join(this.directory, bn);
+    const p = path.join(this.directory, bn);
     return new Promise(resolve => {
-      rimraf(storagePath, e => {
+      rimraf(p, e => {
         if (e !== null) {
           throw e;
         }
@@ -199,5 +212,9 @@ export class StorageLocal extends AbstractStorage implements IStorage {
     const p = path.join(this.directory, this.bucketName, name);
     const stat = await fs.promises.stat(p);
     return stat.size;
+  }
+
+  async fileExists(name: string): Promise<boolean> {
+    return true;
   }
 }

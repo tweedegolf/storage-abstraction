@@ -1,18 +1,12 @@
 import path from "path";
-import { Readable } from "stream";
 import slugify from "slugify";
+import { Readable } from "stream";
 import { IStorage } from "./types";
 
 export abstract class AbstractStorage implements IStorage {
   protected type: string;
-  protected bucketName: string;
-  protected initialized: boolean;
-
-  // constructor(config: StorageConfig) {
-  //   if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
-  //     this.bucketName = slugify(config.bucketName);
-  //   }
-  // }
+  protected bucketName: string = null;
+  protected initialized: boolean = false;
 
   async test(): Promise<string> {
     try {
@@ -49,8 +43,6 @@ export abstract class AbstractStorage implements IStorage {
   protected abstract async store(buffer: Buffer, targetFileName: string): Promise<void>;
 
   protected abstract async store(stream: Readable, targetFileName: string): Promise<void>;
-
-  protected abstract checkBucket(name: string): boolean;
 
   abstract async init(): Promise<boolean>;
 

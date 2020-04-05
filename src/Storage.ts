@@ -2,7 +2,7 @@ import path from "path";
 import { Readable } from "stream";
 import { IStorage, StorageConfig } from "./types";
 
-// extend this if you add a new adapter (storage type)
+// add new adapter (storage type) here
 const storageClasses = {
   b2: "StorageBackBlazeB2",
   s3: "StorageAmazonS3",

@@ -8,8 +8,9 @@ import { parseUrl } from "./util";
 
 export class StorageAmazonS3 extends AbstractStorage {
   protected type = StorageType.S3;
+  // protected bucketName: string;
   private storage: S3;
-  private buckets = [];
+  private buckets: string[] = [];
 
   constructor(config: string | ConfigAmazonS3) {
     super();
@@ -19,6 +20,8 @@ export class StorageAmazonS3 extends AbstractStorage {
   }
 
   async init(): Promise<boolean> {
+    // no further initialization required
+    this.initialized = true;
     return Promise.resolve(true);
   }
 
@@ -222,7 +225,7 @@ export class StorageAmazonS3 extends AbstractStorage {
     return true;
   }
 
-  fileExists(name: string): Promise<boolean> {
-    return Promise.resolve(true);
+  async fileExists(name: string): Promise<boolean> {
+    return true;
   }
 }

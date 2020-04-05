@@ -11,8 +11,8 @@ import { parseUrl } from "./util";
 
 export class StorageBackBlazeB2 extends AbstractStorage {
   protected type = StorageType.B2;
-  protected bucketName: string;
-  protected initialized = false;
+  // protected bucketName: string;
+  // protected initialized = false;
   private bucketId: string;
   private storage: B2;
   private buckets: BackBlazeB2Bucket[] = [];
@@ -35,7 +35,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     } catch (e) {
       throw new Error(e.message);
     }
-    if (this.bucketName)
+    if (this.bucketName) {
       try {
         const {
           data: { buckets },
@@ -45,6 +45,8 @@ export class StorageBackBlazeB2 extends AbstractStorage {
       } catch (e) {
         throw new Error(e.message);
       }
+    }
+    this.initialized = true;
     return true;
   }
 

@@ -9,20 +9,55 @@ import {
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage, ConfigGoogleCloud, StorageConfig, StorageType } from "./types";
+import { ConfigGoogleCloud, StorageType } from "./types";
 import slugify from "slugify";
+import { parseUrl } from "./util";
 
-export class StorageGoogleCloud extends AbstractStorage implements IStorage {
-  protected type = StorageType.GCS as string;
+export class StorageGoogleCloud extends AbstractStorage {
+  protected type = StorageType.GCS;
+  // protected bucketName: string;
+  private buckets: string[] = [];
   private storage: GoogleCloudStorage;
 
-  constructor(config: StorageConfig) {
-    // super(config);
+  constructor(config: string | ConfigGoogleCloud) {
     super();
-    this.storage = new GoogleCloudStorage(config as ConfigGoogleCloud);
-    const clone = { ...(config as ConfigGoogleCloud) };
-    // clone.keyFilename = "keyFilename present but hidden";
-    this.config = clone;
+    const { keyFilename, projectId, options } = this.parseConfig(config);
+    this.storage = new GoogleCloudStorage({ keyFilename, projectId });
+    this.bucketName = options.bucketName as string;
+  }
+
+  private getGCSProjectId(config: string): string {
+    const data = fs.readFileSync(config).toString("utf-8");
+    const json = JSON.parse(data);
+    return json.project_id;
+  }
+
+  private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
+    let cfg: ConfigGoogleCloud;
+    if (typeof config === "string") {
+      const [type, keyFilename, projectId, options] = parseUrl(config);
+      cfg = {
+        type,
+        keyFilename,
+        projectId,
+        options,
+      };
+    } else {
+      cfg = config;
+    }
+    if (!cfg.keyFilename) {
+      throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
+    }
+    if (!cfg.projectId) {
+      cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
+    }
+    return cfg;
+  }
+
+  async init(): Promise<boolean> {
+    // no further initialization required
+    this.initialized = true;
+    return Promise.resolve(true);
   }
 
   // After uploading a file to Google Storage it may take a while before the file
@@ -119,7 +154,7 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
       throw new Error("Can not use `null` as bucket name");
     }
     const n = slugify(name);
-    if (super.checkBucket(n)) {
+    if (this.buckets.findIndex(b => b === n) !== -1) {
       return;
     }
     const bucket = this.storage.bucket(n);
@@ -206,5 +241,9 @@ export class StorageGoogleCloud extends AbstractStorage implements IStorage {
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();
     return parseInt(metadata.size, 10);
+  }
+
+  async fileExists(name: string): Promise<boolean> {
+    return true;
   }
 }
