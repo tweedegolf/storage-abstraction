@@ -25,6 +25,7 @@ export class Storage implements IStorage {
       type = args.type;
     }
     const name = storageClasses[type];
+    // console.log(type, name);
     if (typeof name === "undefined") {
       throw new Error(
         `unsupported storage type, must be one of ${Object.keys(storageClasses).join(", ")}`
@@ -93,7 +94,7 @@ export class Storage implements IStorage {
     return this.storage.listFiles(numFiles);
   }
 
-  async selectBucket(name: string | null): Promise<void> {
+  async selectBucket(name?: string): Promise<void> {
     return this.storage.selectBucket(name);
   }
 

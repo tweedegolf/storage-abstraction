@@ -126,8 +126,12 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     }
   }
 
-  protected checkBucket(name: string): boolean {
-    return this.buckets.findIndex(b => b.bucketName === name) !== -1;
+  protected checkBucket(name: string): BackBlazeB2Bucket | null {
+    const index = this.buckets.findIndex(b => b.bucketName === name);
+    if (index === -1) {
+      return null;
+    }
+    return this.buckets[index];
   }
 
   public getSelectedBucket(): string | null {
@@ -171,9 +175,8 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   }
 
   async createBucket(name: string): Promise<void> {
-    if (name === null) {
-      throw new Error("Can not use `null` as bucket name");
-    }
+    super.createBucket(name);
+    console.log(name);
     const n = slugify(name);
     if (this.checkBucket(n)) {
       return;
@@ -197,12 +200,17 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     }
   }
 
-  async selectBucket(name: string | null): Promise<void> {
-    if (name === null) {
+  async selectBucket(name: string): Promise<void> {
+    if (!name) {
       this.bucketName = null;
       return;
     }
-
+    const b = this.checkBucket(name);
+    if (b) {
+      this.bucketName = name;
+      this.bucketId = b.bucketId;
+      return;
+    }
     const [error] = await to(this.createBucket(name));
     if (error !== null) {
       throw error;
@@ -252,7 +260,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     const {
@@ -266,7 +274,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   }
 
   async sizeOf(name: string): Promise<number> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     const file = this.storage.bucket(this.bucketName).file(name);

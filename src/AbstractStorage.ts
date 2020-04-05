@@ -5,7 +5,7 @@ import { IStorage } from "./types";
 
 export abstract class AbstractStorage implements IStorage {
   protected type: string;
-  protected bucketName: string = null;
+  protected bucketName: string;
   protected initialized: boolean = false;
 
   async test(): Promise<string> {
@@ -36,6 +36,15 @@ export abstract class AbstractStorage implements IStorage {
     return this.bucketName;
   }
 
+  async createBucket(name: string): Promise<void> {
+    if (name === null) {
+      throw new Error("Can not use `null` as bucket name");
+    }
+    if (name === "" || typeof name === "undefined") {
+      throw new Error("Please provide a bucket name");
+    }
+  }
+
   // stubs
 
   protected abstract async store(filePath: string, targetFileName: string): Promise<void>;
@@ -45,8 +54,6 @@ export abstract class AbstractStorage implements IStorage {
   protected abstract async store(stream: Readable, targetFileName: string): Promise<void>;
 
   abstract async init(): Promise<boolean>;
-
-  abstract async createBucket(name: string): Promise<void>;
 
   abstract async selectBucket(name: string | null): Promise<void>;
 

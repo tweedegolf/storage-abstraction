@@ -32,10 +32,10 @@ export interface IStorage {
 
   /**
    * @param name: name of the bucket that will be used to store files, if the bucket does not exist it
-   * will be created. Note that the provided name will be slugified. If you pass `null` the currently
-   * selected bucket will be deselected.
+   * will be created. Note that the provided name will be slugified. If you pass null, "" or no value the
+   * currently selected bucket will be deselected.
    */
-  selectBucket(name: string | null): Promise<void>;
+  selectBucket(name?: string): Promise<void>;
 
   /**
    * @param name?: deletes all file in the bucket. If no name is provided the currently selected bucket

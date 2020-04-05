@@ -54,12 +54,15 @@ const test = async (): Promise<void> => {
   });
 
   console.log("BUCKET", storage.getSelectedBucket());
+
   const b = await storage.listBuckets().catch(e => {
     console.error(`\x1b[31m${e} (listBuckets)`);
     process.exit(0);
   });
-
   console.log(b);
+
+  await storage.selectBucket("sab-test1");
+
   const f = await storage.listFiles().catch(e => {
     console.error(`\x1b[31m${e} (listFiles)`);
     process.exit(0);
