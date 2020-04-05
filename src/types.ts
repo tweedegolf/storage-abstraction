@@ -10,17 +10,18 @@ export type UploadOptions = {
 
 export interface IStorage {
   /**
+   * Initializes the storage. Some storage types don't need any initialization, others
+   * may require async actions such as an initial authorization. Because you can't (and don't
+   * want to) handle async action in the constructor all storage types have an init() method
+   * that needs to be called before any other API method call
+   */
+  init(): Promise<boolean>;
+
+  /**
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
    * if it fails and if so, it throws an error.
    */
   test(): Promise<string>;
-
-  /**
-   * Returns an key value object that contains configuration information; can be used for
-   * debugging. Sensitive data is not listed. If you provide a value for `key` only the
-   * value of that will be returned
-   */
-  introspect(key?: string): StorageConfig | string;
 
   /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but
@@ -105,36 +106,79 @@ export interface IStorage {
    * @param name
    */
   sizeOf(name: string): Promise<number>;
+
+  /**
+   * Check if a file with the provided name exists
+   * @param name
+   */
+  fileExists(name: string): Promise<boolean>;
 }
 
 export enum StorageType {
-  GCS = "gcs",
-  S3 = "s3",
   LOCAL = "local",
+  GCS = "gcs", // Google Cloud Storage
+  S3 = "s3", // Amazon S3
+  B2 = "b2", // BackBlaze B2
 }
 
 export type ConfigAmazonS3 = {
-  bucketName?: string;
+  type: string;
   accessKeyId: string;
   secretAccessKey: string;
-  endpoint?: string;
-  useDualstack?: boolean;
-  region?: string;
-  maxRetries?: number;
-  maxRedirects?: number;
-  sslEnabled?: boolean;
-  apiVersion?: string;
+  options: { [id: string]: string | number | boolean };
+  // bucketName?: string;
+  // endpoint?: string;
+  // useDualstack?: boolean;
+  // region?: string;
+  // maxRetries?: number;
+  // maxRedirects?: number;
+  // sslEnabled?: boolean;
+  // apiVersion?: string;
 };
 
 export type ConfigGoogleCloud = {
-  bucketName?: string;
-  projectId: string;
+  type: string;
   keyFilename: string;
+  projectId?: string;
+  options: { [id: string]: string | number | boolean };
 };
 
 export type ConfigLocal = {
-  bucketName?: string;
-  directory?: string;
+  type: string;
+  path: string;
 };
 
-export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud;
+export type ConfigBackBlazeB2 = {
+  type: string;
+  applicationKeyId: string;
+  applicationKey: string;
+  options: { [id: string]: string | number | boolean };
+};
+
+export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;
+
+export type BackBlazeB2Bucket = {
+  accountId: "string";
+  bucketId: "string";
+  bucketInfo: "object";
+  bucketName: "string";
+  bucketType: "string";
+  corsRules: string[];
+  lifecycleRules: string[];
+  options: string[];
+  revision: number;
+};
+
+export type BackBlazeB2File = {
+  accountId: string;
+  action: string;
+  bucketId: string;
+  contentLength: number;
+  contentMd5: string;
+  contentSha1: string;
+  contentType: string;
+  fileId: string;
+  fileInfo: [object];
+  fileName: string;
+  uploadTimestamp: number;
+};

@@ -1,31 +1,18 @@
 import path from "path";
 import { Readable } from "stream";
 import slugify from "slugify";
-import { IStorage, StorageConfig, StorageType } from "./types";
-import { Storage } from ".";
+import { IStorage } from "./types";
 
 export abstract class AbstractStorage implements IStorage {
   protected type: string;
-  protected config: StorageConfig;
-  protected bucketName: null | string = null;
-  protected buckets: string[] = [];
-  protected bucketsById: { [id: string]: string } = {};
+  protected bucketName: string;
+  protected initialized: boolean;
 
   // constructor(config: StorageConfig) {
   //   if (typeof config.bucketName !== "undefined" && config.bucketName !== null) {
   //     this.bucketName = slugify(config.bucketName);
   //   }
   // }
-
-  introspect(key?: string): StorageConfig | string {
-    if (key) {
-      if (key === "type") {
-        return this.type;
-      }
-      return this.config[key];
-    }
-    return this.config;
-  }
 
   async test(): Promise<string> {
     try {
@@ -51,12 +38,7 @@ export abstract class AbstractStorage implements IStorage {
     await this.store(stream, path.join(...paths));
   }
 
-  protected checkBucket(name: string): boolean {
-    // console.log(name, this.buckets, this.buckets.indexOf(name));
-    return this.buckets.indexOf(name) !== -1;
-  }
-
-  public getSelectedBucket(): string | null {
+  public getSelectedBucket(): string | undefined {
     return this.bucketName;
   }
 
@@ -67,6 +49,10 @@ export abstract class AbstractStorage implements IStorage {
   protected abstract async store(buffer: Buffer, targetFileName: string): Promise<void>;
 
   protected abstract async store(stream: Readable, targetFileName: string): Promise<void>;
+
+  protected abstract checkBucket(name: string): boolean;
+
+  abstract async init(): Promise<boolean>;
 
   abstract async createBucket(name: string): Promise<void>;
 
@@ -88,4 +74,6 @@ export abstract class AbstractStorage implements IStorage {
   abstract async listFiles(): Promise<[string, number][]>;
 
   abstract async sizeOf(name: string): Promise<number>;
+
+  abstract async fileExists(name: string): Promise<boolean>;
 }

@@ -4,20 +4,45 @@ import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractStorage } from "./AbstractStorage";
 import { ConfigAmazonS3, IStorage, StorageConfig, StorageType } from "./types";
+import { parseUrl } from "./util";
 
-export class StorageAmazonS3 extends AbstractStorage implements IStorage {
-  protected type = StorageType.S3 as string;
+export class StorageAmazonS3 extends AbstractStorage {
+  protected type = StorageType.S3;
   private storage: S3;
+  private buckets = [];
 
-  constructor(config: StorageConfig) {
-    // super(config);
+  constructor(config: string | ConfigAmazonS3) {
     super();
-    this.storage = new S3(config as ConfigAmazonS3);
-    const clone = { ...(config as ConfigAmazonS3) };
-    clone.accessKeyId = "key present but hidden";
-    clone.secretAccessKey = "secret present but hidden";
-    this.config = clone;
-    // console.log(config);
+    const { accessKeyId, secretAccessKey, options } = this.parseConfig(config);
+    this.storage = new S3({ accessKeyId, secretAccessKey });
+    this.bucketName = options.bucketName as string;
+  }
+
+  async init(): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+
+  private parseConfig(config: string | ConfigAmazonS3): ConfigAmazonS3 {
+    let cfg: ConfigAmazonS3;
+    if (typeof config === "string") {
+      const [type, accessKeyId, secretAccessKey, options] = parseUrl(config);
+      cfg = {
+        type,
+        accessKeyId,
+        secretAccessKey,
+        options,
+      };
+    } else {
+      cfg = config;
+    }
+
+    if (!cfg.accessKeyId || !cfg.secretAccessKey) {
+      throw new Error(
+        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 's3'"
+      );
+    }
+
+    return cfg;
   }
 
   async getFileAsReadable(
@@ -50,7 +75,7 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
     }
     const n = slugify(name);
     // console.log('createBucket', n);
-    if (super.checkBucket(n)) {
+    if (this.checkBucket(n)) {
       // console.log('CHECK BUCKET', n);
       return;
     }
@@ -191,5 +216,13 @@ export class StorageAmazonS3 extends AbstractStorage implements IStorage {
       .headObject(params)
       .promise()
       .then(res => res.ContentLength);
+  }
+
+  checkBucket(name: string): boolean {
+    return true;
+  }
+
+  fileExists(name: string): Promise<boolean> {
+    return Promise.resolve(true);
   }
 }

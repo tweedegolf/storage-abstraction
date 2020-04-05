@@ -1,65 +1,29 @@
 import fs from "fs";
 import path from "path";
 import slugify from "slugify";
-import { zip } from "ramda";
 import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import { AbstractStorage } from "./AbstractStorage";
-import { IStorage } from "./types";
-import { parseUrlGeneric } from "./util";
+import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, StorageType } from "./types";
+import { parseUrl } from "./util";
 
-export type ConfigBackBlazeB2 = {
-  options?: { [id: string]: string };
-  applicationKeyId: string;
-  applicationKey: string;
-};
-
-export type BackBlazeB2Bucket = {
-  accountId: "string";
-  bucketId: "string";
-  bucketInfo: "object";
-  bucketName: "string";
-  bucketType: "string";
-  corsRules: string[];
-  lifecycleRules: string[];
-  options: string[];
-  revision: number;
-};
-
-export type BackBlazeB2File = {
-  accountId: string;
-  action: string;
-  bucketId: string;
-  contentLength: number;
-  contentMd5: string;
-  contentSha1: string;
-  contentType: string;
-  fileId: string;
-  fileInfo: [object];
-  fileName: string;
-  uploadTimestamp: number;
-};
-
-export class StorageBackBlazeB2 implements IStorage {
-  protected type = "b2";
+export class StorageBackBlazeB2 extends AbstractStorage {
+  protected type = StorageType.B2;
+  protected bucketName: string;
+  protected initialized = false;
+  private bucketId: string;
   private storage: B2;
-  private initialized = false;
   private buckets: BackBlazeB2Bucket[] = [];
   private files: BackBlazeB2File[] = [];
-  private bucketId: string;
-  private bucketName: string;
   private nextFileName: string;
 
   constructor(config: string | ConfigBackBlazeB2) {
+    super();
     const { applicationKey, applicationKeyId, options } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
-    this.bucketName = options.bucketName;
-  }
-
-  introspect(): string {
-    return "remove this function from interface!";
+    this.bucketName = options.bucketName as string;
   }
 
   public async init(): Promise<boolean> {
@@ -97,18 +61,24 @@ export class StorageBackBlazeB2 implements IStorage {
   }
 
   private parseConfig(config: string | ConfigBackBlazeB2): ConfigBackBlazeB2 {
+    let cfg: ConfigBackBlazeB2;
     if (typeof config === "string") {
-      const [type, applicationKeyId, applicationKey, options] = parseUrlGeneric(config);
-      if (type !== this.type) {
-        throw new Error(`expecting type "${this.type}" but found type "${type}"`);
-      }
-      return {
+      const [type, applicationKeyId, applicationKey, options] = parseUrl(config);
+      cfg = {
+        type,
         applicationKeyId,
         applicationKey,
         options,
       };
+    } else {
+      cfg = config;
     }
-    return config;
+    if (!cfg.applicationKey || !cfg.applicationKeyId) {
+      throw new Error(
+        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 'b2'"
+      );
+    }
+    return cfg;
   }
 
   private getBucketId(): void {
@@ -152,21 +122,6 @@ export class StorageBackBlazeB2 implements IStorage {
       // console.log(e.message);
       throw e;
     }
-  }
-
-  async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    const paths = targetPath.split("/").map(d => slugify(d));
-    await this.store(origPath, path.join(...paths));
-  }
-
-  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    const paths = targetPath.split("/").map(d => slugify(d));
-    await this.store(buffer, path.join(...paths));
-  }
-
-  async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    const paths = targetPath.split("/").map(d => slugify(d));
-    await this.store(stream, path.join(...paths));
   }
 
   protected checkBucket(name: string): boolean {
@@ -315,5 +270,9 @@ export class StorageBackBlazeB2 implements IStorage {
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();
     return parseInt(metadata.size, 10);
+  }
+
+  async fileExists(name: string): Promise<boolean> {
+    return true;
   }
 }

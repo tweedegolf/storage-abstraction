@@ -1,10 +1,14 @@
 import path from "path";
 import { Readable } from "stream";
-import { IStorage, StorageConfig, StorageType } from "./types";
-import { StorageLocal } from "./StorageLocal";
-import { StorageAmazonS3 } from "./StorageAmazonS3";
-import { StorageGoogleCloud } from "./StorageGoogleCloud";
-import { parseConfig } from "./util";
+import { IStorage, StorageConfig } from "./types";
+
+// extend this if you add a new adapter (storage type)
+const storageClasses = {
+  b2: "StorageBackBlazeB2",
+  s3: "StorageAmazonS3",
+  gcs: "StorageGoogleCloud",
+  local: "StorageLocal",
+};
 
 export class Storage implements IStorage {
   private storage: IStorage;
@@ -13,22 +17,28 @@ export class Storage implements IStorage {
     this.switchStorage(config);
   }
 
-  introspect(key?: string): StorageConfig | string {
-    return this.storage.introspect(key);
-  }
-
   public switchStorage(args?: string | StorageConfig): void {
-    const [type, config] = parseConfig(args);
-    if (type === StorageType.LOCAL) {
-      this.storage = new StorageLocal(config);
-    } else if (type === StorageType.S3) {
-      this.storage = new StorageAmazonS3(config);
-    } else if (type === StorageType.GCS) {
-      this.storage = new StorageGoogleCloud(config);
+    let type: string;
+    if (typeof args === "string") {
+      type = args.substring(0, args.indexOf("://"));
+    } else {
+      type = args.type;
     }
+    const name = storageClasses[type];
+    if (typeof name === "undefined") {
+      throw new Error(
+        `unsupported storage type, must be one of ${Object.keys(storageClasses).join(", ")}`
+      );
+    }
+    const StorageClass = require(path.join(__dirname, name));
+    this.storage = new StorageClass[storageClasses[type]](args);
   }
 
   // all methods below are implementing IStorage
+
+  async init(): Promise<boolean> {
+    return this.storage.init();
+  }
 
   async test(): Promise<string> {
     return this.storage.test();
@@ -89,5 +99,9 @@ export class Storage implements IStorage {
 
   async sizeOf(name: string): Promise<number> {
     return this.storage.sizeOf(name);
+  }
+
+  async fileExists(name: string): Promise<boolean> {
+    return this.storage.fileExists(name);
   }
 }

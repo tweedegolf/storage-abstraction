@@ -40,7 +40,7 @@ const createLocalBucket = (directory: string, bucketName: string): void => {
     });
   }
 };
-
+/*
 export const parseUrlString = (url: string): [string, StorageConfig] => {
   let type = "";
   let config = "";
@@ -203,10 +203,18 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
       }
     });
   });
+*/
 
-export const parseUrlGeneric = (
-  url: string
-): [string, string, string, { [key: string]: string }] => {
+/**
+ * @param url
+ * Parses a url string into fragments.
+ * Urls must be formatted as: type://part1:part2?key1=value1&key2=value2")
+ * If a url is provided, only type://part1 is mandatory.
+ */
+export const parseUrl = (url?: string): [string, string, string, { [key: string]: string }] => {
+  if (url === "" || typeof url === "undefined") {
+    return ["local", "", "local-bucket", {}];
+  }
   const type = url.substring(0, url.indexOf("://"));
   let config = url.substring(url.indexOf("://") + 3);
   const questionMark = config.indexOf("?");
@@ -222,7 +230,6 @@ export const parseUrlGeneric = (
   if (colon !== -1) {
     [part1, part2] = config.split(":");
   } else {
-    // throw Error("url must be formatted as: type://part1:part2[?key1=value1&key2=value2]");
     part1 = config;
   }
   // console.log(config, optionsString);
