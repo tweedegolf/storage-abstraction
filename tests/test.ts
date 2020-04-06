@@ -197,7 +197,7 @@ const run = async (): Promise<void> => {
   // const storage = new Storage(configGoogle);
 
   // const storage = new Storage(process.env.STORAGE_URL);
-  const storage = new Storage(`local://tests/tmp kont?mode=${0o777}&slug=true`);
+  const storage = new Storage(`local://tests/test slug dir?mode=500&slug=true`);
 
   // Note that since 1.4 you have to call `init()` before you can make API calls
   try {

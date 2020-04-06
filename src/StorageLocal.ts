@@ -14,7 +14,8 @@ export class StorageLocal extends AbstractStorage {
   private directory: string;
   private buckets: string[] = [];
   public static defaultOptions = {
-    mode: 0o777,
+    // mode: 0o777,
+    mode: "777",
     slug: false,
   };
 
@@ -23,7 +24,7 @@ export class StorageLocal extends AbstractStorage {
     const { directory, options } = this.parseConfig(config);
     this.bucketName = super.generateSlug(path.basename(directory));
     this.directory = super.generateSlug(path.dirname(directory));
-    // console.log(StorageLocal.defaultOptions.mode, options.mode);
+    // console.log(StorageLocal.defaultOptions.mode, options);
     this.options = {
       ...StorageLocal.defaultOptions,
       ...options,
@@ -64,7 +65,7 @@ export class StorageLocal extends AbstractStorage {
       return true;
     } catch (e) {
       await fs.promises
-        .mkdir(path, { recursive: true, mode: parseInt(this.options.mode as string, 10) })
+        .mkdir(path, { recursive: true, mode: this.options.mode as string })
         .catch(e => {
           console.error(`\x1b[31m${e.message}`);
           return false;
@@ -105,7 +106,7 @@ export class StorageLocal extends AbstractStorage {
   async createBucket(name: string): Promise<void> {
     super.createBucket(name);
     const bn = super.generateSlug(name);
-    console.log(bn, name);
+    // console.log(bn, name);
     const created = await this.createDirectory(path.join(this.directory, bn));
     if (created) {
       this.buckets.push(bn);
