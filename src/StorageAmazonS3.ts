@@ -3,20 +3,22 @@ import slugify from "slugify";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigAmazonS3, IStorage, StorageConfig, StorageType } from "./types";
+import { ConfigAmazonS3, IStorage, StorageConfig, StorageType, JSON as TypeJSON } from "./types";
 import { parseUrl } from "./util";
 
 export class StorageAmazonS3 extends AbstractStorage {
   protected type = StorageType.S3;
   // protected bucketName: string;
   private storage: S3;
+  private options: TypeJSON = {};
   private buckets: string[] = [];
 
   constructor(config: string | ConfigAmazonS3) {
     super();
-    const { accessKeyId, secretAccessKey, options } = this.parseConfig(config);
+    const { accessKeyId, secretAccessKey, bucketName, options } = this.parseConfig(config);
     this.storage = new S3({ accessKeyId, secretAccessKey });
-    this.bucketName = options.bucketName as string;
+    this.bucketName = bucketName;
+    this.options = options;
   }
 
   async init(): Promise<boolean> {
@@ -28,11 +30,12 @@ export class StorageAmazonS3 extends AbstractStorage {
   private parseConfig(config: string | ConfigAmazonS3): ConfigAmazonS3 {
     let cfg: ConfigAmazonS3;
     if (typeof config === "string") {
-      const [type, accessKeyId, secretAccessKey, options] = parseUrl(config);
+      const [type, accessKeyId, secretAccessKey, bucketName, options] = parseUrl(config);
       cfg = {
         type,
         accessKeyId,
         secretAccessKey,
+        bucketName,
         options,
       };
     } else {

@@ -25,26 +25,9 @@ const copyFile = (readStream: Readable, writeStream: Writable): void => {
     });
 };
 
-const configS3 = {
-  bucketName: process.env.STORAGE_BUCKETNAME,
-  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
-};
-
-const configGoogle = {
-  bucketName: process.env.STORAGE_BUCKETNAME,
-  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
-  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
-};
-
-const configLocal = {
-  bucketName: process.env.STORAGE_BUCKETNAME,
-  directory: process.env.STORAGE_LOCAL_DIRECTORY,
-};
-
 const test = async (storage: IStorage): Promise<void> => {
-  console.log("=>", storage.introspect("type") as string);
-  const bucket = storage.introspect("bucketName") as string;
+  console.log("=>", storage.getType());
+  const bucket = storage.getSelectedBucket();
 
   try {
     await storage.test();
@@ -66,6 +49,7 @@ const test = async (storage: IStorage): Promise<void> => {
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
+  process.exit(0);
 
   try {
     const readStream = await storage.getFileAsReadable("test.jpg", {
@@ -137,13 +121,31 @@ const test = async (storage: IStorage): Promise<void> => {
   console.log("\n");
 };
 
+const configS3 = {
+  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
+  bucketName: process.env.STORAGE_BUCKETNAME,
+};
+
+const configGoogle = {
+  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
+  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
+  bucketName: process.env.STORAGE_BUCKETNAME,
+};
+
+const configLocal = {
+  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+};
+
 /* uncomment one of the following lines to test a single storage type: */
 // const storage = new StorageLocal(configLocal);
 // const storage = new StorageAmazonS3(configS3);
 // const storage = new StorageGoogleCloud(configGoogle);
 // const storage = new StorageGoogleCloud(process.env.STORAGE_URL);
 
-const storage = new Storage();
+// const storage = new Storage(`local://${process.cwd()}/tests/tmp`);
+const storage = new Storage(`local://../`);
+
 // console.log(storage.introspect());
 test(storage);
 

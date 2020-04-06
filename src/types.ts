@@ -18,6 +18,11 @@ export interface IStorage {
   init(): Promise<boolean>;
 
   /**
+   * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
+   */
+  getType(): string;
+
+  /**
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
    * if it fails and if so, it throws an error.
    */
@@ -121,28 +126,41 @@ export enum StorageType {
   B2 = "b2", // BackBlaze B2
 }
 
+export type JSON = {
+  [id: string]:
+    | string
+    | number
+    | boolean
+    | string[]
+    | number[]
+    | boolean[]
+    | { [id: string]: JSON };
+};
 interface IConfig {
   type: string;
-  options?: { [id: string]: string | number | boolean };
+  options?: JSON;
 }
 
 export interface ConfigAmazonS3 extends IConfig {
   accessKeyId: string;
   secretAccessKey: string;
+  bucketName?: string;
 }
 
 export interface ConfigGoogleCloud extends IConfig {
   keyFilename: string;
   projectId?: string;
+  bucketName?: string;
 }
 
 export interface ConfigLocal extends IConfig {
-  path: string;
+  directory: string;
 }
 
 export interface ConfigBackBlazeB2 extends IConfig {
   applicationKeyId: string;
   applicationKey: string;
+  bucketName?: string;
 }
 
 export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;

@@ -27,9 +27,11 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
  * Urls must be formatted as: type://part1:part2?key1=value1&key2=value2")
  * If a url is provided, only type://part1 is mandatory.
  */
-export const parseUrl = (url?: string): [string, string, string, { [key: string]: string }] => {
+export const parseUrl = (
+  url: string
+): [string, string, string, string, { [key: string]: string }] => {
   if (url === "" || typeof url === "undefined") {
-    return ["local", "", "local-bucket", {}];
+    throw new Error("please provide a configuration url");
   }
   const type = url.substring(0, url.indexOf("://"));
   let config = url.substring(url.indexOf("://") + 3);
@@ -37,6 +39,7 @@ export const parseUrl = (url?: string): [string, string, string, { [key: string]
   const colon = config.indexOf(":");
   let part1 = "";
   let part2 = "";
+  let bucketName = "";
   let options: { [key: string]: string } = {};
   let optionsString = "";
   if (questionMark !== -1) {
@@ -57,7 +60,10 @@ export const parseUrl = (url?: string): [string, string, string, { [key: string]
         acc[val[0]] = val[1];
         return acc;
       }, {});
+
+    bucketName = options.bucketName;
+    delete options.bucketName;
   }
-  // console.log(type, part1, part2, options);
-  return [type, part1, part2, options];
+  // console.log(type, part1, part2, bucketName, options);
+  return [type, part1, part2, bucketName, options];
 };

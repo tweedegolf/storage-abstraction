@@ -6,7 +6,13 @@ import { Readable } from "stream";
 import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, StorageType } from "./types";
+import {
+  ConfigBackBlazeB2,
+  BackBlazeB2Bucket,
+  BackBlazeB2File,
+  StorageType,
+  JSON as TypeJSON,
+} from "./types";
 import { parseUrl } from "./util";
 
 export class StorageBackBlazeB2 extends AbstractStorage {
@@ -15,15 +21,17 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   // protected initialized = false;
   private bucketId: string;
   private storage: B2;
+  private options: TypeJSON = {};
   private buckets: BackBlazeB2Bucket[] = [];
   private files: BackBlazeB2File[] = [];
   private nextFileName: string;
 
   constructor(config: string | ConfigBackBlazeB2) {
     super();
-    const { applicationKey, applicationKeyId, options } = this.parseConfig(config);
+    const { applicationKey, applicationKeyId, bucketName, options } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
-    this.bucketName = options.bucketName as string;
+    this.bucketName = bucketName;
+    this.options = options;
   }
 
   public async init(): Promise<boolean> {
@@ -65,11 +73,12 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   private parseConfig(config: string | ConfigBackBlazeB2): ConfigBackBlazeB2 {
     let cfg: ConfigBackBlazeB2;
     if (typeof config === "string") {
-      const [type, applicationKeyId, applicationKey, options] = parseUrl(config);
+      const [type, applicationKeyId, applicationKey, bucketName, options] = parseUrl(config);
       cfg = {
         type,
         applicationKeyId,
         applicationKey,
+        bucketName,
         options,
       };
     } else {

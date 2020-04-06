@@ -13,11 +13,15 @@ const storageClasses = {
 export class Storage implements IStorage {
   private storage: IStorage;
 
-  constructor(config?: string | StorageConfig) {
+  constructor(config: string | StorageConfig) {
     this.switchStorage(config);
   }
 
-  public switchStorage(args?: string | StorageConfig): void {
+  public getType(): string {
+    return this.storage.getType();
+  }
+
+  public switchStorage(args: string | StorageConfig): void {
     let type: string;
     if (typeof args === "string") {
       type = args.substring(0, args.indexOf("://"));

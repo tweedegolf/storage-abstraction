@@ -9,21 +9,23 @@ import {
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigGoogleCloud, StorageType } from "./types";
+import { ConfigGoogleCloud, StorageType, JSON as TypeJSON } from "./types";
 import slugify from "slugify";
 import { parseUrl } from "./util";
 
 export class StorageGoogleCloud extends AbstractStorage {
   protected type = StorageType.GCS;
   // protected bucketName: string;
+  private options: TypeJSON = {};
   private buckets: string[] = [];
   private storage: GoogleCloudStorage;
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
-    const { keyFilename, projectId, options } = this.parseConfig(config);
+    const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
-    this.bucketName = options.bucketName as string;
+    this.bucketName = bucketName;
+    this.options = options;
   }
 
   private getGCSProjectId(config: string): string {
@@ -35,11 +37,12 @@ export class StorageGoogleCloud extends AbstractStorage {
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
     let cfg: ConfigGoogleCloud;
     if (typeof config === "string") {
-      const [type, keyFilename, projectId, options] = parseUrl(config);
+      const [type, keyFilename, projectId, bucketName, options] = parseUrl(config);
       cfg = {
         type,
         keyFilename,
         projectId,
+        bucketName,
         options,
       };
     } else {

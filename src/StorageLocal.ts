@@ -13,19 +13,19 @@ export class StorageLocal extends AbstractStorage {
   protected type = StorageType.LOCAL as string;
   // protected bucketName: string;
   private directory: string;
-  private path: string;
+  private fullPath: string;
   private buckets: string[] = [];
 
   constructor(config: ConfigLocal) {
     super();
-    const { path: p } = this.parseConfig(config);
-    this.bucketName = path.basename(p);
-    this.directory = path.dirname(p);
-    this.path = p;
+    const { directory } = this.parseConfig(config);
+    this.bucketName = path.basename(directory);
+    this.directory = path.dirname(directory);
+    this.fullPath = directory;
   }
 
   async init(): Promise<boolean> {
-    await this.createDirectory(this.path);
+    await this.createDirectory(this.fullPath);
     this.initialized = true;
     return true;
   }
@@ -33,16 +33,16 @@ export class StorageLocal extends AbstractStorage {
   private parseConfig(config: string | ConfigLocal): ConfigLocal {
     let cfg: ConfigLocal;
     if (typeof config === "string") {
-      const [type, path] = parseUrl(config);
+      const [type, directory] = parseUrl(config);
       cfg = {
         type,
-        path,
+        directory,
       };
     } else {
       cfg = config;
     }
-    if (!cfg.path) {
-      throw new Error("You must specify a value for 'path' for storage type 'local'");
+    if (!cfg.directory) {
+      throw new Error("You must specify a value for 'directory' for storage type 'local'");
     }
     return cfg;
   }
@@ -67,8 +67,8 @@ export class StorageLocal extends AbstractStorage {
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(filePath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
-    const dest = path.join(this.path, targetPath);
-    await this.createDirectory(dest);
+    const dest = path.join(this.fullPath, targetPath);
+    await this.createDirectory(path.dirname(dest));
     if (typeof arg === "string") {
       await fs.promises.copyFile(arg, dest);
       return;

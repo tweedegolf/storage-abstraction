@@ -8,6 +8,10 @@ export abstract class AbstractStorage implements IStorage {
   protected bucketName: string;
   protected initialized: boolean = false;
 
+  getType(): string {
+    return this.type;
+  }
+
   async test(): Promise<string> {
     try {
       await this.listBuckets();
