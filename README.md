@@ -308,11 +308,11 @@ getFileAsReadable("image.png", {}); // &rarr; reads whole file
 
 getFileAsReadable("image.png", { start: 0 }); // &rarr; reads whole file
 
-getFileAsReadable("image.png", { start: 0, end: 2000 }); // &rarr; reads first 2000 bytes
+getFileAsReadable("image.png", { start: 0, end: 1999 }); // &rarr; reads first 2000 bytes
 
-getFileAsReadable("image.png", { end: 2000 }); // &rarr; reads first 2000 bytes
+getFileAsReadable("image.png", { end: 1999 }); // &rarr; reads first 2000 bytes
 
-getFileAsReadable("image.png", { start: 2000 }); // &rarr; reads file from byte 2001
+getFileAsReadable("image.png", { start: 2000 }); // &rarr; reads file from byte 2000
 ```
 
 ### removeFile

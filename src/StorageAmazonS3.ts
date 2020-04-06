@@ -10,7 +10,6 @@ export class StorageAmazonS3 extends AbstractStorage {
   protected type = StorageType.S3;
   // protected bucketName: string;
   private storage: S3;
-  private options: TypeJSON = {};
   private buckets: string[] = [];
 
   constructor(config: string | ConfigAmazonS3) {

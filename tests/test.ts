@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import os from "os";
 import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
@@ -7,25 +6,55 @@ import { IStorage } from "../src/types";
 import { Readable, Writable } from "stream";
 dotenv.config();
 
-const copyFile = (readStream: Readable, writeStream: Writable): void => {
-  readStream
-    .pipe(writeStream)
-    .on("error", e => {
-      console.error("\x1b[31m", e, "\n");
-    })
-    .on("finish", () => {
-      console.log("read finished");
-    });
-  writeStream
-    .on("error", e => {
-      console.error("\x1b[31m", e, "\n");
-    })
-    .on("finish", () => {
-      console.log("write finished");
-    });
+/**
+ * Below 3 examples of how you can populate a config object using environment variables.
+ * Note that you name the environment variables to your liking.
+ */
+const configS3 = {
+  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
+  bucketName: process.env.STORAGE_BUCKETNAME,
 };
 
-const test = async (storage: IStorage): Promise<void> => {
+const configGoogle = {
+  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
+  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
+  bucketName: process.env.STORAGE_BUCKETNAME,
+};
+
+const configLocal = {
+  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+};
+
+/**
+ * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
+ */
+const copyFile = (readStream: Readable, writeStream: Writable): Promise<void> =>
+  new Promise((resolve, reject) => {
+    readStream
+      .pipe(writeStream)
+      .on("error", e => {
+        console.error("\x1b[31m", e, "\n");
+        reject();
+      })
+      .on("finish", () => {
+        console.log("read finished");
+      });
+    writeStream
+      .on("error", e => {
+        console.error("\x1b[31m", e, "\n");
+        reject();
+      })
+      .on("finish", () => {
+        console.log("write finished");
+        resolve();
+      });
+  });
+
+/**
+ * A set of tests
+ */
+const tests1 = async (storage: IStorage): Promise<void> => {
   console.log("=>", storage.getType());
   const bucket = storage.getSelectedBucket();
 
@@ -49,7 +78,6 @@ const test = async (storage: IStorage): Promise<void> => {
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
-  process.exit(0);
 
   try {
     const readStream = await storage.getFileAsReadable("test.jpg", {
@@ -57,7 +85,9 @@ const test = async (storage: IStorage): Promise<void> => {
     });
     const p = path.join(process.cwd(), "test-partial.jpg");
     const writeStream = fs.createWriteStream(p);
-    copyFile(readStream, writeStream);
+    await copyFile(readStream, writeStream);
+    const size = (await fs.promises.stat(p)).size;
+    console.log("size partial", size);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
@@ -67,7 +97,7 @@ const test = async (storage: IStorage): Promise<void> => {
     const readStream = await storage.getFileAsReadable("test.jpg");
     const p = path.join(process.cwd(), "test.jpg");
     const writeStream = fs.createWriteStream(p);
-    copyFile(readStream, writeStream);
+    await copyFile(readStream, writeStream);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
@@ -95,6 +125,7 @@ const test = async (storage: IStorage): Promise<void> => {
   }
 
   await storage.selectBucket("bucket-1");
+  console.log(`select bucket "${storage.getSelectedBucket()}"`);
   await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
 
   let files = await storage.listFiles();
@@ -117,46 +148,80 @@ const test = async (storage: IStorage): Promise<void> => {
 
   await storage.deleteBucket("bucket-1");
   await storage.deleteBucket("bucket-2");
-  // await storage.deleteBucket(bucket);
+  await storage.deleteBucket("tmp");
+  buckets = await storage.listBuckets();
+  console.log(`cleanup buckets ${buckets}`);
   console.log("\n");
 };
 
-const configS3 = {
-  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+/**
+ * Another set of tests
+ */
+const tests2 = async (storage: IStorage): Promise<void> => {
+  let i = 1;
+  console.log(i++, "type", storage.getType());
+  const bucket = storage.getSelectedBucket();
+  console.log(i++, "select bucket", bucket);
+
+  try {
+    const readStream = createReadStream(path.join("tests", "data", "image1.jpg"));
+    await storage.addFileFromReadable(readStream, "/test.jpg");
+    console.log(i++, "add file");
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+  }
+  let files = await storage.listFiles();
+  console.log(i++, "list files", files);
+
+  await storage.clearBucket();
+  console.log(i++, "clear bucket");
+
+  files = await storage.listFiles();
+  console.log(i++, "list files", files);
 };
 
-const configGoogle = {
-  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
-  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+/**
+ * Another set of tests
+ */
+const tests3 = async (storage: IStorage): Promise<void> => {
+  let i = 1;
+  console.log(i++, "type", storage.getType());
+
+  await storage.createBucket("test-mode");
 };
 
-const configLocal = {
-  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+const run = async (): Promise<void> => {
+  /* uncomment one of the following lines to test a single storage type: */
+  // const storage = new Storage(configLocal);
+  // const storage = new Storage(configS3);
+  // const storage = new Storage(configGoogle);
+
+  // const storage = new Storage(process.env.STORAGE_URL);
+  const storage = new Storage(`local://tests/tmp?mode=${0o777}`);
+
+  // Note that since 1.4 you have to call `init()` before you can make API calls
+  try {
+    await storage.init();
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+    process.exit(0);
+  }
+
+  // tests1(storage);
+  // tests2(storage);
+  tests3(storage);
+
+  /* or run all tests */
+  // test(new StorageLocal(configLocal))
+  //   .then(() => tests1(new Storage(configS3)))
+  //   .then(() => tests1(new Storage(configGoogle)))
+  //   .then(() => tests1(new Storage(process.env.STORAGE_URL)))
+  //   .then(() => {
+  //     console.log("done");
+  //   })
+  //   .catch(e => {
+  //     console.log(e);
+  //   });
 };
 
-/* uncomment one of the following lines to test a single storage type: */
-// const storage = new StorageLocal(configLocal);
-// const storage = new StorageAmazonS3(configS3);
-// const storage = new StorageGoogleCloud(configGoogle);
-// const storage = new StorageGoogleCloud(process.env.STORAGE_URL);
-
-// const storage = new Storage(`local://${process.cwd()}/tests/tmp`);
-const storage = new Storage(`local://../`);
-
-// console.log(storage.introspect());
-test(storage);
-
-/* or run all tests */
-// test(new StorageLocal(configLocal))
-//   .then(() => test(new StorageAmazonS3(configS3)))
-//   .then(() => test(new StorageGoogleCloud(configGoogle)))
-//   .then(() => test(new StorageGoogleCloud(process.env.STORAGE_URL)))
-//   .then(() => {
-//     console.log("done");
-//   })
-//   .catch(e => {
-//     console.log(e);
-//   });
+run();

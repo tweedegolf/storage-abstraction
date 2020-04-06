@@ -16,7 +16,6 @@ import { parseUrl } from "./util";
 export class StorageGoogleCloud extends AbstractStorage {
   protected type = StorageType.GCS;
   // protected bucketName: string;
-  private options: TypeJSON = {};
   private buckets: string[] = [];
   private storage: GoogleCloudStorage;
 

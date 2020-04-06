@@ -21,7 +21,6 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   // protected initialized = false;
   private bucketId: string;
   private storage: B2;
-  private options: TypeJSON = {};
   private buckets: BackBlazeB2Bucket[] = [];
   private files: BackBlazeB2File[] = [];
   private nextFileName: string;
