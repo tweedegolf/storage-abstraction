@@ -1,9 +1,8 @@
 import fs from "fs";
-import slugify from "slugify";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigAmazonS3, IStorage, StorageConfig, StorageType, JSON as TypeJSON } from "./types";
+import { ConfigAmazonS3, StorageType } from "./types";
 import { parseUrl } from "./util";
 
 export class StorageAmazonS3 extends AbstractStorage {
@@ -11,13 +10,17 @@ export class StorageAmazonS3 extends AbstractStorage {
   // protected bucketName: string;
   private storage: S3;
   private buckets: string[] = [];
+  public static defaultOptions = {
+    slug: true,
+    apiVersion: "2006-03-01",
+  };
 
   constructor(config: string | ConfigAmazonS3) {
     super();
     const { accessKeyId, secretAccessKey, bucketName, options } = this.parseConfig(config);
     this.storage = new S3({ accessKeyId, secretAccessKey });
     this.bucketName = bucketName;
-    this.options = options;
+    this.options = { ...StorageAmazonS3.defaultOptions, ...options };
   }
 
   async init(): Promise<boolean> {
@@ -75,10 +78,8 @@ export class StorageAmazonS3 extends AbstractStorage {
   // util members
 
   async createBucket(name: string): Promise<void> {
-    if (name === null) {
-      throw new Error("Can not use `null` as bucket name");
-    }
-    const n = slugify(name);
+    super.createBucket(name);
+    const n = super.generateSlug(name);
     // console.log('createBucket', n);
     if (this.checkBucket(n)) {
       // console.log('CHECK BUCKET', n);
@@ -112,7 +113,7 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = slugify(n);
+    n = super.generateSlug(n);
     // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
@@ -135,7 +136,7 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = slugify(n);
+    n = super.generateSlug(n);
     // try {
     //   const data = await this.storage.listObjectVersions({ Bucket: n }).promise();
     //   console.log(data);

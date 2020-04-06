@@ -9,8 +9,7 @@ import {
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractStorage } from "./AbstractStorage";
-import { ConfigGoogleCloud, StorageType, JSON as TypeJSON } from "./types";
-import slugify from "slugify";
+import { ConfigGoogleCloud, StorageType } from "./types";
 import { parseUrl } from "./util";
 
 export class StorageGoogleCloud extends AbstractStorage {
@@ -18,13 +17,16 @@ export class StorageGoogleCloud extends AbstractStorage {
   // protected bucketName: string;
   private buckets: string[] = [];
   private storage: GoogleCloudStorage;
+  public static defaultOptions = {
+    slug: true,
+  };
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
     const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
     this.bucketName = bucketName;
-    this.options = options;
+    this.options = { ...StorageGoogleCloud.defaultOptions, ...options };
   }
 
   private getGCSProjectId(config: string): string {
@@ -152,10 +154,8 @@ export class StorageGoogleCloud extends AbstractStorage {
   }
 
   async createBucket(name: string): Promise<void> {
-    if (name === null) {
-      throw new Error("Can not use `null` as bucket name");
-    }
-    const n = slugify(name);
+    super.createBucket(name);
+    const n = super.generateSlug(name);
     if (this.buckets.findIndex(b => b === n) !== -1) {
       return;
     }
@@ -193,13 +193,13 @@ export class StorageGoogleCloud extends AbstractStorage {
 
   async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = slugify(n);
+    n = super.generateSlug(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
   }
 
   async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = slugify(n);
+    n = super.generateSlug(n);
     await this.clearBucket(n);
     const data = await this.storage.bucket(n).delete();
     // console.log(data);

@@ -3,7 +3,6 @@ import path from "path";
 import to from "await-to-js";
 import glob from "glob";
 import rimraf from "rimraf";
-import slugify from "slugify";
 import { Readable } from "stream";
 import { ConfigLocal, StorageType } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
@@ -16,13 +15,14 @@ export class StorageLocal extends AbstractStorage {
   private buckets: string[] = [];
   public static defaultOptions = {
     mode: 0o777,
+    slug: false,
   };
 
   constructor(config: ConfigLocal) {
     super();
     const { directory, options } = this.parseConfig(config);
-    this.bucketName = path.basename(directory);
-    this.directory = path.dirname(directory);
+    this.bucketName = super.generateSlug(path.basename(directory));
+    this.directory = super.generateSlug(path.dirname(directory));
     // console.log(StorageLocal.defaultOptions.mode, options.mode);
     this.options = {
       ...StorageLocal.defaultOptions,
@@ -104,7 +104,8 @@ export class StorageLocal extends AbstractStorage {
 
   async createBucket(name: string): Promise<void> {
     super.createBucket(name);
-    const bn = slugify(name);
+    const bn = super.generateSlug(name);
+    console.log(bn, name);
     const created = await this.createDirectory(path.join(this.directory, bn));
     if (created) {
       this.buckets.push(bn);
@@ -115,7 +116,7 @@ export class StorageLocal extends AbstractStorage {
     let bn = name || this.bucketName;
     // console.log(`clear bucket "${bn}"`);
     // slugify in case an un-slugified name is supplied
-    bn = slugify(bn);
+    bn = super.generateSlug(bn);
     if (!bn) {
       return;
     }
@@ -134,7 +135,7 @@ export class StorageLocal extends AbstractStorage {
   async deleteBucket(name?: string): Promise<void> {
     let bn = name || this.bucketName;
     // slugify in case an un-slugified name is supplied
-    bn = slugify(bn);
+    bn = super.generateSlug(bn);
     if (!bn) {
       return;
     }
@@ -152,8 +153,8 @@ export class StorageLocal extends AbstractStorage {
     });
   }
 
-  async selectBucket(name: string | null): Promise<void> {
-    if (name === null) {
+  async selectBucket(name?: string | null): Promise<void> {
+    if (!name) {
       this.bucketName = null;
       return;
     }

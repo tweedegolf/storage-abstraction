@@ -13,6 +13,14 @@ export abstract class AbstractStorage implements IStorage {
     return this.type;
   }
 
+  protected generateSlug(url: string): string {
+    if (this.options.slug === "true" || this.options.slug === true || this.options.slug == 1) {
+      // console.log("SUPER", this.options, url);
+      return slugify(url);
+    }
+    return url;
+  }
+
   async test(): Promise<string> {
     try {
       await this.listBuckets();
@@ -23,18 +31,30 @@ export abstract class AbstractStorage implements IStorage {
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    const paths = targetPath.split("/").map(d => slugify(d));
-    await this.store(origPath, path.join(...paths));
+    let p = targetPath;
+    if (this.options.slugify === true) {
+      const paths = targetPath.split("/").map(d => slugify(d));
+      p = path.join(...paths);
+    }
+    await this.store(origPath, p);
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    const paths = targetPath.split("/").map(d => slugify(d));
-    await this.store(buffer, path.join(...paths));
+    let p = targetPath;
+    if (this.options.slugify === true) {
+      const paths = targetPath.split("/").map(d => slugify(d));
+      p = path.join(...paths);
+    }
+    await this.store(buffer, p);
   }
 
   async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    const paths = targetPath.split("/").map(d => slugify(d));
-    await this.store(stream, path.join(...paths));
+    let p = targetPath;
+    if (this.options.slugify === true) {
+      const paths = targetPath.split("/").map(d => slugify(d));
+      p = path.join(...paths);
+    }
+    await this.store(stream, p);
   }
 
   public getSelectedBucket(): string | undefined {

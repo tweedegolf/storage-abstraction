@@ -187,7 +187,7 @@ const tests3 = async (storage: IStorage): Promise<void> => {
   let i = 1;
   console.log(i++, "type", storage.getType());
 
-  await storage.createBucket("test-mode");
+  await storage.createBucket("test mode");
 };
 
 const run = async (): Promise<void> => {
@@ -197,7 +197,7 @@ const run = async (): Promise<void> => {
   // const storage = new Storage(configGoogle);
 
   // const storage = new Storage(process.env.STORAGE_URL);
-  const storage = new Storage(`local://tests/tmp?mode=${0o777}`);
+  const storage = new Storage(`local://tests/tmp kont?mode=${0o777}&slug=true`);
 
   // Note that since 1.4 you have to call `init()` before you can make API calls
   try {

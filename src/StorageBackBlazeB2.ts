@@ -1,18 +1,11 @@
 import fs from "fs";
 import path from "path";
-import slugify from "slugify";
 import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import { AbstractStorage } from "./AbstractStorage";
-import {
-  ConfigBackBlazeB2,
-  BackBlazeB2Bucket,
-  BackBlazeB2File,
-  StorageType,
-  JSON as TypeJSON,
-} from "./types";
+import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, StorageType } from "./types";
 import { parseUrl } from "./util";
 
 export class StorageBackBlazeB2 extends AbstractStorage {
@@ -24,13 +17,16 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   private buckets: BackBlazeB2Bucket[] = [];
   private files: BackBlazeB2File[] = [];
   private nextFileName: string;
+  public static defaultOptions = {
+    slug: true,
+  };
 
   constructor(config: string | ConfigBackBlazeB2) {
     super();
     const { applicationKey, applicationKeyId, bucketName, options } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
     this.bucketName = bucketName;
-    this.options = options;
+    this.options = { ...StorageBackBlazeB2.defaultOptions, ...options };
   }
 
   public async init(): Promise<boolean> {
@@ -185,7 +181,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   async createBucket(name: string): Promise<void> {
     super.createBucket(name);
     console.log(name);
-    const n = slugify(name);
+    const n = super.generateSlug(name);
     if (this.checkBucket(n)) {
       return;
     }
@@ -228,13 +224,13 @@ export class StorageBackBlazeB2 extends AbstractStorage {
 
   async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = slugify(n);
+    n = super.generateSlug(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
   }
 
   async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = slugify(n);
+    n = super.generateSlug(n);
     await this.clearBucket(n);
     const data = await this.storage.bucket(n).delete();
     // console.log(data);
