@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import rimraf from "rimraf";
 import dotenv from "dotenv";
 import { Storage } from "../src/Storage";
 import to from "await-to-js";
@@ -65,7 +64,7 @@ if (config === null) {
 const waitABit = async (millis = 100): Promise<void> =>
   new Promise(resolve => {
     setTimeout(() => {
-      console.log(`just wait a bit (${millis}ms)`);
+      // console.log(`just wait a bit (${millis}ms)`);
       resolve();
     }, millis);
   });
@@ -80,6 +79,7 @@ describe(`testing ${storage.getType()} storage`, () => {
   });
 
   afterAll(async () => {
+    // await storage.clearBucket();
     // cleaning up test data
     const testFile = path.join(process.cwd(), `test-${storage.getType()}.jpg`);
     fs.promises
@@ -111,19 +111,23 @@ describe(`testing ${storage.getType()} storage`, () => {
     await expectAsync(storage.clearBucket()).toBeResolved();
   });
 
-  xit("add file success", async () => {
+  it("check if bucket is empty", async () => {
+    await expectAsync(storage.listFiles()).toBeResolvedTo([]);
+  });
+
+  it("add file success", async () => {
     await expectAsync(
       storage.addFileFromPath("./tests/data/image1.jpg", "image1.jpg")
     ).toBeResolved();
   });
 
-  xit("add file error", async () => {
+  it("add file error", async () => {
     await expectAsync(
       storage.addFileFromPath("./tests/data/non-existent.jpg", "non-existent.jpg")
     ).toBeRejected();
   });
 
-  xit("add with new name and dir", async () => {
+  it("add with new name and dir", async () => {
     // const [err, result] = await to(storage.addFileFromPath('./tests/data/image1.jpg', {
     //   dir: 'subdir',
     //   name: 'renamed.jpg',
@@ -134,13 +138,7 @@ describe(`testing ${storage.getType()} storage`, () => {
     ).toBeResolved();
   });
 
-  // it('wait a bit', async () => {
-  //   await new Promise((resolve) => {
-  //     setTimeout(resolve, 1000);
-  //   });
-  // });
-
-  xit("list files 1", async () => {
+  it("list files 1", async () => {
     const expectedResult: [string, number][] = [
       ["image1.jpg", 32201],
       ["subdir/renamed.jpg", 32201],
@@ -148,30 +146,30 @@ describe(`testing ${storage.getType()} storage`, () => {
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 
-  xit("remove file success", async () => {
+  it("remove file success", async () => {
     // const [err, result] = await to(storage.removeFile('subdir/renamed.jpg'));
     // console.log(err, result);
     await expectAsync(storage.removeFile("subdir/renamed.jpg")).toBeResolved();
   });
 
-  xit("remove file again", async () => {
+  it("remove file again", async () => {
     await expectAsync(storage.removeFile("subdir/renamed.jpg")).toBeResolved();
   });
 
-  xit("list files 2", async () => {
+  it("list files 2", async () => {
     const expectedResult: [string, number][] = [["image1.jpg", 32201]];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 
-  xit("get readable stream", async () => {
+  it("get readable stream", async () => {
     await expectAsync(storage.getFileAsReadable("image1.jpg")).toBeResolved();
   });
 
-  xit("get readable stream error", async () => {
+  it("get readable stream error", async () => {
     await expectAsync(storage.getFileAsReadable("image2.jpg")).toBeRejected();
   });
 
-  xit("get readable stream and save file", async () => {
+  it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
       const filePath = path.join(process.cwd(), `test-${storage.getType()}.jpg`);
@@ -202,5 +200,24 @@ describe(`testing ${storage.getType()} storage`, () => {
       console.log(e);
       throw e;
     }
+  });
+
+  it("add file from stream", async () => {
+    const stream = fs.createReadStream("./tests/data/image2.jpg");
+    await expectAsync(storage.addFileFromReadable(stream, "image2.jpg")).toBeResolved();
+  });
+
+  it("add file from buffer", async () => {
+    const buffer = await fs.promises.readFile("./tests/data/image2.jpg");
+    await expectAsync(storage.addFileFromBuffer(buffer, "image3.jpg")).toBeResolved();
+  });
+
+  it("list files 3", async () => {
+    const expectedResult: [string, number][] = [
+      ["image1.jpg", 32201],
+      ["image2.jpg", 42908],
+      ["image3.jpg", 42908],
+    ];
+    await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
   });
 });
