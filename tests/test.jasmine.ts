@@ -62,6 +62,14 @@ if (config === null) {
   process.exit(0);
 }
 
+const waitABit = async (millis = 100): Promise<void> =>
+  new Promise(resolve => {
+    setTimeout(() => {
+      console.log(`just wait a bit (${millis}ms)`);
+      resolve();
+    }, millis);
+  });
+
 const storage = new Storage(config);
 // console.log(storage.introspect());
 
@@ -80,20 +88,6 @@ describe(`testing ${storage.getType()} storage`, () => {
       .catch(e => {
         console.log(e);
       });
-
-    // cleanup local-bucket (assuming that you don't want to keep it)
-    if (storage.getType() === StorageType.LOCAL && storage.getSelectedBucket() === "local-bucket") {
-      await new Promise((resolve, reject) => {
-        rimraf(path.join(directory, "local-bucket"), (e: Error) => {
-          if (e) {
-            reject();
-            throw e;
-          } else {
-            resolve();
-          }
-        });
-      });
-    }
   });
 
   it("test", async () => {
@@ -105,11 +99,15 @@ describe(`testing ${storage.getType()} storage`, () => {
     }
   });
 
-  xit("create bucket", async () => {
+  it("create bucket", async () => {
     await expectAsync(storage.createBucket(storage.getSelectedBucket())).toBeResolved();
   });
 
-  xit("clear bucket", async () => {
+  // it("wait it bit", async () => {
+  //   await expectAsync(waitABit(2000)).toBeResolved();
+  // });
+
+  it("clear bucket", async () => {
     await expectAsync(storage.clearBucket()).toBeResolved();
   });
 

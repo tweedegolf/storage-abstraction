@@ -124,8 +124,8 @@ export class StorageLocal extends AbstractStorage {
     // remove all files and folders inside bucket directory, but not the directory itself
     const p = path.join(this.directory, bn, "*");
     return new Promise(resolve => {
-      rimraf(p, e => {
-        if (e !== null) {
+      rimraf(p, (e: Error) => {
+        if (e) {
           throw e;
         }
         resolve();
@@ -140,7 +140,7 @@ export class StorageLocal extends AbstractStorage {
     if (!bn) {
       return;
     }
-    const p = path.join(this.directory, bn);
+    const p = path.join(this.directory, bn, "*");
     return new Promise(resolve => {
       rimraf(p, e => {
         if (e !== null) {
