@@ -21,6 +21,13 @@ export class StorageAmazonS3 extends AbstractStorage {
     this.storage = new S3({ accessKeyId, secretAccessKey });
     this.bucketName = bucketName;
     this.options = { ...StorageAmazonS3.defaultOptions, ...options };
+    this.config = {
+      type: this.type,
+      accessKeyId,
+      secretAccessKey,
+      bucketName,
+      options: this.options,
+    };
   }
 
   async init(): Promise<boolean> {

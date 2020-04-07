@@ -77,6 +77,42 @@ const test1 = async (storage: IStorage): Promise<void> => {
   storage.addFileFromPath("./tests/data/image1.jpg", "image1.jpg");
 };
 
+/**
+ * Another set of tests
+ */
+const tests2 = async (storage: IStorage): Promise<void> => {
+  let i = 1;
+  console.log(i++, "type", storage.getType());
+  const bucket = storage.getSelectedBucket();
+  console.log(i++, "select bucket", bucket);
+
+  try {
+    const readStream = createReadStream(path.join("tests", "data", "image1.jpg"));
+    await storage.addFileFromReadable(readStream, "/test.jpg");
+    console.log(i++, "add file");
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+  }
+  let files = await storage.listFiles();
+  console.log(i++, "list files", files);
+
+  await storage.clearBucket();
+  console.log(i++, "clear bucket");
+
+  files = await storage.listFiles();
+  console.log(i++, "list files", files);
+};
+
+/**
+ * Another set of tests
+ */
+const tests3 = async (storage: IStorage): Promise<void> => {
+  let i = 1;
+  console.log(i++, "type", storage.getType());
+
+  await storage.createBucket("test mode");
+};
+
 const run = async (): Promise<void> => {
   // const storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
   const storage = new Storage(configLocal as StorageConfig);

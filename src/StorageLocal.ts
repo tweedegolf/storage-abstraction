@@ -29,6 +29,11 @@ export class StorageLocal extends AbstractStorage {
       ...StorageLocal.defaultOptions,
       ...options,
     };
+    this.config = {
+      type: this.type,
+      directory,
+      options: this.options,
+    };
   }
 
   async init(): Promise<boolean> {
@@ -140,7 +145,7 @@ export class StorageLocal extends AbstractStorage {
     if (!bn) {
       return;
     }
-    const p = path.join(this.directory, bn, "*");
+    const p = path.join(this.directory, bn);
     return new Promise(resolve => {
       rimraf(p, e => {
         if (e !== null) {

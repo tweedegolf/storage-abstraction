@@ -54,7 +54,7 @@ const copyFile = (readStream: Readable, writeStream: Writable): Promise<void> =>
 /**
  * A set of tests
  */
-const tests1 = async (storage: IStorage): Promise<void> => {
+const test = async (storage: IStorage): Promise<void> => {
   console.log("=>", storage.getType());
   const bucket = storage.getSelectedBucket();
 
@@ -154,42 +154,6 @@ const tests1 = async (storage: IStorage): Promise<void> => {
   console.log("\n");
 };
 
-/**
- * Another set of tests
- */
-const tests2 = async (storage: IStorage): Promise<void> => {
-  let i = 1;
-  console.log(i++, "type", storage.getType());
-  const bucket = storage.getSelectedBucket();
-  console.log(i++, "select bucket", bucket);
-
-  try {
-    const readStream = createReadStream(path.join("tests", "data", "image1.jpg"));
-    await storage.addFileFromReadable(readStream, "/test.jpg");
-    console.log(i++, "add file");
-  } catch (e) {
-    console.error("\x1b[31m", e, "\n");
-  }
-  let files = await storage.listFiles();
-  console.log(i++, "list files", files);
-
-  await storage.clearBucket();
-  console.log(i++, "clear bucket");
-
-  files = await storage.listFiles();
-  console.log(i++, "list files", files);
-};
-
-/**
- * Another set of tests
- */
-const tests3 = async (storage: IStorage): Promise<void> => {
-  let i = 1;
-  console.log(i++, "type", storage.getType());
-
-  await storage.createBucket("test mode");
-};
-
 const run = async (): Promise<void> => {
   /* uncomment one of the following lines to test a single storage type: */
   // const storage = new Storage(configLocal);
@@ -207,15 +171,13 @@ const run = async (): Promise<void> => {
     process.exit(0);
   }
 
-  // tests1(storage);
-  // tests2(storage);
-  tests3(storage);
+  test(storage);
 
   /* or run all tests */
   // test(new StorageLocal(configLocal))
-  //   .then(() => tests1(new Storage(configS3)))
-  //   .then(() => tests1(new Storage(configGoogle)))
-  //   .then(() => tests1(new Storage(process.env.STORAGE_URL)))
+  //   .then(() => test(new Storage(configS3)))
+  //   .then(() => test(new Storage(configGoogle)))
+  //   .then(() => test(new Storage(process.env.STORAGE_URL)))
   //   .then(() => {
   //     console.log("done");
   //   })

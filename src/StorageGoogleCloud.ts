@@ -27,6 +27,13 @@ export class StorageGoogleCloud extends AbstractStorage {
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
     this.bucketName = bucketName;
     this.options = { ...StorageGoogleCloud.defaultOptions, ...options };
+    this.config = {
+      type: this.type,
+      keyFilename,
+      projectId,
+      bucketName,
+      options: this.options,
+    };
   }
 
   private getGCSProjectId(config: string): string {

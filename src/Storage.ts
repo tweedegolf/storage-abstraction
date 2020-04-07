@@ -1,6 +1,6 @@
 import path from "path";
 import { Readable } from "stream";
-import { IStorage, StorageConfig } from "./types";
+import { IStorage, StorageConfig, JSON as TypeJSON } from "./types";
 
 // add new adapter (storage type) here
 const storageClasses = {
@@ -21,6 +21,13 @@ export class Storage implements IStorage {
     return this.storage.getType();
   }
 
+  public getConfiguration(): StorageConfig {
+    return this.storage.getConfiguration();
+  }
+
+  public getOptions(): TypeJSON {
+    return this.storage.getOptions();
+  }
   public switchStorage(args: string | StorageConfig): void {
     let type: string;
     if (typeof args === "string") {

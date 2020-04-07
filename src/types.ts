@@ -23,6 +23,18 @@ export interface IStorage {
   getType(): string;
 
   /**
+   * Returns configuration settings as an object. Use this only for debugging and with great
+   * care as is expose sensitive information!
+   */
+  getConfiguration(): StorageConfig;
+
+  /**
+   * Returns an object that contains both the options passed with the configuration and the
+   * default options of the storage type if not overruled.
+   */
+  getOptions(): JSON;
+
+  /**
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
    * if it fails and if so, it throws an error.
    */

@@ -4,13 +4,7 @@ import dotenv from "dotenv";
 import { Storage } from "../src/Storage";
 import to from "await-to-js";
 import "jasmine";
-import {
-  StorageConfig,
-  StorageType,
-  ConfigLocal,
-  ConfigGoogleCloud,
-  ConfigAmazonS3,
-} from "../src/types";
+import { StorageConfig, StorageType } from "../src/types";
 dotenv.config();
 
 let config: StorageConfig = null;
@@ -34,14 +28,14 @@ if (type === StorageType.LOCAL) {
   config = {
     type,
     directory,
-  } as ConfigLocal;
+  };
 } else if (type === StorageType.GCS && keyFilename) {
   config = {
     type,
     bucketName,
     projectId,
     keyFilename,
-  } as ConfigGoogleCloud;
+  };
 } else if (
   type === StorageType.S3 &&
   typeof accessKeyId !== "undefined" &&
@@ -52,7 +46,7 @@ if (type === StorageType.LOCAL) {
     bucketName,
     accessKeyId,
     secretAccessKey,
-  } as ConfigAmazonS3;
+  };
 }
 
 console.log("CONFIG", config);
@@ -219,5 +213,19 @@ describe(`testing ${storage.getType()} storage`, () => {
       ["image3.jpg", 42908],
     ];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
+  });
+
+  it("create bucket error", async () => {
+    await expectAsync(storage.createBucket()).toBeRejected();
+  });
+
+  it("create bucket", async () => {
+    await expectAsync(storage.createBucket("new-bucket")).toBeResolved();
+  });
+
+  it("check created bucket", async () => {
+    const buckets = await storage.listBuckets();
+    const index = buckets.indexOf("new-bucket");
+    expect(index).toBeGreaterThan(-1);
   });
 });

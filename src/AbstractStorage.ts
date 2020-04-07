@@ -2,9 +2,11 @@ import path from "path";
 import slugify from "slugify";
 import { Readable } from "stream";
 import { IStorage, JSON as TypeJSON } from "./types";
+import { StorageConfig } from ".";
 
 export abstract class AbstractStorage implements IStorage {
   protected type: string;
+  protected config: StorageConfig;
   protected bucketName: string;
   protected options: TypeJSON = {};
   protected initialized: boolean = false;
@@ -13,6 +15,13 @@ export abstract class AbstractStorage implements IStorage {
     return this.type;
   }
 
+  public getConfiguration(): StorageConfig {
+    return this.config;
+  }
+
+  public getOptions(): TypeJSON {
+    return this.options;
+  }
   protected generateSlug(url: string): string {
     if (this.options.slug === "true" || this.options.slug === true || this.options.slug == 1) {
       // console.log("SUPER", this.options, url);

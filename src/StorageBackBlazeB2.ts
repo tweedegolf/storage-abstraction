@@ -27,6 +27,13 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     this.storage = new B2({ applicationKey, applicationKeyId });
     this.bucketName = bucketName;
     this.options = { ...StorageBackBlazeB2.defaultOptions, ...options };
+    this.config = {
+      type: this.type,
+      applicationKey,
+      applicationKeyId,
+      bucketName,
+      options: this.options,
+    };
   }
 
   public async init(): Promise<boolean> {
