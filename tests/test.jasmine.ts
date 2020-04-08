@@ -228,15 +228,15 @@ describe(`testing ${storage.getType()} storage`, () => {
   it("create bucket", async () => {
     // await expectAsync(storage.createBucket("new-bucket")).toBeResolved();
     try {
-      await storage.createBucket("new-bucket");
+      await storage.createBucket("pristine-bucket");
     } catch (e) {
-      console.log(e.message);
+      console.error("\x1b[31m", e.message, "\n");
     }
   });
 
-  xit("check created bucket", async () => {
+  it("check created bucket", async () => {
     const buckets = await storage.listBuckets();
-    const index = buckets.indexOf("new-bucket");
+    const index = buckets.indexOf("pristine-bucket");
     expect(index).toBeGreaterThan(-1);
   });
 });

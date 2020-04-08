@@ -170,21 +170,32 @@ export class StorageGoogleCloud extends AbstractStorage {
     if (msg !== null) {
       return Promise.reject(msg);
     }
+
     const n = this.generateSlug(name);
     if (this.bucketNames.findIndex(b => b === n) !== -1) {
       return;
     }
-    const bucket = this.storage.bucket(n);
-    const [exists] = await bucket.exists();
-    if (exists) {
-      return;
+
+    try {
+      const bucket = this.storage.bucket(n);
+      const [exists] = await bucket.exists();
+      if (exists) {
+        return;
+      }
+    } catch (e) {
+      // console.log(e.message);
+      // just move on
     }
 
     try {
       await this.storage.createBucket(n);
       this.bucketNames.push(n);
     } catch (e) {
-      if (e.code === 409) {
+      // console.log("ERROR", e.message, e.code);
+      if (
+        e.code === 409 &&
+        e.message !== "Sorry, that name is not available. Please try a different one."
+      ) {
         // error code 409 is 'You already own this bucket. Please select another name.'
         // so we can safely return true if this error occurs
         return;
