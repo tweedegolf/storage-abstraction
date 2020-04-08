@@ -3,7 +3,7 @@ import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage } from "../src/types";
-import { Readable, Writable } from "stream";
+import { copyFile } from "./util";
 dotenv.config();
 
 /**
@@ -25,31 +25,6 @@ const configGoogle = {
 const configLocal = {
   directory: process.env.STORAGE_LOCAL_DIRECTORY,
 };
-
-/**
- * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
- */
-const copyFile = (readStream: Readable, writeStream: Writable): Promise<void> =>
-  new Promise((resolve, reject) => {
-    readStream
-      .pipe(writeStream)
-      .on("error", e => {
-        console.error("\x1b[31m", e, "\n");
-        reject();
-      })
-      .on("finish", () => {
-        console.log("read finished");
-      });
-    writeStream
-      .on("error", e => {
-        console.error("\x1b[31m", e, "\n");
-        reject();
-      })
-      .on("finish", () => {
-        console.log("write finished");
-        resolve();
-      });
-  });
 
 /**
  * A set of tests

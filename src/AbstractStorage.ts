@@ -14,19 +14,34 @@ export abstract class AbstractStorage implements IStorage {
     return this.type;
   }
 
+  public getOptions(): TypeJSON {
+    return this.options;
+  }
+
   public getConfiguration(): StorageConfig {
     return this.config;
   }
 
-  public getOptions(): TypeJSON {
-    return this.options;
-  }
-  protected generateSlug(url: string): string {
-    if (this.options.slug === "true" || this.options.slug === true || this.options.slug == 1) {
-      // console.log("SUPER", this.options, url);
-      return slugify(url);
+  protected generateSlug(url: string, options: TypeJSON = this.options): string {
+    // console.log("SUPER", options, url);
+    if (options.slug === "true" || options.slug === true || options.slug == 1) {
+      const s = slugify(url);
+      // console.log("SUPER", options, url, s);
+      return s;
     }
     return url;
+  }
+
+  protected validateName(name: string): string {
+    if (name === null) {
+      // throw new Error("Can not use `null` as bucket name");
+      return "Can not use `null` as bucket name";
+    }
+    if (name === "" || typeof name === "undefined") {
+      // throw new Error("Please provide a bucket name");
+      return "Please provide a bucket name";
+    }
+    return null;
   }
 
   async test(): Promise<string> {
@@ -34,7 +49,7 @@ export abstract class AbstractStorage implements IStorage {
       await this.listBuckets();
       return "ok";
     } catch (e) {
-      throw new Error("Looks like the storage configuration is not correct");
+      throw new Error(`Looks like the storage configuration is not correct (${e.message})`);
     }
   }
 
@@ -69,15 +84,6 @@ export abstract class AbstractStorage implements IStorage {
     return this.bucketName;
   }
 
-  async createBucket(name: string): Promise<void> {
-    if (name === null) {
-      throw new Error("Can not use `null` as bucket name");
-    }
-    if (name === "" || typeof name === "undefined") {
-      throw new Error("Please provide a bucket name");
-    }
-  }
-
   // stubs
 
   protected abstract async store(filePath: string, targetFileName: string): Promise<void>;
@@ -89,6 +95,8 @@ export abstract class AbstractStorage implements IStorage {
   abstract async init(): Promise<boolean>;
 
   abstract async selectBucket(name: string | null): Promise<void>;
+
+  abstract async createBucket(name: string): Promise<string>;
 
   abstract async clearBucket(name?: string): Promise<void>;
 

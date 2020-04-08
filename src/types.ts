@@ -52,7 +52,7 @@ export interface IStorage {
    * also when the bucket already exists. Note that the provided name will be slugified. Also note that
    * you have to use `selectBucket` to start using the newly created bucket
    */
-  createBucket(name: string): Promise<void>;
+  createBucket(name: string): Promise<string>;
 
   /**
    * @param name: name of the bucket that will be used to store files, if the bucket does not exist it

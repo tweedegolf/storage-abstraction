@@ -33,9 +33,10 @@
 
 # 1.4.0
 
-- Replaced `introspect()` by `getConfiguration()`, `getOptions()` and `getType()`
+- Replaced `introspect()` by `getConfiguration():StorageConfig`, `getOptions():JSON` and `getType():string`
 - Added adapter class for BackBlaze B2
 - Made configuration is more strict and generic
 - Removed option to create a new Storage without configuration (StorageLocal)
 - Added default storage options that can be overruled or extended by the options in the config object or url
 - Made slugify optional and turned it off by default on StorageLocal
+- Added API method `fileExists():Promise<boolean>`

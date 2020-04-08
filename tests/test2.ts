@@ -113,7 +113,49 @@ const tests3 = async (storage: IStorage): Promise<void> => {
   await storage.createBucket("test mode");
 };
 
+const testParam = (name = "default"): void => {
+  console.log(name);
+};
+
+const testParam2 = (name?: string): void => {
+  console.log(name || "default");
+};
+
+const testPromise = (name?: string): Promise<string> => {
+  if (name) {
+    return Promise.resolve(name);
+  }
+  return Promise.reject("please provide a name");
+};
+
+const testPromise2 = async (name?: string): Promise<string> => {
+  const n = await testPromise(name);
+  return n;
+};
+
 const run = async (): Promise<void> => {
+  /*  
+  testParam();
+  testParam("");
+  testParam(null);
+  testParam("null");
+  console.log("----");
+  testParam2();
+  testParam2("");
+  testParam2(null);
+  testParam2("null");
+  console.log("---");
+  let r = await testPromise(null).catch(e => {
+    console.log(e);
+  });
+  console.log(r);
+  r = await testPromise("a name");
+  console.log(r);
+*/
+  testPromise2(null).catch(e => {
+    console.log(e);
+  });
+
   // const storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
   const storage = new Storage(configLocal as StorageConfig);
 
@@ -125,7 +167,7 @@ const run = async (): Promise<void> => {
     process.exit(0);
   }
 
-  test1(storage);
+  // test1(storage);
 };
 
 run();

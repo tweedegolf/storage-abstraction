@@ -21,13 +21,14 @@ export class Storage implements IStorage {
     return this.storage.getType();
   }
 
+  public getOptions(): TypeJSON {
+    return this.storage.getOptions();
+  }
+
   public getConfiguration(): StorageConfig {
     return this.storage.getConfiguration();
   }
 
-  public getOptions(): TypeJSON {
-    return this.storage.getOptions();
-  }
   public switchStorage(args: string | StorageConfig): void {
     let type: string;
     if (typeof args === "string") {
@@ -68,7 +69,7 @@ export class Storage implements IStorage {
     return this.storage.addFileFromReadable(stream, targetPath);
   }
 
-  async createBucket(name?: string): Promise<void> {
+  async createBucket(name?: string): Promise<string> {
     return this.storage.createBucket(name);
   }
 

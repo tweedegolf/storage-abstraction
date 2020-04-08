@@ -14,8 +14,7 @@ import { parseUrl } from "./util";
 
 export class StorageGoogleCloud extends AbstractStorage {
   protected type = StorageType.GCS;
-  // protected bucketName: string;
-  private buckets: string[] = [];
+  private bucketNames: string[] = [];
   private storage: GoogleCloudStorage;
   public static defaultOptions = {
     slug: true,
@@ -25,8 +24,8 @@ export class StorageGoogleCloud extends AbstractStorage {
     super();
     const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
-    this.bucketName = bucketName;
     this.options = { ...StorageGoogleCloud.defaultOptions, ...options };
+    this.bucketName = this.generateSlug(bucketName, this.options);
     this.config = {
       type: this.type,
       keyFilename,
@@ -36,8 +35,14 @@ export class StorageGoogleCloud extends AbstractStorage {
     };
   }
 
-  private getGCSProjectId(config: string): string {
-    const data = fs.readFileSync(config).toString("utf-8");
+  /**
+   * @param {string} keyFile - path to the keyFile
+   *
+   * Read in the keyFile and retrieve the projectId, this is function
+   * is called when the user did not provide a projectId
+   */
+  private getGCSProjectId(keyFile: string): string {
+    const data = fs.readFileSync(keyFile).toString("utf-8");
     const json = JSON.parse(data);
     return json.project_id;
   }
@@ -160,10 +165,13 @@ export class StorageGoogleCloud extends AbstractStorage {
     });
   }
 
-  async createBucket(name: string): Promise<void> {
-    super.createBucket(name);
-    const n = super.generateSlug(name);
-    if (this.buckets.findIndex(b => b === n) !== -1) {
+  async createBucket(name: string): Promise<string> {
+    const msg = this.validateName(name);
+    if (msg !== null) {
+      return Promise.reject(msg);
+    }
+    const n = this.generateSlug(name);
+    if (this.bucketNames.findIndex(b => b === n) !== -1) {
       return;
     }
     const bucket = this.storage.bucket(n);
@@ -174,7 +182,7 @@ export class StorageGoogleCloud extends AbstractStorage {
 
     try {
       await this.storage.createBucket(n);
-      this.buckets.push(n);
+      this.bucketNames.push(n);
     } catch (e) {
       if (e.code === 409) {
         // error code 409 is 'You already own this bucket. Please select another name.'
@@ -183,6 +191,22 @@ export class StorageGoogleCloud extends AbstractStorage {
       }
       throw new Error(e.message);
     }
+
+    // ossia:
+    // await this.storage
+    //   .createBucket(n)
+    //   .then(() => {
+    //     this.bucketNames.push(n);
+    //     return;
+    //   })
+    //   .catch(e => {
+    //     if (e.code === 409) {
+    //       // error code 409 is 'You already own this bucket. Please select another name.'
+    //       // so we can safely return true if this error occurs
+    //       return;
+    //     }
+    //     throw new Error(e.message);
+    //   });
   }
 
   async selectBucket(name: string | null): Promise<void> {
@@ -200,26 +224,26 @@ export class StorageGoogleCloud extends AbstractStorage {
 
   async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = super.generateSlug(n);
+    n = this.generateSlug(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
   }
 
   async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = super.generateSlug(n);
+    n = this.generateSlug(n);
     await this.clearBucket(n);
     const data = await this.storage.bucket(n).delete();
     // console.log(data);
     if (n === this.bucketName) {
       this.bucketName = null;
     }
-    this.buckets = this.buckets.filter(b => b !== n);
+    this.bucketNames = this.bucketNames.filter(b => b !== n);
   }
 
   async listBuckets(): Promise<string[]> {
     const [buckets] = await this.storage.getBuckets();
-    this.buckets = buckets.map(b => b.metadata.id);
-    return this.buckets;
+    this.bucketNames = buckets.map(b => b.metadata.id);
+    return this.bucketNames;
   }
 
   private async getMetaData(files: string[]): Promise<number[]> {
@@ -253,6 +277,12 @@ export class StorageGoogleCloud extends AbstractStorage {
   }
 
   async fileExists(name: string): Promise<boolean> {
-    return true;
+    const data = await this.storage
+      .bucket(this.bucketName)
+      .file(name)
+      .exists();
+
+    // console.log(data);
+    return data[0];
   }
 }

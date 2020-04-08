@@ -21,8 +21,8 @@ export class StorageLocal extends AbstractStorage {
   constructor(config: ConfigLocal) {
     super();
     const { directory, options } = this.parseConfig(config);
-    this.bucketName = super.generateSlug(path.basename(directory));
-    this.directory = super.generateSlug(path.dirname(directory));
+    this.bucketName = this.generateSlug(path.basename(directory));
+    this.directory = this.generateSlug(path.dirname(directory));
     // console.log(StorageLocal.defaultOptions.mode, options);
     this.options = { ...StorageLocal.defaultOptions, ...options };
     this.options.mode = this.options.mode.toString();
@@ -107,13 +107,17 @@ export class StorageLocal extends AbstractStorage {
     });
   }
 
-  async createBucket(name: string): Promise<void> {
-    super.createBucket(name);
-    const bn = super.generateSlug(name);
+  async createBucket(name: string): Promise<string> {
+    const msg = this.validateName(name);
+    if (msg !== null) {
+      return Promise.reject(msg);
+    }
+    const bn = this.generateSlug(name);
     // console.log(bn, name);
     const created = await this.createDirectory(path.join(this.directory, bn));
     if (created) {
       this.buckets.push(bn);
+      return "ok";
     }
   }
 
@@ -121,7 +125,7 @@ export class StorageLocal extends AbstractStorage {
     let bn = name || this.bucketName;
     // console.log(`clear bucket "${bn}"`);
     // slugify in case an un-slugified name is supplied
-    bn = super.generateSlug(bn);
+    bn = this.generateSlug(bn);
     if (!bn) {
       return;
     }
@@ -140,7 +144,7 @@ export class StorageLocal extends AbstractStorage {
   async deleteBucket(name?: string): Promise<void> {
     let bn = name || this.bucketName;
     // slugify in case an un-slugified name is supplied
-    bn = super.generateSlug(bn);
+    bn = this.generateSlug(bn);
     if (!bn) {
       return;
     }
@@ -234,6 +238,11 @@ export class StorageLocal extends AbstractStorage {
   }
 
   async fileExists(name: string): Promise<boolean> {
-    return true;
+    try {
+      await fs.promises.access(path.join(this.directory, this.bucketName, name));
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
