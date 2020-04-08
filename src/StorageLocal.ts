@@ -6,7 +6,7 @@ import rimraf from "rimraf";
 import { Readable } from "stream";
 import { ConfigLocal, StorageType } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
-import { parseUrl } from "./util";
+import { parseUrl, parseIntFromString } from "./util";
 
 export class StorageLocal extends AbstractStorage {
   protected type = StorageType.LOCAL as string;
@@ -14,8 +14,7 @@ export class StorageLocal extends AbstractStorage {
   private directory: string;
   private buckets: string[] = [];
   public static defaultOptions = {
-    // mode: 0o777,
-    mode: "777",
+    mode: 0o777,
     slug: false,
   };
 
@@ -25,14 +24,14 @@ export class StorageLocal extends AbstractStorage {
     this.bucketName = super.generateSlug(path.basename(directory));
     this.directory = super.generateSlug(path.dirname(directory));
     // console.log(StorageLocal.defaultOptions.mode, options);
-    this.options = {
-      ...StorageLocal.defaultOptions,
-      ...options,
-    };
+    this.options = { ...StorageLocal.defaultOptions, ...options };
+    this.options.mode = this.options.mode.toString();
+    // in case you've passed in an octal number as string value, e.g. "0o755"
+    this.options.mode = parseIntFromString(this.options.mode);
     this.config = {
       type: this.type,
       directory,
-      options: this.options,
+      options,
     };
   }
 

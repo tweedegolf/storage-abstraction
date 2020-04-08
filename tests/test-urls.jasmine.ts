@@ -2,6 +2,13 @@ import "jasmine";
 import { Storage } from "../src/Storage";
 import { StorageType } from "../src/types";
 
+// describe("test jasmine", () => {
+//   it("weird", () => {
+//     expect("false").toBeTruthy();
+//     expect("0").toBeTruthy();
+//   });
+// });
+
 describe(`testing Google urls`, () => {
   it("[0]", () => {
     this.storage = new Storage("gcs://keyFile.json:appName?bucketName=the-buck");
@@ -88,7 +95,7 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
     expect(this.storage.getConfiguration().options.region).toBe("eu-west-2");
-    expect(this.storage.getConfiguration().options.sslEnabled).toBeTruthy();
+    expect(this.storage.getConfiguration().options.sslEnabled).toBeTrue();
   });
 
   xit("[2] typo", () => {

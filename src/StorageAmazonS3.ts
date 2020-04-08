@@ -26,7 +26,7 @@ export class StorageAmazonS3 extends AbstractStorage {
       accessKeyId,
       secretAccessKey,
       bucketName,
-      options: this.options,
+      options,
     };
   }
 

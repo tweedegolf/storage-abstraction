@@ -1,8 +1,7 @@
 import path from "path";
 import slugify from "slugify";
 import { Readable } from "stream";
-import { IStorage, JSON as TypeJSON } from "./types";
-import { StorageConfig } from ".";
+import { StorageConfig, IStorage, JSON as TypeJSON } from "./types";
 
 export abstract class AbstractStorage implements IStorage {
   protected type: string;

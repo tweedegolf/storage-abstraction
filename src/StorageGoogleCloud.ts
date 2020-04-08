@@ -32,7 +32,7 @@ export class StorageGoogleCloud extends AbstractStorage {
       keyFilename,
       projectId,
       bucketName,
-      options: this.options,
+      options,
     };
   }
 

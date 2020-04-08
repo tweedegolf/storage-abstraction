@@ -23,14 +23,21 @@ export interface IStorage {
   getType(): string;
 
   /**
-   * Returns configuration settings as an object. Use this only for debugging and with great
-   * care as is expose sensitive information!
+   * Returns configuration settings that you've provided when instantiating as an object.
+   * Use this only for debugging and with great care as it may expose sensitive information.
+   *
+   * The object contains the key `bucketName` which is the initial value that you've set during
+   * initialization; if you have selected another bucket after initialization it will still show
+   * the original value. Use `getSelectedBucket()` to retrieve the current value.
+   *
+   * The object also contains the key `options` which are only the options passed in during
+   * initialization; if you want all options, including the default options use `getOptions()`
    */
   getConfiguration(): StorageConfig;
 
   /**
    * Returns an object that contains both the options passed with the configuration and the
-   * default options of the storage type if not overruled.
+   * default options of the storage type if not overruled by the options you passed in.
    */
   getOptions(): JSON;
 

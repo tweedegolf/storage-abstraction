@@ -1,4 +1,5 @@
 import fs from "fs";
+import { JSON as TypeJSON } from "./types";
 
 // not in use, keep for reference
 export const getGCSProjectIdAsync = async (config: string): Promise<string> => {
@@ -66,4 +67,17 @@ export const parseUrl = (
   }
   // console.log(type, part1, part2, bucketName, options);
   return [type, part1, part2, bucketName, options];
+};
+
+export const parseIntFromString = (s: string): number => {
+  if (s.startsWith("0o")) {
+    return parseInt(s, 8);
+  }
+  if (s.startsWith("0x") || s.startsWith("0X")) {
+    return parseInt(s, 16);
+  }
+  if (s.startsWith("0b") || s.startsWith("0B")) {
+    return parseInt(s, 2);
+  }
+  return parseInt(s);
 };
