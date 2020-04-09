@@ -10,8 +10,6 @@ import { parseUrl } from "./util";
 
 export class StorageBackBlazeB2 extends AbstractStorage {
   protected type = StorageType.B2;
-  // protected bucketName: string;
-  // protected initialized = false;
   private bucketId: string;
   private storage: B2;
   private buckets: BackBlazeB2Bucket[] = [];
@@ -25,8 +23,8 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     super();
     const { applicationKey, applicationKeyId, bucketName, options } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
-    this.bucketName = bucketName;
     this.options = { ...StorageBackBlazeB2.defaultOptions, ...options };
+    this.bucketName = this.generateSlug(bucketName, this.options);
     this.config = {
       type: this.type,
       applicationKey,
@@ -155,7 +153,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     await this.createBucket(this.bucketName);
@@ -185,13 +183,17 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     });
   }
 
-  async createBucket(name: string): Promise<void> {
-    super.createBucket(name);
-    console.log(name);
-    const n = super.generateSlug(name);
+  async createBucket(name: string): Promise<string> {
+    const msg = this.validateName(name);
+    if (msg !== null) {
+      return Promise.reject(msg);
+    }
+
+    const n = this.generateSlug(name);
     if (this.checkBucket(n)) {
       return;
     }
+
     const bucket = this.storage.bucket(n);
     const [exists] = await bucket.exists();
     if (exists) {
@@ -200,13 +202,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
 
     try {
       await this.storage.createBucket(n);
-      // this.buckets.push(n);
     } catch (e) {
-      if (e.code === 409) {
-        // error code 409 is 'You already own this bucket. Please select another name.'
-        // so we can safely return true if this error occurs
-        return;
-      }
       throw new Error(e.message);
     }
   }

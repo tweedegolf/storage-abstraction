@@ -23,6 +23,9 @@ export abstract class AbstractStorage implements IStorage {
   }
 
   protected generateSlug(url: string, options: TypeJSON = this.options): string {
+    if (!url || url === "null" || url === "undefined") {
+      return "";
+    }
     // console.log("SUPER", options, url);
     if (options.slug === "true" || options.slug === true || options.slug == 1) {
       const s = slugify(url);
@@ -36,6 +39,12 @@ export abstract class AbstractStorage implements IStorage {
     if (name === null) {
       // throw new Error("Can not use `null` as bucket name");
       return "Can not use `null` as bucket name";
+    }
+    if (name === "null") {
+      return 'Can not use "null" as bucket name';
+    }
+    if (name === "undefined") {
+      return 'Can not use "undefined" as bucket name';
     }
     if (name === "" || typeof name === "undefined") {
       // throw new Error("Please provide a bucket name");

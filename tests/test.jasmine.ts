@@ -1,10 +1,11 @@
 import "jasmine";
 import fs from "fs";
+import to from "await-to-js";
 import path from "path";
 import rimraf from "rimraf";
+import uniquid from "uniquid";
 import dotenv from "dotenv";
 import { Storage } from "../src/Storage";
-import to from "await-to-js";
 import { StorageConfig, StorageType } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
@@ -56,6 +57,8 @@ if (config === null) {
   console.error("\x1b[31m[ERROR] No valid config");
   process.exit(0);
 }
+
+const newBucketName = `bucket-${uniquid()}-${new Date()}`;
 
 const waitABit = async (millis = 100): Promise<void> =>
   new Promise(resolve => {
@@ -222,21 +225,66 @@ describe(`testing ${storage.getType()} storage`, () => {
   });
 
   it("create bucket error", async () => {
+    await expectAsync(storage.createBucket()).toBeRejectedWith("Please provide a bucket name");
+  });
+
+  it("create bucket error", async () => {
     await expectAsync(storage.createBucket("")).toBeRejectedWith("Please provide a bucket name");
   });
 
-  it("create bucket", async () => {
-    // await expectAsync(storage.createBucket("new-bucket")).toBeResolved();
+  it("create bucket error", async () => {
+    await expectAsync(storage.createBucket(null)).toBeRejectedWith(
+      "Can not use `null` as bucket name"
+    );
+  });
+
+  it("create bucket error", async () => {
+    await expectAsync(storage.createBucket("null")).toBeRejectedWith(
+      'Can not use "null" as bucket name'
+    );
+  });
+
+  it("create bucket error", async () => {
+    await expectAsync(storage.createBucket("undefined")).toBeRejectedWith(
+      'Can not use "undefined" as bucket name'
+    );
+  });
+
+  it("create already existing bucket that you are not allowed to access", async () => {
+    // the name "new-bucket" has already been taken by someone else (not for local)
+    let r = storage.getType() === StorageType.LOCAL;
     try {
-      await storage.createBucket("pristine-bucket");
+      const msg = await storage.createBucket("new-bucket");
+      // console.log(msg);
     } catch (e) {
-      console.error("\x1b[31m", e.message, "\n");
+      r = e.message !== "ok" && e.message !== "";
+      // console.log("R", r);
+    }
+    expect(r).toEqual(true);
+  });
+
+  it("create bucket", async () => {
+    try {
+      await storage.createBucket(newBucketName);
+    } catch (e) {
+      console.error("\x1b[31m", e, "\n");
     }
   });
 
   it("check created bucket", async () => {
     const buckets = await storage.listBuckets();
-    const index = buckets.indexOf("pristine-bucket");
+    const index = buckets.indexOf(newBucketName);
     expect(index).toBeGreaterThan(-1);
   });
+
+  // it("select bucket", async () => {
+  //   const buckets = await storage.listBuckets();
+  //   const index = buckets.indexOf(newBucketName);
+  //   expect(index).toBeGreaterThan(-1);
+  // });
+
+  // it("delete bucket", async () => {
+  //   const index = buckets.indexOf(newBucketName);
+  //   expect(index).toBeGreaterThan(-1);
+  // });
 });

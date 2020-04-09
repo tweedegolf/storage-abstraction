@@ -26,6 +26,9 @@ export class StorageGoogleCloud extends AbstractStorage {
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
     this.options = { ...StorageGoogleCloud.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
+    if (this.bucketName) {
+      this.bucketNames.push(this.bucketName);
+    }
     this.config = {
       type: this.type,
       keyFilename,
@@ -135,7 +138,7 @@ export class StorageGoogleCloud extends AbstractStorage {
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     await this.createBucket(this.bucketName);
@@ -194,10 +197,12 @@ export class StorageGoogleCloud extends AbstractStorage {
       // console.log("ERROR", e.message, e.code);
       if (
         e.code === 409 &&
-        e.message !== "Sorry, that name is not available. Please try a different one."
+        e.message === "You already own this bucket. Please select another name."
       ) {
-        // error code 409 is 'You already own this bucket. Please select another name.'
-        // so we can safely return true if this error occurs
+        // error code 409 can have messages like:
+        // "You already own this bucket. Please select another name." (bucket exists!)
+        // "Sorry, that name is not available. Please try a different one." (notably bucket name "new-bucket")
+        // So in some cases we can safely ignore this error, in some case we can't
         return;
       }
       throw new Error(e.message);
@@ -269,7 +274,7 @@ export class StorageGoogleCloud extends AbstractStorage {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     const data = await this.storage.bucket(this.bucketName).getFiles();
@@ -279,7 +284,7 @@ export class StorageGoogleCloud extends AbstractStorage {
   }
 
   async sizeOf(name: string): Promise<number> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     const file = this.storage.bucket(this.bucketName).file(name);

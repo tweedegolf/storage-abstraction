@@ -21,7 +21,11 @@ const configS3 = {
   type: StorageType.S3,
   accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+  // bucketName: process.env.STORAGE_BUCKETNAME,
+  bucketName: "null",
+  options: {
+    region: "eu-west-1",
+  },
 };
 
 const configGoogle = {
@@ -151,17 +155,26 @@ const run = async (): Promise<void> => {
   console.log(r);
   r = await testPromise("a name");
   console.log(r);
-*/
   testPromise2(null).catch(e => {
     console.log(e);
   });
+  */
 
   // const storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
-  const storage = new Storage(configLocal as StorageConfig);
+  const storage = new Storage(configS3);
 
   // Note that since 1.4 you have to call `init()` before you can make API calls
   try {
     await storage.init();
+  } catch (e) {
+    console.error("\x1b[31m", e, "\n");
+    process.exit(0);
+  }
+
+  console.log(storage.getConfiguration());
+
+  try {
+    await storage.createBucket("paap aap 2");
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
     process.exit(0);

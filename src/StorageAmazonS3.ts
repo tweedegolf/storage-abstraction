@@ -9,7 +9,7 @@ export class StorageAmazonS3 extends AbstractStorage {
   protected type = StorageType.S3;
   // protected bucketName: string;
   private storage: S3;
-  private buckets: string[] = [];
+  private bucketNames: string[] = [];
   public static defaultOptions = {
     slug: true,
     apiVersion: "2006-03-01",
@@ -19,8 +19,11 @@ export class StorageAmazonS3 extends AbstractStorage {
     super();
     const { accessKeyId, secretAccessKey, bucketName, options } = this.parseConfig(config);
     this.storage = new S3({ accessKeyId, secretAccessKey });
-    this.bucketName = bucketName;
     this.options = { ...StorageAmazonS3.defaultOptions, ...options };
+    this.bucketName = this.generateSlug(bucketName, this.options);
+    if (this.bucketName) {
+      this.bucketNames.push(this.bucketName);
+    }
     this.config = {
       type: this.type,
       accessKeyId,
@@ -84,28 +87,36 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   // util members
 
-  async createBucket(name: string): Promise<void> {
-    super.createBucket(name);
-    const n = super.generateSlug(name);
+  async createBucket(name: string): Promise<string> {
+    const msg = this.validateName(name);
+    if (msg !== null) {
+      return Promise.reject(msg);
+    }
+
+    const n = this.generateSlug(name);
     // console.log('createBucket', n);
-    if (this.checkBucket(n)) {
-      // console.log('CHECK BUCKET', n);
+    if (this.bucketNames.findIndex(b => b === n) !== -1) {
       return;
     }
+
     try {
-      const data = await this.storage.headBucket({ Bucket: n }).promise();
-      // console.log('HEAD BUCKET', n, data);
-      this.buckets.push(n);
+      await this.storage.headBucket({ Bucket: n }).promise();
+      // console.log("HEAD BUCKET", n, this.bucketNames);
+      this.bucketNames.push(n);
     } catch (e) {
+      // console.log(e);
       if (e.code === "Forbidden") {
-        // BucketAlreadyExists: The requested bucket name is not available.
-        // The bucket namespace is shared by all users of the system.
-        // Please select a different name and try again.
-        throw e;
+        // BucketAlreadyExists
+        const msg = [
+          "The requested bucket name is not available.",
+          "The bucket namespace is shared by all users of the system.",
+          "Please select a different name and try again.",
+        ];
+        return Promise.reject(msg.join(" "));
       }
       const data = await this.storage.createBucket({ Bucket: n }).promise();
-      // console.log('CREATE BUCKET', n, data);
-      this.buckets.push(n);
+      // console.log("CREATE BUCKET", n, data);
+      this.bucketNames.push(n);
     }
   }
 
@@ -120,7 +131,7 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = super.generateSlug(n);
+    n = this.generateSlug(n);
     // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
@@ -143,7 +154,7 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = super.generateSlug(n);
+    n = this.generateSlug(n);
     // try {
     //   const data = await this.storage.listObjectVersions({ Bucket: n }).promise();
     //   console.log(data);
@@ -162,7 +173,7 @@ export class StorageAmazonS3 extends AbstractStorage {
       if (n === this.bucketName) {
         this.bucketName = null;
       }
-      this.buckets = this.buckets.filter(b => b !== n);
+      this.bucketNames = this.bucketNames.filter(b => b !== n);
       // console.log(this.buckets, result);
     } catch (e) {
       if (e.code === "NoSuchBucket") {
@@ -174,15 +185,15 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   async listBuckets(): Promise<string[]> {
     const data = await this.storage.listBuckets().promise();
-    this.buckets = data.Buckets.map(d => d.Name);
-    return this.buckets;
+    this.bucketNames = data.Buckets.map(d => d.Name);
+    return this.bucketNames;
   }
 
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     await this.createBucket(this.bucketName);
@@ -206,7 +217,7 @@ export class StorageAmazonS3 extends AbstractStorage {
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     const params = {
@@ -218,7 +229,7 @@ export class StorageAmazonS3 extends AbstractStorage {
   }
 
   async sizeOf(name: string): Promise<number> {
-    if (this.bucketName === null) {
+    if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
     const params = {
@@ -231,11 +242,18 @@ export class StorageAmazonS3 extends AbstractStorage {
       .then(res => res.ContentLength);
   }
 
-  checkBucket(name: string): boolean {
-    return true;
-  }
-
   async fileExists(name: string): Promise<boolean> {
-    return true;
+    if (!this.bucketName) {
+      throw new Error("Please select a bucket first");
+    }
+    const params = {
+      Bucket: this.bucketName,
+      Key: name,
+    };
+    return await this.storage
+      .headObject(params)
+      .promise()
+      .then(() => true)
+      .catch(() => false);
   }
 }
