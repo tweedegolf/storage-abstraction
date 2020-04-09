@@ -29,7 +29,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
       type: this.type,
       applicationKey,
       applicationKeyId,
-      bucketName: this.bucketName,
+      bucketName,
       options,
     };
   }

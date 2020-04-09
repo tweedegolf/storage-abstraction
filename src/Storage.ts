@@ -3,12 +3,28 @@ import { Readable } from "stream";
 import { IStorage, StorageConfig, JSON as TypeJSON } from "./types";
 
 // add new adapter (storage type) here
-const storageClasses = {
+const adapterClasses = {
   b2: "StorageBackBlazeB2",
   s3: "StorageAmazonS3",
   gcs: "StorageGoogleCloud",
   local: "StorageLocal",
 };
+
+const adapterFunctions = {
+  b2: "AdapterB2", // export must be name `createAdapter`
+  b3: "AdapterB3", // export must be name `createAdapter`
+};
+
+const availableAdapters: string = Object.keys(adapterClasses)
+  .concat(Object.keys(adapterFunctions))
+  .reduce((acc, val) => {
+    if (acc.findIndex(v => v === val) === -1) {
+      acc.push(val);
+    }
+    return acc;
+  }, [])
+  .sort()
+  .join(", ");
 
 export class Storage implements IStorage {
   private storage: IStorage;
@@ -36,15 +52,22 @@ export class Storage implements IStorage {
     } else {
       type = args.type;
     }
-    const name = storageClasses[type];
-    // console.log(type, name);
-    if (typeof name === "undefined") {
-      throw new Error(
-        `unsupported storage type, must be one of ${Object.keys(storageClasses).join(", ")}`
-      );
+    // console.log("type", type);
+    if (!adapterClasses[type] && !adapterFunctions[type]) {
+      throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
-    const StorageClass = require(path.join(__dirname, name));
-    this.storage = new StorageClass[storageClasses[type]](args);
+    // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
+    if (adapterClasses[type]) {
+      const name = adapterClasses[type];
+      const StorageClass = require(path.join(__dirname, name));
+      console.log(StorageClass);
+      this.storage = new StorageClass[adapterClasses[type]](args);
+    } else if (adapterFunctions[type]) {
+      const name = adapterFunctions[type];
+      const module = require(path.join(__dirname, name));
+      // console.log(module);
+      this.storage = module.createAdapter(args);
+    }
   }
 
   // all methods below are implementing IStorage

@@ -19,13 +19,11 @@ describe(`testing local urls`, () => {
 
   it("[1]", () => {
     this.storage = new Storage("local://tests/tmp");
-    expect(this.storage.getConfiguration().directory).toBe("tests");
     expect(this.storage.getSelectedBucket()).toBe("tmp");
   });
 
   it("[2] store in folder where process runs", () => {
     this.storage = new Storage(`local://${process.cwd()}/the-buck`);
-    expect(this.storage.getConfiguration().directory).toBe(process.cwd());
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
 
@@ -36,7 +34,6 @@ describe(`testing local urls`, () => {
       bucketName: "the-buck",
     });
     expect(this.storage.getType()).toBe(StorageType.LOCAL);
-    expect(this.storage.getConfiguration().directory).toBe("tests/tmp");
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
 
@@ -46,7 +43,6 @@ describe(`testing local urls`, () => {
       directory: "tests/tmp",
     });
     expect(this.storage.getType()).toBe(StorageType.LOCAL);
-    expect(this.storage.getConfiguration().directory).toBe("tests");
     expect(this.storage.getSelectedBucket()).toBe("tmp");
   });
 });

@@ -35,8 +35,8 @@ export class StorageLocal extends AbstractStorage {
     this.options.mode = parseIntFromString(this.options.mode);
     this.config = {
       type: this.type,
-      directory: this.directory,
-      bucketName: this.bucketName,
+      directory,
+      bucketName,
       options,
     };
   }

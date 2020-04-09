@@ -160,8 +160,16 @@ const run = async (): Promise<void> => {
   });
   */
 
-  // const storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
-  const storage = new Storage(configS3);
+  let storage: Storage;
+  try {
+    // storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
+    storage = new Storage(`foo://tests/tmp slug?mode=600&slug=true`);
+    // storage = new Storage(`b2://tests/tmp slug?mode=600&slug=true`);
+    // storage = new Storage(configS3);
+  } catch (e) {
+    console.error(`\x1b[31m${e.message}\n`);
+    process.exit(0);
+  }
 
   // Note that since 1.4 you have to call `init()` before you can make API calls
   try {
