@@ -30,7 +30,13 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
  */
 export const parseUrl = (
   url: string
-): [string, string, string, string, { [key: string]: string }] => {
+): {
+  type: string;
+  part1: string;
+  part2: string;
+  bucketName: string;
+  options: { [key: string]: string };
+} => {
   if (url === "" || typeof url === "undefined") {
     throw new Error("please provide a configuration url");
   }
@@ -66,7 +72,7 @@ export const parseUrl = (
     delete options.bucketName;
   }
   // console.log(type, part1, part2, bucketName, options);
-  return [type, part1, part2, bucketName, options];
+  return { type, part1, part2, bucketName, options };
 };
 
 export const parseIntFromString = (s: string): number => {

@@ -158,18 +158,17 @@ export type JSON = {
 interface IConfig {
   type: string;
   options?: JSON;
+  bucketName?: string;
 }
 
 export interface ConfigAmazonS3 extends IConfig {
   accessKeyId: string;
   secretAccessKey: string;
-  bucketName?: string;
 }
 
 export interface ConfigGoogleCloud extends IConfig {
   keyFilename: string;
   projectId?: string;
-  bucketName?: string;
 }
 
 export interface ConfigLocal extends IConfig {
@@ -179,7 +178,6 @@ export interface ConfigLocal extends IConfig {
 export interface ConfigBackBlazeB2 extends IConfig {
   applicationKeyId: string;
   applicationKey: string;
-  bucketName?: string;
 }
 
 export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;

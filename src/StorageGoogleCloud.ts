@@ -33,7 +33,7 @@ export class StorageGoogleCloud extends AbstractStorage {
       type: this.type,
       keyFilename,
       projectId,
-      bucketName,
+      bucketName: this.bucketName,
       options,
     };
   }
@@ -53,7 +53,7 @@ export class StorageGoogleCloud extends AbstractStorage {
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
     let cfg: ConfigGoogleCloud;
     if (typeof config === "string") {
-      const [type, keyFilename, projectId, bucketName, options] = parseUrl(config);
+      const { type, part1: keyFilename, part2: projectId, bucketName, options } = parseUrl(config);
       cfg = {
         type,
         keyFilename,

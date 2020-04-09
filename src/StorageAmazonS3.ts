@@ -28,7 +28,7 @@ export class StorageAmazonS3 extends AbstractStorage {
       type: this.type,
       accessKeyId,
       secretAccessKey,
-      bucketName,
+      bucketName: this.bucketName,
       options,
     };
   }
@@ -42,7 +42,9 @@ export class StorageAmazonS3 extends AbstractStorage {
   private parseConfig(config: string | ConfigAmazonS3): ConfigAmazonS3 {
     let cfg: ConfigAmazonS3;
     if (typeof config === "string") {
-      const [type, accessKeyId, secretAccessKey, bucketName, options] = parseUrl(config);
+      const { type, part1: accessKeyId, part2: secretAccessKey, bucketName, options } = parseUrl(
+        config
+      );
       cfg = {
         type,
         accessKeyId,

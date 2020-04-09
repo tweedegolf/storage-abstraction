@@ -20,9 +20,14 @@ export class StorageLocal extends AbstractStorage {
 
   constructor(config: ConfigLocal) {
     super();
-    const { directory, options } = this.parseConfig(config);
-    this.bucketName = this.generateSlug(path.basename(directory));
-    this.directory = this.generateSlug(path.dirname(directory));
+    const { directory, bucketName, options } = this.parseConfig(config);
+    if (bucketName) {
+      this.bucketName = this.generateSlug(bucketName);
+      this.directory = this.generateSlug(directory);
+    } else {
+      this.bucketName = this.generateSlug(path.basename(directory));
+      this.directory = this.generateSlug(path.dirname(directory));
+    }
     // console.log(StorageLocal.defaultOptions.mode, options);
     this.options = { ...StorageLocal.defaultOptions, ...options };
     this.options.mode = this.options.mode.toString();
@@ -30,7 +35,8 @@ export class StorageLocal extends AbstractStorage {
     this.options.mode = parseIntFromString(this.options.mode);
     this.config = {
       type: this.type,
-      directory,
+      directory: this.directory,
+      bucketName: this.bucketName,
       options,
     };
   }
@@ -44,12 +50,14 @@ export class StorageLocal extends AbstractStorage {
   private parseConfig(config: string | ConfigLocal): ConfigLocal {
     let cfg: ConfigLocal;
     if (typeof config === "string") {
-      const [type, directory, , , options] = parseUrl(config);
+      const { type, part1: directory, bucketName, options } = parseUrl(config);
       cfg = {
         type,
         directory,
+        bucketName,
         options,
       };
+      // console.log(cfg);
     } else {
       cfg = config;
     }

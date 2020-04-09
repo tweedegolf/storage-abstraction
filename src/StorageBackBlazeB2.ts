@@ -29,7 +29,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
       type: this.type,
       applicationKey,
       applicationKeyId,
-      bucketName,
+      bucketName: this.bucketName,
       options,
     };
   }
@@ -73,7 +73,13 @@ export class StorageBackBlazeB2 extends AbstractStorage {
   private parseConfig(config: string | ConfigBackBlazeB2): ConfigBackBlazeB2 {
     let cfg: ConfigBackBlazeB2;
     if (typeof config === "string") {
-      const [type, applicationKeyId, applicationKey, bucketName, options] = parseUrl(config);
+      const {
+        type,
+        part1: applicationKeyId,
+        part2: applicationKey,
+        bucketName,
+        options,
+      } = parseUrl(config);
       cfg = {
         type,
         applicationKeyId,
