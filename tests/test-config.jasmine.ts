@@ -79,7 +79,40 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getOptions().sslEnabled).toBe("true");
   });
 
-  it("[1a] parameter string", () => {
+  it("[2] typo", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes?buckeName=the-buck");
+    expect(this.storage.getType()).toBe(StorageType.S3);
+    expect(this.storage.getSelectedBucket()).toBe(undefined);
+    expect(this.storage.getConfiguration().accessKeyId).toBe("key");
+    expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
+    expect(this.storage.getOptions().region).toBe(undefined);
+  });
+
+  it("[3] non-existent keys will not be filtered anymore", () => {
+    this.storage = new Storage(
+      [
+        "s3://key:secret/can/contain/slashes",
+        "?region=eu-west-2",
+        "&bucketName=the-buck",
+        "&sslEnabled=true",
+        "&useDualstack=23",
+        "&nonExistentKey=true",
+        "&endPoint=https://kms-fips.us-west-2.amazonaws.com", // note: endpoint should not be camel cased
+      ].join("")
+    );
+    expect(this.storage.getType()).toBe(StorageType.S3);
+    expect(this.storage.getSelectedBucket()).toBe("the-buck");
+    expect(this.storage.getConfiguration().accessKeyId).toBe("key");
+    expect(this.storage.getOptions().secretAccessKey).toBe("secret/can/contain/slashes");
+    expect(this.storage.getOptions().region).toBe("eu-west-2");
+    expect(this.storage.getOptions().sslEnabled).toBe(true);
+    expect(this.storage.getOptions().useDualStack).toBe(undefined);
+    expect(this.storage.getOptions().nonExistentKey).toBe(true);
+    expect(this.storage.getOptions().endpoint).toBe(undefined);
+    expect(this.storage.getOptions().endPoint).toBe("https://kms-fips.us-west-2.amazonaws.com");
+  });
+
+  it("[4] object", () => {
     this.storage = new Storage({
       type: "s3",
       accessKeyId: "key",
@@ -96,96 +129,17 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
     expect(this.storage.getConfiguration().options.region).toBe("eu-west-2");
     expect(this.storage.getConfiguration().options.sslEnabled).toBeTrue();
+    expect(this.storage.getOptions().region).toBe("eu-west-2");
+    expect(this.storage.getOptions().sslEnabled).toBeTrue();
   });
 
-  xit("[2] typo", () => {
-    this.storage = new Storage("s3://key:secret/can/contain/slashes?buckeName=the-buck");
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("");
-    expect(this.storage.introspect("bucketName")).toBe("");
-  });
-
-  xit("[3] non-existent keys and key with wrong value types", () => {
-    this.storage = new Storage(
-      [
-        "s3://key:secret/can/contain/slashes",
-        "?region=eu-west-2",
-        "&bucketName=the-buck",
-        "&sslEnabled=true",
-        "&useDualstack=23",
-        "&nonExistentKey=true",
-        "&endPoint=https://kms-fips.us-west-2.amazonaws.com", // note: endpoint should not be camel cased
-      ].join("")
-    );
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("eu-west-2");
-    expect(this.storage.introspect("bucketName")).toBe("the-buck");
-    expect(this.storage.introspect("sslEnabled")).toBe(true);
-    expect(this.storage.introspect("useDualStack")).toBe(undefined);
-    expect(this.storage.introspect("nonExistentKey")).toBe(undefined);
-    expect(this.storage.introspect("endpoint")).toBe(undefined);
-    expect(this.storage.introspect("endPoint")).toBe(undefined);
-  });
-
-  xit("[4] using @ urls", () => {
-    this.storage = new Storage(
-      "s3://key:secret/can/contain/slashes@eu-west-2/the-buck?sslEnabled=true&endpoint=https://kms-fips.us-west-2.amazonaws.com"
-    );
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("eu-west-2");
-    expect(this.storage.introspect("bucketName")).toBe("the-buck");
-    expect(this.storage.introspect("sslEnabled")).toBe(true);
-    expect(this.storage.introspect("endpoint")).toBe("https://kms-fips.us-west-2.amazonaws.com");
-  });
-
-  xit("[5] using @ urls - no region", () => {
-    this.storage = new Storage(
-      "s3://key:secret/can/contain/slashes@/the-buck?sslEnabled=true&endpoint=https://kms-fips.us-west-2.amazonaws.com"
-    );
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("");
-    expect(this.storage.introspect("bucketName")).toBe("the-buck");
-    expect(this.storage.introspect("sslEnabled")).toBe(true);
-    expect(this.storage.introspect("endpoint")).toBe("https://kms-fips.us-west-2.amazonaws.com");
-  });
-
-  xit("[6] using @ urls - no region error", () => {
-    this.storage = new Storage(
-      "s3://key:secret/can/contain/slashes@the-buck?sslEnabled=true&endpoint=https://kms-fips.us-west-2.amazonaws.com"
-    );
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("the-buck?sslEnabled=true&endpoint=https:");
-    expect(this.storage.introspect("bucketName")).toBe("?sslEnabled=true&endpoint=https:/");
-  });
-
-  xit("[7] using @ urls - no region error 2", () => {
-    this.storage = new Storage("s3://key:secret/can/contain/slashes/the-buck?sslEnabled=true");
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("");
-    expect(this.storage.introspect("bucketName")).toBe("");
-  });
-
-  xit("[8] using @ urls - parameter string values overrule @ values", () => {
-    this.storage = new Storage(
-      "s3://key:secret/can/contain/slashes@us-east-1/not-here?region=eu-west-2&bucketName=the-buck"
-    );
-    expect(this.storage.introspect("type")).toBe(StorageType.S3);
-    expect(this.storage.introspect("accessKeyId")).toBe("key present but hidden");
-    expect(this.storage.introspect("secretAccessKey")).toBe("secret present but hidden");
-    expect(this.storage.introspect("region")).toBe("eu-west-2");
-    expect(this.storage.introspect("bucketName")).toBe("the-buck");
+  it("[5] no bucket", () => {
+    this.storage = new Storage({
+      type: "s3",
+      accessKeyId: "key",
+      secretAccessKey: "secret/can/contain/slashes",
+    });
+    expect(this.storage.getSelectedBucket()).toBe(undefined);
   });
 });
 

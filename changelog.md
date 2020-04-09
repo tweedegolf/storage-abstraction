@@ -40,3 +40,5 @@
 - Added default storage options that can be overruled or extended by the options in the config object or url
 - Made slugify optional and turned it off by default on StorageLocal
 - Added API method `fileExists():Promise<boolean>`
+- In the options object or string non-existent keys or invalid values are no longer filtered out: it is up to the programmer to provide valid options
+- If no bucket name is provided the bucket name will always be an empty string "", not `undefined` or `null`.
