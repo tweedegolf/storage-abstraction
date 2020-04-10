@@ -33,7 +33,7 @@ export interface IStorage {
    * The object also contains the key `options` which are only the options passed in during
    * initialization; if you want all options, including the default options use `getOptions()`
    */
-  getConfiguration(): StorageConfig;
+  getConfiguration(): AdapterConfig;
 
   /**
    * Returns an object that contains both the options passed with the configuration and the
@@ -138,7 +138,7 @@ export interface IStorage {
   fileExists(name: string): Promise<boolean>;
 }
 
-export enum StorageType {
+export enum AdapterType {
   LOCAL = "local",
   GCS = "gcs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
@@ -180,7 +180,7 @@ export interface ConfigBackBlazeB2 extends IConfig {
   applicationKey: string;
 }
 
-export type StorageConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;
+export type AdapterConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackBlazeB2;
 
 export type BackBlazeB2Bucket = {
   accountId: "string";

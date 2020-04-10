@@ -1,12 +1,12 @@
 import fs from "fs";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
-import { AbstractStorage } from "./AbstractStorage";
-import { ConfigAmazonS3, StorageType } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { ConfigAmazonS3, AdapterType } from "./types";
 import { parseUrl } from "./util";
 
-export class StorageAmazonS3 extends AbstractStorage {
-  protected type = StorageType.S3;
+export class AdapterAmazonS3 extends AbstractAdapter {
+  protected type = AdapterType.S3;
   // protected bucketName: string;
   private storage: S3;
   private bucketNames: string[] = [];
@@ -19,7 +19,7 @@ export class StorageAmazonS3 extends AbstractStorage {
     super();
     const { accessKeyId, secretAccessKey, bucketName, options } = this.parseConfig(config);
     this.storage = new S3({ accessKeyId, secretAccessKey });
-    this.options = { ...StorageAmazonS3.defaultOptions, ...options };
+    this.options = { ...AdapterAmazonS3.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);

@@ -1,18 +1,18 @@
 import path from "path";
 import { Readable } from "stream";
-import { IStorage, StorageConfig, JSON as TypeJSON } from "./types";
+import { IStorage, AdapterConfig, JSON as TypeJSON } from "./types";
 
-// add new adapter (storage type) here
+// add new storage adapter here
 const adapterClasses = {
-  b2: "StorageBackBlazeB2",
-  s3: "StorageAmazonS3",
-  gcs: "StorageGoogleCloud",
-  local: "StorageLocal",
+  b2: "AdapterBackBlazeB2",
+  s3: "AdapterAmazonS3",
+  gcs: "AdapterGoogleCloud",
+  local: "AdapterLocal",
 };
 
 const adapterFunctions = {
   b2: "AdapterB2", // export must be name `createAdapter`
-  b3: "AdapterB3", // export must be name `createAdapter`
+  b3: "AdapterB3",
 };
 
 const availableAdapters: string = Object.keys(adapterClasses)
@@ -29,7 +29,7 @@ const availableAdapters: string = Object.keys(adapterClasses)
 export class Storage implements IStorage {
   private storage: IStorage;
 
-  constructor(config: string | StorageConfig) {
+  constructor(config: string | AdapterConfig) {
     this.switchStorage(config);
   }
 
@@ -41,11 +41,11 @@ export class Storage implements IStorage {
     return this.storage.getOptions();
   }
 
-  public getConfiguration(): StorageConfig {
+  public getConfiguration(): AdapterConfig {
     return this.storage.getConfiguration();
   }
 
-  public switchStorage(args: string | StorageConfig): void {
+  public switchStorage(args: string | AdapterConfig): void {
     let type: string;
     if (typeof args === "string") {
       type = args.substring(0, args.indexOf("://"));

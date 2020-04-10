@@ -4,12 +4,12 @@ import to from "await-to-js";
 import glob from "glob";
 import rimraf from "rimraf";
 import { Readable } from "stream";
-import { ConfigLocal, StorageType } from "./types";
-import { AbstractStorage } from "./AbstractStorage";
+import { ConfigLocal, AdapterType } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
 import { parseUrl } from "./util";
 
-export class StorageLocal extends AbstractStorage {
-  protected type = StorageType.LOCAL as string;
+export class AdapterLocal extends AbstractAdapter {
+  protected type = AdapterType.LOCAL as string;
   // protected bucketName: string;
   private directory: string;
   private buckets: string[] = [];
@@ -28,8 +28,9 @@ export class StorageLocal extends AbstractStorage {
       this.bucketName = this.generateSlug(path.basename(directory));
       this.directory = this.generateSlug(path.dirname(directory));
     }
+    // console.log(this.bucketName, this.directory);
     // console.log(StorageLocal.defaultOptions.mode, options);
-    this.options = { ...StorageLocal.defaultOptions, ...options };
+    this.options = { ...AdapterLocal.defaultOptions, ...options };
     this.config = {
       type: this.type,
       directory,
@@ -74,7 +75,8 @@ export class StorageLocal extends AbstractStorage {
       return true;
     } catch (e) {
       await fs.promises
-        .mkdir(path, { recursive: true, mode: `${this.options.mode}`.valueOf() })
+        // .mkdir(path, { recursive: true, mode: `${this.options.mode}`.valueOf() })
+        .mkdir(path, { recursive: true, mode: 0o777 })
         .catch(e => {
           console.error(`\x1b[31m${e.message}`);
           return false;

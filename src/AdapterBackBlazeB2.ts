@@ -4,12 +4,12 @@ import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
-import { AbstractStorage } from "./AbstractStorage";
-import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, StorageType } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, AdapterType } from "./types";
 import { parseUrl } from "./util";
 
-export class StorageBackBlazeB2 extends AbstractStorage {
-  protected type = StorageType.B2;
+export class AdapterBackBlazeB2 extends AbstractAdapter {
+  protected type = AdapterType.B2;
   private bucketId: string;
   private storage: B2;
   private buckets: BackBlazeB2Bucket[] = [];
@@ -23,7 +23,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     super();
     const { applicationKey, applicationKeyId, bucketName, options } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
-    this.options = { ...StorageBackBlazeB2.defaultOptions, ...options };
+    this.options = { ...AdapterBackBlazeB2.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
     this.config = {
       type: this.type,

@@ -8,12 +8,12 @@ import {
   File,
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
-import { AbstractStorage } from "./AbstractStorage";
-import { ConfigGoogleCloud, StorageType } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { ConfigGoogleCloud, AdapterType } from "./types";
 import { parseUrl } from "./util";
 
-export class StorageGoogleCloud extends AbstractStorage {
-  protected type = StorageType.GCS;
+export class AdapterGoogleCloud extends AbstractAdapter {
+  protected type = AdapterType.GCS;
   private bucketNames: string[] = [];
   private storage: GoogleCloudStorage;
   public static defaultOptions = {
@@ -24,7 +24,7 @@ export class StorageGoogleCloud extends AbstractStorage {
     super();
     const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
-    this.options = { ...StorageGoogleCloud.defaultOptions, ...options };
+    this.options = { ...AdapterGoogleCloud.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);

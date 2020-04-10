@@ -11,19 +11,19 @@ dotenv.config();
  * Note that you name the environment variables to your liking.
  */
 const configS3 = {
-  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  bucketName: process.env.BUCKET_NAME,
 };
 
 const configGoogle = {
-  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
-  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  keyFilename: process.env.GOOGLE_CLOUD_KEYFILE,
+  bucketName: process.env.BUCKET_NAME,
 };
 
 const configLocal = {
-  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+  directory: process.env.LOCAL_DIRECTORY,
 };
 
 /**

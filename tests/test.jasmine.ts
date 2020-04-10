@@ -7,53 +7,58 @@ import dotenv from "dotenv";
 import uniquid from "uniquid";
 import slugify from "slugify";
 import { Storage } from "../src/Storage";
-import { StorageConfig, StorageType } from "../src/types";
+import { AdapterConfig, AdapterType } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
 
-let config: StorageConfig = null;
 const type = process.env["TYPE"];
-console.log("TYPE", type);
-if (!type) {
-  console.error("\x1b[31m[ERROR] Please set a value for env. var TYPE");
-  process.exit(0);
-}
+const configUrl = process.env["CONFIG_URL"];
+const bucketName = process.env["BUCKET_NAME"];
+const directory = process.env["LOCAL_DIRECTORY"];
+const projectId = process.env["GOOGLE_CLOUD_PROJECT_ID"];
+const keyFilename = process.env["GOOGLE_CLOUD_KEYFILE"];
+const accessKeyId = process.env["AWS_ACCESS_KEY_ID"];
+const secretAccessKey = process.env["AWS_SECRET_ACCESS_KEY"];
 
-const bucketName = process.env.STORAGE_BUCKETNAME;
-const directory = process.env.STORAGE_LOCAL_DIRECTORY;
-const projectId = process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID;
-const keyFilename = process.env.STORAGE_GOOGLE_CLOUD_KEYFILE;
-const accessKeyId = process.env.STORAGE_AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.STORAGE_AWS_SECRET_ACCESS_KEY;
+console.log(
+  type,
+  configUrl,
+  bucketName,
+  directory,
+  projectId,
+  keyFilename,
+  accessKeyId,
+  secretAccessKey
+);
 
-// console.log(bucketName, directory, projectId, keyFilename, accessKeyId, secretAccessKey);
-
-if (type === StorageType.LOCAL) {
+let config: AdapterConfig | string = null;
+if (type === AdapterType.LOCAL) {
   config = {
     type,
     directory,
   };
-} else if (type === StorageType.GCS) {
+} else if (type === AdapterType.GCS) {
   config = {
     type,
     bucketName,
     projectId,
     keyFilename,
   };
-} else if (type === StorageType.S3) {
+} else if (type === AdapterType.S3) {
   config = {
     type,
     bucketName,
     accessKeyId,
     secretAccessKey,
   };
+} else {
+  if (!configUrl) {
+    config = `local://${process.cwd()}/the-buck`;
+  } else {
+    config = configUrl;
+  }
 }
-
 console.log("CONFIG", config);
-if (config === null) {
-  console.error("\x1b[31m[ERROR] No valid config");
-  process.exit(0);
-}
 
 let storage: Storage;
 try {
@@ -98,13 +103,14 @@ describe(`testing ${storage.getType()} storage`, () => {
   });
 
   it("create bucket", async () => {
+    console.log(storage.getSelectedBucket());
     await expectAsync(storage.createBucket(storage.getSelectedBucket())).toBeResolved();
   });
 
   // it("wait it bit", async () => {
   //   await expectAsync(waitABit(2000)).toBeResolved();
   // });
-
+  /*
   it("clear bucket", async () => {
     await expectAsync(storage.clearBucket()).toBeResolved();
   });
@@ -317,4 +323,5 @@ describe(`testing ${storage.getType()} storage`, () => {
     const index = buckets.indexOf(newBucketName);
     expect(index).toBe(-1);
   });
+*/
 });
