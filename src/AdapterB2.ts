@@ -13,12 +13,6 @@ import {
 } from "./types";
 import { parseUrl } from "./util";
 
-const state = {
-  applicationKeyId: "",
-  applicationKey: "",
-  bucketName: "",
-};
-
 const init = async (): Promise<boolean> => {
   return true;
 };
@@ -38,8 +32,12 @@ const adapter: IStorage = {
 };
 
 const createAdapter = (config: ConfigBackBlazeB2): IStorage => {
-  state.applicationKey = config.applicationKey;
-  state.applicationKeyId = config.applicationKeyId;
+  const state = {
+    applicationKeyId: config.applicationKeyId,
+    applicationKey: config.applicationKey,
+    bucketName: "",
+  };
+
   return adapter;
 };
 

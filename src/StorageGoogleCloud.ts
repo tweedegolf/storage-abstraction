@@ -227,7 +227,7 @@ export class StorageGoogleCloud extends AbstractStorage {
 
   async selectBucket(name: string | null): Promise<void> {
     if (name === null) {
-      this.bucketName = null;
+      this.bucketName = "";
       return;
     }
 
@@ -251,7 +251,7 @@ export class StorageGoogleCloud extends AbstractStorage {
     const data = await this.storage.bucket(n).delete();
     // console.log(data);
     if (n === this.bucketName) {
-      this.bucketName = null;
+      this.bucketName = "";
     }
     this.bucketNames = this.bucketNames.filter(b => b !== n);
   }

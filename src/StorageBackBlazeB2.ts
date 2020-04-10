@@ -215,7 +215,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
 
   async selectBucket(name: string): Promise<void> {
     if (!name) {
-      this.bucketName = null;
+      this.bucketName = "";
       return;
     }
     const b = this.checkBucket(name);
@@ -244,7 +244,7 @@ export class StorageBackBlazeB2 extends AbstractStorage {
     const data = await this.storage.bucket(n).delete();
     // console.log(data);
     if (n === this.bucketName) {
-      this.bucketName = null;
+      this.bucketName = "";
     }
     this.buckets = this.buckets.filter(b => b.bucketName !== n);
   }

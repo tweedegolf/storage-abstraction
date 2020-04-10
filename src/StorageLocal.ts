@@ -6,7 +6,7 @@ import rimraf from "rimraf";
 import { Readable } from "stream";
 import { ConfigLocal, StorageType } from "./types";
 import { AbstractStorage } from "./AbstractStorage";
-import { parseUrl, parseIntFromString } from "./util";
+import { parseUrl } from "./util";
 
 export class StorageLocal extends AbstractStorage {
   protected type = StorageType.LOCAL as string;
@@ -30,9 +30,6 @@ export class StorageLocal extends AbstractStorage {
     }
     // console.log(StorageLocal.defaultOptions.mode, options);
     this.options = { ...StorageLocal.defaultOptions, ...options };
-    this.options.mode = this.options.mode.toString();
-    // in case you've passed in an octal number as string value, e.g. "0o755"
-    this.options.mode = parseIntFromString(this.options.mode);
     this.config = {
       type: this.type,
       directory,
@@ -77,7 +74,7 @@ export class StorageLocal extends AbstractStorage {
       return true;
     } catch (e) {
       await fs.promises
-        .mkdir(path, { recursive: true, mode: this.options.mode as string })
+        .mkdir(path, { recursive: true, mode: `${this.options.mode}`.valueOf() })
         .catch(e => {
           console.error(`\x1b[31m${e.message}`);
           return false;
@@ -163,7 +160,7 @@ export class StorageLocal extends AbstractStorage {
           throw e;
         }
         if (bn === this.bucketName) {
-          this.bucketName = null;
+          this.bucketName = "";
         }
         resolve();
       });
@@ -172,7 +169,7 @@ export class StorageLocal extends AbstractStorage {
 
   async selectBucket(name?: string | null): Promise<void> {
     if (!name) {
-      this.bucketName = null;
+      this.bucketName = "";
       return;
     }
     await this.createBucket(name);

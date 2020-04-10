@@ -30,7 +30,7 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getOptions().region).toBe(undefined);
   });
 
-  it("[3] non-existent keys will not be filtered anymore", () => {
+  it("[3] non-existent keys will not be filtered anymore, nor will invalid typed values (e.g. a numeric value for useDualStack)", () => {
     this.storage = new Storage(
       [
         "s3://key:secret/can/contain/slashes",
@@ -84,7 +84,7 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getSelectedBucket()).toBe("");
   });
 
-  it("[6] number and boolean (object)", () => {
+  it("[6] number and boolean in config object keep their original type", () => {
     this.storage = new Storage({
       type: "s3",
       accessKeyId: "key",
@@ -98,7 +98,7 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getOptions().optionBoolean).toBe(true);
   });
 
-  it("[7] number and boolean (url)", () => {
+  it("[7] number and boolean used in config will stay string types", () => {
     this.storage = new Storage(
       ["s3://key:secret/can/contain/slashes", "?optionNumber=42", "&optionBoolean=true"].join("")
     );

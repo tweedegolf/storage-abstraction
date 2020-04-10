@@ -11,7 +11,7 @@ describe(`testing Google urls`, () => {
     expect(this.storage.getConfiguration().keyFilename).toBe("keyFile.json");
   });
 
-  it("[1]", () => {
+  it("[1] don't use trailing slashes", () => {
     this.storage = new Storage("gcs://keyFile.json:appName/");
     expect(this.storage.getType()).toBe(StorageType.GCS);
     expect(this.storage.getSelectedBucket()).toBe("");
@@ -19,7 +19,7 @@ describe(`testing Google urls`, () => {
     expect(this.storage.getConfiguration().keyFilename).toBe("keyFile.json");
   });
 
-  it("[2]", () => {
+  it("[2] bucketName is optional", () => {
     this.storage = new Storage("gcs://keyFile.json:appName");
     expect(this.storage.getType()).toBe(StorageType.GCS);
     expect(this.storage.getSelectedBucket()).toBe("");
@@ -35,13 +35,13 @@ describe(`testing Google urls`, () => {
     expect(this.storage.getConfiguration().keyFilename).toBe("tests/keyFile.json");
   });
 
-  it("[4]", () => {
+  it("[4] don't use trailing slashes", () => {
     expect((): void => {
       const s = new Storage("gcs://tests/keyFile.json/");
     }).toThrowError("ENOTDIR: not a directory, open 'tests/keyFile.json/'");
   });
 
-  it("[5]", () => {
+  it("[5] when projectId is not provided it will be read from the keyFile", () => {
     this.storage = new Storage("gcs://tests/keyFile.json");
     expect(this.storage.getType()).toBe(StorageType.GCS);
     expect(this.storage.getSelectedBucket()).toBe("");

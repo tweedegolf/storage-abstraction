@@ -60,7 +60,7 @@ export class Storage implements IStorage {
     if (adapterClasses[type]) {
       const name = adapterClasses[type];
       const StorageClass = require(path.join(__dirname, name));
-      console.log(StorageClass);
+      // console.log(StorageClass);
       this.storage = new StorageClass[adapterClasses[type]](args);
     } else if (adapterFunctions[type]) {
       const name = adapterFunctions[type];

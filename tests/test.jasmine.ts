@@ -3,8 +3,9 @@ import fs from "fs";
 import to from "await-to-js";
 import path from "path";
 import rimraf from "rimraf";
-import uniquid from "uniquid";
 import dotenv from "dotenv";
+import uniquid from "uniquid";
+import slugify from "slugify";
 import { Storage } from "../src/Storage";
 import { StorageConfig, StorageType } from "../src/types";
 import { copyFile } from "./util";
@@ -32,18 +33,14 @@ if (type === StorageType.LOCAL) {
     type,
     directory,
   };
-} else if (type === StorageType.GCS && typeof keyFilename !== "undefined") {
+} else if (type === StorageType.GCS) {
   config = {
     type,
     bucketName,
     projectId,
     keyFilename,
   };
-} else if (
-  type === StorageType.S3 &&
-  typeof accessKeyId !== "undefined" &&
-  typeof secretAccessKey !== "undefined"
-) {
+} else if (type === StorageType.S3) {
   config = {
     type,
     bucketName,
@@ -58,7 +55,16 @@ if (config === null) {
   process.exit(0);
 }
 
-const newBucketName = `bucket-${uniquid()}-${new Date()}`;
+let storage: Storage;
+try {
+  storage = new Storage(config);
+  console.log(storage.getConfiguration());
+} catch (e) {
+  console.error(`\x1b[31m${e.message}`);
+  process.exit(0);
+}
+
+const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 
 const waitABit = async (millis = 100): Promise<void> =>
   new Promise(resolve => {
@@ -67,9 +73,6 @@ const waitABit = async (millis = 100): Promise<void> =>
       resolve();
     }, millis);
   });
-
-const storage = new Storage(config);
-console.log(storage.getConfiguration());
 
 describe(`testing ${storage.getType()} storage`, () => {
   beforeEach(() => {
@@ -277,14 +280,41 @@ describe(`testing ${storage.getType()} storage`, () => {
     expect(index).toBeGreaterThan(-1);
   });
 
-  // it("select bucket", async () => {
-  //   const buckets = await storage.listBuckets();
-  //   const index = buckets.indexOf(newBucketName);
-  //   expect(index).toBeGreaterThan(-1);
-  // });
+  it("selected bucket", async () => {
+    expect(storage.getSelectedBucket()).toBe(slugify(bucketName));
+  });
 
-  // it("delete bucket", async () => {
-  //   const index = buckets.indexOf(newBucketName);
-  //   expect(index).toBeGreaterThan(-1);
-  // });
+  it("select bucket", async () => {
+    await storage.selectBucket(newBucketName);
+    expect(storage.getSelectedBucket()).toBe(slugify(newBucketName));
+  });
+
+  it("delete bucket currently selected bucket", async () => {
+    await storage.deleteBucket();
+    expect(storage.getSelectedBucket()).toBe("");
+    const buckets = await storage.listBuckets();
+    const index = buckets.indexOf(newBucketName);
+    expect(index).toBe(-1);
+  });
+
+  it("create bucket", async () => {
+    try {
+      await storage.createBucket(newBucketName);
+    } catch (e) {
+      console.error("\x1b[31m", e, "\n");
+    }
+  });
+
+  it("check created bucket", async () => {
+    const buckets = await storage.listBuckets();
+    const index = buckets.indexOf(newBucketName);
+    expect(index).toBeGreaterThan(-1);
+  });
+
+  it("delete bucket by providing a bucket name", async () => {
+    await storage.deleteBucket(newBucketName);
+    const buckets = await storage.listBuckets();
+    const index = buckets.indexOf(newBucketName);
+    expect(index).toBe(-1);
+  });
 });

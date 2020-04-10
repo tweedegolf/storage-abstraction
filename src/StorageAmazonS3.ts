@@ -124,7 +124,7 @@ export class StorageAmazonS3 extends AbstractStorage {
 
   async selectBucket(name: string | null): Promise<void> {
     if (name === null) {
-      this.bucketName = null;
+      this.bucketName = "";
       return;
     }
     await this.createBucket(name);
@@ -173,7 +173,7 @@ export class StorageAmazonS3 extends AbstractStorage {
         })
         .promise();
       if (n === this.bucketName) {
-        this.bucketName = null;
+        this.bucketName = "";
       }
       this.bucketNames = this.bucketNames.filter(b => b !== n);
       // console.log(this.buckets, result);
