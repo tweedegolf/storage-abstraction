@@ -90,6 +90,21 @@ export const parseIntFromString = (s: string): number => {
   return parseInt(s);
 };
 
+export const parseMode = (s: number | string): number | string => {
+  if (typeof s === "number") {
+    if (s < 0) {
+      throw new Error(
+        `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${s}`
+      );
+    }
+    return s;
+  }
+  if (s.startsWith("0o")) {
+    return s.substring(2);
+  }
+  return s;
+};
+
 export const generateSlug = (url: string, options: TypeJSON): string => {
   if (!url || url === "null" || url === "undefined") {
     return "";

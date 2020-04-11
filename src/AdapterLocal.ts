@@ -6,7 +6,7 @@ import rimraf from "rimraf";
 import { Readable } from "stream";
 import { ConfigLocal, AdapterType } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseUrl } from "./util";
+import { parseUrl, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected type = AdapterType.LOCAL as string;
@@ -75,12 +75,17 @@ export class AdapterLocal extends AbstractAdapter {
       return true;
     } catch (e) {
       await fs.promises
-        // .mkdir(path, { recursive: true, mode: `${this.options.mode}`.valueOf() })
-        .mkdir(path, { recursive: true, mode: 0o777 })
+        .mkdir(path, {
+          recursive: true,
+          mode: parseMode(this.options.mode as string | number),
+        })
         .catch(e => {
-          console.error(`\x1b[31m${e.message}`);
-          return false;
+          throw e;
+          // console.error(`\x1b[31m${e.message}`);
+          // return false;
         });
+      // const m = (await fs.promises.stat(path)).mode;
+      // console.log(m, this.options.mode);
       return true;
     }
   }

@@ -1,3 +1,4 @@
+import rimraf from "rimraf";
 import { Readable, Writable } from "stream";
 
 /**
@@ -31,4 +32,15 @@ export const copyFile = (
         }
         resolve();
       });
+  });
+
+export const promiseRimraf = async (path: string): Promise<boolean> =>
+  new Promise(resolve => {
+    try {
+      rimraf(path, () => {
+        resolve(true);
+      });
+    } catch (e) {
+      resolve(false);
+    }
   });
