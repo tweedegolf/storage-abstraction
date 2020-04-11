@@ -4,8 +4,6 @@ Provides an abstraction layer for interacting with a storage; this storage can b
 
 Because the API only provides basic storage operations (see [below](#api)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
 
-[clear](#clearbucket)
-
 ## Instantiate a storage
 
 ```javascript
@@ -28,13 +26,11 @@ enum StorageType {
 }
 ```
 
-Besides type one or more other values may be mandatory dependent on the type of storage.
-
-<a name="configuration-object"></a>
+Besides type one or more other values may be mandatory dependent on the type of storage, e.g. `keyFilename` for Google Storage or `secretAccessKey` for Amazon S3.
 
 ### Configuration object
 
-The configuration object must be of type `AdapterConfig` that extends `IConfig`:
+The configuration object should implement the interface `IConfig`:
 
 ```typescript
 interface IConfig {
@@ -46,12 +42,12 @@ interface IConfig {
 
 ### Configuration URL
 
-All configuration urls start with a protocol:
+Configuration urls always start with a protocol that defines the storage type:
 
-- `local://` for local storage
-- `gcs://` for Google Cloud
-- `s3://` for Amazon S3
-- `b2://` for Backblaze B2
+- `local://` &rarr; local storage
+- `gcs://` &rarr; Google Cloud
+- `s3://` &rarr; Amazon S3
+- `b2://` &rarr; Backblaze B2
 
 What follows after this protocol is the part that contains the configuration of the storage:
 
@@ -61,9 +57,25 @@ const url = "type://part1:part2?bucketName=bucket&extraOption1=value1&extraOptio
 
 ### Options
 
-Both the configuration object and the configuration URL can contain an unlimited amount of optional configuration parameters using the `options` key in a configuration object or extending the query string of a configuration URL.
+Both the configuration object and the configuration URL can contain an unlimited amount of optional configuration parameters using the `options` key in a configuration object or extending the query string of a configuration URL. During initialization the options will be parsed into an internal `options` object that you can check using `getOptions()`.
 
-During initialization the query string will be parsed into an internal `options` object that you can query using `getOptions()`. Note that `bucketName` has its own key when using a configuration object but is part of the query string when using a configuration url. To make sure the `options` object is the same in both ways of providing a configuration, the key `bucketName` will be stripped off the `options` object.
+Note that `bucketName` is part of the query string when using a configuration URL, but has its own key in a configuration object. To make sure the `options` object is the same in both ways of providing a configuration, the key `bucketName` gets stripped off the `options` object during initialization and is then added to the internal `configuration` object that you can check using `getConfiguration()`.
+
+Options are not checked, which means non-existent keys or invalid values are not filtered and removed; it is the programmer's responsibility to provide correct keys and values:
+
+```typescript
+// url
+const s1 = new Storage({
+  type: StorageTypes.S3,
+  accessKeyId: 'your_key_id,
+  secretAccessKey: 'your_secret',
+  options: {
+    endPoint: "https://kms-fips.us-west-2.amazonaws.com", // should be 'endpoint'
+    useDualStack: 42, // should be a boolean value
+  }
+});
+
+```
 
 ### Default options
 
@@ -72,11 +84,13 @@ All adapters have a default parameter `slug`; this parameter determines whether 
 
 The Amazon S3 adapter has for instance a default option `apiVersion` which is set to "2006-03-01" and the local disk adapter has a default option `mode` that is set to `0o777`.
 
-<a name="local-storage"></a>
+## Adapters
+
+Below follows a description of the configuration objects and urls of the available adapters. You can add more adapters yourself, see [below](#adding-more-adapters)
 
 ### Local storage
 
-Configurion object:
+Configuration object:
 
 ```typescript
 type ConfigLocal = {
@@ -87,12 +101,12 @@ type ConfigLocal = {
 };
 ```
 
-Configurion url:
+Configuration url:
 
 ```typescript
-const url = "local://directory/bucket";
+const url = "local://directory/bucket?option1=value1&...";
 // or
-const url = "local://directory?bucketName=bucket";
+const url = "local://directory?bucketName=bucket&option1=value1&...";
 ```
 
 Example:
@@ -116,6 +130,7 @@ If you use a config object and you omit a value for `bucketName`, the last folde
 ```typescript
 // example #1
 const s = new Storage {
+  type: StorageType.LOCAL,
   directory: "path/to/folder",
   bucketName: "bucket",
 };
@@ -125,6 +140,7 @@ s.getConfiguration().bucketName; // 'bucket'
 
 // example #1a => resulting in same configuration as example #1
 const s = new Storage {
+  type: StorageType.LOCAL,
   directory: "path/to/folder",
   bucketName: "bucket",
 };
@@ -134,6 +150,7 @@ s.getConfiguration().bucketName; // 'bucket'
 
 // example #2
 const s = new Storage {
+  type: StorageType.LOCAL,
   directory: "files",
 };
 const s = new Storage("local://files") // note: 2 slashes
@@ -142,6 +159,7 @@ s.getConfiguration().bucketName; // 'files'
 
 // example #3
 const s = new Storage {
+  type: StorageType.LOCAL,
   directory: "/files",
 };
 const s = new Storage("local:///files") // note: 3 slashes
@@ -149,8 +167,6 @@ s.getConfiguration().directory;  // '/' root folder (may require extra permissio
 s.getConfiguration().bucketName; // 'files'
 
 ```
-
-<a name="google-cloud"></a>
 
 ### Google Cloud
 
@@ -169,34 +185,31 @@ type ConfigGoogleCloud = {
 Configuration url:
 
 ```typescript
-const url = "gcs://path/to/key_file.json:project_id?bucketName=bucket_name";
+const url = "gcs://path/to/key_file.json:project_id?bucketName=bucket&option1=value1&...";
 ```
 
 The project id is optional; if you omit the value for project id, the id will be read from the key file:
 
 ```typescript
-// url
-const s1 = new Storage("gcs://path/to/key_file.json");
-console.log(s1.getConfiguration().projectId); // logs the project id
-
-// config object
-const s2 = new Storage({ keyFilename: "path/to/key_file.json" });
-console.log(s2.introspect("projectId")); // logs the project id
+const s = new Storage({
+  type: StorageType.GCS,
+  keyFilename: "path/to/key_file.json",
+});
+const s = new Storage("gcs://path/to/key_file.json");
+s.getConfiguration().projectId; // the project id
 ```
 
 The name of the bucket can be provided using the `bucketName` key or option:
 
 ```typescript
-// url
-const s1 = new Storage("gcs://path/to/key_file.json?bucketName=bucket");
-console.log(s1.getSelectedBucket()); // logs "bucket"
-
-// config object
-const s2 = new Storage({ keyFilename: "path/to/key_file.json" bucketName: "bucket"});
-console.log(s1.getSelectedBucket()); // logs "bucket"
+const s = new Storage({
+  type: StorageType.GCS,
+  keyFilename: "path/to/key_file.json",
+  bucketName: "bucket",
+});
+const s = new Storage("gcs://path/to/key_file.json?bucketName=bucket");
+s.getSelectedBucket(); // "bucket"
 ```
-
-<a name="amazon-s3"></a>
 
 ### Amazon S3
 
@@ -215,28 +228,52 @@ type ConfigAmazonS3 = {
 Configuration url:
 
 ```typescript
-const url = "s3://key:secret?region=eu-west-2&bucketName=bucket";
+const url = "s3://key:secret?region=eu-west-2&bucketName=bucket&option1=value1&...";
 ```
 
-Note that the more familiar @ notation (e.g. `s3://key:secret@region=eu-west-2/bucket` is not supported. This is because the format of the url has been leveled across all different storage types.
-
-Options are not checked, it is the programmer's responsibility to provide correct keys and values:
+Note that the more familiar @ notation (e.g. `s3://key:secret@region=eu-west-2/bucket` is not supported; this is because the format of the url has been leveled across all different storage types.
 
 ```typescript
-// url
-const s1 = new Storage({
-  type: StorageTypes.S3,
-  accessKeyId: 'your_key_id,
-  secretAccessKey: 'your_secret',
-  options: {
-    endPoint: "https://kms-fips.us-west-2.amazonaws.com", // should be 'endpoint'
-    useDualStack: 42, // should be a boolean value
-  }
+const s = new Storage({
+  type: StorageType.S3,
+  accessKeyId: "key",
+  secretAccessKey: "secret",
+  bucketName: "bucket",
 });
-
+const s = new Storage("s3://key:secret?bucketName=bucket");
+s.getSelectedBucket(); // "bucket"
 ```
 
-<a name="api"></a>
+### Backblaze B2
+
+Config object:
+
+```typescript
+type ConfigBackBlazeB2 = {
+  type: StorageType;
+  applicationKeyId: string;
+  applicationKey: string;
+  bucketName?: string;
+  options?: JSON;
+};
+```
+
+Configuration url:
+
+```typescript
+const url = "b2://application_key_id:application_key?bucketName=bucket&option1=value1&...";
+```
+
+```typescript
+const s = new Storage({
+  type: StorageType.B2,
+  applicationKeyId: "key_id",
+  applicationKey: "key",
+  bucketName: "bucket",
+});
+const s = new Storage("b2://key_id:key?bucketName=bucket");
+s.getSelectedBucket(); // "bucket"
+```
 
 ## API methods
 
@@ -302,7 +339,7 @@ Returns the name of the currently selected bucket or an empty string ("") if no 
 addFileFromPath(filePath: string, targetPath: string): Promise<void>;
 ```
 
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically (not for `LocalStorage` see [options](#options)).
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically if `slug` is to true, see [default options](#default-options).
 
 ### addFileFromBuffer
 
@@ -310,7 +347,7 @@ Copies a file from a local path to the provided path in the storage. The value f
 addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void>;
 ```
 
-Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
+Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically if `slug` is to true, see [default options](#default-options). This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 ### addFileFromReadable
 
@@ -318,7 +355,7 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 addFileFromReadable(stream: Readable, targetPath: string): Promise<void>;
 ```
 
-Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
+Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically if `slug` is to true, see [default options](#default-options). This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
 ### getFileAsReadable
 
@@ -326,7 +363,7 @@ Allows you to stream a file directly to the storage. The value for `targetPath` 
 getFileAsReadable(name: string, options?: {start?: number, end?: number}): Promise<Readable>;
 ```
 
-Returns a file in the storage as a readable stream. You can specify a byte range by using the `options` argument, see these examples:
+Returns a file in the storage as a readable stream. You can specify a byte range by using the extra range argument, see these examples:
 
 ```typescript
 getFileAsReadable("image.png"); // &rarr; reads whole file
@@ -357,6 +394,12 @@ sizeOf(name: string): number;
 ```
 
 Returns the size of a file in the currently selected bucket and throws an error if no bucket has been selected.
+
+```typescript
+sizeOf(name: string): Promise<boolean>;
+```
+
+Returns whether a file exists or not.
 
 ### introspect
 
@@ -424,8 +467,6 @@ npm run test-s3
 You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:
 
 `npm test`
-
-<a name="adapters"></a>
 
 ## Adding more adapters
 
