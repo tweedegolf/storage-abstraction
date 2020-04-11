@@ -34,13 +34,13 @@
 # 1.4.0
 
 - Changed the name of the 'functional classes' from Storage to Adapter, e.g. `StorageAmazonS3` became `AdapterAmazonS3`
-- Replaced `introspect()` by `getConfiguration():StorageConfig`, `getOptions():JSON` and `getType():string`
+- Replaced `introspect()` by `getConfiguration():AdapterConfig`, `getOptions():JSON` and `getType():string`
 - Added adapter class for BackBlaze B2
 - Made configuration is more strict and generic
 - Removed option to create a new Storage without configuration (StorageLocal)
 - Added default storage options that can be overruled or extended by the options in the config object or url
-- Made slugify optional and turned it off by default on StorageLocal
+- Made slugify optional and turned it off by default for StorageLocal
 - Added API method `fileExists():Promise<boolean>`
-- In the options object or string non-existent keys or invalid values are no longer filtered out: it is up to the programmer to provide valid options
+- In the options object or string non-existent keys or invalid values are no longer filtered out: it is the programmer's responsibility to provide valid options
 - If no bucket name is provided the bucket name will always be an empty string "", not `undefined` or `null`. Also when no bucket is selected `bucketName` will be "".
 - Adapter modules are only loaded when needed (using `require`)

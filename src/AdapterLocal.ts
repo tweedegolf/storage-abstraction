@@ -9,7 +9,7 @@ import { AbstractAdapter } from "./AbstractAdapter";
 import { parseUrl, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
-  protected type = StorageType.LOCAL as string;
+  protected type = StorageType.LOCAL;
   // protected bucketName: string;
   private directory: string;
   private buckets: string[] = [];
@@ -21,16 +21,16 @@ export class AdapterLocal extends AbstractAdapter {
   constructor(config: ConfigLocal) {
     super();
     const { directory, bucketName, options } = this.parseConfig(config);
+    this.options = { ...AdapterLocal.defaultOptions, ...options };
+    // console.log(StorageLocal.defaultOptions.mode, options);
     if (bucketName) {
-      this.bucketName = this.generateSlug(bucketName);
-      this.directory = this.generateSlug(directory);
+      this.bucketName = this.generateSlug(bucketName, this.options);
+      this.directory = this.generateSlug(directory, this.options);
     } else {
-      this.bucketName = this.generateSlug(path.basename(directory));
-      this.directory = this.generateSlug(path.dirname(directory));
+      this.bucketName = this.generateSlug(path.basename(directory), this.options);
+      this.directory = this.generateSlug(path.dirname(directory), this.options);
     }
     // console.log(this.bucketName, this.directory);
-    // console.log(StorageLocal.defaultOptions.mode, options);
-    this.options = { ...AdapterLocal.defaultOptions, ...options };
     this.config = {
       type: this.type,
       directory,

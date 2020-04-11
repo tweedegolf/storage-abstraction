@@ -79,9 +79,9 @@ export interface IStorage {
   listBuckets(): Promise<string[]>;
 
   /**
-   * Returns the name of the currently selected bucket or `null` if no bucket has been selected yet
+   * Returns the name of the currently selected bucket or an empty string ("") if no bucket has been selected yet
    */
-  getSelectedBucket(): string | null;
+  getSelectedBucket(): string;
 
   /**
    * @param origPath: path of the file to be copied
@@ -156,6 +156,7 @@ export type JSON = {
     | { [id: string]: JSON };
 };
 interface IConfig {
+  // type: StorageType;
   type: string;
   options?: JSON;
   bucketName?: string;

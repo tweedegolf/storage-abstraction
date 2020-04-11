@@ -1,10 +1,10 @@
 # Storage Abstraction
 
-Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. For cloud storage currently Google Cloud and Amazon S3 and compliant cloud services are supported.
+Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Currently local disk storage, Backblaze B2, Google Cloud and Amazon S3 and compliant cloud services are supported.
 
 Because the API only provides basic storage operations (see [below](#api)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
 
-<a name="instantiate-a-storage"></a>
+[clear](#clearbucket)
 
 ## Instantiate a storage
 
@@ -12,140 +12,188 @@ Because the API only provides basic storage operations (see [below](#api)) the A
 const s = new Storage(config);
 ```
 
-Each type of storage requires a different configuration. You can provide the configuration in 2 forms:
+When instantiating a new `Storage` the argument `config` is used to create an adapter that translates the generic API calls to storage specific calls. You can provide the `config` argument in 2 forms:
 
-1. as a configuration object (js: `typeof === "object"` ts: `StorageConfig`)
-2. as a url (`typeof === "string"`)
+1. using a configuration object (js: `typeof === "object"` ts: `AdapterConfig`)
+2. using a configuration URL (`typeof === "string"`)
 
-The only key that the configurations have in common is the name of the bucket. This is an optional key. For local storage, the bucket name simply is the name of a directory. If you provide a value for `bucketName` in the config object, this bucket will be created if it doesn't exist and selected automatically for storing and reading files. If you don't set a value for `bucketName` you can only store and read files after you have selected a bucket by using `selectBucket`, see below.
-
-All configuration urls start with a protocol:
-
-- `local://` for local storage
-- `gcs://` for Google Cloud
-- `s3://` for Amazon S3
-
-What follows after this protocol is the part that contains the configuration of the storage.
-
-Each storage instance has a member `type` whose value is one of the enum members of `StorageType`. You can query this value using the `introspect` method which is described below.
+A configuration should specify a type whose value is one of the enum members of `StorageType`:
 
 ```typescript
 enum StorageType {
   LOCAL = "local",
   GCS = "gcs",
   S3 = "s3",
+  B2 = "b2",
 }
 ```
+
+Besides type one or more other values may be mandatory dependent on the type of storage.
+
+<a name="configuration-object"></a>
+
+### Configuration object
+
+The configuration object must be of type `AdapterConfig` that extends `IConfig`:
+
+```typescript
+interface IConfig {
+  type: StorageType;
+  bucketName?: string;
+  options?: JSON;
+}
+```
+
+### Configuration URL
+
+All configuration urls start with a protocol:
+
+- `local://` for local storage
+- `gcs://` for Google Cloud
+- `s3://` for Amazon S3
+- `b2://` for Backblaze B2
+
+What follows after this protocol is the part that contains the configuration of the storage:
+
+```typescript
+const url = "type://part1:part2?bucketName=bucket&extraOption1=value1&extraOption2=value2";
+```
+
+### Options
+
+Both the configuration object and the configuration URL can contain an unlimited amount of optional configuration parameters using the `options` key in a configuration object or extending the query string of a configuration URL.
+
+During initialization the query string will be parsed into an internal `options` object that you can query using `getOptions()`. Note that `bucketName` has its own key when using a configuration object but is part of the query string when using a configuration url. To make sure the `options` object is the same in both ways of providing a configuration, the key `bucketName` will be stripped off the `options` object.
+
+### Default options
+
+Every adapter can define its own default options; these will be overruled or extended by the options provided in the configuration object or URL.
+All adapters have a default parameter `slug`; this parameter determines whether or not bucket names should be slugified automatically. All adapters but the local storage adapter have set this by default to true.
+
+The Amazon S3 adapter has for instance a default option `apiVersion` which is set to "2006-03-01" and the local disk adapter has a default option `mode` that is set to `0o777`.
 
 <a name="local-storage"></a>
 
 ### Local storage
 
+Configurion object:
+
 ```typescript
 type ConfigLocal = {
+  type: StorageType;
+  directory: string;
+  options?: JSON;
   bucketName?: string;
-  directory?: string;
 };
+```
+
+Configurion url:
+
+```typescript
+const url = "local://directory/bucket";
+// or
+const url = "local://directory?bucketName=bucket";
 ```
 
 Example:
 
 ```typescript
 const config = {
-  bucketName: "images",
-  directory: "/home/user/domains/my-site",
+  type: StorageType.LOCAL,
+  directory: "path/to/folder/bucket",
 };
 const s = new Storage(config);
 
 // or
-const url = "local:///home/user/domains/my-site/images";
+const url = "local://path/to/folder/bucket";
 const s = new Storage(url);
 ```
 
-Files will be stored in `/home/user/domains/my-site/images`, folders will be created if necessary.
+Files will be stored in `path/to/folder/bucket`, folders will be created if necessary.
 
-Note that the configuration url contains 3 consecutive slashes; this is because the configuration tells us to store files in a subdirectory of the root directory. The same url with 2 slashes would store the files in a directory relative to the directory where the process that uses the storage abstraction module runs, let's assume the process runs in `/usr/bin/node`:
-
-```typescript
-const url = "local://home/user/domains/my-site/images";
-const s = new Storage(url);
-```
-
-Files will now be stored in `/usr/bin/node/home/user/domains/my-site/images`.
-
-You can also create a local storage by not providing any configuration at all:
-
-```typescript
-const s = new Storage();
-console.log(s.introspect("type")); // logs: 'local'
-console.log(s.introspect("bucketName")); // logs: 'local-bucket'
-```
-
-Note that the name of the bucket appears to be `local-bucket` although we haven't provided any value. If you don't provide a bucket name this folder will be created for you in the directory where the process runs (`process.cwd()`).
-
-If you use a config object and you omit a value for `bucketName`, the last folder of the provided directory will be used. If you don't provide a value for `directory` either, you will get the same result as when you don't specify any configuration at all.
+If you use a config object and you omit a value for `bucketName`, the last folder of the provided directory will be used.
 
 ```typescript
 // example #1
 const s = new Storage {
-  directory: "path/to/my/files",
+  directory: "path/to/folder",
+  bucketName: "bucket",
 };
-s.introspect("directory");  // 'path/to/my/'
-s.introspect("bucketName"); // 'files'
+const s = new Storage("local://path/to/folder?bucketName=bucket")
+s.getConfiguration().directory;  // 'path/to/folder'
+s.getConfiguration().bucketName; // 'bucket'
+
+// example #1a => resulting in same configuration as example #1
+const s = new Storage {
+  directory: "path/to/folder",
+  bucketName: "bucket",
+};
+const s = new Storage("local://path/to/folder?bucketName=bucket")
+s.getConfiguration().directory;  // 'path/to/folder'
+s.getConfiguration().bucketName; // 'bucket'
 
 // example #2
 const s = new Storage {
   directory: "files",
 };
-s.introspect("directory");  // folder where the process runs, process.cwd()
-s.introspect("bucketName"); // 'files'
+const s = new Storage("local://files") // note: 2 slashes
+s.getConfiguration().directory;  // folder where the process runs, process.cwd()
+s.getConfiguration().bucketName; // 'files'
 
 // example #3
 const s = new Storage {
   directory: "/files",
 };
-s.introspect("directory");  // '/' root folder (may require extra permissions)
-s.introspect("bucketName"); // 'files'
+const s = new Storage("local:///files") // note: 3 slashes
+s.getConfiguration().directory;  // '/' root folder (may require extra permissions)
+s.getConfiguration().bucketName; // 'files'
 
-// example #4
-const s = new Storage {
-  directory: "",
-  bucketName: "",
-};
-s.introspect("directory");  // folder where the process runs
-s.introspect("bucketName"); // 'local-bucket'
 ```
 
 <a name="google-cloud"></a>
 
 ### Google Cloud
 
-Config object:
+Configuration object:
 
 ```typescript
 type ConfigGoogleCloud = {
-  bucketName?: string;
-  projectId?: string;
+  type: StorageType;
   keyFilename: string; // path to key-file.json,
+  projectId?: string;
+  bucketName?: string;
+  options?: JSON;
 };
 ```
 
 Configuration url:
 
 ```typescript
-const url = "gcs://path/to/key_file.json:project_id/bucket_name";
+const url = "gcs://path/to/key_file.json:project_id?bucketName=bucket_name";
 ```
 
-If you omit the value for project id, the id will be read from the key file:
+The project id is optional; if you omit the value for project id, the id will be read from the key file:
 
 ```typescript
 // url
-const s1 = new Storage("gcs://path/to/key_file.json/bucket_name");
-console.log(s1.introspect("projectId")); // logs the project id
+const s1 = new Storage("gcs://path/to/key_file.json");
+console.log(s1.getConfiguration().projectId); // logs the project id
 
 // config object
 const s2 = new Storage({ keyFilename: "path/to/key_file.json" });
 console.log(s2.introspect("projectId")); // logs the project id
+```
+
+The name of the bucket can be provided using the `bucketName` key or option:
+
+```typescript
+// url
+const s1 = new Storage("gcs://path/to/key_file.json?bucketName=bucket");
+console.log(s1.getSelectedBucket()); // logs "bucket"
+
+// config object
+const s2 = new Storage({ keyFilename: "path/to/key_file.json" bucketName: "bucket"});
+console.log(s1.getSelectedBucket()); // logs "bucket"
 ```
 
 <a name="amazon-s3"></a>
@@ -156,57 +204,36 @@ Config object:
 
 ```typescript
 type ConfigAmazonS3 = {
-  bucketName?: string;
+  type: StorageType;
   accessKeyId: string;
   secretAccessKey: string;
-  // additional parameters
-  endpoint?: string;
-  useDualstack?: boolean;
-  region?: string;
-  maxRetries?: number;
-  maxRedirects?: number;
-  sslEnabled?: boolean;
-  apiVersion?: string;
+  bucketName?: string;
+  options?: JSON;
 };
 ```
 
 Configuration url:
 
 ```typescript
-// using @ notation
-const url = "s3://key:secret@eu-west-2/the-buck";
-
-// using @ notation with additional parameters in query string
-const url = "s3://key:secret@eu-west-2/the-buck?sslEnabled=true&useDualstack=true";
-
-// using query string for all parameters
-const url = "s3://key:secret?region=eu-west-2&bucket=the-buck&sslEnabled=true&useDualstack=true";
+const url = "s3://key:secret?region=eu-west-2&bucketName=bucket";
 ```
 
-All provided additional parameters will be typo- and type-checked:
+Note that the more familiar @ notation (e.g. `s3://key:secret@region=eu-west-2/bucket` is not supported. This is because the format of the url has been leveled across all different storage types.
+
+Options are not checked, it is the programmer's responsibility to provide correct keys and values:
 
 ```typescript
-const url = "s3://key:secret?endPoint=https://kms-fips.us-west-2.amazonaws.com&useDualStack=23";
-const s = new Storage(s);
-console.log(s.introspect("endpoint")); // undefined because of typo: endPoint !== endpoint
-console.log(s.introspect("useDualStack")); // undefined because type of useDualStack must be boolean
-```
+// url
+const s1 = new Storage({
+  type: StorageTypes.S3,
+  accessKeyId: 'your_key_id,
+  secretAccessKey: 'your_secret',
+  options: {
+    endPoint: "https://kms-fips.us-west-2.amazonaws.com", // should be 'endpoint'
+    useDualStack: 42, // should be a boolean value
+  }
+});
 
-If you provide a value for region or bucket name using both the `@` notation and the query string notation, the latter values will prevail:
-
-```typescript
-const url = "s3://key:secret@us-east-1/bucket1?region=eu-west-2&bucketName=bucket2";
-const s = new Storage(url);
-// last values overrule earlier values:
-console.log(s.introspect("region")); // 'eu-west-2' (not 'us-east-1')
-console.log(s.introspect("bucketName")); // 'bucket2' (not 'bucket1')
-```
-
-You can omit the region in the `@` notation variant but you have to add a slash after the `@` because a `secretAccessKey` can contain slashes:
-
-```typescript
-const url1 = "s3://key:secret/can/contain/slashes@/the-buck"; // works!
-const url2 = "s3://key:secret/can/contain/slashes@the-buck"; // error
 ```
 
 <a name="api"></a>
@@ -224,10 +251,10 @@ Runs a simple test to test the storage configuration. The test is a call to `lis
 ### createBucket
 
 ```typescript
-createBucket(name: string): Promise<void>;
+createBucket(name: string): Promise<string>;
 ```
 
-Creates a new bucket, does not fail if the bucket already exists.
+Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully (or it did already exist) it resolves with a simple "ok" or an empty string, else it will reject with an error message.
 
 ### selectBucket
 
@@ -235,7 +262,7 @@ Creates a new bucket, does not fail if the bucket already exists.
 selectBucket(name: string | null): Promise<void>;
 ```
 
-Selects a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` the currently selected bucket will be deselected.
+Selects a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` an empty string or nothing at all the currently selected bucket will be deselected.
 
 ### clearBucket
 
@@ -264,10 +291,10 @@ Returns a list with the names of all buckets in the storage.
 ### getSelectedBucket
 
 ```typescript
-getSelectedBucket(): string | null
+getSelectedBucket(): string
 ```
 
-Returns the name of the currently selected bucket or `null` if no bucket has been selected yet.
+Returns the name of the currently selected bucket or an empty string ("") if no bucket has been selected yet.
 
 ### addFileFromPath
 
@@ -275,7 +302,7 @@ Returns the name of the currently selected bucket or `null` if no bucket has bee
 addFileFromPath(filePath: string, targetPath: string): Promise<void>;
 ```
 
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically.
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically (not for `LocalStorage` see [options](#options)).
 
 ### addFileFromBuffer
 
@@ -397,6 +424,12 @@ npm run test-s3
 You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:
 
 `npm test`
+
+<a name="adapters"></a>
+
+## Adding more adapters
+
+TBD
 
 ## Example application
 

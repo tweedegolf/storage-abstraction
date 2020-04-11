@@ -12,8 +12,6 @@
   "dependencies": {
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.3",
     "@google-cloud/storage": "^4.7.0",
-    "@types/ramda": "^0.26.38",
-    "@types/rimraf": "^2.0.4",
     "await-to-js": "^2.1.1",
     "aws-sdk": "^2.656.0",
     "backblaze-b2": "^1.5.0",
@@ -27,6 +25,8 @@
   "devDependencies": {
     "@types/jasmine": "^3.5.10",
     "@types/node": "^12.12.35",
+    "@types/ramda": "^0.26.38",
+    "@types/rimraf": "^2.0.4",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "dotenv": "^8.2.0",

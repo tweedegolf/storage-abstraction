@@ -108,7 +108,7 @@ export class Storage implements IStorage {
     return this.storage.listBuckets();
   }
 
-  public getSelectedBucket(): string | null {
+  public getSelectedBucket(): string {
     return this.storage.getSelectedBucket();
   }
 
