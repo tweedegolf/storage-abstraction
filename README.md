@@ -401,20 +401,6 @@ sizeOf(name: string): Promise<boolean>;
 
 Returns whether a file exists or not.
 
-### introspect
-
-```typescript
-introspect(key?: string): string | StorageType | StorageConfig;
-```
-
-Retrieves configuration settings from a storage. If you use it without arguments it will return the complete configuration object. Sensitive values will not be shown. If you do provide an argument you can retrieve a specific value of the configuration.
-
-```typescript
-const s = new Storage("local://my-folder/my-bucket");
-const type = s.introspect("type"); // local
-const bucketName = s.introspect("bucket"); // my-bucket
-```
-
 ### listFiles
 
 ```typescript
@@ -423,27 +409,54 @@ listFiles(): Promise<[string, number][]>;
 
 Returns a list of all files in the currently selected bucket; for each file a tuple is returned containing the path and the size of the file. If no bucket is selected an error will be thrown.
 
-### switchStorage
+### getType
 
 ```typescript
-switchStorage(config: string | StorageConfig): void;
+getType(): string;
 ```
 
-Switch to another storage type in an existing `Storage` instance at runtime. The config object or url is the same type of object or url that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
+Returns the type of storage, calue is one of the enum `StorageType`.
+
+### getOptions
+
+```typescript
+getOptions(): JSON
+```
+
+Returns an object containing all options: the default options overruled or extended by the options provided by the configuration object or URL.
+
+### getConfiguration
+
+```typescript
+getConfiguration(): AdapterConfig
+```
+
+Retrieves configuration as provided during instantiation. If you have provided the configuration in url form, the function will return an configuration object. Note that the actual value may differ from the values returned. For instance if you have selected a different bucket after initialization, the key `bucketName` in the configuration object that this method returns will still hold the value of the initially set bucket. Use `getSelectedBucket()` to retrieve the actual value of `bucketName`.
+
+### switchAdapter
+
+```typescript
+switchAdapter(config: string | AdapterConfig): void;
+```
+
+Switch to another adapter in an existing `Storage` instance at runtime. The config parameter is the same type of object or URL that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
 
 ## How it works
 
-When you create a `Storage` instance you create a thin wrapper around one of these classes:
+When you create a `Storage` instance you create a thin wrapper around one of the available adapters:
 
-- `StorageLocal`
-- `StorageGoogleCloud`
-- `StorageAmazonS3`
+- `AdapterLocal`
+- `AdapterGoogleCloud`
+- `AdapterAmazonS3`
+- `AdapterBackblazeB2`
 
-Let's call these classes the adapter classes because they actually translate the general API methods to storage type specific functionality. The wrapper creates an instance of one of these adapter classes based on the provided configuration and then forwards every API call to this instance.
+The API is defined in the wrapper class `Storage` and the adapter classes translate the generic API methods to storage type specific functionality. The wrapper creates an instance of one of these adapter classes based on the provided configuration and then forwards every API call to this instance.
 
-This is possible because both the wrapper and the adapter classes implement the interface `IStorage`. This interface declares all API methods listed above except `switchStorage`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchStorage`.
+This is possible because both the wrapper and the adapter classes implement the interface `IStorage`. This interface declares all API methods listed above except `switchAdapter`; this method is implemented in the `Storage` class. The wrapper itself has hardly any functionality apart from `switchAdapter`.
 
 The adapter classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer`, `addFileFromPath` and `addFileFromReadable`. For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
+
+It is also possible to add an adapter that is not a class but a function -> FP instead of OO
 
 More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
 
@@ -470,7 +483,9 @@ You can find some additional non-Jasmine tests in the file `tests/test.ts`. You 
 
 ## Adding more adapters
 
-TBD
+You can add your own adapter by following these steps:
+
+- TBD
 
 ## Example application
 

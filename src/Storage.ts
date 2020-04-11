@@ -30,7 +30,7 @@ export class Storage implements IStorage {
   private storage: IStorage;
 
   constructor(config: string | AdapterConfig) {
-    this.switchStorage(config);
+    this.switchAdapter(config);
   }
 
   public getType(): string {
@@ -45,7 +45,7 @@ export class Storage implements IStorage {
     return this.storage.getConfiguration();
   }
 
-  public switchStorage(args: string | AdapterConfig): void {
+  public switchAdapter(args: string | AdapterConfig): void {
     let type: string;
     if (typeof args === "string") {
       type = args.substring(0, args.indexOf("://"));
