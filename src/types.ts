@@ -138,7 +138,7 @@ export interface IStorage {
   fileExists(name: string): Promise<boolean>;
 }
 
-export enum AdapterType {
+export enum StorageType {
   LOCAL = "local",
   GCS = "gcs", // Google Cloud Storage
   S3 = "s3", // Amazon S3

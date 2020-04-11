@@ -5,11 +5,11 @@ import { Readable } from "stream";
 import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import { AbstractAdapter } from "./AbstractAdapter";
-import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, AdapterType } from "./types";
+import { ConfigBackBlazeB2, BackBlazeB2Bucket, BackBlazeB2File, StorageType } from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterBackBlazeB2 extends AbstractAdapter {
-  protected type = AdapterType.B2;
+  protected type = StorageType.B2;
   private bucketId: string;
   private storage: B2;
   private buckets: BackBlazeB2Bucket[] = [];

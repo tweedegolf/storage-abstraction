@@ -2,7 +2,7 @@ import "jasmine";
 import fs from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { AdapterType } from "../src/types";
+import { StorageType } from "../src/types";
 import { promiseRimraf } from "./util";
 
 // describe("test jasmine", () => {
@@ -15,7 +15,7 @@ import { promiseRimraf } from "./util";
 describe(`testing local urls`, () => {
   it("[0]", () => {
     this.storage = new Storage("local://tests/tmp?bucketName=the-buck");
-    expect(this.storage.getType()).toBe(AdapterType.LOCAL);
+    expect(this.storage.getType()).toBe(StorageType.LOCAL);
     expect(this.storage.getConfiguration().directory).toBe("tests/tmp");
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
@@ -32,26 +32,26 @@ describe(`testing local urls`, () => {
 
   it("[3]", () => {
     this.storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       bucketName: "the-buck",
     });
-    expect(this.storage.getType()).toBe(AdapterType.LOCAL);
+    expect(this.storage.getType()).toBe(StorageType.LOCAL);
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
 
   it("[4]", () => {
     this.storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
     });
-    expect(this.storage.getType()).toBe(AdapterType.LOCAL);
+    expect(this.storage.getType()).toBe(StorageType.LOCAL);
     expect(this.storage.getSelectedBucket()).toBe("tmp");
   });
 
   it("[5] numeric values in options stay numeric and keep their radix (8)", () => {
     this.storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       options: {
         mode: 0o777,
@@ -62,7 +62,7 @@ describe(`testing local urls`, () => {
 
   it("[5b] numeric values in options stay numeric and keep their radix (10)", () => {
     this.storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       options: {
         mode: 511,
@@ -98,7 +98,7 @@ describe(`testing local urls`, () => {
 
   it("[6c] octal numbers get converted to radix 10", async () => {
     const storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       options: {
         mode: 0o777,
@@ -114,7 +114,7 @@ describe(`testing local urls`, () => {
 
   it("[6d]", async () => {
     const storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       options: {
         mode: 511,
@@ -130,7 +130,7 @@ describe(`testing local urls`, () => {
 
   it("[6e]", async () => {
     const storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       options: {
         mode: "0o777",
@@ -146,7 +146,7 @@ describe(`testing local urls`, () => {
 
   it("[6f]", async () => {
     const storage = new Storage({
-      type: AdapterType.LOCAL,
+      type: StorageType.LOCAL,
       directory: "tests/tmp",
       options: {
         mode: "777",

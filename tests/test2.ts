@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { IStorage, StorageConfig, StorageType } from "../src/types";
+import { IStorage, StorageType } from "../src/types";
 import { Readable, Writable } from "stream";
 dotenv.config();
 

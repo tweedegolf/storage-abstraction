@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import uniquid from "uniquid";
 import slugify from "slugify";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, AdapterType } from "../src/types";
+import { AdapterConfig, StorageType } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
 
@@ -32,19 +32,19 @@ console.log(
 );
 
 let config: AdapterConfig | string = null;
-if (type === AdapterType.LOCAL) {
+if (type === StorageType.LOCAL) {
   config = {
     type,
     directory,
   };
-} else if (type === AdapterType.GCS) {
+} else if (type === StorageType.GCS) {
   config = {
     type,
     bucketName,
     projectId,
     keyFilename,
   };
-} else if (type === AdapterType.S3) {
+} else if (type === StorageType.S3) {
   config = {
     type,
     bucketName,
@@ -86,7 +86,10 @@ describe(`testing ${storage.getType()} storage`, () => {
   });
 
   afterAll(async () => {
-    // await storage.clearBucket();
+    await storage.clearBucket(slugify(bucketName));
+    if (storage.getType() === StorageType.LOCAL) {
+      await storage.deleteBucket("new-bucket");
+    }
     // cleaning up test data
     rimraf(path.join(process.cwd(), `test-*.jpg`), () => {
       console.log("all cleaned up!");
@@ -110,7 +113,7 @@ describe(`testing ${storage.getType()} storage`, () => {
   // it("wait it bit", async () => {
   //   await expectAsync(waitABit(2000)).toBeResolved();
   // });
-  /*
+
   it("clear bucket", async () => {
     await expectAsync(storage.clearBucket()).toBeResolved();
   });
@@ -323,5 +326,4 @@ describe(`testing ${storage.getType()} storage`, () => {
     const index = buckets.indexOf(newBucketName);
     expect(index).toBe(-1);
   });
-*/
 });

@@ -1,4 +1,4 @@
 import { Storage } from "./Storage";
-import { AdapterConfig, AdapterType } from "./types";
+import { AdapterConfig, StorageType } from "./types";
 
-export { AdapterConfig, AdapterType as StorageType, Storage };
+export { AdapterConfig, StorageType, Storage };

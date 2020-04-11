@@ -9,11 +9,11 @@ import {
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { ConfigGoogleCloud, AdapterType } from "./types";
+import { ConfigGoogleCloud, StorageType } from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
-  protected type = AdapterType.GCS;
+  protected type = StorageType.GCS;
   private bucketNames: string[] = [];
   private storage: GoogleCloudStorage;
   public static defaultOptions = {

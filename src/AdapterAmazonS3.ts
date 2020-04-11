@@ -2,11 +2,11 @@ import fs from "fs";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { ConfigAmazonS3, AdapterType } from "./types";
+import { ConfigAmazonS3, StorageType } from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
-  protected type = AdapterType.S3;
+  protected type = StorageType.S3;
   // protected bucketName: string;
   private storage: S3;
   private bucketNames: string[] = [];

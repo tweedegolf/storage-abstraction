@@ -8,7 +8,7 @@ import {
   ConfigBackBlazeB2,
   BackBlazeB2Bucket,
   BackBlazeB2File,
-  AdapterType,
+  StorageType,
   IStorage,
 } from "./types";
 import { parseUrl } from "./util";
@@ -19,7 +19,7 @@ const init = async (): Promise<boolean> => {
 
 const getConfiguration = (): ConfigBackBlazeB2 => {
   return {
-    type: AdapterType.B2,
+    type: StorageType.B2,
     applicationKeyId: "",
     applicationKey: "",
   };
@@ -27,7 +27,7 @@ const getConfiguration = (): ConfigBackBlazeB2 => {
 
 const adapter: IStorage = {
   init,
-  getType: () => AdapterType.B2,
+  getType: () => StorageType.B2,
   getConfiguration,
 };
 

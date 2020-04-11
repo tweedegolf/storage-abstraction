@@ -4,12 +4,12 @@ import to from "await-to-js";
 import glob from "glob";
 import rimraf from "rimraf";
 import { Readable } from "stream";
-import { ConfigLocal, AdapterType } from "./types";
+import { ConfigLocal, StorageType } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { parseUrl, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
-  protected type = AdapterType.LOCAL as string;
+  protected type = StorageType.LOCAL as string;
   // protected bucketName: string;
   private directory: string;
   private buckets: string[] = [];
