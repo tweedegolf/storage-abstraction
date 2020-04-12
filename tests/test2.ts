@@ -14,14 +14,14 @@ const configB2 = {
   type: StorageType.B2,
   applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
   applicationKey: process.env.B2_APPLICATION_KEY,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+  bucketName: process.env.BUCKET_NAME,
 };
 
 const configS3 = {
   type: StorageType.S3,
-  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
-  // bucketName: process.env.STORAGE_BUCKETNAME,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  // bucketName: process.env.BUCKET_NAME,
   bucketName: "null",
   options: {
     region: "eu-west-1",
@@ -30,14 +30,14 @@ const configS3 = {
 
 const configGoogle = {
   type: StorageType.GCS,
-  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
-  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
-  bucketName: process.env.STORAGE_BUCKETNAME,
+  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  keyFilename: process.env.GOOGLE_CLOUD_KEYFILE,
+  bucketName: process.env.BUCKET_NAME,
 };
 
 const configLocal = {
   type: StorageType.LOCAL,
-  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+  directory: process.env.LOCAL_DIRECTORY,
 };
 
 /**
@@ -163,9 +163,10 @@ const run = async (): Promise<void> => {
   let storage: Storage;
   try {
     // storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
-    storage = new Storage(`foo://tests/tmp slug?mode=600&slug=true`);
+    // storage = new Storage(`foo://tests/tmp slug?mode=600&slug=true`);
     // storage = new Storage(`b2://tests/tmp slug?mode=600&slug=true`);
-    // storage = new Storage(configS3);
+    storage = new Storage(configS3);
+    const c = storage.getConfiguration();
   } catch (e) {
     console.error(`\x1b[31m${e.message}\n`);
     process.exit(0);

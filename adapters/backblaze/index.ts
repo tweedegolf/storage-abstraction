@@ -1,106 +1,116 @@
 import fs from "fs";
 import path from "path";
-import { zip } from "ramda";
 import to from "await-to-js";
 import { Readable } from "stream";
-import {
-  Storage as GoogleCloudStorage,
-  File,
-  CreateReadStreamOptions,
-} from "@google-cloud/storage";
-import { AbstractAdapter } from "./AbstractAdapter";
-import { ConfigGoogleCloud, StorageType } from "./types";
-import { parseUrl } from "./util";
+import B2 from "backblaze-b2";
+// require("@gideo-llc/backblaze-b2-upload-any").install(B2);
+import { AbstractAdapter } from "../../src/AbstractAdapter";
+import { StorageType } from "../../src/types";
+import { ConfigBackblazeB2, BackblazeB2Bucket, BackblazeB2File } from "./types";
+import { parseUrl } from "../../src/util";
 
-export class AdapterGoogleCloud extends AbstractAdapter {
-  protected type = StorageType.GCS;
-  private bucketNames: string[] = [];
-  private storage: GoogleCloudStorage;
+export class AdapterBackblazeB2 extends AbstractAdapter {
+  protected type = StorageType.B2;
+  private bucketId: string;
+  private storage: B2;
+  private buckets: BackblazeB2Bucket[] = [];
+  private files: BackblazeB2File[] = [];
+  private nextFileName: string;
   public static defaultOptions = {
     slug: true,
   };
 
-  constructor(config: string | ConfigGoogleCloud) {
+  constructor(config: string | ConfigBackblazeB2) {
     super();
-    const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
-    this.storage = new GoogleCloudStorage({ keyFilename, projectId });
-    this.options = { ...AdapterGoogleCloud.defaultOptions, ...options };
+    const { applicationKey, applicationKeyId, bucketName, options } = this.parseConfig(config);
+    this.storage = new B2({ applicationKey, applicationKeyId });
+    this.options = { ...AdapterBackblazeB2.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
-    if (this.bucketName) {
-      this.bucketNames.push(this.bucketName);
-    }
     this.config = {
       type: this.type,
-      keyFilename,
-      projectId,
+      applicationKey,
+      applicationKeyId,
       bucketName,
       options,
     };
   }
 
-  /**
-   * @param {string} keyFile - path to the keyFile
-   *
-   * Read in the keyFile and retrieve the projectId, this is function
-   * is called when the user did not provide a projectId
-   */
-  private getGCSProjectId(keyFile: string): string {
-    const data = fs.readFileSync(keyFile).toString("utf-8");
-    const json = JSON.parse(data);
-    return json.project_id;
+  public async init(): Promise<boolean> {
+    if (this.initialized) {
+      return Promise.resolve(true);
+    }
+    try {
+      await this.storage.authorize();
+    } catch (e) {
+      throw new Error(e.message);
+    }
+    if (this.bucketName) {
+      try {
+        const {
+          data: { buckets },
+        } = await this.storage.getBucket({ bucketName: this.bucketName });
+        this.buckets = buckets;
+        this.getBucketId();
+      } catch (e) {
+        throw new Error(e.message);
+      }
+    }
+    this.initialized = true;
+    return true;
   }
 
-  private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
-    let cfg: ConfigGoogleCloud;
+  public async test(): Promise<string> {
+    if (this.initialized === false) {
+      return Promise.reject("storage has not been initialized yet; call Storage.init() first");
+    }
+    try {
+      await this.storage.listBuckets();
+    } catch (e) {
+      throw new Error(e.message);
+    }
+    return Promise.resolve("ok");
+  }
+
+  private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
+    let cfg: ConfigBackblazeB2;
     if (typeof config === "string") {
-      const { type, part1: keyFilename, part2: projectId, bucketName, options } = parseUrl(config);
+      const {
+        type,
+        part1: applicationKeyId,
+        part2: applicationKey,
+        bucketName,
+        options,
+      } = parseUrl(config);
       cfg = {
         type,
-        keyFilename,
-        projectId,
+        applicationKeyId,
+        applicationKey,
         bucketName,
         options,
       };
     } else {
       cfg = config;
     }
-    if (!cfg.keyFilename) {
-      throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
-    }
-    if (!cfg.projectId) {
-      cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
+    if (!cfg.applicationKey || !cfg.applicationKeyId) {
+      throw new Error(
+        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 'b2'"
+      );
     }
     return cfg;
   }
 
-  async init(): Promise<boolean> {
-    // no further initialization required
-    this.initialized = true;
-    return Promise.resolve(true);
-  }
-
-  // After uploading a file to Google Storage it may take a while before the file
-  // can be discovered and downloaded; this function adds a little delay
-  async getFile(fileName: string, retries: number = 5): Promise<File> {
-    const file = this.storage.bucket(this.bucketName).file(fileName);
-    const [exists] = await file.exists();
-    if (!exists && retries !== 0) {
-      const r = retries - 1;
-      await new Promise(res => {
-        setTimeout(res, 250);
-      });
-      // console.log('RETRY', r, fileName);
-      return this.getFile(fileName, r);
+  private getBucketId(): void {
+    const index = this.buckets.findIndex(
+      (b: BackblazeB2Bucket) => b.bucketName === this.bucketName
+    );
+    if (index !== -1) {
+      this.bucketId = this.buckets[index].bucketId;
     }
-    if (!exists) {
-      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
-    }
-    return file;
   }
 
   async getFileAsReadable(
     fileName: string,
-    options: CreateReadStreamOptions = { start: 0 }
+    options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
     const file = this.storage.bucket(this.bucketName).file(fileName);
     const [exists] = await file.exists();
@@ -130,6 +140,18 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       // console.log(e.message);
       throw e;
     }
+  }
+
+  protected checkBucket(name: string): BackblazeB2Bucket | null {
+    const index = this.buckets.findIndex(b => b.bucketName === name);
+    if (index === -1) {
+      return null;
+    }
+    return this.buckets[index];
+  }
+
+  public getSelectedBucket(): string | null {
+    return this.bucketName;
   }
 
   // util members
@@ -175,62 +197,34 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
 
     const n = this.generateSlug(name);
-    if (this.bucketNames.findIndex(b => b === n) !== -1) {
+    if (this.checkBucket(n)) {
       return;
     }
 
-    try {
-      const bucket = this.storage.bucket(n);
-      const [exists] = await bucket.exists();
-      if (exists) {
-        return;
-      }
-    } catch (e) {
-      // console.log(e.message);
-      // just move on
+    const bucket = this.storage.bucket(n);
+    const [exists] = await bucket.exists();
+    if (exists) {
+      return;
     }
 
     try {
       await this.storage.createBucket(n);
-      this.bucketNames.push(n);
     } catch (e) {
-      // console.log("ERROR", e.message, e.code);
-      if (
-        e.code === 409 &&
-        e.message === "You already own this bucket. Please select another name."
-      ) {
-        // error code 409 can have messages like:
-        // "You already own this bucket. Please select another name." (bucket exists!)
-        // "Sorry, that name is not available. Please try a different one." (notably bucket name "new-bucket")
-        // So in some cases we can safely ignore this error, in some case we can't
-        return;
-      }
       throw new Error(e.message);
     }
-
-    // ossia:
-    // await this.storage
-    //   .createBucket(n)
-    //   .then(() => {
-    //     this.bucketNames.push(n);
-    //     return;
-    //   })
-    //   .catch(e => {
-    //     if (e.code === 409) {
-    //       // error code 409 is 'You already own this bucket. Please select another name.'
-    //       // so we can safely return true if this error occurs
-    //       return;
-    //     }
-    //     throw new Error(e.message);
-    //   });
   }
 
-  async selectBucket(name: string | null): Promise<void> {
-    if (name === null) {
+  async selectBucket(name: string): Promise<void> {
+    if (!name) {
       this.bucketName = "";
       return;
     }
-
+    const b = this.checkBucket(name);
+    if (b) {
+      this.bucketName = name;
+      this.bucketId = b.bucketId;
+      return;
+    }
     const [error] = await to(this.createBucket(name));
     if (error !== null) {
       throw error;
@@ -240,26 +234,32 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   async clearBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = this.generateSlug(n);
+    n = super.generateSlug(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
   }
 
   async deleteBucket(name?: string): Promise<void> {
     let n = name || this.bucketName;
-    n = this.generateSlug(n);
+    n = super.generateSlug(n);
     await this.clearBucket(n);
     const data = await this.storage.bucket(n).delete();
     // console.log(data);
     if (n === this.bucketName) {
       this.bucketName = "";
     }
-    this.bucketNames = this.bucketNames.filter(b => b !== n);
+    this.buckets = this.buckets.filter(b => b.bucketName !== n);
   }
 
   async listBuckets(): Promise<string[]> {
-    const [buckets] = await this.storage.getBuckets();
-    this.bucketNames = buckets.map(b => b.metadata.id);
-    return this.bucketNames;
+    const {
+      data: { buckets },
+    } = await this.storage.listBuckets();
+    // this.bucketsById = buckets.reduce((acc: { [id: string]: string }, val: BackBlazeB2Bucket) => {
+    //   acc[val.bucketId] = val.bucketName;
+    //   return acc;
+    // }, {});
+    this.buckets = buckets;
+    return this.buckets.map(b => b.bucketName);
   }
 
   private async getMetaData(files: string[]): Promise<number[]> {
@@ -277,10 +277,14 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
-    const data = await this.storage.bucket(this.bucketName).getFiles();
-    const names = data[0].map(f => f.name);
-    const sizes = await this.getMetaData(names);
-    return zip(names, sizes) as [string, number][];
+    const {
+      data: { files, nextFileName },
+    } = await this.storage.listFileNames({
+      bucketId: this.bucketId,
+    });
+    this.files = files;
+    this.nextFileName = nextFileName;
+    return this.files.map(f => [f.fileName, f.contentLength]);
   }
 
   async sizeOf(name: string): Promise<number> {
@@ -293,12 +297,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   async fileExists(name: string): Promise<boolean> {
-    const data = await this.storage
-      .bucket(this.bucketName)
-      .file(name)
-      .exists();
-
-    // console.log(data);
-    return data[0];
+    return true;
   }
 }

@@ -4,9 +4,10 @@ import to from "await-to-js";
 import glob from "glob";
 import rimraf from "rimraf";
 import { Readable } from "stream";
-import { ConfigLocal, StorageType } from "./types";
-import { AbstractAdapter } from "./AbstractAdapter";
-import { parseUrl, parseMode } from "./util";
+import { StorageType } from "../../src/types";
+import { AbstractAdapter } from "../../src/AbstractAdapter";
+import { parseUrl, parseMode } from "../../src/util";
+import { ConfigLocal } from "./types";
 
 export class AdapterLocal extends AbstractAdapter {
   protected type = StorageType.LOCAL;

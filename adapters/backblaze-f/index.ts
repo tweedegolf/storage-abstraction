@@ -4,14 +4,9 @@ import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
-import {
-  ConfigBackBlazeB2,
-  BackBlazeB2Bucket,
-  BackBlazeB2File,
-  StorageType,
-  IStorage,
-} from "./types";
-import { parseUrl } from "./util";
+import { StorageType, IStorage } from "../../src/types";
+import { parseUrl } from "../../src/util";
+import { ConfigBackBlazeB2 } from "./types";
 
 const init = async (): Promise<boolean> => {
   return true;
@@ -32,6 +27,7 @@ const adapter: IStorage = {
 };
 
 const createAdapter = (config: ConfigBackBlazeB2): IStorage => {
+  console.log("create adapter");
   const state = {
     applicationKeyId: config.applicationKeyId,
     applicationKey: config.applicationKey,

@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "1.4.0",
+  "version": "1.3.1",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,20 +10,23 @@
     "tests/test.ts"
   ],
   "dependencies": {
-    "@tweedegolf/sab-adapter-amazon-s3": "file:adapters/amazon",
+    "@gideo-llc/backblaze-b2-upload-any": "^0.1.3",
+    "@google-cloud/storage": "^4.7.0",
     "await-to-js": "^2.1.1",
+    "aws-sdk": "^2.656.0",
+    "backblaze-b2": "^1.5.0",
+    "fast-crc32c": "^2.0.0",
+    "glob": "^7.1.6",
+    "ramda": "^0.26.1",
+    "rimraf": "^3.0.0",
     "slugify": "^1.3.6",
     "uniquid": "^1.1.4"
-  },
-  "peerDependencies": {
-    "sab-adapter-local": "^1.0.0",
-    "sab-adapter-google": "^1.0.0",
-    "sab-adapter-amazon": "^1.0.0",
-    "sab-adapter-backblaze": "^1.0.0"
   },
   "devDependencies": {
     "@types/jasmine": "^3.5.10",
     "@types/node": "^12.12.35",
+    "@types/ramda": "^0.26.38",
+    "@types/rimraf": "^2.0.4",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "dotenv": "^8.2.0",
@@ -59,8 +62,7 @@
     "storage abstraction",
     "cloud filesystem",
     "google cloud",
-    "amazon s3",
-    "backblaze b2"
+    "amazon s3"
   ],
   "author": "daniel@tweedegolf.nl",
   "license": "MIT",
@@ -85,10 +87,6 @@
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
       "prettier"
-    ],
-    "ignorePatterns": [
-      "node_modules/",
-      "dist/"
     ],
     "rules": {
       "prettier/prettier": "error",
