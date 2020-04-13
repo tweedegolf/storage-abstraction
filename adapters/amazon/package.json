@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-amazon-s3",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Amazon S3 adapter for storage-abstraction (SAB)",
   "main": "dist/adapters/amazon/index.js",
   "types": "dist/adapters/amazon/index.d.ts",
@@ -11,7 +11,7 @@
     "tests/test.ts"
   ],
   "dependencies": {
-    "@tweedegolf/storage-abstraction": "file:../../",
+    "@tweedegolf/storage-abstraction": "^1.3.1",
     "aws-sdk": "^2.656.0",
     "slugify": "^1.3.6",
     "uniquid": "^1.1.4"
@@ -74,8 +74,8 @@
       "prettier"
     ],
     "ignorePatterns": [
-      "node_modules/",
-      "dist/"
+      "node_modules",
+      "dist"
     ],
     "rules": {
       "prettier/prettier": "error",
