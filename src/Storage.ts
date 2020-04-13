@@ -1,7 +1,21 @@
 import path from "path";
 import { Readable } from "stream";
-import { IStorage, IAdapterConfig, JSON as TypeJSON } from "./types";
-import { adapterFunctions, adapterClasses } from "./adapters";
+import { IStorage, AdapterConfig, JSON as TypeJSON } from "./types";
+
+/**
+ *  add new storage adapter here
+ */
+
+const adapterClasses = {
+  b2: "AdapterLocal",
+  s3: "AdapterAmazonS3",
+  gcs: "AdapterGoogleCloudStorage",
+  local: "AdapterBackblazeB2",
+};
+
+const adapterFunctions = {
+  b2f: "AdapterBackblazeB2F",
+};
 
 const availableAdapters: string = Object.keys(adapterClasses)
   .concat(Object.keys(adapterFunctions))
@@ -17,7 +31,7 @@ const availableAdapters: string = Object.keys(adapterClasses)
 export class Storage implements IStorage {
   private storage: IStorage;
 
-  constructor(config: string | IAdapterConfig) {
+  constructor(config: string | AdapterConfig) {
     this.switchAdapter(config);
   }
 
@@ -29,32 +43,31 @@ export class Storage implements IStorage {
     return this.storage.getOptions();
   }
 
-  public getConfiguration(): IAdapterConfig {
+  public getConfiguration(): AdapterConfig {
     return this.storage.getConfiguration();
   }
 
-  public switchAdapter(args: string | IAdapterConfig): void {
+  public switchAdapter(args: string | AdapterConfig): void {
     let type: string;
     if (typeof args === "string") {
       type = args.substring(0, args.indexOf("://"));
     } else {
       type = args.type;
     }
-    // console.log("type", type);
+    console.log("type", type);
     if (!adapterClasses[type] && !adapterFunctions[type]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
-    // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
+    console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
     if (adapterClasses[type]) {
-      const { name, path: p } = adapterClasses[type];
-      const StorageClass = require(path.join(__dirname, p))[name];
-      // console.log(StorageClass);
+      const name = adapterClasses[type];
+      const StorageClass = require(path.join(__dirname, name))[name];
+      console.log(StorageClass);
       this.storage = new StorageClass(args);
     } else if (adapterFunctions[type]) {
-      const { name, path: p } = adapterFunctions[type];
-      const createFunction = require(path.join(__dirname, p))[name];
-      // console.log(createFunction);
-      this.storage = createFunction(args);
+      const name = adapterFunctions[type];
+      const module = require(path.join(__dirname, name));
+      this.storage = module.createAdapter(args);
     }
   }
 

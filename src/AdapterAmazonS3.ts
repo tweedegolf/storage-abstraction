@@ -1,17 +1,13 @@
 import fs from "fs";
 import { Readable } from "stream";
 import S3 from "aws-sdk/clients/s3";
-import {
-  AbstractAdapter,
-  parseUrl,
-  StorageType,
-  IAdapterConfig,
-} from "@tweedegolf/storage-abstraction";
-import { ConfigAmazonS3 } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { ConfigAmazonS3, AdapterConfig, StorageType } from "./types";
+import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected type = StorageType.S3;
-  protected config: ConfigAmazonS3;
+  // protected config: ConfigAmazonS3;
   // protected bucketName: string;
   private storage: S3;
   private bucketNames: string[] = [];
@@ -20,7 +16,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     apiVersion: "2006-03-01",
   };
 
-  constructor(config: string | IAdapterConfig) {
+  constructor(config: string | AdapterConfig) {
     super();
     const { accessKeyId, secretAccessKey, bucketName, options } = this.parseConfig(
       config as ConfigAmazonS3

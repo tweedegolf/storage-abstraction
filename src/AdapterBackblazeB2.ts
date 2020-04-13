@@ -1,13 +1,12 @@
+import B2 from "backblaze-b2";
 import fs from "fs";
 import path from "path";
 import to from "await-to-js";
 import { Readable } from "stream";
-import B2 from "backblaze-b2";
 // require("@gideo-llc/backblaze-b2-upload-any").install(B2);
-import { AbstractAdapter } from "../../src/AbstractAdapter";
-import { StorageType } from "../../src/types";
-import { ConfigBackblazeB2, BackblazeB2Bucket, BackblazeB2File } from "./types";
-import { parseUrl } from "../../src/util";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { StorageType, ConfigBackblazeB2, BackblazeB2Bucket, BackblazeB2File } from "./types";
+import { parseUrl } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected type = StorageType.B2;

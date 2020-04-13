@@ -37,8 +37,7 @@ export interface IStorage {
    * The object also contains the key `options` which are only the options passed in during
    * initialization; if you want all options, including the default options use `getOptions()`
    */
-  // getConfiguration(): AdapterConfig;
-  getConfiguration(): IAdapterConfig;
+  getConfiguration(): AdapterConfig;
 
   /**
    * Returns an object that contains both the options passed with the configuration and the
@@ -165,7 +164,51 @@ export interface IAdapterConfig {
   type: string;
   options?: JSON;
   bucketName?: string;
-  [id: string]: any;
 }
 
-// export type AdapterConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackblazeB2;
+export interface ConfigAmazonS3 extends IAdapterConfig {
+  accessKeyId: string;
+  secretAccessKey: string;
+}
+
+export interface ConfigBackblazeB2 extends IAdapterConfig {
+  applicationKeyId: string;
+  applicationKey: string;
+}
+
+export interface ConfigGoogleCloud extends IAdapterConfig {
+  keyFilename: string;
+  projectId?: string;
+}
+
+export interface ConfigLocal extends IAdapterConfig {
+  directory: string;
+}
+
+export type AdapterConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackblazeB2;
+
+export type BackblazeB2Bucket = {
+  accountId: "string";
+  bucketId: "string";
+  bucketInfo: "object";
+  bucketName: "string";
+  bucketType: "string";
+  corsRules: string[];
+  lifecycleRules: string[];
+  options: string[];
+  revision: number;
+};
+
+export type BackblazeB2File = {
+  accountId: string;
+  action: string;
+  bucketId: string;
+  contentLength: number;
+  contentMd5: string;
+  contentSha1: string;
+  contentType: string;
+  fileId: string;
+  fileInfo: [object];
+  fileName: string;
+  uploadTimestamp: number;
+};

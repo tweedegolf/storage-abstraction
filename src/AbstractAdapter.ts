@@ -1,11 +1,11 @@
 import path from "path";
 import slugify from "slugify";
 import { Readable } from "stream";
-import { IAdapterConfig, IStorage, JSON as TypeJSON, StorageType } from "./types";
+import { AdapterConfig, IStorage, JSON as TypeJSON, StorageType } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
   protected type: StorageType;
-  protected config: IAdapterConfig;
+  protected config: AdapterConfig;
   protected bucketName: string;
   protected options: TypeJSON = {};
   protected initialized: boolean = false;
@@ -18,7 +18,7 @@ export abstract class AbstractAdapter implements IStorage {
     return this.options;
   }
 
-  public getConfiguration(): IAdapterConfig {
+  public getConfiguration(): AdapterConfig {
     return this.config;
   }
 

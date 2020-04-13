@@ -165,7 +165,8 @@ const run = async (): Promise<void> => {
     // storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
     // storage = new Storage(`foo://tests/tmp slug?mode=600&slug=true`);
     // storage = new Storage(`b2://tests/tmp slug?mode=600&slug=true`);
-    storage = new Storage(configS3);
+    storage = new Storage(`b2f://key_id/key?bucketName=bucket`);
+    // storage = new Storage(configS3);
     const c = storage.getConfiguration();
   } catch (e) {
     console.error(`\x1b[31m${e.message}\n`);

@@ -90,6 +90,8 @@ Below follows a description of the configuration objects and urls of the availab
 
 ### Local storage
 
+> peer dependencies: <br/> > `npm i glob rimraf`
+
 Configuration object:
 
 ```typescript
@@ -170,6 +172,8 @@ s.getConfiguration().bucketName; // 'files'
 
 ### Google Cloud
 
+> peer dependencies: <br/> > `npm i @google-cloud/storage ramda`
+
 Configuration object:
 
 ```typescript
@@ -213,6 +217,8 @@ s.getSelectedBucket(); // "bucket"
 
 ### Amazon S3
 
+> peer dependencies: <br/> > `npm i aws-sdk`
+
 Config object:
 
 ```typescript
@@ -245,6 +251,8 @@ s.getSelectedBucket(); // "bucket"
 ```
 
 ### Backblaze B2
+
+> peer dependencies: <br/> > `npm i backblaze-b2 @gideo-llc/backblaze-b2-upload-any`
 
 Config object:
 

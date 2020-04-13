@@ -8,10 +8,9 @@ import {
   File,
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
-import { AbstractAdapter } from "../../src/AbstractAdapter";
-import { StorageType } from "../../src/types";
-import { parseUrl } from "../../src/util";
-import { ConfigGoogleCloud } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { StorageType, ConfigGoogleCloud } from "./types";
+import { parseUrl } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
   protected type = StorageType.GCS;
