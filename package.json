@@ -24,15 +24,6 @@
     "slugify": "^1.3.6",
     "uniquid": "^1.1.4"
   },
-  "peerDependencies": {
-    "@gideo-llc/backblaze-b2-upload-any": "^0.1.3",
-    "@google-cloud/storage": "^4.7.0",
-    "aws-sdk": "^2.656.0",
-    "backblaze-b2": "^1.5.0",
-    "glob": "^7.1.6",
-    "ramda": "^0.26.1",
-    "rimraf": "^3.0.0"
-  },
   "devDependencies": {
     "@types/jasmine": "^3.5.10",
     "@types/node": "^12.12.35",

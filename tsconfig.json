@@ -23,7 +23,8 @@
     "spec",
     "dist",
     "adapters",
-    "src/AdapterBackblazeB2.ts",
-    "src/AdapterBackblazeB2F.ts"
+    "src/template_class.ts",
+    "src/template_functional.ts",
+    "src/AdapterBackblazeB2.ts"
   ]
 }

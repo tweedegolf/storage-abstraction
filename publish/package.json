@@ -40,7 +40,6 @@
     "typescript": "^3.7.3"
   },
   "scripts": {
-    "test-await": "ts-node ./tests/test-await.ts",
     "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-config-b2": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-b2.jasmine.ts",
@@ -50,12 +49,7 @@
     "test-local": "TYPE='local' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
-    "test": "ts-node ./tests/test.ts",
-    "test2": "ts-node ./tests/test2.ts",
-    "test3": "ts-node ./tests/test3.ts",
-    "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",
-    "prepublishOnly": "npm run tsc",
     "peerdependencies": "npm i -D  glob rimraf @google-cloud/storage ramda aws-sdk backblaze-b2 @gideo-llc/backblaze-b2-upload-any"
   },
   "keywords": [

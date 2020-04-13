@@ -58,18 +58,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return true;
   }
 
-  public async test(): Promise<string> {
-    if (this.initialized === false) {
-      return Promise.reject("storage has not been initialized yet; call Storage.init() first");
-    }
-    try {
-      await this.storage.listBuckets();
-    } catch (e) {
-      throw new Error(e.message);
-    }
-    return Promise.resolve("ok");
-  }
-
   private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
     let cfg: ConfigBackblazeB2;
     if (typeof config === "string") {

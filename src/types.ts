@@ -185,7 +185,17 @@ export interface ConfigLocal extends IAdapterConfig {
   directory: string;
 }
 
-export type AdapterConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackblazeB2;
+export interface ConfigTemplate extends IAdapterConfig {
+  someKey: string;
+  someOtherKey: string;
+}
+
+export type AdapterConfig =
+  | ConfigLocal
+  | ConfigAmazonS3
+  | ConfigGoogleCloud
+  | ConfigBackblazeB2
+  | ConfigTemplate;
 
 export type BackblazeB2Bucket = {
   accountId: "string";

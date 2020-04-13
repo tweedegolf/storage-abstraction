@@ -4,7 +4,8 @@ import { Readable } from "stream";
 import { AdapterConfig, IStorage, JSON as TypeJSON, StorageType } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
-  protected type: StorageType;
+  // protected type: StorageType;
+  protected type: string;
   protected config: AdapterConfig;
   protected bucketName: string;
   protected options: TypeJSON = {};
@@ -54,9 +55,12 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   async test(): Promise<string> {
+    if (this.initialized === false) {
+      return Promise.reject("storage has not been initialized yet; call Storage.init() first");
+    }
     try {
       await this.listBuckets();
-      return "ok";
+      return Promise.resolve("ok");
     } catch (e) {
       throw new Error(`Looks like the storage configuration is not correct (${e.message})`);
     }
