@@ -1,7 +1,6 @@
-import path from "path";
-import slugify from "slugify";
 import { Readable } from "stream";
-import { AdapterConfig, IStorage, JSON as TypeJSON, StorageType } from "./types";
+import { generateSlug, slugifyPath, validateName } from "./util";
+import { AdapterConfig, IStorage, JSON as TypeJSON } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
   // protected type: StorageType;
@@ -24,34 +23,11 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   protected generateSlug(url: string, options: TypeJSON = this.options): string {
-    if (!url || url === "null" || url === "undefined") {
-      return "";
-    }
-    // console.log("SUPER", options, url);
-    if (options.slug === "true" || options.slug === true || options.slug == 1) {
-      const s = slugify(url);
-      // console.log("SUPER", options, url, s);
-      return s;
-    }
-    return url;
+    return generateSlug(url, options);
   }
 
   protected validateName(name: string): string {
-    if (name === null) {
-      // throw new Error("Can not use `null` as bucket name");
-      return "Can not use `null` as bucket name";
-    }
-    if (name === "null") {
-      return 'Can not use "null" as bucket name';
-    }
-    if (name === "undefined") {
-      return 'Can not use "undefined" as bucket name';
-    }
-    if (name === "" || typeof name === "undefined") {
-      // throw new Error("Please provide a bucket name");
-      return "Please provide a bucket name";
-    }
-    return null;
+    return validateName(name);
   }
 
   async test(): Promise<string> {
@@ -67,30 +43,15 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    let p = targetPath;
-    if (this.options.slugify === true) {
-      const paths = targetPath.split("/").map(d => slugify(d));
-      p = path.join(...paths);
-    }
-    await this.store(origPath, p);
+    await this.store(origPath, slugifyPath(targetPath, this.options));
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    let p = targetPath;
-    if (this.options.slugify === true) {
-      const paths = targetPath.split("/").map(d => slugify(d));
-      p = path.join(...paths);
-    }
-    await this.store(buffer, p);
+    await this.store(buffer, slugifyPath(targetPath, this.options));
   }
 
   async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    let p = targetPath;
-    if (this.options.slugify === true) {
-      const paths = targetPath.split("/").map(d => slugify(d));
-      p = path.join(...paths);
-    }
-    await this.store(stream, p);
+    await this.store(stream, slugifyPath(targetPath, this.options));
   }
 
   public getSelectedBucket(): string {

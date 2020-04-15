@@ -1,32 +1,42 @@
 import fs from "fs";
-import path from "path";
-import to from "await-to-js";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-// use ConfigTemplate as starting point for your configuration object
+// Use ConfigTemplate as starting point for your own configuration object
 import { StorageType, ConfigTemplate } from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterTemplate extends AbstractAdapter {
-  // your storage type, this type to the enum StorageType in ./types.ts
+  // Your storage type, add this type to the enum StorageType in ./types.ts
   protected type: string;
-  private bucketId: string;
-  // you could use this to store the names of existing buckets to save calls
-  // to the cloud storage for checking if a bucket exists
+
+  // You could use this to store the names of existing buckets to save calls
+  // to the cloud storage for checking if a bucket exists.
   private bucketNames: string[];
-  // the instance of the storage is you use another library, e.g. aws-sdk for Amazon S3
+
+  // The instance of the storage if you use another library as a wrapper
+  // around the API of your storage service, e.g. aws-sdk for Amazon S3.
   private storage: any;
-  // add default options to you liking, it is recommended to use slugify for cloud storage
+
+  // Add default options to you liking, it is recommended to use slugify for cloud storage
   // so in most cases you should set `slug` to true.
   public static defaultOptions = {
     slug: true,
   };
 
+  // The constructor can take both a string and an object. You should define an interface
+  // for the object that extends IConfig, see the file ./types.ts. You can use any name
+  // for your interface but it is convenient if you start your name with Config and then
+  // the name of your storage service in camelcase, e.g. ConfigMyStorageType.
   constructor(config: string | ConfigTemplate) {
     super();
     const { someKey, someOtherKey, bucketName, options } = this.parseConfig(config);
-    this.storage; // if you are using a library, create an instance here
+
+    // If you are using a wrapper library, create an instance here
+    this.storage;
     this.options = { ...AdapterTemplate.defaultOptions, ...options };
+
+    // The function generateSlug is defined in ./util.js, it slugifies the
+    // name of the bucket if the option `slug` is true
     this.bucketName = this.generateSlug(bucketName, this.options);
     this.config = {
       type: this.type,
@@ -36,31 +46,30 @@ export class AdapterTemplate extends AbstractAdapter {
     };
   }
 
-  public async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
-    }
-    // perform some extra initialization steps if required, such as logging in.
-    this.initialized = true;
-    return true;
-  }
-
-  // Implement your own testing code to overrule the `test()` method of the super
-  // class AbstractAdapter, or remove this method.
-  public async test(): Promise<string> {
-    return "ok";
-  }
-
-  // Here you parse the configuration URL and object, you can add validation
-  // here if required. Note that the type part in the url must match the type
-  // key in the object and that this value should also be used in the StorageType
-  // enum, e.g.:
-  // object: {type: 'yourtype', someKey: 'foo', someOtherKey: 'bar'}
+  // This method parses the configuration URL to a configuration object, you can
+  // add validation here if required. Note that the type part in the url must match
+  // the value of the type key in the object and that this value should also be added
+  // to the StorageType enum, e.g.:
+  //
+  // object: {
+  //    type: 'yourtype',
+  //    someKey: 'foo',
+  //    someOtherKey: 'bar'
+  //  }
+  //
   // URL: yourtype://foo:bar
-  // StorageType { YOUR_TYPE: 'yourtype'}
+  //
+  // StorageType {
+  //  ...
+  //  YOUR_TYPE: 'yourtype'
+  // }
+  //
   private parseConfig(config: string | ConfigTemplate): ConfigTemplate {
     let cfg: ConfigTemplate;
     if (typeof config === "string") {
+      // The parseUrl function is defined in ./util.js, see the documentation
+      // in that file or hover your mouse over the function name if you IDE
+      // supports it.
       const { type, part1, part2, bucketName, options } = parseUrl(config);
       cfg = {
         type,
@@ -80,11 +89,27 @@ export class AdapterTemplate extends AbstractAdapter {
     return cfg;
   }
 
+  public async init(): Promise<boolean> {
+    if (this.initialized) {
+      return Promise.resolve(true);
+    }
+    // perform some extra initialization steps if required, such as logging in.
+    this.initialized = true;
+    return true;
+  }
+
+  // Implement your own testing code to overrule the `test()` method of the super
+  // class AbstractAdapter, or remove this method if you want to use the test method
+  // of the super class
+  public async test(): Promise<string> {
+    return "ok";
+  }
+
   async getFileAsReadable(
     fileName: string,
     options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
-    // Return a Readable that you've created somehow or piped from you storage
+    // Return a Readable that you've created somehow or that you pipe from your storage.
     const r: Readable = fs.createReadStream("path");
     return r;
   }
@@ -107,7 +132,7 @@ export class AdapterTemplate extends AbstractAdapter {
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
-    // always check if a bucket has been selected
+    // Always check if a bucket has been selected before bucket actions.
     if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
@@ -116,56 +141,62 @@ export class AdapterTemplate extends AbstractAdapter {
   // Not a mandatory method, it is used in `createBucket` to check if the
   // bucket already exists. To avoid making too much calls to the cloud
   // storage you could save the names of the buckets that you've already
-  // checked
+  // checked so you don't need to check their existence again.
   private checkBucket(name: string): boolean {
     return this.bucketNames.findIndex(n => n === name) !== -1;
   }
 
   async createBucket(name: string): Promise<string> {
-    // you can use the validateName method of AbstractStorage to check for
+    // You can use the validateName method of AbstractStorage to check for
     // invalid entries or write your own code to do it.
+    // The function validateName is defined in ./util.js
     const msg = this.validateName(name);
     if (msg !== null) {
       return Promise.reject(msg);
     }
 
-    // you can use the generateSlug method of AbstractStorage to slugify
+    // You can use the generateSlug method of AbstractStorage to slugify
     // the provided name. note that this method checks the value of `slug`
-    // in the options
+    // in the options, see the file ./util.js
     const n = this.generateSlug(name);
     if (this.checkBucket(n)) {
       return;
     }
 
-    // create bucket, if bucket has been created successfully you could
-    // add it to this.bucketNames
+    // Create bucket, if bucket has been created successfully you could
+    // add it to this.bucketNames so you don't have to check its existence
+    // again.
   }
 
   async selectBucket(name: string): Promise<void> {
-    // after you have successfully selected a new bucket, you should
-    // update the value of this.bucketName accordingly
+    // After you have successfully selected a new bucket, you should
+    // update the value of this.bucketName accordingly.
     this.bucketName = name;
   }
 
   async clearBucket(name?: string): Promise<void> {
-    // if no name has been provided the currently selected bucket will be cleared
+    // If no name has been provided the currently selected bucket will be cleared.
     let n = name || this.bucketName;
-    // slugify the name in case the user provide the unslugified version
+
+    // Slugify the name in case the user provide the unslugified version.
     n = this.generateSlug(n);
   }
 
   async deleteBucket(name?: string): Promise<void> {
-    // if no name has been provided the currently selected bucket will be deleted
+    // If no name has been provided the currently selected bucket will be deleted.
     let n = name || this.bucketName;
-    // slugify the name in case the user provide the unslugified version
+
+    // Slugify the name in case the user provide the unslugified version.
     n = this.generateSlug(n);
-    // after the bucket has been deleted you should check if you have deleted
-    // the currently selected bucket and reset this.bucketName if necessary
-    // to avoid that the storage is set to use a non-existing bucket
+
+    // After the bucket has been deleted you should check if you have deleted
+    // the currently selected bucket and if so, reset this.bucketName to avoid
+    // that the storage is set to use a non-existing bucket.
     if (n === this.bucketName) {
       this.bucketName = "";
     }
-    // and remove the name from your saved bucket names
+
+    // And you should remove the name from your saved bucket names.
     this.bucketNames = this.bucketNames.filter(bn => bn !== n);
   }
 
@@ -175,27 +206,19 @@ export class AdapterTemplate extends AbstractAdapter {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    // always check if a bucket has been selected!
+    // Always check if a bucket has been selected before bucket actions
     if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
-    const {
-      data: { files, nextFileName },
-    } = await this.storage.listFileNames({
-      bucketId: this.bucketId,
-    });
-    this.files = files;
-    this.nextFileName = nextFileName;
-    return this.files.map(f => [f.fileName, f.contentLength]);
+    return [];
   }
 
   async sizeOf(name: string): Promise<number> {
+    // Always check if a bucket has been selected before bucket actions
     if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
-    const file = this.storage.bucket(this.bucketName).file(name);
-    const [metadata] = await file.getMetadata();
-    return parseInt(metadata.size, 10);
+    return 42;
   }
 
   async fileExists(name: string): Promise<boolean> {

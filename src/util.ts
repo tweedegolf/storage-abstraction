@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { JSON as TypeJSON } from "./types";
 import slugify from "slugify";
 
@@ -25,9 +26,13 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
 
 /**
  * @param url
- * Parses a url string into fragments.
- * Urls must be formatted as: type://part1:part2?key1=value1&key2=value2")
- * If a url is provided, only type://part1 is mandatory.
+ * Parses a url string into fragments and parses the query string into a
+ * key-value object.
+ *
+ * Urls must be formatted as: type://part1:part2?key1=value1&key2=value2..."
+ * If a url is provided, only type://part1 is mandatory. Usually part1 and part2
+ * are used to hold the value of an application id and its key, for instance for
+ * Backblaze B2, part1 is the applicationKeyId and part2 is the applicationKey
  */
 export const parseUrl = (
   url: string
@@ -77,6 +82,12 @@ export const parseUrl = (
   return { type, part1, part2, bucketName, options };
 };
 
+/**
+ * @param s
+ *
+ * Parses a string that contains a radix prefix to a number
+ *
+ */
 export const parseIntFromString = (s: string): number => {
   if (s.startsWith("0o")) {
     return parseInt(s, 8);
@@ -105,17 +116,35 @@ export const parseMode = (s: number | string): number | string => {
   return s;
 };
 
+/**
+ * @param url
+ * @param options
+ *
+ * Slugifies a url if the key `slug` in the options object is true
+ */
 export const generateSlug = (url: string, options: TypeJSON): string => {
   if (!url || url === "null" || url === "undefined") {
     return "";
   }
-  // console.log("SUPER", options, url);
   if (options.slug === "true" || options.slug === true || options.slug == 1) {
     const s = slugify(url);
-    // console.log("SUPER", options, url, s);
     return s;
   }
   return url;
+};
+
+/**
+ * @param p
+ * @param options
+ *
+ * Slugifies a path if the key `slug` in the options object is true
+ */
+export const slugifyPath = (p: string, options: TypeJSON): string => {
+  if (options.slugify === true) {
+    const paths = p.split("/").map(d => slugify(d));
+    return path.join(...paths);
+  }
+  return p;
 };
 
 export const validateName = (name: string): string => {
