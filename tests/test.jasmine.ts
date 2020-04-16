@@ -19,6 +19,8 @@ const projectId = process.env["GOOGLE_CLOUD_PROJECT_ID"];
 const keyFilename = process.env["GOOGLE_CLOUD_KEYFILE"];
 const accessKeyId = process.env["AWS_ACCESS_KEY_ID"];
 const secretAccessKey = process.env["AWS_SECRET_ACCESS_KEY"];
+const applicationKeyId = process.env["B2_APPLICATION_KEY_ID"];
+const applicationKey = process.env["B2_APPLICATION_KEY"];
 
 console.log(
   type,
@@ -50,6 +52,13 @@ if (type === StorageType.LOCAL) {
     bucketName,
     accessKeyId,
     secretAccessKey,
+  };
+} else if (type === StorageType.B2) {
+  config = {
+    type,
+    bucketName,
+    applicationKeyId,
+    applicationKey,
   };
 } else {
   if (!configUrl) {

@@ -2,7 +2,7 @@
 
 Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Currently local disk storage, Backblaze B2, Google Cloud and Amazon S3 and compliant cloud services are supported.
 
-Because the API only provides basic storage operations (see [below](#api)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
+Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
 
 ## <a name='instantiate-a-storage'></a>Instantiate a storage
 
@@ -67,14 +67,13 @@ Options are not validated, which means non-existent keys or invalid values are n
 // url
 const s1 = new Storage({
   type: StorageTypes.S3,
-  accessKeyId: 'your_key_id,
-  secretAccessKey: 'your_secret',
+  accessKeyId: "your_key_id",
+  secretAccessKey: "your_secret",
   options: {
     endPoint: "https://kms-fips.us-west-2.amazonaws.com", // should be 'endpoint'
     useDualStack: 42, // should be a boolean value
-  }
+  },
 });
-
 ```
 
 ### <a name='default-options'></a>Default options
@@ -482,13 +481,43 @@ More adapter classes can be added for different storage types, note however that
 
 ## <a name='adding-more-adapters'></a>Adding more adapters
 
-If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like. The only requirement is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and return an object that has the shape of `IStorage`
+If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
+
+Your adapter might use a wrapper library for the storage type you create the adapter for, like for instance aws-sdk is used in the Amazon S3 adapter. Add these dependencies to the peer dependencies in the package.json file in the publish folder
+
+This way your extra dependencies will not be installed automatically but have to be installed manually if the user actually uses your adapter in their code.
+
+Please add an npm command to your documentation that users can copy paste to their terminal, e.g. `npm i storage-wrapper additional-module`.
+
+And for library developers you can add your dependencies to the dependencies in the package.json file in the root directory as well because only the files in the publish folder are published to npm.
 
 ### <a name='adapter-class'></a>Adapter class
 
-The adapter classes all extend the class `AbstractStorage`, as you would have guessed this is an abstract class that cannot be instantiated. Its purpose is to implement functionality that can be used across all derived classes; it implements some generic functionality that is used by `addFileFromBuffer`, `addFileFromPath` and `addFileFromReadable`. For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
+You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `test` method. Also it performs some sanity checking of parameters of a few API functions; this way you don't have to implement these checks in all derived classes.
+
+One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the non-API function `store`. This function has and stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
+
+For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
+
+You don't necessarily have to let your adapter class extend `AbstractAdapter` but if you choose not to your class should implement the `IStorage` interface. Most handy utility functions that are used in `AbstractAdapter` are defined in the file `./src/util.ts` so you can easily import them in your own class as well.
+
+You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 
 ### <a name='adapter-function'></a>Adapter function
+
+The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape of `IStorage`.
+
+If you like you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
+
+### <a name='register-your-adapter'></a>Register your adapter
+
+After you've finished your adapter module you need to register it, this requires 3 simple steps:
+
+1] As mentioned earlier the adapters are loaded at runtime, therefor you have to add your type and the path to your module to the lookup table at the top of the file [`./src/Storage.ts`](https://github.com/tweedegolf/storage-abstraction/blob/master/src/Storage.ts#L5).
+
+2] Add your type to the enum `StorageTypes` in `./src/types.ts`.
+
+3] Also in the file `./src/types.ts` add a configuration type that extends `IAdapterConfig` and add it to the union type `AdapterConfig`
 
 ## <a name='tests'></a>Tests
 
@@ -505,6 +534,8 @@ npm run test-local
 npm run test-gcs
 # test Amazon S3
 npm run test-s3
+# test Backblaze B2
+npm run test-b2
 ```
 
 You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:

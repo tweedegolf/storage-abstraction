@@ -3,27 +3,6 @@ import path from "path";
 import { JSON as TypeJSON } from "./types";
 import slugify from "slugify";
 
-// not in use, keep for reference
-export const getGCSProjectIdAsync = async (config: string): Promise<string> => {
-  const data = await fs.promises.readFile(config).catch(e => {
-    throw e;
-  });
-  const json = JSON.parse(data.toString("utf-8"));
-  return json.project_id;
-};
-
-// not in use, keep for reference
-export const readFilePromise = (path: string): Promise<Buffer> =>
-  new Promise(function(resolve, reject) {
-    fs.readFile(path, function(err, data) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-
 /**
  * @param url
  * Parses a url string into fragments and parses the query string into a
@@ -167,3 +146,26 @@ export const validateName = (name: string): string => {
   }
   return null;
 };
+
+/*
+// not in use, keep for reference
+export const getGCSProjectIdAsync = async (config: string): Promise<string> => {
+  const data = await fs.promises.readFile(config).catch(e => {
+    throw e;
+  });
+  const json = JSON.parse(data.toString("utf-8"));
+  return json.project_id;
+};
+
+// not in use, keep for reference
+export const readFilePromise = (path: string): Promise<Buffer> =>
+  new Promise(function(resolve, reject) {
+    fs.readFile(path, function(err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+*/
