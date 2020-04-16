@@ -2,10 +2,7 @@ import path from "path";
 import { Readable } from "stream";
 import { IStorage, AdapterConfig, JSON as TypeJSON } from "./types";
 
-/**
- *  add new storage adapter here
- */
-
+//  add new storage adapters here
 const adapterClasses = {
   b2: "AdapterLocal",
   s3: "AdapterAmazonS3",
@@ -13,6 +10,7 @@ const adapterClasses = {
   local: "AdapterBackblazeB2",
 };
 
+// or here for functional adapters
 const adapterFunctions = {
   b2f: "AdapterBackblazeB2F",
 };
@@ -29,22 +27,22 @@ const availableAdapters: string = Object.keys(adapterClasses)
   .join(", ");
 
 export class Storage implements IStorage {
-  private storage: IStorage;
+  private adapter: IStorage;
 
   constructor(config: string | AdapterConfig) {
     this.switchAdapter(config);
   }
 
   public getType(): string {
-    return this.storage.getType();
+    return this.adapter.getType();
   }
 
   public getOptions(): TypeJSON {
-    return this.storage.getOptions();
+    return this.adapter.getOptions();
   }
 
   public getConfiguration(): AdapterConfig {
-    return this.storage.getConfiguration();
+    return this.adapter.getConfiguration();
   }
 
   public switchAdapter(args: string | AdapterConfig): void {
@@ -54,63 +52,63 @@ export class Storage implements IStorage {
     } else {
       type = args.type;
     }
-    console.log("type", type);
+    // console.log("type", type);
     if (!adapterClasses[type] && !adapterFunctions[type]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
-    console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
+    // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
     if (adapterClasses[type]) {
       const name = adapterClasses[type];
-      const StorageClass = require(path.join(__dirname, name))[name];
-      console.log(StorageClass);
-      this.storage = new StorageClass(args);
+      const AdapterClass = require(path.join(__dirname, name))[name];
+      // console.log(AdapterClass);
+      this.adapter = new AdapterClass(args);
     } else if (adapterFunctions[type]) {
       const name = adapterFunctions[type];
       const module = require(path.join(__dirname, name));
-      this.storage = module.createAdapter(args);
+      this.adapter = module.createAdapter(args);
     }
   }
 
   // all methods below are implementing IStorage
 
   async init(): Promise<boolean> {
-    return this.storage.init();
+    return this.adapter.init();
   }
 
   async test(): Promise<string> {
-    return this.storage.test();
+    return this.adapter.test();
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    return this.storage.addFileFromBuffer(buffer, targetPath);
+    return this.adapter.addFileFromBuffer(buffer, targetPath);
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    return this.storage.addFileFromPath(origPath, targetPath);
+    return this.adapter.addFileFromPath(origPath, targetPath);
   }
 
   async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    return this.storage.addFileFromReadable(stream, targetPath);
+    return this.adapter.addFileFromReadable(stream, targetPath);
   }
 
   async createBucket(name?: string): Promise<string> {
-    return this.storage.createBucket(name);
+    return this.adapter.createBucket(name);
   }
 
   async clearBucket(name?: string): Promise<void> {
-    return this.storage.clearBucket(name);
+    return this.adapter.clearBucket(name);
   }
 
   async deleteBucket(name?: string): Promise<void> {
-    return this.storage.deleteBucket(name);
+    return this.adapter.deleteBucket(name);
   }
 
   async listBuckets(): Promise<string[]> {
-    return this.storage.listBuckets();
+    return this.adapter.listBuckets();
   }
 
   public getSelectedBucket(): string {
-    return this.storage.getSelectedBucket();
+    return this.adapter.getSelectedBucket();
   }
 
   async getFileAsReadable(
@@ -119,26 +117,26 @@ export class Storage implements IStorage {
   ): Promise<Readable> {
     const { start = 0, end } = options;
     // console.log(start, end, options);
-    return this.storage.getFileAsReadable(name, { start, end });
+    return this.adapter.getFileAsReadable(name, { start, end });
   }
 
   async removeFile(fileName: string): Promise<void> {
-    return this.storage.removeFile(fileName);
+    return this.adapter.removeFile(fileName);
   }
 
   async listFiles(numFiles?: number): Promise<[string, number][]> {
-    return this.storage.listFiles(numFiles);
+    return this.adapter.listFiles(numFiles);
   }
 
   async selectBucket(name?: string): Promise<void> {
-    return this.storage.selectBucket(name);
+    return this.adapter.selectBucket(name);
   }
 
   async sizeOf(name: string): Promise<number> {
-    return this.storage.sizeOf(name);
+    return this.adapter.sizeOf(name);
   }
 
   async fileExists(name: string): Promise<boolean> {
-    return this.storage.fileExists(name);
+    return this.adapter.fileExists(name);
   }
 }

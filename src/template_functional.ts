@@ -2,6 +2,15 @@ import fs, { ReadStream } from "fs";
 import { AdapterConfig, UploadOptions, IStorage, JSON as TypeJSON } from "./types";
 import { Readable } from "stream";
 
+/**
+ * You can use this template as a starting point for your own functional adapter. You are
+ * totally free in the way you setup your code as long as it exports function with the name
+ * `createAdapter()` that returns an object that should match the IStorage interface.
+ *
+ * You can use some util functions that are used in the class AbstractAdapter because they
+ * are imported from ./util.js where they are defined.
+ */
+
 const init = (): Promise<boolean> => Promise.resolve(true);
 const getType = (): string => "string";
 const getConfiguration = (): AdapterConfig => ({} as AdapterConfig);

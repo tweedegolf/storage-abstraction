@@ -7,3 +7,4 @@ tests/data
 tests/tmp
 .env
 .idea
+toc*

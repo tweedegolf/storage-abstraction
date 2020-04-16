@@ -30,9 +30,12 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
  * key-value object.
  *
  * Urls must be formatted as: type://part1:part2?key1=value1&key2=value2..."
- * If a url is provided, only type://part1 is mandatory. Usually part1 and part2
- * are used to hold the value of an application id and its key, for instance for
- * Backblaze B2, part1 is the applicationKeyId and part2 is the applicationKey
+ *
+ * If a url is provided, only type://part1 is mandatory.
+ *
+ * The fragments part1 and part2 should be used to hold the credentials, for
+ * instance Backblaze B2: part1 is the applicationKeyId and part2 is the
+ * applicationKey.
  */
 export const parseUrl = (
   url: string
