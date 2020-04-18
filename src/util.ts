@@ -7,14 +7,6 @@ import slugify from "slugify";
  * @param url
  * Parses a url string into fragments and parses the query string into a
  * key-value object.
- *
- * Urls must be formatted as: type://part1:part2?key1=value1&key2=value2..."
- *
- * If a url is provided, only type://part1 is mandatory.
- *
- * The fragments part1 and part2 should be used to hold the credentials, for
- * instance Backblaze B2: part1 is the applicationKeyId and part2 is the
- * applicationKey.
  */
 export const parseUrl = (
   url: string
@@ -22,6 +14,7 @@ export const parseUrl = (
   type: string;
   part1: string;
   part2: string;
+  part3: string;
   bucketName: string;
   options: { [key: string]: string };
 } => {
@@ -30,24 +23,20 @@ export const parseUrl = (
   }
   const type = url.substring(0, url.indexOf("://"));
   let config = url.substring(url.indexOf("://") + 3);
+  const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
   const colon = config.indexOf(":");
   let part1 = "";
   let part2 = "";
+  let part3 = "";
   let bucketName = "";
+
+  // parse options
   let options: { [key: string]: string } = {};
   let optionsString = "";
   if (questionMark !== -1) {
     optionsString = config.substring(questionMark + 1);
     config = config.substring(0, questionMark);
-  }
-  if (colon !== -1) {
-    [part1, part2] = config.split(":");
-  } else {
-    part1 = config;
-  }
-  // console.log(config, optionsString);
-  if (questionMark !== -1) {
     options = optionsString
       .split("&")
       .map(pair => pair.split("="))
@@ -56,12 +45,32 @@ export const parseUrl = (
         acc[val[0]] = val[1];
         return acc;
       }, {});
-
-    bucketName = options.bucketName;
-    delete options.bucketName;
   }
-  // console.log(type, part1, part2, bucketName, options);
-  return { type, part1, part2, bucketName, options };
+
+  // get bucket name and region
+  let bucketString = "";
+  if (at !== -1) {
+    bucketString = config.substring(at + 1);
+    const slash = bucketString.indexOf("/");
+    if (slash !== -1) {
+      // Amazon S3 @region/bucket
+      bucketName = bucketString.substring(slash + 1);
+      part3 = bucketString.substring(0, slash);
+    } else {
+      bucketName = bucketString;
+    }
+    config = config.substring(0, at);
+  }
+
+  // get credentials
+  if (colon !== -1) {
+    [part1, part2] = config.split(":");
+  } else {
+    part1 = config;
+  }
+
+  // console.log(type, part1, part2, region, bucketName, options);
+  return { type, part1, part2, part3, bucketName, options };
 };
 
 /**

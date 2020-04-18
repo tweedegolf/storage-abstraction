@@ -169,6 +169,14 @@ export interface IAdapterConfig {
 export interface ConfigAmazonS3 extends IAdapterConfig {
   accessKeyId: string;
   secretAccessKey: string;
+  region?: string;
+  bucketName?: string;
+  endpoint?: string;
+  useDualstack?: boolean;
+  maxRetries?: number;
+  maxRedirects?: number;
+  sslEnabled?: boolean;
+  options?: JSON;
 }
 
 export interface ConfigBackblazeB2 extends IAdapterConfig {

@@ -14,28 +14,41 @@ describe(`testing Amazon urls`, () => {
 
   it("[1] parameter string", () => {
     this.storage = new Storage(
-      "s3://key:secret/can/contain/slashes?region=eu-west-2&bucketName=the-buck&sslEnabled=true"
+      "s3://key:secret/can/contain/slashes@eu-west-2/the-buck?sslEnabled=true"
     );
+    console.log(this.storage.getConfiguration());
     expect(this.storage.getType()).toBe(StorageType.S3);
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
-    expect(this.storage.getOptions().region).toBe("eu-west-2");
+    expect(this.storage.getConfiguration().region).toBe("eu-west-2");
     expect(this.storage.getOptions().sslEnabled).toBe("true");
   });
 
   it("[2] typo", () => {
-    this.storage = new Storage("s3://key:secret/can/contain/slashes?buckeName=the-buck");
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@eu-west-2/buckeName=the-buck");
     expect(this.storage.getSelectedBucket()).toBe("");
-    expect(this.storage.getOptions().region).toBe(undefined);
+    expect(this.storage.getConfiguration().region).toBe(undefined);
+  });
+
+  xit("[] no region", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@bucketName=the-buck");
+    expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getConfiguration().region).toBe(undefined);
+    expect(this.storage.getConfiguration().bucketName).toBe("bucket");
+  });
+
+  it("[] no region 2", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@/bucketName=the-buck");
+    expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getConfiguration().region).toBe(undefined);
+    expect(this.storage.getConfiguration().bucketName).toBe("bucket");
   });
 
   it("[3] non-existent keys will not be filtered anymore, nor will invalid typed values (e.g. a numeric value for useDualStack)", () => {
     this.storage = new Storage(
       [
-        "s3://key:secret/can/contain/slashes",
-        "?region=eu-west-2",
-        "&bucketName=the-buck",
+        "s3://key:secret/can/contain/slashes@eu-west-2/the-buck",
         "&sslEnabled=true",
         "&useDualstack=23",
         "&nonExistentKey=true",
@@ -46,7 +59,7 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
-    expect(this.storage.getOptions().region).toBe("eu-west-2");
+    expect(this.storage.getConfiguration().region).toBe("eu-west-2");
     expect(this.storage.getOptions().sslEnabled).toBe("true");
     expect(this.storage.getOptions().useDualStack).toBe(undefined);
     expect(this.storage.getOptions().nonExistentKey).toBe("true");
@@ -59,9 +72,9 @@ describe(`testing Amazon urls`, () => {
       type: "s3",
       accessKeyId: "key",
       secretAccessKey: "secret/can/contain/slashes",
+      region: "eu-west-2",
       bucketName: "the-buck",
       options: {
-        region: "eu-west-2",
         sslEnabled: true,
       },
     });
@@ -69,7 +82,7 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
-    expect(this.storage.getOptions().region).toBe("eu-west-2");
+    expect(this.storage.getConfiguration().region).toBe("eu-west-2");
     expect(this.storage.getOptions().sslEnabled).toBe(true);
     expect(this.storage.getConfiguration().options.region).toBe("eu-west-2");
     expect(this.storage.getConfiguration().options.sslEnabled).toBe(true);

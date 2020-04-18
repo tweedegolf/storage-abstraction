@@ -11,8 +11,7 @@ Because the API only provides basic storage operations (see [below](#api-methods
 - [Instantiate a storage](#instantiate-a-storage)
   - [Configuration object](#configuration-object)
   - [Configuration URL](#configuration-url)
-  - [Options](#options)
-  - [Default options](#default-options)
+  - [Adapter options](#adapter-options)
 - [Adapters](#adapters)
   - [Local storage](#local-storage)
   - [Google Cloud](#google-cloud)
@@ -41,6 +40,7 @@ Because the API only provides basic storage operations (see [below](#api-methods
   - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
+  - [Define your configuration](#define-your-configuration)
   - [Adapter class](#adapter-class)
   - [Adapter function](#adapter-function)
   - [Register your adapter](#register-your-adapter)
@@ -61,7 +61,9 @@ When instantiating a new `Storage` the argument `config` is used to create an ad
 1. using a configuration object (js: `typeof === "object"` ts: `AdapterConfig`)
 2. using a configuration URL (`typeof === "string"`)
 
-A configuration should specify a type whose value is one of the enum members of `StorageType`:
+### <a name='configuration-object'></a>Configuration object
+
+A configuration should at least specify a type whose value is one of the enum members of `StorageType`:
 
 ```typescript
 enum StorageType {
@@ -72,55 +74,11 @@ enum StorageType {
 }
 ```
 
-Besides type, one or more other values may be mandatory dependent on the storage, e.g. `keyFilename` for Google Storage or `secretAccessKey` for Amazon S3.
+A configuration can have an optional `options` key that is meant to configure the adapter itself, an option that all adapters have in common is for instance `slug`, which determines if bucket names and paths to files in buckets are slugified automatically, see [Adapter options](#adapter-options).
 
-### <a name='configuration-object'></a>Configuration object
+Another optional key is `bucketName`; for most cloud storage services it is require to select a bucket after a connection has been made. If you don't want or can't provide a bucket name upon initialization you can use `selectBucket` to do it afterwards.
 
-The configuration object should extend the interface `IConfig`:
-
-```typescript
-interface IConfig {
-  type: StorageType;
-  bucketName?: string;
-  options?: JSON;
-}
-```
-
-The `type` key is mandatory and its value should be one of the values of the enum `StorageType`. Although the key `bucketName` is optional most cloud storage services require a bucket name. Besides `type` and `bucketName` a configuration object usually has 1 or 2 keys for the credentials. The `options` key is meant to specify all other storage specific parameters.
-
-In the example below `accessKeyId` and `secretAccessKey` are the keys for storing the credentials. Then there is one extra key `region` and all other parameters are stored under the `options` key
-
-```typescript
-// example Amazon S3 #1
-const config = {
-  type: "s3",
-  accessKeyId: "your-key-id",
-  secretAccessKeyId: "your-secret"
-  bucketName: "bucket",
-  region: "eu-west-1",
-  options: {
-    useDualstack: true,
-    maxRetries: 4,
-    maxRedirects: 4,
-    sslEnabled: true,
-    ...
-  },
-};
-```
-
-Note that keys in the configuration object are not validated:
-
-```typescript
-// example Amazon S3 #2
-const config = {
-  type: "s3",
-  accessKeyId: "your-key-id",
-  secretAccessKeyId: "your-secret"
-  buckename: "bucket", // should be 'bucketName'
-};
-const s = new Storage(config);
-s.getSelectedBucket() // returns "" -> no bucket selected!
-```
+Besides `type`, `bucketName` and `options`, one or more other keys may be mandatory or optional dependent on the type of storage; all these keys are used for configuring the storage service, e.g. `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3.
 
 ### <a name='configuration-url'></a>Configuration URL
 
@@ -131,7 +89,7 @@ Configuration urls always start with a protocol that defines the type of storage
 - `s3://` &rarr; Amazon S3
 - `b2://` &rarr; Backblaze B2
 
-What follows after this protocol is the part that contains the configuration of the storage. The format of the URL differs per storage type, see also the documentation per adapter [below](#adapters)
+These values match the values in the enum `StorageType`. What follows after the protocol is the part that contains the configuration of the storage. The format of the URL differs per storage type, see also the documentation per adapter [below](#adapters)
 
 ```typescript
 // local storage
@@ -149,34 +107,17 @@ const url =
   "b2://applicationKeyId:applicationKey@bucketName?extraOption1=value1&extraOption2=value2";
 ```
 
-### <a name='options'></a>Options
+### <a name='adapter-options'></a>Adapter options
 
-Both the configuration object and the configuration URL can contain an unlimited amount of optional configuration parameters using the `options` key in a configuration object or extending the query string of a configuration URL. During initialization the options will be parsed into an internal `options` object that you can check using `getOptions()`.
+Options are used to configure the adapter itself, that means they are not set to the cloud service but handled locally only.
 
-Options are not validated, which means non-existent keys or invalid values are not filtered and removed; it is the programmer's responsibility to provide correct keys and values, see the following example showing the use of erroneous options for configuring Amazon S3:
+Both the configuration object and the configuration URL can contain an unlimited amount of optional parameters using the `options` key in a configuration object or extending the query string of a configuration URL. During initialization the options will be parsed into an internal `options` object that you can check using `getOptions()`.
 
-```typescript
-// url
-const s1 = new Storage({
-  type: StorageTypes.S3,
-  accessKeyId: "your_key_id",
-  secretAccessKey: "your_secret",
-  bucketName: "bucket",
-  options: {
-    endPoint: "https://kms-fips.us-west-2.amazonaws.com", // should be 'endpoint'
-    useDualStack: 42, // should be a boolean value
-    region: "north-pole-2", // region doesn't exist
-  },
-});
-```
-
-### <a name='default-options'></a>Default options
-
-Every adapter can define its own default options; these will be overruled or extended by the options provided in the configuration object or URL.
+An adapter can also define its own default options; these will be overruled or extended by the options provided in the configuration object or URL.
 
 All adapters have a default parameter `slug`; this parameter determines whether or not bucket names and paths to files in the bucket should be slugified automatically. All adapters but the local storage adapter have set this by default to true.
 
-Other examples of default options are for instance: Amazon S3 adapter has a default option `apiVersion` which is set to "2006-03-01" and the local disk adapter has a default option `mode` that is set to `0o777`.
+Another example of a default option is the default option `mode` in local storage that is set to `0o777`.
 
 ## <a name='adapters'></a>Adapters
 
@@ -232,7 +173,9 @@ const s = new Storage {
   type: StorageType.LOCAL,
   directory: "files",
 };
+
 const s = new Storage("local://files") // note: 2 slashes
+
 s.getConfiguration().directory;  // folder where the process runs, process.cwd()
 s.getConfiguration().bucketName; // 'files'
 
@@ -241,7 +184,9 @@ const s = new Storage {
   type: StorageType.LOCAL,
   directory: "/files",
 };
+
 const s = new Storage("local:///files") // note: 3 slashes
+
 s.getConfiguration().directory;  // '/' root folder (may require extra permissions)
 s.getConfiguration().bucketName; // 'files'
 
@@ -276,8 +221,8 @@ const s = new Storage({
   type: StorageType.GCS,
   keyFilename: "path/to/keyFile.json",
 });
+
 const s = new Storage("gcs://path/to/keyFile.json");
-s.getConfiguration().projectId; // the project id
 ```
 
 Another example:
@@ -289,8 +234,8 @@ const s = new Storage({
   keyFilename: "path/to/keyFile.json",
   bucketName: "bucket",
 });
+
 const s = new Storage("gcs://path/to/keyFile.json@bucket");
-s.getSelectedBucket(); // "bucket"
 ```
 
 ### <a name='amazon-s3'></a>Amazon S3
@@ -306,6 +251,11 @@ type ConfigAmazonS3 = {
   secretAccessKey: string;
   region?: string;
   bucketName?: string;
+  endpoint?: string;
+  useDualstack?: boolean;
+  maxRetries?: number;
+  maxRedirects?: number;
+  sslEnabled?: boolean;
   options?: JSON;
 };
 ```
@@ -313,7 +263,8 @@ type ConfigAmazonS3 = {
 Configuration url:
 
 ```typescript
-const url = "s3://accessKeyId:secretAccessKey@region/bucketName&option1=value1&option2=value2...";
+const url =
+  "s3://accessKeyId:secretAccessKey@region/bucketName?useDualstack=value&sslEnabled=value...";
 ```
 
 Example:
@@ -325,13 +276,11 @@ const s = new Storage({
   secretAccessKey: "secret",
   region: "eu-west-2"
   bucketName: "bucket",
-  option: {
-    useDualStack: true,
-    sslEnabled: true,
-  }
+  useDualStack: true,
+  sslEnabled: true,
 });
+
 const s = new Storage("s3://key:secret@eu-west-2/bucket?useDualStack=true&sslEnabled=true");
-s.getSelectedBucket(); // "bucket"
 ```
 
 You can omit a value for `region` but because `secretAccessKey` can contain slashes you must include the @ in your URL:
@@ -371,8 +320,8 @@ const s = new Storage({
   applicationKey: "key",
   bucketName: "bucket",
 });
+
 const s = new Storage("b2://keyId:key@bucket");
-s.getSelectedBucket(); // "bucket"
 ```
 
 ## <a name='api-methods'></a>API methods
@@ -551,7 +500,7 @@ Returns an object containing all options: the default options overruled or exten
 getConfiguration(): AdapterConfig
 ```
 
-Retrieves configuration as provided during instantiation. If you have provided the configuration in url form, the function will return an configuration object. Note that the actual value may differ from the values returned. For instance if you have selected a different bucket after initialization, the key `bucketName` in the configuration object that this method returns will still hold the value of the initially set bucket. Use `getSelectedBucket()` to retrieve the actual value of `bucketName`.
+Retrieves configuration as provided during instantiation. If you have provided the configuration in url form, the function will return it as an configuration object. Note that the actual value may differ from the values returned. For instance if you have selected a different bucket after initialization, the key `bucketName` in the configuration object that this method returns will still hold the value of the initially set bucket. Use `getSelectedBucket()` to retrieve the actual value of `bucketName`.
 
 ### <a name='switchadapter'></a>switchAdapter
 
@@ -592,6 +541,39 @@ Please add an npm command to your documentation that users can copy paste to the
 
 And for library developers you can add your dependencies to the dependencies in the package.json file in the root directory as well because only the files in the publish folder are published to npm.
 
+### <a name='define-your-configuration'></a>Define your configuration
+
+Your configuration object should at least contain a key `type` and its value should be one of the values of the enum `StorageType`. You could accomplish this by extending the interface `IConfig`:
+
+```typescript
+interface IConfig {
+  type: StorageType;
+}
+```
+
+Your configuration URL should also at least contain the type; the name of the type is used for the protocol part of the URL. This name should be added to the enum `StorageType`.
+
+```typescript
+// add your type to the enum
+enum StorageType {
+  LOCAL = "local",
+  GCS = "gcs", // Google Cloud Storage
+  S3 = "s3", // Amazon S3
+  B2 = "b2", // BackBlaze B2
+  YOUR_TYPE = "yourtype",
+}
+// your configuration URL
+const u = "yourtype://and/the:rest@anything/goes?option1=value1&option2=value2...";
+
+// your configuration object
+const o = {
+  type: "yourtype", // mandatory
+  ...
+}
+```
+
+You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url fit in the template `type://part1:part2@part3/bucketName?option1=value1&option2=value2...` you can use the `parseURL` function in `./util.ts`.
+
 ### <a name='adapter-class'></a>Adapter class
 
 You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `test` method. Also it performs some sanity checking of parameters of a few API functions; this way you don't have to implement these checks in all derived classes.
@@ -622,7 +604,7 @@ After you've finished your adapter module you need to register it, this requires
 
 ## <a name='tests'></a>Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way.
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that these tests require that the credentials allow to create, delete and list buckets.
 
 You can run tests per storage type using one of these commands, see also the file `package.json`:
 

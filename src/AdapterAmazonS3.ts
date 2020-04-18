@@ -18,22 +18,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   constructor(config: string | AdapterConfig) {
     super();
-    const { accessKeyId, secretAccessKey, bucketName, options } = this.parseConfig(
-      config as ConfigAmazonS3
-    );
+    const cfg = this.parseConfig(config as ConfigAmazonS3);
+    const { accessKeyId, secretAccessKey, bucketName, options } = cfg;
     this.storage = new S3({ accessKeyId, secretAccessKey });
     this.options = { ...AdapterAmazonS3.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
     }
-    this.config = {
-      type: this.type,
-      accessKeyId,
-      secretAccessKey,
-      bucketName,
-      options,
-    };
+    this.config = { ...cfg };
   }
 
   async init(): Promise<boolean> {
@@ -45,13 +38,19 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   private parseConfig(config: string | ConfigAmazonS3): ConfigAmazonS3 {
     let cfg: ConfigAmazonS3;
     if (typeof config === "string") {
-      const { type, part1: accessKeyId, part2: secretAccessKey, bucketName, options } = parseUrl(
-        config
-      );
+      const {
+        type,
+        part1: accessKeyId,
+        part2: secretAccessKey,
+        part3: region,
+        bucketName,
+        options,
+      } = parseUrl(config);
       cfg = {
         type,
         accessKeyId,
         secretAccessKey,
+        region,
         bucketName,
         options,
       };
