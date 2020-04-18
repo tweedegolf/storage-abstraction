@@ -165,8 +165,9 @@ const run = async (): Promise<void> => {
     // storage = new Storage(`local://tests/tmp slug?mode=600&slug=true`);
     // storage = new Storage(`foo://tests/tmp slug?mode=600&slug=true`);
     // storage = new Storage(`b2://tests/tmp slug?mode=600&slug=true`);
-    storage = new Storage(`b2f://key_id/key?bucketName=bucket`);
+    // storage = new Storage(`b2f://key_id/key?bucketName=bucket`);
     // storage = new Storage(configS3);
+    storage = new Storage(configGoogle);
     const c = storage.getConfiguration();
   } catch (e) {
     console.error(`\x1b[31m${e.message}\n`);
@@ -184,11 +185,18 @@ const run = async (): Promise<void> => {
   console.log(storage.getConfiguration());
 
   try {
-    await storage.createBucket("paap aap 2");
+    await storage.listBuckets();
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
     process.exit(0);
   }
+
+  // try {
+  //   await storage.createBucket("paap aap 2");
+  // } catch (e) {
+  //   console.error("\x1b[31m", e, "\n");
+  //   process.exit(0);
+  // }
 
   // test1(storage);
 };

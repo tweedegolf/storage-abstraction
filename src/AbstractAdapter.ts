@@ -35,7 +35,7 @@ export abstract class AbstractAdapter implements IStorage {
       return Promise.reject("storage has not been initialized yet; call Storage.init() first");
     }
     try {
-      await this.listBuckets();
+      await this.listFiles();
       return Promise.resolve("ok");
     } catch (e) {
       throw new Error(`Looks like the storage configuration is not correct (${e.message})`);

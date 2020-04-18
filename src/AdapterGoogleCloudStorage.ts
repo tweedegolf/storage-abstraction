@@ -12,7 +12,7 @@ import { AbstractAdapter } from "./AbstractAdapter";
 import { StorageType, ConfigGoogleCloud } from "./types";
 import { parseUrl } from "./util";
 
-export class AdapterGoogleCloud extends AbstractAdapter {
+export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected type = StorageType.GCS;
   private bucketNames: string[] = [];
   private storage: GoogleCloudStorage;
@@ -24,7 +24,8 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     super();
     const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
-    this.options = { ...AdapterGoogleCloud.defaultOptions, ...options };
+    console.log(this.storage);
+    this.options = { ...AdapterGoogleCloudStorage.defaultOptions, ...options };
     this.bucketName = this.generateSlug(bucketName, this.options);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
@@ -274,9 +275,9 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
-    }
+    // if (!this.bucketName) {
+    //   throw new Error("Please select a bucket first");
+    // }
     const data = await this.storage.bucket(this.bucketName).getFiles();
     const names = data[0].map(f => f.name);
     const sizes = await this.getMetaData(names);

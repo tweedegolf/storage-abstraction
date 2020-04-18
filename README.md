@@ -4,6 +4,52 @@ Provides an abstraction layer for interacting with a storage; this storage can b
 
 Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
 
+## <a name='table-of-contents'></a>Table of contents
+
+<!-- toc -->
+
+- [Instantiate a storage](#instantiate-a-storage)
+  * [Configuration object](#configuration-object)
+  * [Configuration URL](#configuration-url)
+  * [Options](#options)
+  * [Default options](#default-options)
+- [Adapters](#adapters)
+  * [Local storage](#local-storage)
+  * [Google Cloud](#google-cloud)
+  * [Amazon S3](#amazon-s3)
+  * [Backblaze B2](#backblaze-b2)
+- [API methods](#api-methods)
+  * [init](#init)
+  * [test](#test)
+  * [createBucket](#createbucket)
+  * [selectBucket](#selectbucket)
+  * [clearBucket](#clearbucket)
+  * [deleteBucket](#deletebucket)
+  * [listBuckets](#listbuckets)
+  * [getSelectedBucket](#getselectedbucket)
+  * [addFileFromPath](#addfilefrompath)
+  * [addFileFromBuffer](#addfilefrombuffer)
+  * [addFileFromReadable](#addfilefromreadable)
+  * [getFileAsReadable](#getfileasreadable)
+  * [removeFile](#removefile)
+  * [sizeOf](#sizeof)
+  * [fileExists](#fileexists)
+  * [listFiles](#listfiles)
+  * [getType](#gettype)
+  * [getOptions](#getoptions)
+  * [getConfiguration](#getconfiguration)
+  * [switchAdapter](#switchadapter)
+- [How it works](#how-it-works)
+- [Adding more adapters](#adding-more-adapters)
+  * [Adapter class](#adapter-class)
+  * [Adapter function](#adapter-function)
+  * [Register your adapter](#register-your-adapter)
+- [Tests](#tests)
+- [Example application](#example-application)
+- [Questions and requests](#questions-and-requests)
+
+<!-- tocstop -->
+
 ## <a name='instantiate-a-storage'></a>Instantiate a storage
 
 ```javascript
@@ -30,7 +76,7 @@ Besides type, one or more other values may be mandatory dependent on the storage
 
 ### <a name='configuration-object'></a>Configuration object
 
-The configuration object should implement the interface `IConfig`:
+The configuration object should extend the interface `IConfig`:
 
 ```typescript
 interface IConfig {
@@ -40,26 +86,72 @@ interface IConfig {
 }
 ```
 
+The `type` key is mandatory and its value should be one of the values of the enum `StorageType`. Although the key `bucketName` is optional most cloud storage services require a bucket name. Besides `type` and `bucketName` a configuration object usually has 1 or 2 keys for the credentials. The `options` key is meant to specify all other storage specific parameters.
+
+In the example below `accessKeyId` and `secretAccessKey` are the keys for storing the credentials. Then there is one extra key `region` and all other parameters are stored under the `options` key
+
+```typescript
+// example Amazon S3 #1
+const config = {
+  type: "s3",
+  accessKeyId: "your-key-id",
+  secretAccessKeyId: "your-secret"
+  bucketName: "bucket",
+  region: "eu-west-1",
+  options: {
+    useDualstack: true,
+    maxRetries: 4,
+    maxRedirects: 4,
+    sslEnabled: true,
+    ...
+  },
+};
+```
+
+Note that keys in the configuration object are not validated:
+
+```typescript
+// example Amazon S3 #2
+const config = {
+  type: "s3",
+  accessKeyId: "your-key-id",
+  secretAccessKeyId: "your-secret"
+  buckename: "bucket", // should be 'bucketName'
+};
+const s = new Storage(config);
+s.getSelectedBucket() // returns "" -> no bucket selected!
+```
+
 ### <a name='configuration-url'></a>Configuration URL
 
-Configuration urls always start with a protocol that defines the storage type:
+Configuration urls always start with a protocol that defines the type of storage:
 
 - `local://` &rarr; local storage
 - `gcs://` &rarr; Google Cloud
 - `s3://` &rarr; Amazon S3
 - `b2://` &rarr; Backblaze B2
 
-What follows after this protocol is the part that contains the configuration of the storage. The fragments part1 and part2 should be used for credentials and all other options, including the name of the bucket should go in the query string:
+What follows after this protocol is the part that contains the configuration of the storage. The format of the URL differs per storage type, see also the documentation per adapter [below](#adapters)
 
 ```typescript
-const url = "type://part1:part2?bucketName=bucket&extraOption1=value1&extraOption2=value2";
+// local storage
+const url = "local://path/to/bucket";
+
+// Amazon S3
+const url = "s3://key:secret@region/bucketName?extraOption1=value1&extraOption2=value2";
+
+// Google Cloud Storage
+const url =
+  "gcs://path/to/keyfile.json:project_id@bucketName?extraOption1=value1&extraOption2=value2";
+
+// Backblaze B2
+const url =
+  "b2://applicationKeyId:applicationKey@bucketName?extraOption1=value1&extraOption2=value2";
 ```
 
 ### <a name='options'></a>Options
 
 Both the configuration object and the configuration URL can contain an unlimited amount of optional configuration parameters using the `options` key in a configuration object or extending the query string of a configuration URL. During initialization the options will be parsed into an internal `options` object that you can check using `getOptions()`.
-
-Note that `bucketName` is part of the query string when using a configuration URL, but has its own key in a configuration object. To make sure the `options` object is the same in both ways of providing a configuration, the key `bucketName` gets stripped off the `options` object during initialization and is then added to the internal `configuration` object that you can check using `getConfiguration()`.
 
 Options are not validated, which means non-existent keys or invalid values are not filtered and removed; it is the programmer's responsibility to provide correct keys and values, see the following example showing the use of erroneous options for configuring Amazon S3:
 
@@ -69,9 +161,11 @@ const s1 = new Storage({
   type: StorageTypes.S3,
   accessKeyId: "your_key_id",
   secretAccessKey: "your_secret",
+  bucketName: "bucket",
   options: {
     endPoint: "https://kms-fips.us-west-2.amazonaws.com", // should be 'endpoint'
     useDualStack: 42, // should be a boolean value
+    region: "north-pole-2", // region doesn't exist
   },
 });
 ```
@@ -86,7 +180,7 @@ Other examples of default options are for instance: Amazon S3 adapter has a defa
 
 ## <a name='adapters'></a>Adapters
 
-The adapters are the key part of this library; where the `Storage` is merely a shim, adapters perform the actual actions on the storage by translating calls to the generic API methods to storage specific calls.
+The adapters are the key part of this library; where the `Storage` is merely a thin wrapper (see [How it works](#how-it-works)), adapters perform the actual actions on the storage by translating calls to the generic API methods to storage specific calls.
 
 Below follows a description of the available adapters; what the configuration objects and urls look like and what the default options are. Also per adapter the peer dependencies are listed as a handy copy-pasteble npm command. The peer dependencies are usually wrapper libraries such as aws-sdk but can also be specific modules with a specific functionality such as rimraf for local storage.
 
@@ -105,16 +199,13 @@ type ConfigLocal = {
   type: StorageType;
   directory: string;
   options?: JSON;
-  bucketName?: string;
 };
 ```
 
 Configuration url:
 
 ```typescript
-const url = "local://directory/bucket?option1=value1&...";
-// or
-const url = "local://directory?bucketName=bucket&option1=value1&...";
+const url = "local://path/to/your/bucket?option1=value1&...";
 ```
 
 Example:
@@ -131,33 +222,11 @@ const url = "local://path/to/folder/bucket";
 const s = new Storage(url);
 ```
 
-Files will be stored in `path/to/folder/bucket`, folders will be created if necessary.
+Files will be stored in `path/to/folder/bucket`, folders will be created if necessary. As you can see the last folder of the directory will be used as bucket; if you call `getSelectedBucket()` the name of this folder will be returned.
 
-If you use a config object and you omit a value for `bucketName` as in the example above, the last folder of the provided directory will be used.
-
-More examples:
+Note the use of double and triple slashes:
 
 ```typescript
-// example #1
-const s = new Storage {
-  type: StorageType.LOCAL,
-  directory: "path/to/folder",
-  bucketName: "bucket",
-};
-const s = new Storage("local://path/to/folder?bucketName=bucket")
-s.getConfiguration().directory;  // 'path/to/folder'
-s.getConfiguration().bucketName; // 'bucket'
-
-// example #1a => resulting in same configuration as example #1
-const s = new Storage {
-  type: StorageType.LOCAL,
-  directory: "path/to/folder",
-  bucketName: "bucket",
-};
-const s = new Storage("local://path/to/folder?bucketName=bucket")
-s.getConfiguration().directory;  // 'path/to/folder'
-s.getConfiguration().bucketName; // 'bucket'
-
 // example #2
 const s = new Storage {
   type: StorageType.LOCAL,
@@ -187,7 +256,7 @@ Configuration object:
 ```typescript
 type ConfigGoogleCloud = {
   type: StorageType;
-  keyFilename: string; // path to key file in json format
+  keyFilename: string; // path to keyFile.json
   projectId?: string;
   bucketName?: string;
   options?: JSON;
@@ -197,7 +266,7 @@ type ConfigGoogleCloud = {
 Configuration url:
 
 ```typescript
-const url = "gcs://path/to/key_file.json:project_id?bucketName=bucket&option1=value1&...";
+const url = "gcs://path/to/keyFile.json:projectId@bucketName?option1=value1&option2=value2...";
 ```
 
 The project id is optional; if you omit the value for project id, the id will be read from the key file:
@@ -205,22 +274,22 @@ The project id is optional; if you omit the value for project id, the id will be
 ```typescript
 const s = new Storage({
   type: StorageType.GCS,
-  keyFilename: "path/to/key_file.json",
+  keyFilename: "path/to/keyFile.json",
 });
-const s = new Storage("gcs://path/to/key_file.json");
+const s = new Storage("gcs://path/to/keyFile.json");
 s.getConfiguration().projectId; // the project id
 ```
 
-More examples:
+Another example:
 
 ```typescript
 // example #1
 const s = new Storage({
   type: StorageType.GCS,
-  keyFilename: "path/to/key_file.json",
+  keyFilename: "path/to/keyFile.json",
   bucketName: "bucket",
 });
-const s = new Storage("gcs://path/to/key_file.json?bucketName=bucket");
+const s = new Storage("gcs://path/to/keyFile.json@bucket");
 s.getSelectedBucket(); // "bucket"
 ```
 
@@ -235,6 +304,7 @@ type ConfigAmazonS3 = {
   type: StorageType;
   accessKeyId: string;
   secretAccessKey: string;
+  region?: string;
   bucketName?: string;
   options?: JSON;
 };
@@ -243,20 +313,31 @@ type ConfigAmazonS3 = {
 Configuration url:
 
 ```typescript
-const url = "s3://key:secret?region=eu-west-2&bucketName=bucket&option1=value1&...";
+const url = "s3://accessKeyId:secretAccessKey@region/bucketName&option1=value1&option2=value2...";
 ```
 
-Note that the more familiar @ notation (e.g. `s3://key:secret@region=eu-west-2/bucket`) is not supported; this is because the format of the url has been leveled across all different storage types.
+Example:
 
 ```typescript
 const s = new Storage({
   type: StorageType.S3,
   accessKeyId: "key",
   secretAccessKey: "secret",
+  region: "eu-west-2"
   bucketName: "bucket",
+  option: {
+    useDualStack: true,
+    sslEnabled: true,
+  }
 });
-const s = new Storage("s3://key:secret?bucketName=bucket");
+const s = new Storage("s3://key:secret@eu-west-2/bucket?useDualStack=true&sslEnabled=true");
 s.getSelectedBucket(); // "bucket"
+```
+
+You can omit a value for `region` but because `secretAccessKey` can contain slashes you must include the @ in your URL:
+
+```typescript
+const s = new Storage("s3://key:secret@bucket?useDualStack=true&sslEnabled=true");
 ```
 
 ### <a name='backblaze-b2'></a>Backblaze B2
@@ -278,21 +359,31 @@ type ConfigBackBlazeB2 = {
 Configuration url:
 
 ```typescript
-const url = "b2://application_key_id:application_key?bucketName=bucket&option1=value1&...";
+const url = "b2://applicationKeyId:applicationKey@bucketName&option1=value1&option2=value2&...";
 ```
+
+Example:
 
 ```typescript
 const s = new Storage({
   type: StorageType.B2,
-  applicationKeyId: "key_id",
+  applicationKeyId: "keyId",
   applicationKey: "key",
   bucketName: "bucket",
 });
-const s = new Storage("b2://key_id:key?bucketName=bucket");
+const s = new Storage("b2://keyId:key@bucket");
 s.getSelectedBucket(); // "bucket"
 ```
 
 ## <a name='api-methods'></a>API methods
+
+### <a name='init'></a>init
+
+```typescript
+init():Promise<boolean>;
+```
+
+Some cloud storage services need some initial setup before they can be used. If initial setup is required it is handled in this method, if no setup is required this method simply returns true. Note that you need to call this method even it the storage type doesn't need any setup; this is done to abstract away the differences between all types of storage.
 
 ### <a name='test'></a>test
 
@@ -300,7 +391,7 @@ s.getSelectedBucket(); // "bucket"
 test():Promise<void>;
 ```
 
-Runs a simple test to test the storage configuration. The test is a call to `listBuckets` and if it fails it throws an error.
+Runs a simple test to test the storage configuration. The test is a call to `listFiles` and if it fails it throws an error.
 
 ### <a name='createbucket'></a>createBucket
 
@@ -310,6 +401,8 @@ createBucket(name: string): Promise<string>;
 
 Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully (or it did already exist) it resolves with a simple "ok" or an empty string, else it will reject with an error message.
 
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+
 ### <a name='selectbucket'></a>selectBucket
 
 ```typescript
@@ -317,6 +410,8 @@ selectBucket(name: string | null): Promise<void>;
 ```
 
 Selects a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` an empty string or nothing at all the currently selected bucket will be deselected.
+
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
 ### <a name='clearbucket'></a>clearBucket
 
@@ -326,6 +421,8 @@ clearBucket(name?: string): Promise<void>;
 
 Removes all files in the bucket. If you omit the `name` parameter all files in the currently selected bucket will be removed. If no bucket is selected an error will be thrown.
 
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
+
 ### <a name='deletebucket'></a>deleteBucket
 
 ```typescript
@@ -334,6 +431,8 @@ deleteBucket(name?: string): Promise<void>;
 
 Deletes the bucket and all files in it. If you omit the `name` parameter the currently selected bucket will be deleted. If no bucket is selected an error will be thrown.
 
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
+
 ### <a name='listbuckets'></a>listBuckets
 
 ```typescript
@@ -341,6 +440,8 @@ listBuckets(): Promise<string[]>
 ```
 
 Returns a list with the names of all buckets in the storage.
+
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
 ### <a name='getselectedbucket'></a>getSelectedBucket
 
@@ -462,7 +563,7 @@ Switch to another adapter in an existing `Storage` instance at runtime. The conf
 
 ## <a name='how-it-works'></a>How it works
 
-A `Storage` instance is actually a thin wrapper around one of the available adapters; it creates an instance of an adapter based on the configuration object or URL that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of `Storage` that shows how `createBucket` is forwarded:
+A `Storage` instance is actually a thin wrapper around one of the available adapters; it creates an instance of an adapter based on the configuration object or URL that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
 
 ```typescript
 // member function of class Storage
@@ -483,7 +584,7 @@ More adapter classes can be added for different storage types, note however that
 
 If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
 
-Your adapter might use a wrapper library for the storage type you create the adapter for, like for instance aws-sdk is used in the Amazon S3 adapter. Add these dependencies to the peer dependencies in the package.json file in the publish folder
+Your adapter might use a wrapper library for the storage type that you create the adapter for, like for instance aws-sdk is used in the Amazon S3 adapter. Add these dependencies to the peer dependencies in the package.json file in the `./publish` folder
 
 This way your extra dependencies will not be installed automatically but have to be installed manually if the user actually uses your adapter in their code.
 
@@ -495,19 +596,19 @@ And for library developers you can add your dependencies to the dependencies in 
 
 You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `test` method. Also it performs some sanity checking of parameters of a few API functions; this way you don't have to implement these checks in all derived classes.
 
-One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the non-API function `store`. This function has and stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
+One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the non-API function `store`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
 
 For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
 
-You don't necessarily have to let your adapter class extend `AbstractAdapter` but if you choose not to your class should implement the `IStorage` interface. Most handy utility functions that are used in `AbstractAdapter` are defined in the file `./src/util.ts` so you can easily import them in your own class as well.
+You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IStorage` interface. Most handy utility functions that are used in `AbstractAdapter` are defined in the file `./src/util.ts` so you can easily import them in your own class as well.
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 
 ### <a name='adapter-function'></a>Adapter function
 
-The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape of `IStorage`.
+The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape of the interface `IStorage`.
 
-If you like you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
+If you like, you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
 
 ### <a name='register-your-adapter'></a>Register your adapter
 
@@ -517,11 +618,11 @@ After you've finished your adapter module you need to register it, this requires
 
 2] Add your type to the enum `StorageTypes` in `./src/types.ts`.
 
-3] Also in the file `./src/types.ts` add a configuration type that extends `IAdapterConfig` and add it to the union type `AdapterConfig`
+3] Also in the file `./src/types.ts` add your configuration type that extends `IAdapterConfig` and add it to the union type `AdapterConfig` as well.
 
 ## <a name='tests'></a>Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. The tests test all storage types; for Google Cloud and Amazon S3 you need add your credentials to a `.env` file, see the file `.env.default` for more explanation. To run the Jasmine tests use this command:
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. The tests test all storage types; for most storage type you need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide them in another way. To run the Jasmine tests use this command:
 
 `npm run test-jasmine`
 

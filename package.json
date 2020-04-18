@@ -57,7 +57,7 @@
     "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",
     "prepublishOnly": "npm run tsc",
-    "peerdependencies": "npm i -D  glob rimraf @google-cloud/storage ramda aws-sdk backblaze-b2 @gideo-llc/backblaze-b2-upload-any"
+    "toc": "markdown-toc -i README.md"
   },
   "keywords": [
     "storage",
