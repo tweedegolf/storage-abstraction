@@ -9,41 +9,41 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
-  * [Options](#options)
-  * [Default options](#default-options)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
+  - [Options](#options)
+  - [Default options](#default-options)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-  * [Backblaze B2](#backblaze-b2)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+  - [Backblaze B2](#backblaze-b2)
 - [API methods](#api-methods)
-  * [init](#init)
-  * [test](#test)
-  * [createBucket](#createbucket)
-  * [selectBucket](#selectbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [getSelectedBucket](#getselectedbucket)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromReadable](#addfilefromreadable)
-  * [getFileAsReadable](#getfileasreadable)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getOptions](#getoptions)
-  * [getConfiguration](#getconfiguration)
-  * [switchAdapter](#switchadapter)
+  - [init](#init)
+  - [test](#test)
+  - [createBucket](#createbucket)
+  - [selectBucket](#selectbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [getSelectedBucket](#getselectedbucket)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromReadable](#addfilefromreadable)
+  - [getFileAsReadable](#getfileasreadable)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getOptions](#getoptions)
+  - [getConfiguration](#getconfiguration)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -622,9 +622,7 @@ After you've finished your adapter module you need to register it, this requires
 
 ## <a name='tests'></a>Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. The tests test all storage types; for most storage type you need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide them in another way. To run the Jasmine tests use this command:
-
-`npm run test-jasmine`
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way.
 
 You can run tests per storage type using one of these commands, see also the file `package.json`:
 
@@ -637,6 +635,29 @@ npm run test-gcs
 npm run test-s3
 # test Backblaze B2
 npm run test-b2
+```
+
+To run a generic Jasmine test that uses local storage and does not require any credentials use this command:
+
+`npm run test-jasmine`
+
+There are also Jamine tests that test a set of configuration objects and URLs per storage type:
+
+```bash
+# test config local disk
+npm run test-config-local
+# test config Google Cloud Storage
+npm run test-config-gcs
+# test config Amazon S3
+npm run test-config-s3
+# test config Backblaze B2
+npm run test-config-b2
+```
+
+To run all tests:
+
+```bash
+npm run test-all
 ```
 
 You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:

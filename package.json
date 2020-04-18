@@ -51,6 +51,7 @@
     "test-local": "TYPE='local' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-b2": "TYPE='b2' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test": "ts-node ./tests/test.ts",
     "test2": "ts-node ./tests/test2.ts",
     "test3": "ts-node ./tests/test3.ts",
