@@ -22,21 +22,20 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
-    const { keyFilename, projectId, bucketName } = this.parseConfig(config);
-    this.storage = new GoogleCloudStorage({ keyFilename, projectId });
-    console.log(this.storage);
-    // this.options = { ...AdapterGoogleCloudStorage.defaultOptions, ...options };
-    this.bucketName = this.generateSlug(bucketName, this.settings);
+    const cfg = this.parseConfig(config);
+    this.config = { ...cfg };
+    if (cfg.slug) {
+      this.slug = cfg.slug;
+      delete cfg.slug;
+    }
+    if (cfg.bucketName) {
+      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
+      delete cfg.bucketName;
+    }
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
     }
-    this.config = {
-      type: this.type,
-      keyFilename,
-      projectId,
-      bucketName,
-      // options,
-    };
+    this.storage = new GoogleCloudStorage(cfg);
   }
 
   /**
@@ -54,13 +53,15 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
     let cfg: ConfigGoogleCloud;
     if (typeof config === "string") {
-      const { type, part1: keyFilename, part2: projectId, bucketName, options } = parseUrl(config);
+      const { type, part1: keyFilename, part2: projectId, bucketName, queryString } = parseUrl(
+        config
+      );
       cfg = {
         type,
         keyFilename,
         projectId,
         bucketName,
-        // options,
+        ...queryString,
       };
     } else {
       cfg = config;

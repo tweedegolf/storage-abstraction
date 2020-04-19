@@ -4,7 +4,7 @@ import { StorageType } from "../src/types";
 
 describe(`testing Google urls`, () => {
   it("[0]", () => {
-    this.storage = new Storage("gcs://keyFile.json:appName?bucketName=the-buck");
+    this.storage = new Storage("gcs://keyFile.json:appName@the-buck");
     expect(this.storage.getType()).toBe(StorageType.GCS);
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
     expect(this.storage.getConfiguration().projectId).toBe("appName");
@@ -27,24 +27,24 @@ describe(`testing Google urls`, () => {
     expect(this.storage.getConfiguration().keyFilename).toBe("keyFile.json");
   });
 
-  it("[3]", () => {
-    this.storage = new Storage("gcs://tests/keyFile.json?bucketName=the-buck");
-    expect(this.storage.getType()).toBe(StorageType.GCS);
-    expect(this.storage.getSelectedBucket()).toBe("the-buck");
-    expect(this.storage.getConfiguration().projectId).toBe("appIdFromTestFile");
-    expect(this.storage.getConfiguration().keyFilename).toBe("tests/keyFile.json");
-  });
-
-  it("[4] don't use trailing slashes", () => {
+  it("[3] don't use trailing slashes", () => {
     expect((): void => {
       const s = new Storage("gcs://tests/keyFile.json/");
     }).toThrowError("ENOTDIR: not a directory, open 'tests/keyFile.json/'");
   });
 
-  it("[5] when projectId is not provided it will be read from the keyFile", () => {
+  it("[4] when projectId is not provided it will be read from the keyFile", () => {
     this.storage = new Storage("gcs://tests/keyFile.json");
     expect(this.storage.getType()).toBe(StorageType.GCS);
     expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getConfiguration().projectId).toBe("appIdFromTestFile");
+    expect(this.storage.getConfiguration().keyFilename).toBe("tests/keyFile.json");
+  });
+
+  it("[4a] projectId is optional", () => {
+    this.storage = new Storage("gcs://tests/keyFile.json@the-buck");
+    expect(this.storage.getType()).toBe(StorageType.GCS);
+    expect(this.storage.getSelectedBucket()).toBe("the-buck");
     expect(this.storage.getConfiguration().projectId).toBe("appIdFromTestFile");
     expect(this.storage.getConfiguration().keyFilename).toBe("tests/keyFile.json");
   });

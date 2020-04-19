@@ -138,6 +138,7 @@ Configuration object:
 type ConfigLocal = {
   type: StorageType;
   directory: string;
+  slug?: boolean;
   mode?: string | number;
 };
 ```
@@ -160,7 +161,7 @@ Example:
 const config = {
   type: StorageType.LOCAL,
   directory: "path/to/folder/bucket",
-  mode: 750,
+  mode: "750",
 };
 const s = new Storage(config);
 
@@ -210,13 +211,14 @@ type ConfigGoogleCloud = {
   keyFilename: string; // path to keyFile.json
   projectId?: string;
   bucketName?: string;
+  slug?: boolean;
 };
 ```
 
 Configuration url:
 
 ```typescript
-const url = "gcs://path/to/keyFile.json:projectId@bucketName?option1=value1&option2=value2...";
+const url = "gcs://path/to/keyFile.json:projectId@bucketName?slug=false";
 ```
 
 The project id is optional; if you omit the value for project id, the id will be read from the key file:
@@ -254,6 +256,7 @@ type ConfigAmazonS3 = {
   type: StorageType;
   accessKeyId: string;
   secretAccessKey: string;
+  slug?: boolean;
   region?: string;
   bucketName?: string;
   endpoint?: string;
@@ -294,7 +297,7 @@ You can omit a value for `region` but because `secretAccessKey` can contain slas
 const s = new Storage("s3://key:secret@bucket?useDualStack=true&sslEnabled=true");
 ```
 
-If you want to specify a bucket name but not a region, put a slash behind the region, and right before the question mark in case your URL has a querystring:
+If you want to specify a bucket name but not a region, put a slash behind the region, and right before the question mark in case your URL has a query string:
 
 ```typescript
 const s = new Storage("s3://key:secret@eu-west-2/");

@@ -110,7 +110,7 @@ describe(`testing Amazon urls`, () => {
 
   it("[5b1] no bucket URL plus queryString", () => {
     this.storage = new Storage("s3://key:secret/can/contain/slashes@eu-west-2?sslEnabled=true");
-    expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getSelectedBucket()).toBe("eu-west-2");
     expect(this.storage.getConfiguration().region).not.toBe("eu-west-2");
     expect(this.storage.getConfiguration().sslEnabled).toBe("true");
   });
