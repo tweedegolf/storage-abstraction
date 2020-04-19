@@ -197,8 +197,10 @@ const run = async (): Promise<void> => {
   }
 
   try {
-    const f = await storage.getFileAsReadable("first-file.jpg");
-    console.log(f);
+    const readStream = await storage.getFileAsReadable("first-file.jpg", { start: 0, end: 4000 });
+    const p = path.join(process.cwd(), "test-b2.jpg");
+    const writeStream = fs.createWriteStream(p);
+    await copyFile(readStream, writeStream);
   } catch (e) {
     console.error("\x1b[31m", e.message, "\n");
     process.exit(0);

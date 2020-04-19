@@ -101,27 +101,30 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   async getFileAsReadable(
-    fileName: string,
+    name: string,
     options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
-    const d = await this.storage.downloadFileByName({
-      bucketName: this.bucketName,
-      fileName,
-      responseType: "stream", // options are as in axios: 'arraybuffer', 'blob', 'document', 'json', 'text', 'stream'
+    const file = await this.findFile(name);
+    if (file === null) {
+      throw new Error("file not found");
+    }
+    // console.log(`bytes ${options.start}-${options.end}/${file.contentLength}`);
+    const d = await this.storage.downloadFileById({
+      fileId: file.fileId,
+      // options are as in axios: 'arraybuffer', 'blob', 'document', 'json', 'text', 'stream'
+      responseType: "stream",
       // progress monitoring
-      onDownloadProgress: event => {
-        console.log(event);
-      },
+      // onDownloadProgress: event => {
+      //   console.log("progress", event);
+      // },
       // ...common arguments (optional)
+      headers: {
+        "Content-Type": file.contentType,
+        "Content-Range": `bytes ${options.start}-${options.end}/${file.contentLength}}`,
+      },
     });
     // console.log(d);
-    return new Readable();
-    // const file = this.storage.bucket(this.bucketName).file(fileName);
-    // const [exists] = await file.exists();
-    // if (exists) {
-    //   return file.createReadStream(options);
-    // }
-    // throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
+    return d.data;
   }
 
   async removeFile(name: string): Promise<void> {
