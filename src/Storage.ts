@@ -4,7 +4,7 @@ import { IStorage, AdapterConfig, JSON as TypeJSON } from "./types";
 
 //  add new storage adapters here
 const adapterClasses = {
-  b2: "AdapterLocal",
+  b2: "AdapterBackblazeB2",
   s3: "AdapterAmazonS3",
   gcs: "AdapterGoogleCloudStorage",
   local: "AdapterLocal",

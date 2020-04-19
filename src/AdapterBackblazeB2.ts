@@ -15,23 +15,48 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   private buckets: BackblazeB2Bucket[] = [];
   private files: BackblazeB2File[] = [];
   private nextFileName: string;
-  public static defaultOptions = {
-    slug: true,
-  };
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
-    const { applicationKey, applicationKeyId, bucketName } = this.parseConfig(config);
-    this.storage = new B2({ applicationKey, applicationKeyId });
-    // this.options = { ...AdapterBackblazeB2.defaultOptions, ...options };
-    this.bucketName = this.generateSlug(bucketName, this.settings);
-    this.config = {
-      type: this.type,
-      applicationKey,
-      applicationKeyId,
-      bucketName,
-      // options,
-    };
+    const cfg = this.parseConfig(config);
+    this.config = { ...cfg };
+    if (cfg.slug) {
+      this.slug = cfg.slug;
+      delete cfg.slug;
+    }
+    if (cfg.bucketName) {
+      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
+      delete cfg.bucketName;
+    }
+    this.storage = new B2(cfg);
+  }
+
+  private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
+    let cfg: ConfigBackblazeB2;
+    if (typeof config === "string") {
+      const {
+        type,
+        part1: applicationKeyId,
+        part2: applicationKey,
+        bucketName,
+        queryString,
+      } = parseUrl(config);
+      cfg = {
+        type,
+        applicationKeyId,
+        applicationKey,
+        bucketName,
+        ...queryString,
+      };
+    } else {
+      cfg = config;
+    }
+    if (!cfg.applicationKey || !cfg.applicationKeyId) {
+      throw new Error(
+        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 'b2'"
+      );
+    }
+    return cfg;
   }
 
   public async init(): Promise<boolean> {
@@ -56,34 +81,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     this.initialized = true;
     return true;
-  }
-
-  private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
-    let cfg: ConfigBackblazeB2;
-    if (typeof config === "string") {
-      const {
-        type,
-        part1: applicationKeyId,
-        part2: applicationKey,
-        bucketName,
-        options,
-      } = parseUrl(config);
-      cfg = {
-        type,
-        applicationKeyId,
-        applicationKey,
-        bucketName,
-        // options,
-      };
-    } else {
-      cfg = config;
-    }
-    if (!cfg.applicationKey || !cfg.applicationKeyId) {
-      throw new Error(
-        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 'b2'"
-      );
-    }
-    return cfg;
   }
 
   private getBucketId(): void {
