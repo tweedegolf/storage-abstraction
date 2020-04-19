@@ -2,27 +2,37 @@ import dotenv from "dotenv";
 import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { IStorage } from "../src/types";
+import { IStorage, StorageType } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
 
 /**
- * Below 3 examples of how you can populate a config object using environment variables.
+ * Below 4 examples of how you can populate a config object using environment variables.
  * Note that you name the environment variables to your liking.
  */
 const configS3 = {
+  type: StorageType.S3,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   bucketName: process.env.BUCKET_NAME,
 };
 
 const configGoogle = {
+  type: StorageType.GCS,
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
   keyFilename: process.env.GOOGLE_CLOUD_KEYFILE,
   bucketName: process.env.BUCKET_NAME,
 };
 
+const configBackblaze = {
+  type: StorageType.B2,
+  applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
+  applicationKey: process.env.B2_APPLICATION_KEY,
+  bucketName: process.env.BUCKET_NAME,
+};
+
 const configLocal = {
+  type: StorageType.LOCAL,
   directory: process.env.LOCAL_DIRECTORY,
 };
 
@@ -134,19 +144,82 @@ const run = async (): Promise<void> => {
   // const storage = new Storage(configLocal);
   // const storage = new Storage(configS3);
   // const storage = new Storage(configGoogle);
+  const storage = new Storage(configBackblaze);
 
   // const storage = new Storage(process.env.STORAGE_URL);
-  const storage = new Storage(`local://tests/test slug dir?mode=500&slug=true`);
+  // const storage = new Storage(`local://tests/test slug dir?mode=500&slug=true`);
 
   // Note that since 1.4 you have to call `init()` before you can make API calls
   try {
     await storage.init();
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", e.message, "\n");
     process.exit(0);
   }
 
-  test(storage);
+  try {
+    const b = await storage.listBuckets();
+    // console.log(b);
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  try {
+    await storage.addFileFromPath("./tests/data/image1.jpg", "first-file.jpg");
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  try {
+    const f = await storage.listFiles();
+    // console.log(f);
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  try {
+    const f = await storage.fileExists("first-file.jpg");
+    console.log(f);
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  try {
+    const f = await storage.sizeOf("first-file.jpg");
+    console.log(f);
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  try {
+    const f = await storage.getFileAsReadable("first-file.jpg");
+    console.log(f);
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  process.exit(0);
+
+  try {
+    const f = await storage.removeFile("first-file.jpg");
+    console.log(f);
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
+
+  const f = await storage.removeFile("first-file.jpg").catch(e => {
+    console.log(e.message);
+  });
+  console.log(f);
+
+  // test(storage);
 
   /* or run all tests */
   // test(new StorageLocal(configLocal))

@@ -35,6 +35,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
     }
+    delete cfg.type;
     this.storage = new GoogleCloudStorage(cfg);
   }
 
