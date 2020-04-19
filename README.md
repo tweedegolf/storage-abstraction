@@ -261,7 +261,7 @@ type ConfigAmazonS3 = {
   maxRetries?: number;
   maxRedirects?: number;
   sslEnabled?: boolean;
-  [id: string]: any;
+  [id: string]: boolean | string | number; // configuration is extensible
 };
 ```
 
@@ -292,6 +292,14 @@ You can omit a value for `region` but because `secretAccessKey` can contain slas
 
 ```typescript
 const s = new Storage("s3://key:secret@bucket?useDualStack=true&sslEnabled=true");
+```
+
+If you want to specify a bucket name but not a region, put a slash behind the region, and right before the question mark in case your URL has a querystring:
+
+```typescript
+const s = new Storage("s3://key:secret@eu-west-2/");
+
+const s = new Storage("s3://key:secret@eu-west-2/?useDualStack=true&sslEnabled=true");
 ```
 
 ### <a name='backblaze-b2'></a>Backblaze B2

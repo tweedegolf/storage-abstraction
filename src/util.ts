@@ -16,7 +16,7 @@ export const parseUrl = (
   part2: string;
   part3: string;
   bucketName: string;
-  options: { [key: string]: string };
+  queryString: { [key: string]: string };
 } => {
   if (url === "" || typeof url === "undefined") {
     throw new Error("please provide a configuration url");
@@ -32,12 +32,10 @@ export const parseUrl = (
   let bucketName = "";
 
   // parse options
-  let options: { [key: string]: string } = {};
-  let optionsString = "";
+  let queryString: { [key: string]: string } = {};
   if (questionMark !== -1) {
-    optionsString = config.substring(questionMark + 1);
-    config = config.substring(0, questionMark);
-    options = optionsString
+    queryString = config
+      .substring(questionMark + 1)
       .split("&")
       .map(pair => pair.split("="))
       .reduce((acc, val) => {
@@ -45,6 +43,7 @@ export const parseUrl = (
         acc[val[0]] = val[1];
         return acc;
       }, {});
+    config = config.substring(0, questionMark);
   }
 
   // get bucket name and region
@@ -69,8 +68,8 @@ export const parseUrl = (
     part1 = config;
   }
 
-  // console.log(type, part1, part2, region, bucketName, options);
-  return { type, part1, part2, part3, bucketName, options };
+  // console.log(type, part1, part2, region, bucketName, queryString);
+  return { type, part1, part2, part3, bucketName, queryString };
 };
 
 /**

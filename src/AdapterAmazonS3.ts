@@ -11,22 +11,25 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   // protected bucketName: string;
   private storage: S3;
   private bucketNames: string[] = [];
-  public static defaultOptions = {
-    slug: true,
-    apiVersion: "2006-03-01",
-  };
+  // private apiVersion = "2006-03-01";
 
   constructor(config: string | AdapterConfig) {
     super();
     const cfg = this.parseConfig(config as ConfigAmazonS3);
-    const { accessKeyId, secretAccessKey, bucketName, options } = cfg;
-    this.storage = new S3({ accessKeyId, secretAccessKey });
-    // this.options = { ...AdapterAmazonS3.defaultOptions, ...options };
-    this.bucketName = this.generateSlug(bucketName, this.settings);
+    this.config = { ...cfg };
+    if (cfg.slug) {
+      this.slug = cfg.slug;
+      delete cfg.slug;
+    }
+    if (cfg.bucketName) {
+      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
+      delete cfg.bucketName;
+    }
+    delete cfg.type;
+    this.storage = new S3(cfg);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
     }
-    this.config = { ...cfg };
   }
 
   async init(): Promise<boolean> {
@@ -44,7 +47,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         part2: secretAccessKey,
         part3: region,
         bucketName,
-        options,
+        queryString,
       } = parseUrl(config);
       cfg = {
         type,
@@ -52,7 +55,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         secretAccessKey,
         region,
         bucketName,
-        // options,
+        ...queryString,
       };
     } else {
       cfg = config;

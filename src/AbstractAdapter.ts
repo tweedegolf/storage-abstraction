@@ -6,7 +6,7 @@ export abstract class AbstractAdapter implements IStorage {
   // protected type: StorageType;
   protected type: string;
   protected config: AdapterConfig;
-  protected bucketName: string;
+  protected bucketName: string = "";
   protected initialized: boolean = false;
   protected slug: boolean = true;
 

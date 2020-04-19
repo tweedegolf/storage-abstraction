@@ -3,26 +3,26 @@ import { Storage } from "../src/Storage";
 import { StorageType } from "../src/types";
 
 describe(`testing Amazon urls`, () => {
-  xit("[0] no options", () => {
+  it("[0] no options", () => {
     this.storage = new Storage("s3://key:secret/can/contain/slashes");
     expect(this.storage.getType()).toBe(StorageType.S3);
     expect(this.storage.getSelectedBucket()).toBe("");
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
-    expect(this.storage.getOptions().region).toBeUndefined();
+    expect(this.storage.getConfiguration().region).toBe("");
   });
 
-  xit("[1] parameter string", () => {
+  it("[1] parameter string", () => {
     this.storage = new Storage(
       "s3://key:secret/can/contain/slashes@eu-west-2/the-buck?sslEnabled=true"
     );
-    console.log(this.storage.getConfiguration());
+    // console.log(this.storage.getConfiguration());
     expect(this.storage.getType()).toBe(StorageType.S3);
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
     expect(this.storage.getConfiguration().region).toBe("eu-west-2");
-    expect(this.storage.getOptions().sslEnabled).toBe("true");
+    expect(this.storage.getConfiguration().sslEnabled).toBe("true");
   });
 
   it("[2a] no region", () => {
@@ -54,11 +54,13 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
     expect(this.storage.getConfiguration().region).toBe("eu-west-2");
-    expect(this.storage.getOptions().sslEnabled).toBe("true");
-    expect(this.storage.getOptions().useDualStack).toBe(undefined);
-    expect(this.storage.getOptions().nonExistentKey).toBe("true");
-    expect(this.storage.getOptions().endpoint).toBe(undefined);
-    expect(this.storage.getOptions().endPoint).toBe("https://kms-fips.us-west-2.amazonaws.com");
+    expect(this.storage.getConfiguration().sslEnabled).toBe("true");
+    expect(this.storage.getConfiguration().useDualStack).toBe(undefined);
+    expect(this.storage.getConfiguration().nonExistentKey).toBe("true");
+    expect(this.storage.getConfiguration().endpoint).toBe(undefined);
+    expect(this.storage.getConfiguration().endPoint).toBe(
+      "https://kms-fips.us-west-2.amazonaws.com"
+    );
   });
 
   it("[4] object", () => {
@@ -75,12 +77,10 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getConfiguration().accessKeyId).toBe("key");
     expect(this.storage.getConfiguration().secretAccessKey).toBe("secret/can/contain/slashes");
     expect(this.storage.getConfiguration().region).toBe("eu-west-2");
-    expect(this.storage.getOptions().sslEnabled).toBe(true);
-    expect(this.storage.getConfiguration().options.region).toBe("eu-west-2");
-    expect(this.storage.getConfiguration().options.sslEnabled).toBe(true);
+    expect(this.storage.getConfiguration().sslEnabled).toBe(true);
   });
 
-  xit("[5] no bucket", () => {
+  it("[5] no bucket", () => {
     this.storage = new Storage({
       type: "s3",
       accessKeyId: "key",
@@ -89,25 +89,49 @@ describe(`testing Amazon urls`, () => {
     expect(this.storage.getSelectedBucket()).toBe("");
   });
 
-  xit("[6] number and boolean in config object keep their original type", () => {
+  it("[5a] no bucket URL", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@eu-west-2");
+    expect(this.storage.getSelectedBucket()).toBe("eu-west-2");
+    expect(this.storage.getConfiguration().region).not.toBe("eu-west-2");
+  });
+
+  it("[5a1] no bucket URL", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@eu-west-2/");
+    expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getConfiguration().region).toBe("eu-west-2");
+  });
+
+  it("[5b] no bucket URL plus queryString", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@eu-west-2/?sslEnabled=true");
+    expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getConfiguration().region).toBe("eu-west-2");
+    expect(this.storage.getConfiguration().sslEnabled).toBe("true");
+  });
+
+  it("[5b1] no bucket URL plus queryString", () => {
+    this.storage = new Storage("s3://key:secret/can/contain/slashes@eu-west-2?sslEnabled=true");
+    expect(this.storage.getSelectedBucket()).toBe("");
+    expect(this.storage.getConfiguration().region).not.toBe("eu-west-2");
+    expect(this.storage.getConfiguration().sslEnabled).toBe("true");
+  });
+
+  it("[6] number and boolean in config object keep their original type", () => {
     this.storage = new Storage({
       type: "s3",
       accessKeyId: "key",
       secretAccessKey: "secret/can/contain/slashes",
-      options: {
-        optionNumber: 42,
-        optionBoolean: true,
-      },
+      optionNumber: 42,
+      optionBoolean: true,
     });
-    expect(this.storage.getOptions().optionNumber).toBe(42);
-    expect(this.storage.getOptions().optionBoolean).toBe(true);
+    expect(this.storage.getConfiguration().optionNumber).toBe(42);
+    expect(this.storage.getConfiguration().optionBoolean).toBe(true);
   });
 
-  xit("[7] number and boolean used in config will stay string types", () => {
+  it("[7] number and boolean used in config will stay string types", () => {
     this.storage = new Storage(
       ["s3://key:secret/can/contain/slashes", "?optionNumber=42", "&optionBoolean=true"].join("")
     );
-    expect(this.storage.getOptions().optionNumber).toBe("42");
-    expect(this.storage.getOptions().optionBoolean).toBe("true");
+    expect(this.storage.getConfiguration().optionNumber).toBe("42");
+    expect(this.storage.getConfiguration().optionBoolean).toBe("true");
   });
 });
