@@ -21,16 +21,16 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
-    const { applicationKey, applicationKeyId, bucketName, options } = this.parseConfig(config);
+    const { applicationKey, applicationKeyId, bucketName } = this.parseConfig(config);
     this.storage = new B2({ applicationKey, applicationKeyId });
-    this.options = { ...AdapterBackblazeB2.defaultOptions, ...options };
-    this.bucketName = this.generateSlug(bucketName, this.options);
+    // this.options = { ...AdapterBackblazeB2.defaultOptions, ...options };
+    this.bucketName = this.generateSlug(bucketName, this.settings);
     this.config = {
       type: this.type,
       applicationKey,
       applicationKeyId,
       bucketName,
-      options,
+      // options,
     };
   }
 
@@ -73,7 +73,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         applicationKeyId,
         applicationKey,
         bucketName,
-        options,
+        // options,
       };
     } else {
       cfg = config;

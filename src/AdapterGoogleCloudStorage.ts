@@ -22,11 +22,11 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
-    const { keyFilename, projectId, bucketName, options } = this.parseConfig(config);
+    const { keyFilename, projectId, bucketName } = this.parseConfig(config);
     this.storage = new GoogleCloudStorage({ keyFilename, projectId });
     console.log(this.storage);
-    this.options = { ...AdapterGoogleCloudStorage.defaultOptions, ...options };
-    this.bucketName = this.generateSlug(bucketName, this.options);
+    // this.options = { ...AdapterGoogleCloudStorage.defaultOptions, ...options };
+    this.bucketName = this.generateSlug(bucketName, this.settings);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
     }
@@ -35,7 +35,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       keyFilename,
       projectId,
       bucketName,
-      options,
+      // options,
     };
   }
 
@@ -60,7 +60,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         keyFilename,
         projectId,
         bucketName,
-        options,
+        // options,
       };
     } else {
       cfg = config;

@@ -1,29 +1,25 @@
 import { Readable } from "stream";
 import { generateSlug, slugifyPath, validateName } from "./util";
-import { AdapterConfig, IStorage, JSON as TypeJSON } from "./types";
+import { AdapterConfig, IStorage } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
   // protected type: StorageType;
   protected type: string;
   protected config: AdapterConfig;
   protected bucketName: string;
-  protected options: TypeJSON = {};
   protected initialized: boolean = false;
+  protected slug: boolean = true;
 
   getType(): string {
     return this.type;
-  }
-
-  public getOptions(): TypeJSON {
-    return this.options;
   }
 
   public getConfiguration(): AdapterConfig {
     return this.config;
   }
 
-  protected generateSlug(url: string, options: TypeJSON = this.options): string {
-    return generateSlug(url, options);
+  protected generateSlug(url: string, slug: boolean = this.slug): string {
+    return generateSlug(url, slug);
   }
 
   protected validateName(name: string): string {
@@ -43,15 +39,15 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    await this.store(origPath, slugifyPath(targetPath, this.options));
+    await this.store(origPath, slugifyPath(targetPath, this.slug));
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    await this.store(buffer, slugifyPath(targetPath, this.options));
+    await this.store(buffer, slugifyPath(targetPath, this.slug));
   }
 
   async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    await this.store(stream, slugifyPath(targetPath, this.options));
+    await this.store(stream, slugifyPath(targetPath, this.slug));
   }
 
   public getSelectedBucket(): string {

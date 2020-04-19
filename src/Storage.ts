@@ -7,7 +7,7 @@ const adapterClasses = {
   b2: "AdapterLocal",
   s3: "AdapterAmazonS3",
   gcs: "AdapterGoogleCloudStorage",
-  local: "AdapterBackblazeB2",
+  local: "AdapterLocal",
 };
 
 // or here for functional adapters
@@ -37,9 +37,9 @@ export class Storage implements IStorage {
     return this.adapter.getType();
   }
 
-  public getOptions(): TypeJSON {
-    return this.adapter.getOptions();
-  }
+  // public getOptions(): TypeJSON {
+  //   return this.adapter.getOptions();
+  // }
 
   public getConfiguration(): AdapterConfig {
     return this.adapter.getConfiguration();

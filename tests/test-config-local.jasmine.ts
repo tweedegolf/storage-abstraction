@@ -2,7 +2,7 @@ import "jasmine";
 import fs from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { StorageType } from "../src/types";
+import { StorageType, ConfigLocal } from "../src/types";
 import { promiseRimraf } from "./util";
 
 // describe("test jasmine", () => {
@@ -14,9 +14,8 @@ import { promiseRimraf } from "./util";
 
 describe(`testing local urls`, () => {
   it("[0]", () => {
-    this.storage = new Storage("local://tests/tmp?bucketName=the-buck");
+    this.storage = new Storage("local://tests/tmp/the-buck");
     expect(this.storage.getType()).toBe(StorageType.LOCAL);
-    expect(this.storage.getConfiguration().directory).toBe("tests/tmp");
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
 
@@ -33,8 +32,7 @@ describe(`testing local urls`, () => {
   it("[3]", () => {
     this.storage = new Storage({
       type: StorageType.LOCAL,
-      directory: "tests/tmp",
-      bucketName: "the-buck",
+      directory: "tests/tmp/the-buck",
     });
     expect(this.storage.getType()).toBe(StorageType.LOCAL);
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
@@ -53,28 +51,24 @@ describe(`testing local urls`, () => {
     this.storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
-      options: {
-        mode: 0o777,
-      },
+      mode: 0o777,
     });
-    expect(this.storage.getOptions().mode).toBe(0o777);
+    expect(this.storage.getConfiguration().mode).toBe(0o777);
   });
 
   it("[5b] numeric values in options stay numeric and keep their radix (10)", () => {
     this.storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
-      options: {
-        mode: 511,
-      },
+      mode: 511,
     });
-    expect(this.storage.getOptions().mode).toBe(511);
+    expect(this.storage.getConfiguration().mode).toBe(511);
   });
 
   it("[6] string values in options stay string values (will be converted when used in code when necessary)", async () => {
     const storage = new Storage("local://tests/tmp?mode=0o777");
     expect(storage.getSelectedBucket()).toBe("tmp");
-    expect(storage.getOptions().mode).toBe("0o777");
+    expect((storage.getConfiguration() as ConfigLocal).mode).toBe("0o777");
     try {
       await storage.init();
     } catch (e) {
@@ -89,7 +83,7 @@ describe(`testing local urls`, () => {
   it("[6a]", async () => {
     const storage = new Storage("local://tests/tmp?mode=777");
     expect(storage.getSelectedBucket()).toBe("tmp");
-    expect(storage.getOptions().mode).toBe("777");
+    expect((storage.getConfiguration() as ConfigLocal).mode).toBe("777");
     await storage.init();
     const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
     expect(mode).toBe(16877);
@@ -100,12 +94,10 @@ describe(`testing local urls`, () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
-      options: {
-        mode: 0o777,
-      },
+      mode: 0o777,
     });
     expect(storage.getSelectedBucket()).toBe("tmp");
-    expect(storage.getOptions().mode).toBe(511);
+    expect((storage.getConfiguration() as ConfigLocal).mode).toBe(511);
     await storage.init();
     const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
     expect(mode).toBe(16877);
@@ -116,12 +108,10 @@ describe(`testing local urls`, () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
-      options: {
-        mode: 511,
-      },
+      mode: 511,
     });
     expect(storage.getSelectedBucket()).toBe("tmp");
-    expect(storage.getOptions().mode).toBe(511);
+    expect((storage.getConfiguration() as ConfigLocal).mode).toBe(511);
     await storage.init();
     const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
     expect(mode).toBe(16877);
@@ -132,12 +122,10 @@ describe(`testing local urls`, () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
-      options: {
-        mode: "0o777",
-      },
+      mode: "0o777",
     });
     expect(storage.getSelectedBucket()).toBe("tmp");
-    expect(storage.getOptions().mode).toBe("0o777");
+    expect((storage.getConfiguration() as ConfigLocal).mode).toBe("0o777");
     await storage.init();
     const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
     expect(mode).toBe(16877);
@@ -148,12 +136,10 @@ describe(`testing local urls`, () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
-      options: {
-        mode: "777",
-      },
+      mode: "777",
     });
     expect(storage.getSelectedBucket()).toBe("tmp");
-    expect(storage.getOptions().mode).toBe("777");
+    expect((storage.getConfiguration() as ConfigLocal).mode).toBe("777");
     await storage.init();
     const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
     expect(mode).toBe(16877);
@@ -161,12 +147,12 @@ describe(`testing local urls`, () => {
   });
 
   it("[7] slufigy is disabled by default", () => {
-    this.storage = new Storage("local://tests/tmp?bucketName=the buck");
+    this.storage = new Storage("local://tests/tmp/the buck");
     expect(this.storage.getSelectedBucket()).toBe("the buck");
   });
 
   it("[7a] but you can turn it on using the `slug` option", () => {
-    this.storage = new Storage("local://tests/tmp?bucketName=the buck&slug=true");
+    this.storage = new Storage("local://tests/tmp/the buck?slug=true");
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
 });

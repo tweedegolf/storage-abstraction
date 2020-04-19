@@ -21,8 +21,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const cfg = this.parseConfig(config as ConfigAmazonS3);
     const { accessKeyId, secretAccessKey, bucketName, options } = cfg;
     this.storage = new S3({ accessKeyId, secretAccessKey });
-    this.options = { ...AdapterAmazonS3.defaultOptions, ...options };
-    this.bucketName = this.generateSlug(bucketName, this.options);
+    // this.options = { ...AdapterAmazonS3.defaultOptions, ...options };
+    this.bucketName = this.generateSlug(bucketName, this.settings);
     if (this.bucketName) {
       this.bucketNames.push(this.bucketName);
     }
@@ -52,7 +52,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         secretAccessKey,
         region,
         bucketName,
-        options,
+        // options,
       };
     } else {
       cfg = config;

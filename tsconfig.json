@@ -16,6 +16,7 @@
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/*.ts"],
+  // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",
     "examples",

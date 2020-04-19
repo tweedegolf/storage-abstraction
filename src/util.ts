@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { JSON as TypeJSON } from "./types";
+import { GenericKey } from "./types";
 import slugify from "slugify";
 
 /**
@@ -108,16 +108,45 @@ export const parseMode = (s: number | string): number | string => {
 };
 
 /**
- * @param url
- * @param options
- *
- * Slugifies a url if the key `slug` in the options object is true
+ * @param: url
+ * strips off the querystring of an url and returns it as an object
  */
-export const generateSlug = (url: string, options: TypeJSON): string => {
+export const getOptions = (url: string): { [id: string]: GenericKey } => {
+  let options = {};
+  const questionMark = url.indexOf("?");
+  if (questionMark !== -1) {
+    options = url
+      .substring(questionMark + 1)
+      .split("&")
+      .map(pair => pair.split("="))
+      .reduce((acc, val) => {
+        // acc[val[0]] = `${val[1]}`.valueOf();
+        acc[val[0]] = val[1];
+        return acc;
+      }, {});
+  }
+  return options;
+};
+
+/**
+ * @param: url
+ * strips off the protocol of an url and returns it
+ */
+export const getProtocol = (url: string): string => {
+  return;
+};
+
+/**
+ * @param url
+ * @param doSlug
+ *
+ * Slugifies a url if the `slug` is true
+ */
+export const generateSlug = (url: string, slug: boolean | number | string): string => {
   if (!url || url === "null" || url === "undefined") {
     return "";
   }
-  if (options.slug === "true" || options.slug === true || options.slug == 1) {
+  if (slug === "true" || slug === true || slug == 1) {
     const s = slugify(url);
     return s;
   }
@@ -126,12 +155,12 @@ export const generateSlug = (url: string, options: TypeJSON): string => {
 
 /**
  * @param p
- * @param options
+ * @param settings
  *
- * Slugifies a path if the key `slug` in the options object is true
+ * Slugifies a path if `slug` is true
  */
-export const slugifyPath = (p: string, options: TypeJSON): string => {
-  if (options.slugify === true) {
+export const slugifyPath = (p: string, slug: boolean): string => {
+  if (slug === true) {
     const paths = p.split("/").map(d => slugify(d));
     return path.join(...paths);
   }

@@ -43,7 +43,7 @@ export interface IStorage {
    * Returns an object that contains both the options passed with the configuration and the
    * default options of the storage type if not overruled by the options you passed in.
    */
-  getOptions(): JSON;
+  // getOptions(): JSON;
 
   /**
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
@@ -162,40 +162,46 @@ export type JSON = {
 export interface IAdapterConfig {
   // type: StorageType;
   type: string;
-  options?: JSON;
+  slug?: boolean;
   bucketName?: string;
 }
+
+export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
 
 export interface ConfigAmazonS3 extends IAdapterConfig {
   accessKeyId: string;
   secretAccessKey: string;
   region?: string;
-  bucketName?: string;
   endpoint?: string;
   useDualstack?: boolean;
   maxRetries?: number;
   maxRedirects?: number;
   sslEnabled?: boolean;
-  options?: JSON;
+  [id: string]: GenericKey;
 }
 
 export interface ConfigBackblazeB2 extends IAdapterConfig {
   applicationKeyId: string;
   applicationKey: string;
+  // [id: string]: GenericKey;
 }
 
 export interface ConfigGoogleCloud extends IAdapterConfig {
   keyFilename: string;
   projectId?: string;
+  // [id: string]: GenericKey;
 }
 
 export interface ConfigLocal extends IAdapterConfig {
   directory: string;
+  mode?: number | string;
+  // [id: string]: GenericKey;
 }
 
 export interface ConfigTemplate extends IAdapterConfig {
   someKey: string;
   someOtherKey: string;
+  // [id: string]: GenericKey;
 }
 
 export type AdapterConfig =

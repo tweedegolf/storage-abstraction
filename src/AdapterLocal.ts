@@ -6,54 +6,53 @@ import rimraf from "rimraf";
 import { Readable } from "stream";
 import { StorageType, ConfigLocal } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseUrl, parseMode } from "./util";
+import { getOptions, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected type = StorageType.LOCAL;
   // protected bucketName: string;
+  protected slug = false;
   private directory: string;
   private buckets: string[] = [];
-  public static defaultOptions = {
-    mode: 0o777,
-    slug: false,
-  };
+  private mode: number | string = 0o777;
 
   constructor(config: ConfigLocal) {
     super();
-    const { directory, bucketName, options } = this.parseConfig(config);
-    this.options = { ...AdapterLocal.defaultOptions, ...options };
-    // console.log(StorageLocal.defaultOptions.mode, options);
-    if (bucketName) {
-      this.bucketName = this.generateSlug(bucketName, this.options);
-      this.directory = this.generateSlug(directory, this.options);
-    } else {
-      this.bucketName = this.generateSlug(path.basename(directory), this.options);
-      this.directory = this.generateSlug(path.dirname(directory), this.options);
+    const { directory, slug, mode } = this.parseConfig(config);
+    if (slug) {
+      this.slug = slug;
     }
-    // console.log(this.bucketName, this.directory);
+    if (mode) {
+      this.mode = mode;
+    }
+
+    this.directory = this.generateSlug(path.dirname(directory), this.slug);
+    this.bucketName = this.generateSlug(path.basename(directory), this.slug);
+    // console.log("INIT", this.directory, this.bucketName);
+
     this.config = {
       type: this.type,
       directory,
-      bucketName,
-      options,
+      mode,
+      slug,
     };
-  }
-
-  async init(): Promise<boolean> {
-    await this.createDirectory(path.join(this.directory, this.bucketName));
-    this.initialized = true;
-    return true;
   }
 
   private parseConfig(config: string | ConfigLocal): ConfigLocal {
     let cfg: ConfigLocal;
     if (typeof config === "string") {
-      const { type, part1: directory, bucketName, options } = parseUrl(config);
+      const qm = config.indexOf("?");
+      const sep = config.indexOf("://");
+      const type = config.substring(0, sep);
+      const { slug, mode } = getOptions(config);
+      const end = qm !== -1 ? qm : config.length;
+      const directory = config.substring(sep + 3, end);
+      // console.log("DIR", directory, end, qm);
       cfg = {
         type,
         directory,
-        bucketName,
-        options,
+        slug: slug === "true",
+        mode: mode as string,
       };
       // console.log(cfg);
     } else {
@@ -63,6 +62,12 @@ export class AdapterLocal extends AbstractAdapter {
       throw new Error("You must specify a value for 'directory' for storage type 'local'");
     }
     return cfg;
+  }
+
+  async init(): Promise<boolean> {
+    await this.createDirectory(path.join(this.directory, this.bucketName));
+    this.initialized = true;
+    return true;
   }
 
   /**
@@ -77,7 +82,7 @@ export class AdapterLocal extends AbstractAdapter {
       await fs.promises
         .mkdir(path, {
           recursive: true,
-          mode: parseMode(this.options.mode as string | number),
+          mode: parseMode(this.mode as string | number),
         })
         .catch(e => {
           throw e;
@@ -124,7 +129,7 @@ export class AdapterLocal extends AbstractAdapter {
     if (msg !== null) {
       return Promise.reject(msg);
     }
-    const bn = this.generateSlug(name);
+    const bn = this.generateSlug(name, this.slug);
     // console.log(bn, name);
     const created = await this.createDirectory(path.join(this.directory, bn));
     if (created) {
@@ -137,7 +142,7 @@ export class AdapterLocal extends AbstractAdapter {
     let bn = name || this.bucketName;
     // console.log(`clear bucket "${bn}"`);
     // slugify in case an un-slugified name is supplied
-    bn = this.generateSlug(bn);
+    bn = this.generateSlug(bn, this.slug);
     if (!bn) {
       return;
     }
@@ -156,7 +161,7 @@ export class AdapterLocal extends AbstractAdapter {
   async deleteBucket(name?: string): Promise<void> {
     let bn = name || this.bucketName;
     // slugify in case an un-slugified name is supplied
-    bn = this.generateSlug(bn);
+    bn = this.generateSlug(bn, this.slug);
     if (!bn) {
       return;
     }
