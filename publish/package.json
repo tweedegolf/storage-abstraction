@@ -22,24 +22,8 @@
     "ramda": "^0.26.1",
     "rimraf": "^3.0.0"
   },
-  "devDependencies": {
-    "@types/node": "^12.12.35",
-    "@typescript-eslint/eslint-plugin": "^2.27.0",
-    "@typescript-eslint/parser": "^2.27.0",
-    "dotenv": "^8.2.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-prettier": "^3.1.2",
-    "prettier": "^1.19.1",
-    "ts-node": "^8.8.2",
-    "tsc-watch": "^4.0.0",
-    "typescript": "^3.7.3"
-  },
-  "scripts": {
-    "tsc": "node_modules/.bin/tsc",
-    "prepublishOnly": "npm run tsc",
-    "peerdependencies": "npm i -D glob rimraf @google-cloud/storage ramda aws-sdk backblaze-b2 @gideo-llc/backblaze-b2-upload-any"
-  },
+  "devDependencies": {},
+  "scripts": {},
   "keywords": [
     "storage",
     "storage abstraction",
@@ -52,42 +36,5 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
-  },
-  "prettier": {
-    "semi": true,
-    "trailingComma": "es5",
-    "printWidth": 100
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true,
-      "browser": true,
-      "es6": true,
-      "jasmine": true
-    },
-    "globals": {},
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "prettier"
-    ],
-    "ignorePatterns": [
-      "node_modules/",
-      "dist/"
-    ],
-    "rules": {
-      "prettier/prettier": "error",
-      "no-dupe-class-members": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-inferrable-types": "off",
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/interface-name-prefix": "off",
-      "@typescript-eslint/no-var-requires": "off"
-    },
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "prettier"
-    ]
   }
 }

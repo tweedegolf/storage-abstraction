@@ -29,7 +29,6 @@ const getConfiguration = (): ConfigBackblazeB2 => {
 // const init = (): Promise<boolean> => Promise.resolve(true);
 const getType = (): string => "string";
 // const getConfiguration = (): AdapterConfig => ({} as AdapterConfig);
-const getOptions = (): TypeJSON => ({});
 const test = (): Promise<string> => Promise.resolve("ok");
 const createBucket = (name: string): Promise<string> => Promise.resolve("ok");
 const selectBucket = (name?: string | null): Promise<void> => Promise.resolve();
@@ -60,7 +59,6 @@ const adapter: IStorage = {
   init,
   getType: () => StorageType.B2,
   getConfiguration,
-  getOptions: () => ({}),
   test,
   createBucket,
   selectBucket,

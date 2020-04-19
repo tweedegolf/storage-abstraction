@@ -67,18 +67,20 @@ if (type === StorageType.LOCAL) {
     config = configUrl;
   }
 }
-console.log("CONFIG", config);
+
+const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
+
+console.log("CONFIG", config, newBucketName, "\n");
 
 let storage: Storage;
 try {
   storage = new Storage(config);
+  storage.init();
   console.log(storage.getConfiguration());
 } catch (e) {
   console.error(`\x1b[31m${e.message}`);
   process.exit(0);
 }
-
-const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 
 const waitABit = async (millis = 100): Promise<void> =>
   new Promise(resolve => {
@@ -115,7 +117,7 @@ describe(`testing ${storage.getType()} storage`, () => {
   });
 
   it("create bucket", async () => {
-    console.log(storage.getSelectedBucket());
+    // console.log(storage.getSelectedBucket());
     await expectAsync(storage.createBucket(storage.getSelectedBucket())).toBeResolved();
   });
 
@@ -299,7 +301,12 @@ describe(`testing ${storage.getType()} storage`, () => {
   });
 
   it("selected bucket", async () => {
-    expect(storage.getSelectedBucket()).toBe(slugify(bucketName));
+    // local storage does not automatically slugify
+    if (storage.getType() === "local") {
+      expect(storage.getSelectedBucket()).not.toBe(slugify(bucketName));
+    } else {
+      expect(storage.getSelectedBucket()).toBe(slugify(bucketName));
+    }
   });
 
   it("select bucket", async () => {
