@@ -25,7 +25,6 @@
     "dist",
     "adapters",
     "src/template_class.ts",
-    "src/template_functional.ts",
-    "src/AdapterBackblazeB2.ts"
+    "src/template_functional.ts"
   ]
 }

@@ -70,18 +70,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     // check if the bucket already exists
     if (this.bucketName) {
-      try {
-        const {
-          data: { buckets },
-        } = await this.storage.getBucket({ bucketName: this.bucketName });
-        this.buckets = buckets;
-        this.bucketId = this.getBucketId();
-      } catch (e) {
-        throw new Error(e.message);
-      }
-    }
-    // create new bucket if it doesn't exist
-    if (!this.bucketId) {
+      // create new bucket if it doesn't exist
       await this.createBucket(this.bucketName);
       this.bucketId = this.getBucketId();
     }
@@ -153,6 +142,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // util function for findBucket
   private findBucketLocal(name: string): BackblazeB2Bucket | null {
+    if (this.buckets.length === 0) {
+      return null;
+    }
     const index = this.buckets.findIndex(b => b.bucketName === name);
     if (index !== -1) {
       return this.buckets[index];
@@ -210,18 +202,18 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return;
     }
 
-    return this.storage
+    const d = await this.storage
       .createBucket({
         bucketName: n,
         bucketType: "allPrivate", // should be a config option!
       })
-      .then(d => {
-        this.buckets.push(d.data[0]);
-        return;
-      })
       .catch(e => {
-        return e.response.data.message;
+        throw new Error(e.response.data.message);
       });
+
+    this.buckets.push(d.data);
+    // console.log("createBucket", this.buckets, d.data);
+    return "ok";
   }
 
   async selectBucket(name: string): Promise<string> {

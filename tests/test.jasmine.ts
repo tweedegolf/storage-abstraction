@@ -73,14 +73,14 @@ const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 console.log("CONFIG", config, newBucketName, "\n");
 
 let storage: Storage;
-try {
-  storage = new Storage(config);
-  storage.init();
-  console.log(storage.getConfiguration());
-} catch (e) {
-  console.error(`\x1b[31m${e.message}`);
-  process.exit(0);
-}
+// try {
+//   storage = new Storage(config);
+//   await storage.init();
+//   console.log(storage.getConfiguration());
+// } catch (e) {
+//   console.error(`\x1b[31m${e.message}`);
+//   process.exit(0);
+// }
 
 const waitABit = async (millis = 100): Promise<void> =>
   new Promise(resolve => {
@@ -90,7 +90,14 @@ const waitABit = async (millis = 100): Promise<void> =>
     }, millis);
   });
 
-describe(`testing ${storage.getType()} storage`, () => {
+describe(`testing ${type} storage`, async () => {
+  // beforeAll(async () => {
+  //   storage = new Storage(config);
+  //   await storage.init();
+  //   console.log("beforeAll");
+  //   console.log(storage.getConfiguration());
+  // });
+
   beforeEach(() => {
     // increase this value if you experience a lot of timeouts
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
@@ -105,6 +112,16 @@ describe(`testing ${storage.getType()} storage`, () => {
     rimraf(path.join(process.cwd(), `test-*.jpg`), () => {
       console.log("all cleaned up!");
     });
+  });
+
+  it("init", async () => {
+    try {
+      storage = new Storage(config);
+      await storage.init();
+    } catch (e) {
+      console.error(e);
+      return;
+    }
   });
 
   it("test", async () => {

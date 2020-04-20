@@ -120,7 +120,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     await file.download({ destination: localFilename });
   }
 
-  async removeFile(fileName: string): Promise<void> {
+  async removeFile(fileName: string): Promise<string> {
     try {
       await this.storage
         .bucket(this.bucketName)
@@ -228,7 +228,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     //   });
   }
 
-  async selectBucket(name: string | null): Promise<void> {
+  async selectBucket(name: string | null): Promise<string> {
     if (name === null) {
       this.bucketName = "";
       return;
@@ -241,13 +241,14 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     this.bucketName = name;
   }
 
-  async clearBucket(name?: string): Promise<void> {
+  async clearBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = this.generateSlug(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
+    return "ok";
   }
 
-  async deleteBucket(name?: string): Promise<void> {
+  async deleteBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = this.generateSlug(n);
     await this.clearBucket(n);
@@ -257,6 +258,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       this.bucketName = "";
     }
     this.bucketNames = this.bucketNames.filter(b => b !== n);
+    return "ok";
   }
 
   async listBuckets(): Promise<string[]> {

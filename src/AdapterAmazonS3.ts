@@ -84,12 +84,13 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return this.storage.getObject(params).createReadStream();
   }
 
-  async removeFile(fileName: string): Promise<void> {
+  async removeFile(fileName: string): Promise<string> {
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
     };
     await this.storage.deleteObject(params).promise();
+    return "ok";
   }
 
   // util members
@@ -127,16 +128,18 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async selectBucket(name: string | null): Promise<void> {
+  async selectBucket(name: string | null): Promise<string> {
+    // add check if bucket exists!
     if (name === null) {
       this.bucketName = "";
       return;
     }
     await this.createBucket(name);
     this.bucketName = name;
+    return "ok";
   }
 
-  async clearBucket(name?: string): Promise<void> {
+  async clearBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = this.generateSlug(n);
     // console.log('clearBucket', n);
@@ -157,9 +160,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       },
     };
     await this.storage.deleteObjects(params2).promise();
+    return "ok";
   }
 
-  async deleteBucket(name?: string): Promise<void> {
+  async deleteBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = this.generateSlug(n);
     // try {

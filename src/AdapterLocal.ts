@@ -138,7 +138,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async clearBucket(name?: string): Promise<void> {
+  async clearBucket(name?: string): Promise<string> {
     let bn = name || this.bucketName;
     // console.log(`clear bucket "${bn}"`);
     // slugify in case an un-slugified name is supplied
@@ -158,7 +158,7 @@ export class AdapterLocal extends AbstractAdapter {
     });
   }
 
-  async deleteBucket(name?: string): Promise<void> {
+  async deleteBucket(name?: string): Promise<string> {
     let bn = name || this.bucketName;
     // slugify in case an un-slugified name is supplied
     bn = this.generateSlug(bn, this.slug);
@@ -179,7 +179,7 @@ export class AdapterLocal extends AbstractAdapter {
     });
   }
 
-  async selectBucket(name?: string | null): Promise<void> {
+  async selectBucket(name?: string | null): Promise<string> {
     if (!name) {
       this.bucketName = "";
       return;
@@ -233,7 +233,7 @@ export class AdapterLocal extends AbstractAdapter {
     return fs.createReadStream(p, options);
   }
 
-  async removeFile(fileName: string): Promise<void> {
+  async removeFile(fileName: string): Promise<string> {
     const p = path.join(this.directory, this.bucketName, fileName);
     const [err] = await to(fs.promises.unlink(p));
     if (err !== null) {

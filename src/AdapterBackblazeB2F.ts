@@ -3,7 +3,8 @@ import path from "path";
 import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
-// require("@gideo-llc/backblaze-b2-upload-any").install(B2);
+require("@gideo-llc/backblaze-b2-upload-any").install(B2);
+
 import {
   StorageType,
   IStorage,
@@ -31,9 +32,9 @@ const getType = (): string => "string";
 // const getConfiguration = (): AdapterConfig => ({} as AdapterConfig);
 const test = (): Promise<string> => Promise.resolve("ok");
 const createBucket = (name: string): Promise<string> => Promise.resolve("ok");
-const selectBucket = (name?: string | null): Promise<void> => Promise.resolve();
-const clearBucket = (name?: string): Promise<void> => Promise.resolve();
-const deleteBucket = (name?: string): Promise<void> => Promise.resolve();
+const selectBucket = (name?: string | null): Promise<string> => Promise.resolve("ok");
+const clearBucket = (name?: string): Promise<string> => Promise.resolve("ok");
+const deleteBucket = (name?: string): Promise<string> => Promise.resolve("ok");
 const listBuckets = (): Promise<string[]> => Promise.resolve(["string", "string"]);
 const getSelectedBucket = (): string => "string";
 const addFileFromPath = (origPath: string, targetPath: string): Promise<void> => Promise.resolve();
@@ -50,7 +51,7 @@ const getFileAsReadable = (
     end?: number;
   }
 ): Promise<ReadStream> => Promise.resolve(fs.createReadStream(""));
-const removeFile = (name: string): Promise<void> => Promise.resolve();
+const removeFile = (name: string): Promise<string> => Promise.resolve("ok");
 const listFiles = (numFiles?: number): Promise<[string, number][]> => Promise.resolve([["s", 0]]);
 const sizeOf = (name: string): Promise<number> => Promise.resolve(42);
 const fileExists = (name: string): Promise<boolean> => Promise.resolve(true);
