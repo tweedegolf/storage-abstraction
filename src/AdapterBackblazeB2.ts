@@ -1,7 +1,4 @@
 import B2 from "backblaze-b2";
-import fs from "fs";
-import path from "path";
-import to from "await-to-js";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { StorageType, ConfigBackblazeB2, BackblazeB2Bucket, BackblazeB2File } from "./types";
@@ -12,7 +9,7 @@ require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected type = StorageType.B2;
   private bucketId: string;
-  private storage: B2;
+  private storage: any; // create @types for this library
   private buckets: BackblazeB2Bucket[] = [];
   private files: BackblazeB2File[] = [];
   private nextFileName: string;
@@ -71,32 +68,34 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } catch (e) {
       throw new Error(e.message);
     }
+    // check if the bucket already exists
     if (this.bucketName) {
       try {
         const {
           data: { buckets },
         } = await this.storage.getBucket({ bucketName: this.bucketName });
         this.buckets = buckets;
-        this.getBucketId();
+        this.bucketId = this.getBucketId();
       } catch (e) {
         throw new Error(e.message);
       }
     }
+    // create new bucket if it doesn't exist
     if (!this.bucketId) {
       await this.createBucket(this.bucketName);
-      this.getBucketId();
+      this.bucketId = this.getBucketId();
     }
     this.initialized = true;
     return true;
   }
 
-  private getBucketId(): void {
+  private getBucketId(): string {
     // console.log(this.buckets);
     const index = this.buckets.findIndex(
       (b: BackblazeB2Bucket) => b.bucketName === this.bucketName
     );
     if (index !== -1) {
-      this.bucketId = this.buckets[index].bucketId;
+      return this.buckets[index].bucketId;
     }
   }
 
@@ -108,44 +107,67 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (file === null) {
       throw new Error("file not found");
     }
-    // console.log(`bytes ${options.start}-${options.end}/${file.contentLength}`);
     const d = await this.storage.downloadFileById({
       fileId: file.fileId,
-      // options are as in axios: 'arraybuffer', 'blob', 'document', 'json', 'text', 'stream'
       responseType: "stream",
-      // progress monitoring
-      // onDownloadProgress: event => {
-      //   console.log("progress", event);
-      // },
-      // ...common arguments (optional)
-      headers: {
-        "Content-Type": file.contentType,
-        "Content-Range": `bytes ${options.start}-${options.end}/${file.contentLength}}`,
+      axios: {
+        headers: {
+          "Content-Type": file.contentType,
+          Range: `bytes=${options.start}-${options.end}`,
+        },
       },
     });
-    // console.log(d);
     return d.data;
   }
 
-  async removeFile(name: string): Promise<void> {
-    const file = await this.findFile(name);
-    if (file === null) {
-      throw new Error("file not found");
+  async removeFile(name: string): Promise<string> {
+    if (!this.bucketName) {
+      throw new Error("Please select a bucket first");
     }
-    const { fileId, fileName } = file;
-    this.storage.deleteFileVersion({
-      fileId,
-      fileName,
+
+    const n = this.generateSlug(name);
+
+    const file = await this.findFile(n);
+    if (file === null) {
+      return `file ${name} not found`;
+    }
+
+    const {
+      data: { files },
+    } = await this.storage.listFileVersions({
+      bucketId: this.bucketId,
     });
+
+    Promise.all(
+      files
+        .filter((f: BackblazeB2File) => f.fileName === n)
+        .map(({ fileId, fileName }) =>
+          this.storage.deleteFileVersion({
+            fileId,
+            fileName,
+          })
+        )
+    );
+    this.files = this.files.filter(file => file.fileName !== name);
+  }
+
+  // util function for findBucket
+  private findBucketLocal(name: string): BackblazeB2Bucket | null {
+    const index = this.buckets.findIndex(b => b.bucketName === name);
+    if (index !== -1) {
+      return this.buckets[index];
+    }
+    return null;
   }
 
   // check if we have accessed and stored the bucket earlier
-  protected checkBucket(name: string): BackblazeB2Bucket | null {
-    const index = this.buckets.findIndex(b => b.bucketName === name);
-    if (index === -1) {
-      return null;
+  private async findBucket(name: string): Promise<BackblazeB2Bucket | null> {
+    const b = this.findBucketLocal(name);
+    if (b !== null) {
+      return b;
     }
-    return this.buckets[index];
+    await this.listBuckets();
+    return this.findBucketLocal(name);
   }
 
   public getSelectedBucket(): string | null {
@@ -162,25 +184,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       throw new Error("Please select a bucket first");
     }
     await this.createBucket(this.bucketName);
-
-    let readStream: Readable;
-    if (typeof arg === "string") {
-      await fs.promises.stat(arg); // throws error if path doesn't exist
-      readStream = fs.createReadStream(arg);
-    } else if (arg instanceof Buffer) {
-      readStream = new Readable();
-      readStream._read = (): void => {}; // _read is required but you can noop it
-      readStream.push(arg);
-      readStream.push(null);
-    } else if (arg instanceof Readable) {
-      readStream = arg;
-    }
-
     try {
       const file: BackblazeB2File = await this.storage.uploadAny({
         bucketId: this.bucketId,
         fileName: targetPath,
-        data: readStream,
+        data: arg,
       });
       this.files.push(file);
       return;
@@ -196,57 +204,91 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const n = this.generateSlug(name);
-    if (this.checkBucket(n)) {
+
+    const b = await this.findBucket(n);
+    if (b !== null) {
       return;
     }
 
-    const d = await this.storage.createBucket({
-      bucketName: this.bucketName,
-      bucketType: "allPrivate",
-    });
-    this.buckets.push(d.data[0]);
+    return this.storage
+      .createBucket({
+        bucketName: n,
+        bucketType: "allPrivate", // should be a config option!
+      })
+      .then(d => {
+        this.buckets.push(d.data[0]);
+        return;
+      })
+      .catch(e => {
+        return e.response.data.message;
+      });
   }
 
-  async selectBucket(name: string): Promise<void> {
+  async selectBucket(name: string): Promise<string> {
     if (!name) {
       this.bucketName = "";
       return;
     }
+
     if (name === this.bucketName) {
       return;
     }
-    const b = this.checkBucket(name);
-    if (b) {
+
+    const b = await this.findBucket(name);
+    if (b !== null) {
       this.bucketName = name;
       this.bucketId = b.bucketId;
       this.files = [];
       return;
     }
-    const [error] = await to(this.createBucket(name));
-    if (error !== null) {
-      throw error;
-    }
+
+    // return `bucket ${name} not found`;
+    await this.createBucket(name);
     this.bucketName = name;
-    this.getBucketId();
+    this.bucketId = this.getBucketId();
     this.files = [];
   }
 
-  async clearBucket(name?: string): Promise<void> {
+  async clearBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = super.generateSlug(n);
-    await this.storage.bucket(n).deleteFiles({ force: true });
+
+    const b = await this.findBucket(n);
+    if (b === null) {
+      return `bucket "${name} not found"`;
+    }
+
+    const {
+      data: { files },
+    } = await this.storage.listFileVersions({
+      bucketId: b.bucketId,
+    });
+
+    await Promise.all(
+      files.map((file: BackblazeB2File) =>
+        this.storage.deleteFileVersion({
+          fileId: file.fileId,
+          fileName: file.fileName,
+        })
+      )
+    );
+
+    return "ok";
   }
 
-  async deleteBucket(name?: string): Promise<void> {
+  async deleteBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = super.generateSlug(n);
-    await this.clearBucket(n);
-    const data = await this.storage.bucket(n).delete();
-    // console.log(data);
-    if (n === this.bucketName) {
-      this.bucketName = "";
+
+    const b = await this.findBucket(n);
+    if (b === null) {
+      return `bucket "${name}" not found`;
     }
+
+    const { bucketId } = b;
+    await this.storage.deleteBucket({ bucketId });
     this.buckets = this.buckets.filter(b => b.bucketName !== n);
+    return "ok";
   }
 
   async listBuckets(): Promise<string[]> {
@@ -267,13 +309,15 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (!this.bucketName) {
       throw new Error("Please select a bucket first");
     }
+
     const {
       data: { files, nextFileName },
     } = await this.storage.listFileNames({
       bucketId: this.bucketId,
       maxFileCount: numFiles,
     });
-    this.files.push(...files);
+
+    this.files = [...files];
     this.nextFileName = nextFileName;
     return this.files.map(f => [f.fileName, f.contentLength]);
   }

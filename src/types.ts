@@ -63,19 +63,19 @@ export interface IStorage {
    * will be created. Note that the provided name will be slugified. If you pass null, "" or no value the
    * currently selected bucket will be deselected.
    */
-  selectBucket(name?: string | null): Promise<void>;
+  selectBucket(name?: string | null): Promise<string>;
 
   /**
    * @param name?: deletes all file in the bucket. If no name is provided the currently selected bucket
    * of the storage will be emptied. If no bucket is selected an error will be thrown.
    */
-  clearBucket(name?: string): Promise<void>;
+  clearBucket(name?: string): Promise<string>;
 
   /**
    * @param name?: deletes the bucket with this name. If no name is provided the currently selected bucket
    * of the storage will be deleted. If no bucket is selected an error will be thrown.
    */
-  deleteBucket(name?: string): Promise<void>;
+  deleteBucket(name?: string): Promise<string>;
 
   /**
    * Retrieves a list of the names of the buckets in this storage
@@ -121,7 +121,7 @@ export interface IStorage {
   /**
    * @param name: name of the file to be removed
    */
-  removeFile(name: string): Promise<void>;
+  removeFile(name: string): Promise<string>;
 
   /**
    * Returns an array of tuples containing the file path and the file size of all files in the currently

@@ -95,11 +95,11 @@ export class Storage implements IStorage {
     return this.adapter.createBucket(name);
   }
 
-  async clearBucket(name?: string): Promise<void> {
+  async clearBucket(name?: string): Promise<string> {
     return this.adapter.clearBucket(name);
   }
 
-  async deleteBucket(name?: string): Promise<void> {
+  async deleteBucket(name?: string): Promise<string> {
     return this.adapter.deleteBucket(name);
   }
 
@@ -120,7 +120,7 @@ export class Storage implements IStorage {
     return this.adapter.getFileAsReadable(name, { start, end });
   }
 
-  async removeFile(fileName: string): Promise<void> {
+  async removeFile(fileName: string): Promise<string> {
     return this.adapter.removeFile(fileName);
   }
 
@@ -128,7 +128,7 @@ export class Storage implements IStorage {
     return this.adapter.listFiles(numFiles);
   }
 
-  async selectBucket(name?: string): Promise<void> {
+  async selectBucket(name?: string): Promise<string> {
     return this.adapter.selectBucket(name);
   }
 

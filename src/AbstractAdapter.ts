@@ -64,13 +64,13 @@ export abstract class AbstractAdapter implements IStorage {
 
   abstract async init(): Promise<boolean>;
 
-  abstract async selectBucket(name: string | null): Promise<void>;
+  abstract async selectBucket(name: string | null): Promise<string>;
 
   abstract async createBucket(name: string): Promise<string>;
 
-  abstract async clearBucket(name?: string): Promise<void>;
+  abstract async clearBucket(name?: string): Promise<string>;
 
-  abstract async deleteBucket(name?: string): Promise<void>;
+  abstract async deleteBucket(name?: string): Promise<string>;
 
   abstract async listBuckets(): Promise<string[]>;
 
@@ -79,7 +79,7 @@ export abstract class AbstractAdapter implements IStorage {
     options?: { start?: number; end?: number }
   ): Promise<Readable>;
 
-  abstract async removeFile(fileName: string): Promise<void>;
+  abstract async removeFile(fileName: string): Promise<string>;
 
   abstract async listFiles(): Promise<[string, number][]>;
 
