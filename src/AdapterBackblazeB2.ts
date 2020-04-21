@@ -1,12 +1,7 @@
 import B2 from "backblaze-b2";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-import {
-  StorageType,
-  ConfigBackblazeB2,
-  BackblazeB2Bucket,
-  BackblazeB2File,
-} from "./types";
+import { StorageType, ConfigBackblazeB2, BackblazeB2Bucket, BackblazeB2File } from "./types";
 import { parseUrl } from "./util";
 
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
@@ -53,7 +48,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         ...queryString,
       };
     } else {
-      cfg = config;
+      cfg = { ...config };
     }
     if (!cfg.applicationKey || !cfg.applicationKeyId) {
       throw new Error(
@@ -177,10 +172,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string
-  ): Promise<void> {
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (!this.bucketName) {
       throw new Error("no bucket selected");
     }

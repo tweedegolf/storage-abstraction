@@ -62,7 +62,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         ...queryString,
       };
     } else {
-      cfg = config;
+      cfg = { ...config };
     }
     if (!cfg.keyFilename) {
       throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");

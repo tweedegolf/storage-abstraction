@@ -165,7 +165,7 @@ const run = async (): Promise<void> => {
   //   .then(() => test(new Storage(configS3)))
   //   .then(() => test(new Storage(configGoogle)))
   //   .then(() => test(new Storage(configBackblaze)))
-  //   // .then(() => test(new Storage(process.env.STORAGE_URL)))
+  //   .then(() => test(new Storage(process.env.CONFIG_URL)))
   //   .then(() => {
   //     console.log("done");
   //   })

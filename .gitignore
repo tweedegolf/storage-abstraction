@@ -1,5 +1,4 @@
 .vscode
-adapters
 node_modules
 publish/dist
 sensitive

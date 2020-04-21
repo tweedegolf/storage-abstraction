@@ -59,7 +59,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...queryString,
       };
     } else {
-      cfg = config;
+      cfg = { ...config };
     }
 
     if (!cfg.accessKeyId || !cfg.secretAccessKey) {

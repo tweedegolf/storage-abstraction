@@ -84,7 +84,8 @@ export class AdapterTemplate extends AbstractAdapter {
         ...queryString,
       };
     } else {
-      cfg = config;
+      // don't forget to clone!
+      cfg = { ...config };
     }
     if (!cfg.someKey || !cfg.someOtherKey) {
       throw new Error(

@@ -45,3 +45,4 @@
 - If no bucket name is provided the bucket name will always be an empty string "", not `undefined` or `null`. Also when no bucket is selected `bucketName` will be "".
 - Adapter modules are only loaded when needed (using `require`)
 - Removed options from both configuration and adapters.
+- Formalized return values

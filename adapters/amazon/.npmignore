@@ -1,7 +1,0 @@
-node_modules/
-.env
-.env-default
-.gitignore
-package-lock.json
-tsconfig.json
-yarn.lock

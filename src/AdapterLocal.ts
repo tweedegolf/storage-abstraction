@@ -56,7 +56,7 @@ export class AdapterLocal extends AbstractAdapter {
       };
       // console.log(cfg);
     } else {
-      cfg = config;
+      cfg = { ...config };
     }
     if (!cfg.directory) {
       throw new Error("You must specify a value for 'directory' for storage type 'local'");
