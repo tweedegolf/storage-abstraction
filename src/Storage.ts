@@ -46,15 +46,15 @@ export class Storage implements IStorage {
   }
 
   public switchAdapter(args: string | AdapterConfig): void {
-    console.log(args);
+    // console.log(args);
     let type: string;
     if (typeof args === "string") {
       type = args.substring(0, args.indexOf("://"));
     } else {
       type = args.type;
     }
-    console.log("type", type);
-    console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
+    // console.log("type", type);
+    // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
     if (!adapterClasses[type] && !adapterFunctions[type]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
