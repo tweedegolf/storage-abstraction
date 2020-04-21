@@ -1,197 +1,201 @@
 import fs from "fs";
 import path from "path";
-import {
-  StorageConfig,
-  StorageType,
-  ConfigGoogleCloud,
-  ConfigAmazonS3,
-  ConfigLocal,
-} from "./types";
+import { GenericKey } from "./types";
+import slugify from "slugify";
 
-const allowedOptionsAmazonS3 = {
-  bucketName: "string",
-  endpoint: "string",
-  useDualstack: "boolean",
-  region: "string",
-  maxRetries: "number",
-  maxRedirects: "number",
-  sslEnabled: "boolean",
-  apiVersion: "string",
+/**
+ * @param: url
+ *
+ * strips off the querystring of an url and returns it as an object
+ */
+export const parseQuerystring = (url: string): { [id: string]: string } => {
+  let options = {};
+  const questionMark = url.indexOf("?");
+  if (questionMark !== -1) {
+    options = url
+      .substring(questionMark + 1)
+      .split("&")
+      .map(pair => pair.split("="))
+      .reduce((acc, val) => {
+        // acc[val[0]] = `${val[1]}`.valueOf();
+        acc[val[0]] = val[1];
+        return acc;
+      }, {});
+  }
+  return options;
 };
 
-// get the project_id from the keyFile
-const getGCSProjectId = (config: string): string => {
-  const data = fs.readFileSync(config).toString("utf-8");
-  const json = JSON.parse(data);
+/**
+ * @param url
+ * Parses a url string into fragments and parses the query string into a
+ * key-value object.
+ */
+export const parseUrl = (
+  url: string
+): {
+  type: string;
+  part1: string;
+  part2: string;
+  part3: string;
+  bucketName: string;
+  queryString: { [key: string]: string };
+} => {
+  if (url === "" || typeof url === "undefined") {
+    throw new Error("please provide a configuration url");
+  }
+  const type = url.substring(0, url.indexOf("://"));
+  let config = url.substring(url.indexOf("://") + 3);
+  const at = config.indexOf("@");
+  const questionMark = config.indexOf("?");
+  const colon = config.indexOf(":");
+  let part1 = "";
+  let part2 = "";
+  let part3 = "";
+  let bucketName = "";
+
+  // parse options
+  const queryString: { [key: string]: string } = parseQuerystring(url);
+  if (questionMark !== -1) {
+    config = config.substring(0, questionMark);
+  }
+
+  // get bucket name and region
+  let bucketString = "";
+  if (at !== -1) {
+    bucketString = config.substring(at + 1);
+    const slash = bucketString.indexOf("/");
+    if (slash !== -1) {
+      // Amazon S3 @region/bucket
+      bucketName = bucketString.substring(slash + 1);
+      part3 = bucketString.substring(0, slash);
+    } else {
+      bucketName = bucketString;
+    }
+    config = config.substring(0, at);
+  }
+
+  // get credentials
+  if (colon !== -1) {
+    [part1, part2] = config.split(":");
+  } else {
+    part1 = config;
+  }
+
+  // console.log(type, part1, part2, region, bucketName, queryString);
+  return { type, part1, part2, part3, bucketName, queryString };
+};
+
+/**
+ * @param s
+ *
+ * Parses a string that contains a radix prefix to a number
+ *
+ */
+export const parseIntFromString = (s: string): number => {
+  if (s.startsWith("0o")) {
+    return parseInt(s, 8);
+  }
+  if (s.startsWith("0x") || s.startsWith("0X")) {
+    return parseInt(s, 16);
+  }
+  if (s.startsWith("0b") || s.startsWith("0B")) {
+    return parseInt(s, 2);
+  }
+  return parseInt(s);
+};
+
+export const parseMode = (s: number | string): number | string => {
+  if (typeof s === "number") {
+    if (s < 0) {
+      throw new Error(
+        `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${s}`
+      );
+    }
+    return s;
+  }
+  if (s.startsWith("0o")) {
+    return s.substring(2);
+  }
+  return s;
+};
+
+/**
+ * @param: url
+ *
+ * strips off the protocol of an url and returns it
+ */
+export const getProtocol = (url: string): string => {
+  return;
+};
+
+/**
+ * @param p
+ * @param settings
+ *
+ * Slugifies a path if `slug` is true
+ */
+export const generateSlugPath = (p: string, slug: boolean | number | string): string => {
+  if (slug === "true" || slug === true || slug == 1) {
+    const paths = p.split("/").map(d => slugify(d));
+    return path.join(...paths);
+  }
+  return p;
+};
+
+/**
+ * @param url
+ * @param doSlug
+ *
+ * Slugifies a url if the `slug` is true
+ */
+export const generateSlug = (url: string, slug: boolean | number | string): string => {
+  if (!url || url === "null" || url === "undefined") {
+    return "";
+  }
+  if (url.indexOf("/") !== -1) {
+    return generateSlugPath(url, slug);
+  }
+  if (slug === "true" || slug === true || slug == 1) {
+    const s = slugify(url);
+    return s;
+  }
+  return url;
+};
+
+/**
+ * @param name
+ *
+ * Checks if the value of the name is not null or undefined
+ */
+export const validateName = (name: string): string => {
+  if (name === null) {
+    // throw new Error("Can not use `null` as bucket name");
+    return "Can not use `null` as bucket name";
+  }
+  if (name === "null") {
+    return 'Can not use "null" as bucket name';
+  }
+  if (name === "undefined") {
+    return 'Can not use "undefined" as bucket name';
+  }
+  if (name === "" || typeof name === "undefined") {
+    // throw new Error("Please provide a bucket name");
+    return "Please provide a bucket name";
+  }
+  return null;
+};
+
+/*
+// not in use, keep for reference
+export const getGCSProjectIdAsync = async (config: string): Promise<string> => {
+  const data = await fs.promises.readFile(config).catch(e => {
+    throw e;
+  });
+  const json = JSON.parse(data.toString("utf-8"));
   return json.project_id;
 };
 
-// create local bucket if it doesn't exist
-const createLocalBucket = (directory: string, bucketName: string): void => {
-  const p = path.join(directory, bucketName);
-  const exists = fs.existsSync(p);
-  // console.log("constructor", config, exists);
-  if (!exists) {
-    fs.mkdir(p, { recursive: true }, err => {
-      if (err) {
-        throw err;
-      }
-    });
-  }
-};
-
-export const parseUrlString = (url: string): [string, StorageConfig] => {
-  let type = "";
-  let config = "";
-  if (url === "" || typeof url === "undefined") {
-    type = StorageType.LOCAL;
-  } else {
-    type = url.substring(0, url.indexOf("://"));
-    config = url.substring(url.indexOf("://") + 3);
-  }
-  // console.log("[URL]", url);
-  if (type === StorageType.LOCAL) {
-    if (config === "") {
-      config = path.join(process.cwd(), "local-bucket");
-    }
-    const bucketName = path.basename(config);
-    const directory = path.dirname(config);
-    createLocalBucket(directory, bucketName);
-    return [
-      type,
-      {
-        directory,
-        bucketName,
-      },
-    ];
-  } else if (type === StorageType.S3) {
-    const at = config.indexOf("@");
-    let questionMark = config.indexOf("?");
-    let credentials: string[] = [];
-    let region = "";
-    let bucketName = "";
-    let options: { [key: string]: string } = {};
-
-    if (at !== -1) {
-      credentials = config.substring(0, config.indexOf("@")).split(":");
-    } else {
-      const end = questionMark === -1 ? config.length : questionMark;
-      credentials = config.substring(0, end).split(":");
-    }
-    const [accessKeyId, secretAccessKey] = credentials;
-    if (!accessKeyId || !secretAccessKey) {
-      throw new Error("provide both an accessKeyId and a secretAccessKey!");
-    }
-
-    if (at !== -1) {
-      // remove credentials
-      config = config.substring(at + 1);
-      // position of question mark has shifted
-      questionMark = config.indexOf("?");
-      const end = config.length;
-      const slash = config.indexOf("/");
-      region = config.substring(0, slash !== -1 ? slash : end);
-      if (slash !== -1) {
-        bucketName = config.substring(slash + 1, questionMark !== -1 ? questionMark : end);
-      }
-    }
-
-    if (questionMark !== -1) {
-      options = config
-        .substring(questionMark + 1)
-        .split("&")
-        .map(pair => pair.split("="))
-        .reduce((acc, val) => {
-          const type = allowedOptionsAmazonS3[val[0]];
-          if (typeof type !== "undefined") {
-            const value = val[1];
-            if (type === "boolean") {
-              if (value === "true" || value === "false") {
-                acc[val[0]] = value === "true";
-              }
-            } else if (type === "number") {
-              const intVal = parseInt(value, 10);
-              if (!isNaN(intVal)) {
-                acc[val[0]] = intVal;
-              }
-            } else {
-              acc[val[0]] = val[1];
-            }
-          }
-          return acc;
-        }, {});
-    }
-    // console.log(accessKeyId, secretAccessKey, region, bucket, options);
-    return [
-      type,
-      {
-        accessKeyId,
-        secretAccessKey,
-        apiVersion: "2006-03-01", // will be overruled if apiVersion is provided in the config
-        region,
-        bucketName,
-        // note: if region and bucketName are present in the options object they will overrule the earlier set values
-        ...options,
-      },
-    ];
-  } else if (type === StorageType.GCS) {
-    const slash = config.lastIndexOf("/");
-    const colon = config.indexOf(":");
-    let bucketName = "";
-    let keyFilename = "";
-    let projectId = "";
-    if (slash !== -1) {
-      bucketName = config.substring(slash + 1);
-      config = config.substring(0, slash);
-    }
-    if (colon !== -1) {
-      [keyFilename, projectId] = config.split(":");
-    } else {
-      projectId = getGCSProjectId(config);
-      keyFilename = config.substring(0, config.length);
-    }
-    // console.log("[KF]", keyFilename, "[PI]", projectId, "[B]", bucketName);
-    return [type, { keyFilename, projectId, bucketName }];
-  } else {
-    throw new Error("Not a supported configuration");
-  }
-};
-
-export const parseConfig = (args: string | StorageConfig): [string, StorageConfig] => {
-  if (typeof args === "string" || typeof args === "undefined") {
-    return parseUrlString(args);
-  }
-  if ((args as ConfigGoogleCloud).keyFilename) {
-    if (!(args as ConfigGoogleCloud).projectId) {
-      const { bucketName, keyFilename } = args as ConfigGoogleCloud;
-      const clone: ConfigGoogleCloud = {
-        bucketName,
-        keyFilename,
-        projectId: getGCSProjectId(keyFilename),
-      };
-      return [StorageType.GCS, clone];
-    }
-    return [StorageType.GCS, args];
-  } else if ((args as ConfigAmazonS3).accessKeyId && (args as ConfigAmazonS3).secretAccessKey) {
-    return [StorageType.S3, args];
-  } else if ((args as ConfigLocal).directory || (args as ConfigLocal).bucketName) {
-    let { directory, bucketName } = args as ConfigLocal;
-    if (!bucketName && !directory) {
-      directory = process.cwd();
-      bucketName = "local-bucket";
-    } else if (!bucketName && directory) {
-      bucketName = path.basename(directory);
-      directory = path.dirname(directory);
-    } else if (bucketName && !directory) {
-      directory = process.cwd();
-    }
-    createLocalBucket(directory, bucketName);
-    return [StorageType.LOCAL, { directory, bucketName }];
-  } else {
-    throw new Error("Not a supported configuration");
-  }
-};
-
+// not in use, keep for reference
 export const readFilePromise = (path: string): Promise<Buffer> =>
   new Promise(function(resolve, reject) {
     fs.readFile(path, function(err, data) {
@@ -202,3 +206,4 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
       }
     });
   });
+*/

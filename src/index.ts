@@ -1,14 +1,6 @@
 import { Storage } from "./Storage";
-// import { StorageLocal } from "./StorageLocal";
-// import { StorageAmazonS3 } from "./StorageAmazonS3";
-// import { StorageGoogleCloud } from "./StorageGoogleCloud";
-import { StorageConfig, StorageType } from "./types";
+// import { AbstractAdapter } from "./AbstractAdapter";
+// import { parseUrl } from "./util";
+import { StorageType, IStorage } from "./types";
 
-export {
-  StorageConfig,
-  StorageType,
-  Storage,
-  // StorageLocal,
-  // StorageAmazonS3,
-  // StorageGoogleCloud,
-};
+export { IStorage, StorageType, Storage };

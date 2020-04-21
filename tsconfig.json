@@ -3,7 +3,7 @@
     "target": "es5",
     "lib": ["es2016"],
     // "types": ["reflect-metadata"],
-    "outDir": "dist",
+    "outDir": "publish/dist",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -16,5 +16,15 @@
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/*.ts"],
-  "exclude": ["node_modules", "examples", "tests", "spec", "dist"]
+  // "include": ["src/index.ts"],
+  "exclude": [
+    "node_modules",
+    "examples",
+    "tests",
+    "spec",
+    "dist",
+    "adapters",
+    "src/template_class.ts",
+    "src/template_functional.ts"
+  ]
 }

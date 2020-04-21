@@ -1,50 +1,59 @@
 import dotenv from "dotenv";
-import os from "os";
+import uniquid from "uniquid";
 import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { IStorage } from "../src/types";
-import { Readable, Writable } from "stream";
+import { IStorage, StorageType } from "../src/types";
+import { copyFile } from "./util";
 dotenv.config();
 
-const copyFile = (readStream: Readable, writeStream: Writable): void => {
-  readStream
-    .pipe(writeStream)
-    .on("error", e => {
-      console.error("\x1b[31m", e, "\n");
-    })
-    .on("finish", () => {
-      console.log("read finished");
-    });
-  writeStream
-    .on("error", e => {
-      console.error("\x1b[31m", e, "\n");
-    })
-    .on("finish", () => {
-      console.log("write finished");
-    });
-};
-
+/**
+ * Below 4 examples of how you can populate a config object using environment variables.
+ * Note that you name the environment variables to your liking.
+ */
 const configS3 = {
-  bucketName: process.env.STORAGE_BUCKETNAME,
-  accessKeyId: process.env.STORAGE_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.STORAGE_AWS_SECRET_ACCESS_KEY,
+  type: StorageType.S3,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  bucketName: process.env.BUCKET_NAME,
 };
 
 const configGoogle = {
-  bucketName: process.env.STORAGE_BUCKETNAME,
-  projectId: process.env.STORAGE_GOOGLE_CLOUD_PROJECT_ID,
-  keyFilename: process.env.STORAGE_GOOGLE_CLOUD_KEYFILE,
+  type: StorageType.GCS,
+  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  keyFilename: process.env.GOOGLE_CLOUD_KEYFILE,
+  bucketName: process.env.BUCKET_NAME,
+};
+
+const configBackblaze = {
+  type: StorageType.B2,
+  applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
+  applicationKey: process.env.B2_APPLICATION_KEY,
+  bucketName: process.env.BUCKET_NAME,
 };
 
 const configLocal = {
-  bucketName: process.env.STORAGE_BUCKETNAME,
-  directory: process.env.STORAGE_LOCAL_DIRECTORY,
+  type: StorageType.LOCAL,
+  directory: process.env.LOCAL_DIRECTORY,
 };
 
+const generateBucketName = (): string => `bucket-${uniquid()}-${new Date().getTime()}`;
+const bucketNames = [generateBucketName(), generateBucketName(), generateBucketName()];
+
+/**
+ * A set of tests
+ */
 const test = async (storage: IStorage): Promise<void> => {
-  console.log("=>", storage.introspect("type") as string);
-  const bucket = storage.introspect("bucketName") as string;
+  console.log("=>", storage.getType());
+  const bucket = storage.getSelectedBucket();
+
+  // Note that since 1.4 you have to call `init()` before you can make API calls
+  try {
+    await storage.init();
+  } catch (e) {
+    console.error("\x1b[31m", e.message, "\n");
+    process.exit(0);
+  }
 
   try {
     await storage.test();
@@ -73,7 +82,9 @@ const test = async (storage: IStorage): Promise<void> => {
     });
     const p = path.join(process.cwd(), "test-partial.jpg");
     const writeStream = fs.createWriteStream(p);
-    copyFile(readStream, writeStream);
+    await copyFile(readStream, writeStream);
+    const size = (await fs.promises.stat(p)).size;
+    console.log("size partial", size);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
@@ -83,7 +94,7 @@ const test = async (storage: IStorage): Promise<void> => {
     const readStream = await storage.getFileAsReadable("test.jpg");
     const p = path.join(process.cwd(), "test.jpg");
     const writeStream = fs.createWriteStream(p);
-    copyFile(readStream, writeStream);
+    await copyFile(readStream, writeStream);
   } catch (e) {
     console.error("\x1b[31m", e, "\n");
   }
@@ -92,14 +103,14 @@ const test = async (storage: IStorage): Promise<void> => {
   let buckets = await storage.listBuckets();
   console.log("list buckets", buckets);
 
-  await storage.createBucket("bucket-1");
-  await storage.createBucket("bucket-2");
-  await storage.createBucket("bucket-3");
+  await storage.createBucket(bucketNames[0]);
+  await storage.createBucket(bucketNames[1]);
+  await storage.createBucket(bucketNames[2]);
 
   buckets = await storage.listBuckets();
   console.log("list buckets", buckets);
 
-  await storage.deleteBucket("bucket-3");
+  await storage.deleteBucket(bucketNames[2]);
 
   buckets = await storage.listBuckets();
   console.log("list buckets", buckets);
@@ -110,7 +121,8 @@ const test = async (storage: IStorage): Promise<void> => {
     console.log(e.message);
   }
 
-  await storage.selectBucket("bucket-1");
+  await storage.selectBucket(bucketNames[0]);
+  console.log(`select bucket "${storage.getSelectedBucket()}"`);
   await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
 
   let files = await storage.listFiles();
@@ -131,30 +143,35 @@ const test = async (storage: IStorage): Promise<void> => {
 
   await storage.addFileFromPath("./tests/data/image1.jpg", "tmp.jpg");
 
-  await storage.deleteBucket("bucket-1");
-  await storage.deleteBucket("bucket-2");
-  // await storage.deleteBucket(bucket);
+  await storage.deleteBucket(bucketNames[0]);
+  await storage.deleteBucket(bucketNames[1]);
+  buckets = await storage.listBuckets();
+  console.log(`cleanup buckets ${buckets}`);
   console.log("\n");
 };
 
-/* uncomment one of the following lines to test a single storage type: */
-// const storage = new StorageLocal(configLocal);
-// const storage = new StorageAmazonS3(configS3);
-// const storage = new StorageGoogleCloud(configGoogle);
-// const storage = new StorageGoogleCloud(process.env.STORAGE_URL);
+const run = async (): Promise<void> => {
+  /* uncomment one of the following lines to test a single storage type: */
+  // const storage = new Storage(configLocal);
+  // const storage = new Storage(configS3);
+  // const storage = new Storage(configGoogle);
+  // const storage = new Storage(process.env.STORAGE_URL);
+  const storage = new Storage(configBackblaze);
 
-const storage = new Storage();
-// console.log(storage.introspect());
-test(storage);
+  test(storage);
 
-/* or run all tests */
-// test(new StorageLocal(configLocal))
-//   .then(() => test(new StorageAmazonS3(configS3)))
-//   .then(() => test(new StorageGoogleCloud(configGoogle)))
-//   .then(() => test(new StorageGoogleCloud(process.env.STORAGE_URL)))
-//   .then(() => {
-//     console.log("done");
-//   })
-//   .catch(e => {
-//     console.log(e);
-//   });
+  /* or run all tests */
+  // test(new Storage(configLocal))
+  //   .then(() => test(new Storage(configS3)))
+  //   .then(() => test(new Storage(configGoogle)))
+  //   .then(() => test(new Storage(configBackblaze)))
+  //   .then(() => test(new Storage(process.env.CONFIG_URL)))
+  //   .then(() => {
+  //     console.log("done");
+  //   })
+  //   .catch(e => {
+  //     console.log(e);
+  //   });
+};
+
+run();
