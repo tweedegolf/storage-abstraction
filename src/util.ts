@@ -136,6 +136,20 @@ export const getProtocol = (url: string): string => {
 };
 
 /**
+ * @param p
+ * @param settings
+ *
+ * Slugifies a path if `slug` is true
+ */
+export const generateSlugPath = (p: string, slug: boolean | number | string): string => {
+  if (slug === "true" || slug === true || slug == 1) {
+    const paths = p.split("/").map(d => slugify(d));
+    return path.join(...paths);
+  }
+  return p;
+};
+
+/**
  * @param url
  * @param doSlug
  *
@@ -145,25 +159,14 @@ export const generateSlug = (url: string, slug: boolean | number | string): stri
   if (!url || url === "null" || url === "undefined") {
     return "";
   }
+  if (url.indexOf("/") !== -1) {
+    return generateSlugPath(url, slug);
+  }
   if (slug === "true" || slug === true || slug == 1) {
     const s = slugify(url);
     return s;
   }
   return url;
-};
-
-/**
- * @param p
- * @param settings
- *
- * Slugifies a path if `slug` is true
- */
-export const slugifyPath = (p: string, slug: boolean): string => {
-  if (slug === true) {
-    const paths = p.split("/").map(d => slugify(d));
-    return path.join(...paths);
-  }
-  return p;
 };
 
 export const validateName = (name: string): string => {

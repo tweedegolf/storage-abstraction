@@ -90,7 +90,7 @@ const waitABit = async (millis = 100): Promise<void> =>
     }, millis);
   });
 
-describe(`testing ${type} storage`, async () => {
+describe(`[testing ${type} storage]`, async () => {
   // beforeAll(async () => {
   //   storage = new Storage(config);
   //   await storage.init();
@@ -331,8 +331,19 @@ describe(`testing ${type} storage`, async () => {
     expect(storage.getSelectedBucket()).toBe(slugify(newBucketName));
   });
 
-  it("delete bucket currently selected bucket", async () => {
-    await storage.deleteBucket();
+  it("add file to new bucket", async () => {
+    await expectAsync(
+      storage.addFileFromPath("./tests/data/image1.jpg", "image1.jpg")
+    ).toBeResolved();
+  });
+
+  it("list files in new bucket", async () => {
+    const expectedResult: [string, number][] = [["image1.jpg", 32201]];
+    await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
+  });
+
+  it("delete bucket currently selected non-empty bucket", async () => {
+    const msg = await storage.deleteBucket();
     expect(storage.getSelectedBucket()).toBe("");
     const buckets = await storage.listBuckets();
     const index = buckets.indexOf(newBucketName);
@@ -340,6 +351,7 @@ describe(`testing ${type} storage`, async () => {
   });
 
   it("create bucket", async () => {
+    // expectAsync(storage.createBucket(newBucketName)).toBeResolved();
     try {
       await storage.createBucket(newBucketName);
     } catch (e) {
@@ -350,11 +362,20 @@ describe(`testing ${type} storage`, async () => {
   it("check created bucket", async () => {
     const buckets = await storage.listBuckets();
     const index = buckets.indexOf(newBucketName);
-    expect(index).toBeGreaterThan(-1);
+    expect(index).not.toBe(-1);
+  });
+
+  it("clear bucket by providing a bucket name", async () => {
+    expectAsync(storage.clearBucket(newBucketName)).toBeResolved();
+  });
+
+  it("bucket should contain no files", async () => {
+    expectAsync(storage.listFiles()).toBeResolvedTo([]);
   });
 
   it("delete bucket by providing a bucket name", async () => {
-    await storage.deleteBucket(newBucketName);
+    const msg = await storage.deleteBucket(newBucketName);
+    // console.log(msg);
     const buckets = await storage.listBuckets();
     const index = buckets.indexOf(newBucketName);
     expect(index).toBe(-1);

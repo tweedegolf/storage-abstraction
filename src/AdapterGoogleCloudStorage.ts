@@ -32,9 +32,6 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
       delete cfg.bucketName;
     }
-    if (this.bucketName) {
-      this.bucketNames.push(this.bucketName);
-    }
     delete cfg.type;
     this.storage = new GoogleCloudStorage(cfg);
   }
@@ -77,6 +74,10 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   }
 
   async init(): Promise<boolean> {
+    if (this.bucketName) {
+      await this.createBucket(this.bucketName);
+      this.bucketNames.push(this.bucketName);
+    }
     // no further initialization required
     this.initialized = true;
     return Promise.resolve(true);
@@ -126,6 +127,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         .bucket(this.bucketName)
         .file(fileName)
         .delete();
+      return "file deleted";
     } catch (e) {
       if (e.message.indexOf("No such object") !== -1) {
         return;
@@ -179,14 +181,14 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
     const n = this.generateSlug(name);
     if (this.bucketNames.findIndex(b => b === n) !== -1) {
-      return;
+      return "bucket exists already";
     }
 
     try {
       const bucket = this.storage.bucket(n);
       const [exists] = await bucket.exists();
       if (exists) {
-        return;
+        return "bucket exists already";
       }
     } catch (e) {
       // console.log(e.message);
@@ -196,6 +198,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     try {
       await this.storage.createBucket(n);
       this.bucketNames.push(n);
+      return "bucket created";
     } catch (e) {
       // console.log("ERROR", e.message, e.code);
       if (

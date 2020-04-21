@@ -131,9 +131,9 @@ const test = async (storage: IStorage): Promise<void> => {
 
   await storage.addFileFromPath("./tests/data/image1.jpg", "tmp.jpg");
 
-  await storage.deleteBucket("bucket-1");
-  await storage.deleteBucket("bucket-2");
-  await storage.deleteBucket("tmp");
+  // await storage.deleteBucket("bucket-1");
+  // await storage.deleteBucket("bucket-2");
+  // await storage.deleteBucket("tmp");
   buckets = await storage.listBuckets();
   console.log(`cleanup buckets ${buckets}`);
   console.log("\n");
@@ -173,12 +173,12 @@ const run = async (): Promise<void> => {
   //   process.exit(0);
   // }
 
-  try {
-    await storage.addFileFromPath("./tests/data/image1.jpg", "first-file.jpg");
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
+  // try {
+  //   await storage.addFileFromPath("./tests/data/image1.jpg", "first-file.jpg");
+  // } catch (e) {
+  //   console.error("\x1b[31m", e.message, "\n");
+  //   process.exit(0);
+  // }
 
   // try {
   //   await storage.addFileFromPath("./tests/data/image2.jpg", "second-file.jpg");
@@ -203,30 +203,30 @@ const run = async (): Promise<void> => {
   //   process.exit(0);
   // }
 
-  try {
-    const f = await storage.sizeOf("first-file.jpg");
-    console.log(f);
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
+  // try {
+  //   const f = await storage.sizeOf("first-file.jpg");
+  //   console.log(f);
+  // } catch (e) {
+  //   console.error("\x1b[31m", e.message, "\n");
+  //   process.exit(0);
+  // }
 
-  try {
-    const readStream = await storage.getFileAsReadable("first-file.jpg", { start: 0, end: 10000 });
-    const p = path.join(process.cwd(), "test-b2.jpg");
-    const writeStream = fs.createWriteStream(p);
-    await copyFile(readStream, writeStream);
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
+  // try {
+  //   const readStream = await storage.getFileAsReadable("first-file.jpg", { start: 0, end: 10000 });
+  //   const p = path.join(process.cwd(), "test-b2.jpg");
+  //   const writeStream = fs.createWriteStream(p);
+  //   await copyFile(readStream, writeStream);
+  // } catch (e) {
+  //   console.error("\x1b[31m", e.message, "\n");
+  //   process.exit(0);
+  // }
 
-  try {
-    await storage.removeFile("first-file.jpg");
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
+  // try {
+  //   await storage.removeFile("first-file.jpg");
+  // } catch (e) {
+  //   console.error("\x1b[31m", e.message, "\n");
+  //   process.exit(0);
+  // }
 
   // try {
   //   await storage.removeFile("second-file.jpg");
@@ -239,29 +239,29 @@ const run = async (): Promise<void> => {
   //   console.log(e.message);
   // });
 
-  try {
-    const f = await storage.listFiles();
-    console.log(f);
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
+  // try {
+  //   const f = await storage.listFiles();
+  //   console.log(f);
+  // } catch (e) {
+  //   console.error("\x1b[31m", e.message, "\n");
+  //   process.exit(0);
+  // }
 
   // await storage.clearBucket().catch(e => {
   //   console.log(e.message);
   // });
 
-  try {
-    const f = await storage.listFiles();
-    console.log(f);
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
+  // try {
+  //   const f = await storage.listFiles();
+  //   console.log(f);
+  // } catch (e) {
+  //   console.error("\x1b[31m", e.message, "\n");
+  //   process.exit(0);
+  // }
 
   process.exit(0);
 
-  // test(storage);
+  test(storage);
 
   /* or run all tests */
   // test(new StorageLocal(configLocal))

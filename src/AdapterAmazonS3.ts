@@ -27,12 +27,13 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
     delete cfg.type;
     this.storage = new S3(cfg);
-    if (this.bucketName) {
-      this.bucketNames.push(this.bucketName);
-    }
   }
 
   async init(): Promise<boolean> {
+    if (this.bucketName) {
+      await this.createBucket(this.bucketName);
+      this.bucketNames.push(this.bucketName);
+    }
     // no further initialization required
     this.initialized = true;
     return Promise.resolve(true);
@@ -102,7 +103,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     const n = this.generateSlug(name);
-    // console.log('createBucket', n);
     if (this.bucketNames.findIndex(b => b === n) !== -1) {
       return;
     }
@@ -123,7 +123,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return Promise.reject(msg.join(" "));
       }
       const data = await this.storage.createBucket({ Bucket: n }).promise();
-      // console.log("CREATE BUCKET", n, data);
       this.bucketNames.push(n);
     }
   }
@@ -142,6 +141,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   async clearBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = this.generateSlug(n);
+
+    if (!n) {
+      throw new Error("no bucket selected");
+    }
     // console.log('clearBucket', n);
     const params1 = {
       Bucket: n,
@@ -173,7 +176,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     // } catch (e) {
     //   throw e;
     // }
-    // console.log('deleteBucket', n);
+    if (n === "") {
+      throw new Error("no bucket selected");
+    }
     try {
       await this.clearBucket(name);
       const result = await this.storage
@@ -185,10 +190,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         this.bucketName = "";
       }
       this.bucketNames = this.bucketNames.filter(b => b !== n);
+      return "bucket deleted";
       // console.log(this.buckets, result);
     } catch (e) {
       if (e.code === "NoSuchBucket") {
-        return;
+        throw new Error("bucket not found");
       }
       throw e;
     }

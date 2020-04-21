@@ -118,7 +118,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     const file = await this.findFile(n);
     if (file === null) {
-      return `file ${name} not found`;
+      return "file not found";
     }
 
     const {
@@ -138,6 +138,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         )
     );
     this.files = this.files.filter(file => file.fileName !== name);
+    return "file removed";
   }
 
   // util function for findBucket
@@ -213,7 +214,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     this.buckets.push(d.data);
     // console.log("createBucket", this.buckets, d.data);
-    return "ok";
+    return "bucket created";
   }
 
   async selectBucket(name: string): Promise<string> {
@@ -247,7 +248,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     const b = await this.findBucket(n);
     if (b === null) {
-      return `bucket "${name} not found"`;
+      throw new Error("bucket not found");
     }
 
     const {
@@ -265,7 +266,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       )
     );
 
-    return "ok";
+    return "bucket cleared";
   }
 
   async deleteBucket(name?: string): Promise<string> {
@@ -274,13 +275,25 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     const b = await this.findBucket(n);
     if (b === null) {
-      return `bucket "${name}" not found`;
+      throw new Error("bucket not found");
+    }
+
+    try {
+      await this.clearBucket(n);
+    } catch (e) {
+      return e.response.data.message;
     }
 
     const { bucketId } = b;
-    await this.storage.deleteBucket({ bucketId });
+    try {
+      await this.storage.deleteBucket({ bucketId });
+    } catch (e) {
+      return e.response.data.message;
+    }
     this.buckets = this.buckets.filter(b => b.bucketName !== n);
-    return "ok";
+    this.bucketId = "";
+    this.bucketName = "";
+    return "bucket deleted";
   }
 
   async listBuckets(): Promise<string[]> {
@@ -308,9 +321,14 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       bucketId: this.bucketId,
       maxFileCount: numFiles,
     });
-
+    // console.log(files);
     this.files = [...files];
-    this.nextFileName = nextFileName;
+
+    // @TODO; should loop this until all files are listed
+    if (nextFileName !== null) {
+      // console.log(nextFileName);
+      this.nextFileName = nextFileName;
+    }
     return this.files.map(f => [f.fileName, f.contentLength]);
   }
 

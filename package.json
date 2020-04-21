@@ -56,6 +56,7 @@
     "test2": "ts-node ./tests/test2.ts",
     "test3": "ts-node ./tests/test3.ts",
     "test6": "ts-node ./tests/test6.ts",
+    "ts": "ts-node",
     "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",
     "prepublishOnly": "npm run tsc",

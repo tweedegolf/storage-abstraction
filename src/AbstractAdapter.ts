@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { generateSlug, slugifyPath, validateName } from "./util";
+import { generateSlug, generateSlugPath, validateName } from "./util";
 import { AdapterConfig, IStorage } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
@@ -39,15 +39,15 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    await this.store(origPath, slugifyPath(targetPath, this.slug));
+    await this.store(origPath, generateSlugPath(targetPath, this.slug));
   }
 
   async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    await this.store(buffer, slugifyPath(targetPath, this.slug));
+    await this.store(buffer, generateSlugPath(targetPath, this.slug));
   }
 
   async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    await this.store(stream, slugifyPath(targetPath, this.slug));
+    await this.store(stream, generateSlugPath(targetPath, this.slug));
   }
 
   public getSelectedBucket(): string {
