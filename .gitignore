@@ -1,10 +1,9 @@
 .vscode
-adapters
 node_modules
 publish/dist
+publish/README.md
 sensitive
 tests/data
 tests/tmp
 .env
 .idea
-toc*

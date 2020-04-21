@@ -1,6 +1,6 @@
 import { Storage } from "./Storage";
 // import { AbstractAdapter } from "./AbstractAdapter";
 // import { parseUrl } from "./util";
-import { StorageType, IStorage } from "./types";
+import { StorageType, IStorage, AdapterConfig } from "./types";
 
-export { IStorage, StorageType, Storage };
+export { Storage, IStorage, StorageType, AdapterConfig };
