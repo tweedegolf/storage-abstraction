@@ -323,7 +323,8 @@ type ConfigBackBlazeB2 = {
 Configuration url:
 
 ```typescript
-const url = "b2://applicationKeyId:applicationKey@bucketName&option1=value1&option2=value2&...";
+const url =
+  "b2://applicationKeyId:applicationKey@bucketName&option1=value1&option2=value2&...";
 ```
 
 Example:
@@ -347,7 +348,9 @@ const s = new Storage("b2://keyId:key@bucket");
 init():Promise<boolean>;
 ```
 
-Some cloud storage services need some initial setup before they can be used. If initial setup is required it is handled in this method, if no setup is required this method simply returns true. Note that you need to call this method even it the storage type doesn't need any setup; this is done to abstract away the differences between all types of storage.
+Some cloud storage services need some initial setup that can't be handled in the constructor before they can be used, for instance an async authorization. Also if your storage is set to use a previously non-existing bucket, this bucket will be created in this method.
+
+If initial setup is required it is handled in this method, if no setup is required this method simply returns true. Note that you need to call this method even it the storage type doesn't need any setup; this is done to abstract away the differences between all types of storage.
 
 ### <a name='test'></a>test
 
@@ -363,7 +366,7 @@ Runs a simple test to test the storage configuration. The test is a call to `lis
 createBucket(name: string): Promise<string>;
 ```
 
-Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully (or it did already exist) it resolves with a simple "ok" or an empty string, else it will reject with an error message.
+Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully it returns "bucket created" or if already existed "bucket exists", else it will reject with an error message.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
@@ -375,6 +378,8 @@ selectBucket(name: string | null): Promise<void>;
 
 Selects a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` an empty string or nothing at all the currently selected bucket will be deselected.
 
+Returns "bucket selected" or "bucket deselected".
+
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
 ### <a name='clearbucket'></a>clearBucket
@@ -385,6 +390,8 @@ clearBucket(name?: string): Promise<void>;
 
 Removes all files in the bucket. If you omit the `name` parameter all files in the currently selected bucket will be removed. If no bucket is selected an error will be thrown.
 
+Returns "bucket cleared".
+
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
 ### <a name='deletebucket'></a>deleteBucket
@@ -394,6 +401,8 @@ deleteBucket(name?: string): Promise<void>;
 ```
 
 Deletes the bucket and all files in it. If you omit the `name` parameter the currently selected bucket will be deleted. If no bucket is selected an error will be thrown.
+
+Returns "bucket deleted"
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
@@ -468,6 +477,8 @@ removeFile(name: string): Promise<void>;
 ```
 
 Removes a file from the bucket. Does not fail if the file doesn't exist.
+
+Returns "file removed" or "file not found".
 
 ### <a name='sizeof'></a>sizeOf
 

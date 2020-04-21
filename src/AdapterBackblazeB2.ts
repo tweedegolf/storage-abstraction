@@ -1,7 +1,12 @@
 import B2 from "backblaze-b2";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, ConfigBackblazeB2, BackblazeB2Bucket, BackblazeB2File } from "./types";
+import {
+  StorageType,
+  ConfigBackblazeB2,
+  BackblazeB2Bucket,
+  BackblazeB2File,
+} from "./types";
 import { parseUrl } from "./util";
 
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
@@ -111,7 +116,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   async removeFile(name: string): Promise<string> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
 
     const n = this.generateSlug(name);
@@ -172,9 +177,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected async store(buffer: Buffer, targetPath: string): Promise<void>;
   protected async store(stream: Readable, targetPath: string): Promise<void>;
   protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
+  protected async store(
+    arg: string | Buffer | Readable,
+    targetPath: string
+  ): Promise<void> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     await this.createBucket(this.bucketName);
     try {
@@ -220,11 +228,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   async selectBucket(name: string): Promise<string> {
     if (!name) {
       this.bucketName = "";
-      return;
+      return "bucket deselected";
     }
 
     if (name === this.bucketName) {
-      return;
+      return "bucket selected";
     }
 
     const b = await this.findBucket(name);
@@ -232,7 +240,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       this.bucketName = name;
       this.bucketId = b.bucketId;
       this.files = [];
-      return;
+      return "bucket selected";
     }
 
     // return `bucket ${name} not found`;
@@ -240,6 +248,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     this.bucketName = name;
     this.bucketId = this.getBucketId();
     this.files = [];
+    return "bucket selected";
   }
 
   async clearBucket(name?: string): Promise<string> {
@@ -312,7 +321,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
     // console.log("ID", this.bucketId);
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
 
     const {
@@ -350,7 +359,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   async sizeOf(name: string): Promise<number> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const file = await this.findFile(name);
     if (file === null) {
@@ -361,7 +370,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   async fileExists(name: string): Promise<boolean> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const file = await this.findFile(name);
     if (file === null) {

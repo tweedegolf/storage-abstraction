@@ -130,7 +130,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       return "file deleted";
     } catch (e) {
       if (e.message.indexOf("No such object") !== -1) {
-        return;
+        return "file deleted";
       }
       // console.log(e.message);
       throw e;
@@ -144,7 +144,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     await this.createBucket(this.bucketName);
 
@@ -181,14 +181,14 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
     const n = this.generateSlug(name);
     if (this.bucketNames.findIndex(b => b === n) !== -1) {
-      return "bucket exists already";
+      return "bucket exists";
     }
 
     try {
       const bucket = this.storage.bucket(n);
       const [exists] = await bucket.exists();
       if (exists) {
-        return "bucket exists already";
+        return "bucket exists";
       }
     } catch (e) {
       // console.log(e.message);
@@ -234,7 +234,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   async selectBucket(name: string | null): Promise<string> {
     if (name === null) {
       this.bucketName = "";
-      return;
+      return "bucket deselected";
     }
 
     const [error] = await to(this.createBucket(name));
@@ -242,13 +242,14 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       throw error;
     }
     this.bucketName = name;
+    return "bucket selected";
   }
 
   async clearBucket(name?: string): Promise<string> {
     let n = name || this.bucketName;
     n = this.generateSlug(n);
     await this.storage.bucket(n).deleteFiles({ force: true });
-    return "ok";
+    return "bucket cleared";
   }
 
   async deleteBucket(name?: string): Promise<string> {
@@ -261,7 +262,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       this.bucketName = "";
     }
     this.bucketNames = this.bucketNames.filter(b => b !== n);
-    return "ok";
+    return "bucket deleted";
   }
 
   async listBuckets(): Promise<string[]> {
@@ -282,9 +283,9 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   }
 
   async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    // if (!this.bucketName) {
-    //   throw new Error("Please select a bucket first");
-    // }
+    if (!this.bucketName) {
+      throw new Error("no bucket selected");
+    }
     const data = await this.storage.bucket(this.bucketName).getFiles();
     const names = data[0].map(f => f.name);
     const sizes = await this.getMetaData(names);
@@ -293,7 +294,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
   async sizeOf(name: string): Promise<number> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();

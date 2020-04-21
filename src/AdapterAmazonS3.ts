@@ -91,7 +91,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       Key: fileName,
     };
     await this.storage.deleteObject(params).promise();
-    return "ok";
+    return "file removed";
   }
 
   // util members
@@ -131,11 +131,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     // add check if bucket exists!
     if (name === null) {
       this.bucketName = "";
-      return;
+      return "bucket deselected";
     }
     await this.createBucket(name);
     this.bucketName = name;
-    return "ok";
+    return "bucket selected";
   }
 
   async clearBucket(name?: string): Promise<string> {
@@ -163,7 +163,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       },
     };
     await this.storage.deleteObjects(params2).promise();
-    return "ok";
+    return "bucket cleared";
   }
 
   async deleteBucket(name?: string): Promise<string> {
@@ -211,7 +211,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   protected async store(origPath: string, targetPath: string): Promise<void>;
   protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     await this.createBucket(this.bucketName);
     let readable: Readable;
@@ -235,7 +235,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const params = {
       Bucket: this.bucketName,
@@ -247,7 +247,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   async sizeOf(name: string): Promise<number> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const params = {
       Bucket: this.bucketName,
@@ -261,7 +261,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   async fileExists(name: string): Promise<boolean> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const params = {
       Bucket: this.bucketName,

@@ -4,6 +4,28 @@ import { GenericKey } from "./types";
 import slugify from "slugify";
 
 /**
+ * @param: url
+ *
+ * strips off the querystring of an url and returns it as an object
+ */
+export const parseQuerystring = (url: string): { [id: string]: string } => {
+  let options = {};
+  const questionMark = url.indexOf("?");
+  if (questionMark !== -1) {
+    options = url
+      .substring(questionMark + 1)
+      .split("&")
+      .map(pair => pair.split("="))
+      .reduce((acc, val) => {
+        // acc[val[0]] = `${val[1]}`.valueOf();
+        acc[val[0]] = val[1];
+        return acc;
+      }, {});
+  }
+  return options;
+};
+
+/**
  * @param url
  * Parses a url string into fragments and parses the query string into a
  * key-value object.
@@ -32,17 +54,8 @@ export const parseUrl = (
   let bucketName = "";
 
   // parse options
-  let queryString: { [key: string]: string } = {};
+  const queryString: { [key: string]: string } = parseQuerystring(url);
   if (questionMark !== -1) {
-    queryString = config
-      .substring(questionMark + 1)
-      .split("&")
-      .map(pair => pair.split("="))
-      .reduce((acc, val) => {
-        // acc[val[0]] = `${val[1]}`.valueOf();
-        acc[val[0]] = val[1];
-        return acc;
-      }, {});
     config = config.substring(0, questionMark);
   }
 
@@ -108,27 +121,7 @@ export const parseMode = (s: number | string): number | string => {
 
 /**
  * @param: url
- * strips off the querystring of an url and returns it as an object
- */
-export const getOptions = (url: string): { [id: string]: GenericKey } => {
-  let options = {};
-  const questionMark = url.indexOf("?");
-  if (questionMark !== -1) {
-    options = url
-      .substring(questionMark + 1)
-      .split("&")
-      .map(pair => pair.split("="))
-      .reduce((acc, val) => {
-        // acc[val[0]] = `${val[1]}`.valueOf();
-        acc[val[0]] = val[1];
-        return acc;
-      }, {});
-  }
-  return options;
-};
-
-/**
- * @param: url
+ *
  * strips off the protocol of an url and returns it
  */
 export const getProtocol = (url: string): string => {
@@ -169,6 +162,11 @@ export const generateSlug = (url: string, slug: boolean | number | string): stri
   return url;
 };
 
+/**
+ * @param name
+ *
+ * Checks if the value of the name is not null or undefined
+ */
 export const validateName = (name: string): string => {
   if (name === null) {
     // throw new Error("Can not use `null` as bucket name");

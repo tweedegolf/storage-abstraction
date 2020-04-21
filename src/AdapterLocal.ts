@@ -6,7 +6,7 @@ import rimraf from "rimraf";
 import { Readable } from "stream";
 import { StorageType, ConfigLocal } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { getOptions, parseMode } from "./util";
+import { parseQuerystring, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected type = StorageType.LOCAL;
@@ -44,7 +44,7 @@ export class AdapterLocal extends AbstractAdapter {
       const qm = config.indexOf("?");
       const sep = config.indexOf("://");
       const type = config.substring(0, sep);
-      const { slug, mode } = getOptions(config);
+      const { slug, mode } = parseQuerystring(config);
       const end = qm !== -1 ? qm : config.length;
       const directory = config.substring(sep + 3, end);
       // console.log("DIR", directory, end, qm);
@@ -209,7 +209,7 @@ export class AdapterLocal extends AbstractAdapter {
 
   async listFiles(): Promise<[string, number][]> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const storagePath = path.join(this.directory, this.bucketName);
     const files = await this.globFiles(storagePath);
@@ -247,7 +247,7 @@ export class AdapterLocal extends AbstractAdapter {
 
   async sizeOf(name: string): Promise<number> {
     if (!this.bucketName) {
-      throw new Error("Please select a bucket first");
+      throw new Error("no bucket selected");
     }
     const p = path.join(this.directory, this.bucketName, name);
     const stat = await fs.promises.stat(p);
