@@ -19,7 +19,7 @@
     "aws-sdk": "^2.656.0",
     "backblaze-b2": "^1.5.0",
     "glob": "^7.1.6",
-    "ramda": "^0.26.1",
+    "ramda": "^0.27",
     "rimraf": "^3.0.0"
   },
   "devDependencies": {},

@@ -46,3 +46,7 @@
 - Adapter modules are only loaded when needed (using `require`)
 - Removed options from both configuration and adapters.
 - Formalized return values
+
+# 1.4.1
+
+- Added `AdapterConfig` to exported types
