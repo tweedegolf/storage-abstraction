@@ -63,10 +63,11 @@ const test = async (storage: IStorage): Promise<void> => {
   }
 
   try {
-    await storage.selectBucket(bucket);
-    console.log(`select bucket "${bucket}"`);
+    const r = await storage.selectBucket(bucket);
+    console.log(`select bucket "${bucket}": ${r}`);
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", e.message, "\n");
+    return;
   }
 
   try {
