@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { zip } from "ramda";
-import to from "await-to-js";
 import { Readable } from "stream";
 import {
   Storage as GoogleCloudStorage,
@@ -219,7 +218,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     //   .createBucket(n)
     //   .then(() => {
     //     this.bucketNames.push(n);
-    //     return;
+    //     return "bucket created";
     //   })
     //   .catch(e => {
     //     if (e.code === 409) {
@@ -237,12 +236,18 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       return "bucket deselected";
     }
 
-    const [error] = await to(this.createBucket(name));
-    if (error !== null) {
-      throw error;
-    }
-    this.bucketName = name;
-    return "bucket selected";
+    // const [error] = await to(this.createBucket(name));
+    // if (error !== null) {
+    //   throw error;
+    // }
+    this.createBucket(name)
+      .then(() => {
+        this.bucketName = name;
+        return "bucket selected";
+      })
+      .catch(e => {
+        throw e;
+      });
   }
 
   async clearBucket(name?: string): Promise<string> {

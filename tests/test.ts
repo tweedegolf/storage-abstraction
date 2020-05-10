@@ -3,7 +3,7 @@ import uniquid from "uniquid";
 import fs, { createReadStream } from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { IStorage, StorageType } from "../src/types";
+import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
 
@@ -63,10 +63,11 @@ const test = async (storage: IStorage): Promise<void> => {
   }
 
   try {
-    await storage.selectBucket(bucket);
-    console.log(`select bucket "${bucket}"`);
+    const r = await storage.selectBucket(bucket);
+    console.log(`select bucket "${bucket}": ${r}`);
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", e.message, "\n");
+    return;
   }
 
   try {

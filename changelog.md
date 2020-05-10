@@ -46,3 +46,12 @@
 - Adapter modules are only loaded when needed (using `require`)
 - Removed options from both configuration and adapters.
 - Formalized return values
+
+# 1.4.1
+
+- Added `AdapterConfig` to exported types
+
+# 1.4.2
+
+- Added `ConfigAmazonS3`, `ConfigBackblazeB2`, `ConfigGoogleCloud` and `ConfigLocal` to exported types
+- Removed `await-to-js` dependency
