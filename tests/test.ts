@@ -35,6 +35,7 @@ const configBackblaze = {
 const configLocal = {
   type: StorageType.LOCAL,
   directory: process.env.LOCAL_DIRECTORY,
+  // slug: true,
 };
 
 const generateBucketName = (): string => `bucket-${uniquid()}-${new Date().getTime()}`;
@@ -138,7 +139,7 @@ const test = async (storage: IStorage): Promise<void> => {
   files = await storage.listFiles();
   console.log("add file", files);
 
-  await storage.removeFile("subdir/sub-subdir/new-name.jpg");
+  await storage.removeFile("subdir/sub subdir/new name.jpg");
   files = await storage.listFiles();
   console.log("remove file", files);
 
@@ -157,7 +158,7 @@ const run = async (): Promise<void> => {
   // const storage = new Storage(configS3);
   // const storage = new Storage(configGoogle);
   // const storage = new Storage(process.env.STORAGE_URL);
-  const storage = new Storage(configBackblaze);
+  const storage = new Storage(configLocal);
 
   test(storage);
 

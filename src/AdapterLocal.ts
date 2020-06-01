@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import to from "await-to-js";
 import glob from "glob";
 import rimraf from "rimraf";
 import { Readable } from "stream";
@@ -235,14 +234,18 @@ export class AdapterLocal extends AbstractAdapter {
 
   async removeFile(fileName: string): Promise<string> {
     const p = path.join(this.directory, this.bucketName, fileName);
-    const [err] = await to(fs.promises.unlink(p));
-    if (err !== null) {
-      // don't throw an error if the file has already been removed (or didn't exist at all)
-      if (err.message.indexOf("no such file or directory") !== -1) {
-        return;
-      }
-      throw new Error(err.message);
-    }
+    return fs.promises
+      .unlink(p)
+      .then(() => {
+        return "";
+      })
+      .catch(err => {
+        // don't throw an error if the file has already been removed (or didn't exist at all)
+        if (err.message.indexOf("no such file or directory") !== -1) {
+          return "";
+        }
+        throw new Error(err.message);
+      });
   }
 
   async sizeOf(name: string): Promise<number> {

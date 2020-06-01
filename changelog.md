@@ -1,3 +1,7 @@
+# 1.4.3
+
+- Removed `await-to-js` dependency in local storage adapter
+
 # 1.4.2
 
 - Added `ConfigAmazonS3`, `ConfigBackblazeB2`, `ConfigGoogleCloud` and `ConfigLocal` to exported types
