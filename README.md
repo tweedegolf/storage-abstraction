@@ -473,7 +473,7 @@ getFileAsReadable("image.png", { start: 2000 }); // &rarr; reads file from byte 
 ### <a name='removefile'></a>removeFile
 
 ```typescript
-removeFile(name: string): Promise<void>;
+removeFile(name: string): Promise<string>;
 ```
 
 Removes a file from the bucket. Does not fail if the file doesn't exist.
