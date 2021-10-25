@@ -35,18 +35,6 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     this.storage = new GoogleCloudStorage(cfg);
   }
 
-  /**
-   * @param {string} keyFile - path to the keyFile
-   *
-   * Read in the keyFile and retrieve the projectId, this is function
-   * is called when the user did not provide a projectId
-   */
-  private getGCSProjectId(keyFile: string): string {
-    const data = fs.readFileSync(keyFile).toString("utf-8");
-    const json = JSON.parse(data);
-    return json.project_id;
-  }
-
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
     let cfg: ConfigGoogleCloud;
     if (typeof config === "string") {
@@ -62,12 +50,6 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       };
     } else {
       cfg = { ...config };
-    }
-    if (!cfg.keyFilename) {
-      throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
-    }
-    if (!cfg.projectId) {
-      cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
     }
     return cfg;
   }

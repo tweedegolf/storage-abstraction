@@ -187,7 +187,7 @@ export interface ConfigBackblazeB2 extends IAdapterConfig {
 }
 
 export interface ConfigGoogleCloud extends IAdapterConfig {
-  keyFilename: string;
+  keyFilename?: string;
   projectId?: string;
   // [id: string]: GenericKey;
 }
