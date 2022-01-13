@@ -9,39 +9,39 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-  * [Backblaze B2](#backblaze-b2)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+  - [Backblaze B2](#backblaze-b2)
 - [API methods](#api-methods)
-  * [init](#init)
-  * [test](#test)
-  * [createBucket](#createbucket)
-  * [selectBucket](#selectbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [getSelectedBucket](#getselectedbucket)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromReadable](#addfilefromreadable)
-  * [getFileAsReadable](#getfileasreadable)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [switchAdapter](#switchadapter)
+  - [init](#init)
+  - [test](#test)
+  - [createBucket](#createbucket)
+  - [selectBucket](#selectbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [getSelectedBucket](#getselectedbucket)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromReadable](#addfilefromreadable)
+  - [getFileAsReadable](#getfileasreadable)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -208,7 +208,7 @@ Configuration object:
 ```typescript
 type ConfigGoogleCloud = {
   type: StorageType;
-  keyFilename: string; // path to keyFile.json
+  keyFilename?: string; // path to keyFile.json
   projectId?: string;
   bucketName?: string;
   slug?: boolean;
@@ -221,7 +221,17 @@ Configuration url:
 const url = "gcs://path/to/keyFile.json:projectId@bucketName?slug=false";
 ```
 
-The project id is optional; if you omit the value for project id, the id will be read from the key file:
+The key filename is optional; if you omit the value for key filename, application default credentials with be loaded:
+
+```typescript
+const s = new Storage({
+  type: StorageType.GCS,
+});
+
+const s = new Storage("gcs://bucketName");
+```
+
+The project id is optional; if you omit the value for project id, the id will be read from the key file or by the application default credentials:
 
 ```typescript
 const s = new Storage({
@@ -230,6 +240,18 @@ const s = new Storage({
 });
 
 const s = new Storage("gcs://path/to/keyFile.json");
+```
+
+The project id is required if the key file is type `.pem` or `.p12`:
+
+```typescript
+const s = new Storage({
+  type: StorageType.GCS,
+  keyFilename: "path/to/keyFile.pem",
+  projectId: "projectId",
+});
+
+const s = new Storage("gcs://path/to/keyFile.pem:projectId");
 ```
 
 Another example:
@@ -323,8 +345,7 @@ type ConfigBackBlazeB2 = {
 Configuration url:
 
 ```typescript
-const url =
-  "b2://applicationKeyId:applicationKey@bucketName&option1=value1&option2=value2&...";
+const url = "b2://applicationKeyId:applicationKey@bucketName&option1=value1&option2=value2&...";
 ```
 
 Example:
