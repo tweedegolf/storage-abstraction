@@ -64,34 +64,34 @@ export abstract class AbstractAdapter implements IStorage {
 
   // stubs
 
-  protected abstract async store(filePath: string, targetFileName: string): Promise<void>;
+  protected abstract store(filePath: string, targetFileName: string): Promise<void>;
 
-  protected abstract async store(buffer: Buffer, targetFileName: string): Promise<void>;
+  protected abstract store(buffer: Buffer, targetFileName: string): Promise<void>;
 
-  protected abstract async store(stream: Readable, targetFileName: string): Promise<void>;
+  protected abstract store(stream: Readable, targetFileName: string): Promise<void>;
 
-  abstract async init(): Promise<boolean>;
+  abstract init(): Promise<boolean>;
 
-  abstract async selectBucket(name: string | null): Promise<string>;
+  abstract selectBucket(name: string | null): Promise<string>;
 
-  abstract async createBucket(name: string): Promise<string>;
+  abstract createBucket(name: string): Promise<string>;
 
-  abstract async clearBucket(name?: string): Promise<string>;
+  abstract clearBucket(name?: string): Promise<string>;
 
-  abstract async deleteBucket(name?: string): Promise<string>;
+  abstract deleteBucket(name?: string): Promise<string>;
 
-  abstract async listBuckets(): Promise<string[]>;
+  abstract listBuckets(): Promise<string[]>;
 
-  abstract async getFileAsReadable(
+  abstract getFileAsReadable(
     name: string,
     options?: { start?: number; end?: number }
   ): Promise<Readable>;
 
-  abstract async removeFile(fileName: string): Promise<string>;
+  abstract removeFile(fileName: string): Promise<string>;
 
-  abstract async listFiles(): Promise<[string, number][]>;
+  abstract listFiles(): Promise<[string, number][]>;
 
-  abstract async sizeOf(name: string): Promise<number>;
+  abstract sizeOf(name: string): Promise<number>;
 
-  abstract async fileExists(name: string): Promise<boolean>;
+  abstract fileExists(name: string): Promise<boolean>;
 }

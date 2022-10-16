@@ -152,7 +152,7 @@ export class AdapterLocal extends AbstractAdapter {
         if (e) {
           throw e;
         }
-        resolve();
+        resolve("");
       });
     });
   }
@@ -173,7 +173,7 @@ export class AdapterLocal extends AbstractAdapter {
         if (bn === this.bucketName) {
           this.bucketName = "";
         }
-        resolve();
+        resolve("");
       });
     });
   }

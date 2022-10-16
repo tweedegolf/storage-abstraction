@@ -2,8 +2,8 @@
 node_modules
 publish/dist
 publish/README.md
-sensitive
-tests/data
-tests/tmp
+tests/tmp/*.jpg
+tests/keyFile1.json
+tests/keyFile2.json
 .env
 .idea

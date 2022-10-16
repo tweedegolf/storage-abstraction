@@ -33,7 +33,7 @@ console.log(
   secretAccessKey
 );
 
-let config: AdapterConfig | string = null;
+let config: AdapterConfig | string = "";
 if (type === StorageType.LOCAL) {
   config = {
     type,
@@ -70,7 +70,7 @@ if (type === StorageType.LOCAL) {
 
 const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 
-console.log("CONFIG", config, newBucketName, "\n");
+console.log("CONFIG", config, "\n", newBucketName, "\n");
 
 let storage: Storage;
 // try {
@@ -104,7 +104,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   afterAll(async () => {
-    await storage.clearBucket(slugify(bucketName));
+    await storage.clearBucket(slugify(bucketName as string));
     if (storage.getType() === StorageType.LOCAL) {
       await storage.deleteBucket("new-bucket");
     }
@@ -210,7 +210,7 @@ describe(`[testing ${type} storage]`, async () => {
   it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(process.cwd(), `test-${storage.getType()}.jpg`);
+      const filePath = path.join(process.cwd(), 'tests', 'tmp', `test-${storage.getType()}.jpg`);
       const writeStream = fs.createWriteStream(filePath);
       await copyFile(readStream, writeStream);
     } catch (e) {
@@ -220,7 +220,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("get readable stream partially and save file", async () => {
-    const filePath = path.join(process.cwd(), `test-${storage.getType()}-part.jpg`);
+    const filePath = path.join(process.cwd(), 'tests', 'tmp', `test-${storage.getType()}-part.jpg`);
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
       const writeStream = fs.createWriteStream(filePath);
@@ -320,9 +320,9 @@ describe(`[testing ${type} storage]`, async () => {
   it("selected bucket", async () => {
     // local storage does not automatically slugify
     if (storage.getType() === "local") {
-      expect(storage.getSelectedBucket()).not.toBe(slugify(bucketName));
+      expect(storage.getSelectedBucket()).not.toBe(slugify(bucketName as string));
     } else {
-      expect(storage.getSelectedBucket()).toBe(slugify(bucketName));
+      expect(storage.getSelectedBucket()).toBe(slugify(bucketName as string));
     }
   });
 
@@ -366,11 +366,12 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("clear bucket by providing a bucket name", async () => {
-    expectAsync(storage.clearBucket(newBucketName)).toBeResolved();
+    await expectAsync(storage.clearBucket(newBucketName)).toBeResolved();
   });
 
   it("bucket should contain no files", async () => {
-    expectAsync(storage.listFiles()).toBeResolvedTo([]);
+    await expectAsync(storage.selectBucket(newBucketName)).toBeResolvedTo("bucket selected");
+    await expectAsync(storage.listFiles()).toBeResolvedTo([]);
   });
 
   it("delete bucket by providing a bucket name", async () => {
