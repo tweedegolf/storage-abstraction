@@ -70,7 +70,8 @@ if (type === StorageType.LOCAL) {
 
 const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 
-console.log("CONFIG", config, "\n", newBucketName, "\n");
+console.log("CONFIG", config);
+console.log("newBucketName:", newBucketName, '\n');
 
 let storage: Storage;
 // try {

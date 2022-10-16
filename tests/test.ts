@@ -5,7 +5,7 @@ import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
-dotenv.config();
+ dotenv.config();
 
 /**
  * Below 4 examples of how you can populate a config object using environment variables.
