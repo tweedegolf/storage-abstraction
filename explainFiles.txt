@@ -1,0 +1,538 @@
+
+> @tweedegolf/storage-abstraction@1.4.4 tscExplainFiles
+> node_modules/.bin/tsc --explainFiles
+
+node_modules/typescript/lib/lib.es6.d.ts
+  Default library for target 'es6'
+node_modules/typescript/lib/lib.es5.d.ts
+  Library referenced via 'es5' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es5' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.d.ts
+  Library referenced via 'es2015' from file 'node_modules/typescript/lib/lib.es2016.d.ts'
+  Library referenced via 'es2015' from file 'node_modules/typescript/lib/lib.es6.d.ts'
+node_modules/typescript/lib/lib.es2016.d.ts
+  Library referenced via 'es2016' from file 'node_modules/typescript/lib/lib.es2017.d.ts'
+node_modules/typescript/lib/lib.es2017.d.ts
+  Library referenced via 'es2017' from file 'node_modules/typescript/lib/lib.es2018.d.ts'
+node_modules/typescript/lib/lib.es2018.d.ts
+  Library referenced via 'es2018' from file 'node_modules/typescript/lib/lib.es2019.d.ts'
+node_modules/typescript/lib/lib.es2019.d.ts
+  Library referenced via 'es2019' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.d.ts
+  Library referenced via 'es2020' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/typescript/lib/lib.dom.d.ts
+  Library referenced via 'dom' from file 'node_modules/typescript/lib/lib.es6.d.ts'
+node_modules/typescript/lib/lib.dom.iterable.d.ts
+  Library referenced via 'dom.iterable' from file 'node_modules/typescript/lib/lib.es6.d.ts'
+node_modules/typescript/lib/lib.webworker.importscripts.d.ts
+  Library referenced via 'webworker.importscripts' from file 'node_modules/typescript/lib/lib.es6.d.ts'
+node_modules/typescript/lib/lib.scripthost.d.ts
+  Library referenced via 'scripthost' from file 'node_modules/typescript/lib/lib.es6.d.ts'
+node_modules/typescript/lib/lib.es2015.core.d.ts
+  Library referenced via 'es2015.core' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.core' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.collection.d.ts
+  Library referenced via 'es2015.collection' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.collection' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.generator.d.ts
+  Library referenced via 'es2015.generator' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.generator' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.iterable.d.ts
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2015.generator.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2018.asynciterable.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2019.object.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2020.string.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.iterable' from file 'node_modules/typescript/lib/lib.es2015.generator.d.ts'
+node_modules/typescript/lib/lib.es2015.promise.d.ts
+  Library referenced via 'es2015.promise' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.promise' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.proxy.d.ts
+  Library referenced via 'es2015.proxy' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.proxy' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.reflect.d.ts
+  Library referenced via 'es2015.reflect' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.reflect' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2015.symbol.d.ts
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2015.iterable.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2018.asynciterable.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2015.iterable.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.symbol' from file 'node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts'
+node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts
+  Library referenced via 'es2015.symbol.wellknown' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+  Library referenced via 'es2015.symbol.wellknown' from file 'node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts'
+  Library referenced via 'es2015.symbol.wellknown' from file 'node_modules/typescript/lib/lib.es2015.d.ts'
+node_modules/typescript/lib/lib.es2016.array.include.d.ts
+  Library referenced via 'es2016.array.include' from file 'node_modules/typescript/lib/lib.es2016.d.ts'
+node_modules/typescript/lib/lib.es2017.object.d.ts
+  Library referenced via 'es2017.object' from file 'node_modules/typescript/lib/lib.es2017.d.ts'
+node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts
+  Library referenced via 'es2017.sharedmemory' from file 'node_modules/typescript/lib/lib.es2017.d.ts'
+node_modules/typescript/lib/lib.es2017.string.d.ts
+  Library referenced via 'es2017.string' from file 'node_modules/typescript/lib/lib.es2017.d.ts'
+node_modules/typescript/lib/lib.es2017.intl.d.ts
+  Library referenced via 'es2017.intl' from file 'node_modules/typescript/lib/lib.es2017.d.ts'
+node_modules/typescript/lib/lib.es2017.typedarrays.d.ts
+  Library referenced via 'es2017.typedarrays' from file 'node_modules/typescript/lib/lib.es2017.d.ts'
+node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts
+  Library referenced via 'es2018.asyncgenerator' from file 'node_modules/typescript/lib/lib.es2018.d.ts'
+node_modules/typescript/lib/lib.es2018.asynciterable.d.ts
+  Library referenced via 'es2018.asynciterable' from file 'node_modules/typescript/lib/lib.es2018.d.ts'
+  Library referenced via 'es2018.asynciterable' from file 'node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts'
+  Library referenced via 'esnext.asynciterable' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/typescript/lib/lib.es2018.intl.d.ts
+  Library referenced via 'es2018.intl' from file 'node_modules/typescript/lib/lib.es2018.d.ts'
+  Library referenced via 'es2018.intl' from file 'node_modules/typescript/lib/lib.es2020.intl.d.ts'
+node_modules/typescript/lib/lib.es2018.promise.d.ts
+  Library referenced via 'es2018.promise' from file 'node_modules/typescript/lib/lib.es2018.d.ts'
+node_modules/typescript/lib/lib.es2018.regexp.d.ts
+  Library referenced via 'es2018.regexp' from file 'node_modules/typescript/lib/lib.es2018.d.ts'
+node_modules/typescript/lib/lib.es2019.array.d.ts
+  Library referenced via 'es2019.array' from file 'node_modules/typescript/lib/lib.es2019.d.ts'
+node_modules/typescript/lib/lib.es2019.object.d.ts
+  Library referenced via 'es2019.object' from file 'node_modules/typescript/lib/lib.es2019.d.ts'
+node_modules/typescript/lib/lib.es2019.string.d.ts
+  Library referenced via 'es2019.string' from file 'node_modules/typescript/lib/lib.es2019.d.ts'
+node_modules/typescript/lib/lib.es2019.symbol.d.ts
+  Library referenced via 'es2019.symbol' from file 'node_modules/typescript/lib/lib.es2019.d.ts'
+node_modules/typescript/lib/lib.es2020.bigint.d.ts
+  Library referenced via 'es2020.bigint' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+  Library referenced via 'esnext.bigint' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/typescript/lib/lib.es2020.date.d.ts
+  Library referenced via 'es2020.date' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.promise.d.ts
+  Library referenced via 'es2020.promise' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.sharedmemory.d.ts
+  Library referenced via 'es2020.sharedmemory' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.string.d.ts
+  Library referenced via 'es2020.string' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts
+  Library referenced via 'es2020.symbol.wellknown' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.intl.d.ts
+  Library referenced via 'es2020.intl' from file 'node_modules/typescript/lib/lib.es2020.bigint.d.ts'
+  Library referenced via 'es2020.intl' from file 'node_modules/typescript/lib/lib.es2020.date.d.ts'
+  Library referenced via 'es2020.intl' from file 'node_modules/typescript/lib/lib.es2020.number.d.ts'
+  Library referenced via 'es2020.intl' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.es2020.number.d.ts
+  Library referenced via 'es2020.number' from file 'node_modules/typescript/lib/lib.es2020.d.ts'
+node_modules/typescript/lib/lib.esnext.intl.d.ts
+  Library referenced via 'esnext.intl' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+src/types.ts
+  Imported via "./types" from file 'src/util.ts'
+  Imported via "./types" from file 'src/AbstractAdapter.ts'
+  Imported via "./types" from file 'src/AdapterAmazonS3.ts'
+  Imported via "./types" from file 'src/AdapterBackblazeB2.ts'
+  Imported via "./types" from file 'src/AdapterBackblazeB2F.ts'
+  Imported via "./types" from file 'src/AdapterGoogleCloudStorage.ts'
+  Imported via "./types" from file 'src/AdapterLocal.ts'
+  Imported via "./types" from file 'src/Storage.ts'
+  Imported via "./types" from file 'src/index.ts'
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+node_modules/slugify/slugify.d.ts
+  Imported via "slugify" from file 'src/util.ts' with packageId 'slugify/slugify.d.ts@1.6.5'
+src/util.ts
+  Imported via "./util" from file 'src/AbstractAdapter.ts'
+  Imported via "./util" from file 'src/AdapterAmazonS3.ts'
+  Imported via "./util" from file 'src/AdapterBackblazeB2.ts'
+  Imported via "./util" from file 'src/AdapterBackblazeB2F.ts'
+  Imported via "./util" from file 'src/AdapterGoogleCloudStorage.ts'
+  Imported via "./util" from file 'src/AdapterLocal.ts'
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+src/AbstractAdapter.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+  Imported via "./AbstractAdapter" from file 'src/AdapterAmazonS3.ts'
+  Imported via "./AbstractAdapter" from file 'src/AdapterBackblazeB2.ts'
+  Imported via "./AbstractAdapter" from file 'src/AdapterGoogleCloudStorage.ts'
+  Imported via "./AbstractAdapter" from file 'src/AdapterLocal.ts'
+node_modules/aws-sdk/lib/error.d.ts
+  Imported via './error' from file 'node_modules/aws-sdk/lib/service.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via './error' from file 'node_modules/aws-sdk/lib/config-base.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via './error' from file 'node_modules/aws-sdk/lib/credentials.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via '../error' from file 'node_modules/aws-sdk/lib/credentials/credential_provider_chain.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via './error' from file 'node_modules/aws-sdk/lib/token.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via '../error' from file 'node_modules/aws-sdk/lib/token/token_provider_chain.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via './error' from file 'node_modules/aws-sdk/lib/request.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via '../lib/error' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+  Imported via '../error' from file 'node_modules/aws-sdk/lib/s3/managed_upload.d.ts' with packageId 'aws-sdk/lib/error.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/credentials.d.ts
+  Imported via './credentials' from file 'node_modules/aws-sdk/lib/config-base.d.ts' with packageId 'aws-sdk/lib/credentials.d.ts@2.1233.0'
+  Imported via '../credentials' from file 'node_modules/aws-sdk/lib/credentials/credential_provider_chain.d.ts' with packageId 'aws-sdk/lib/credentials.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/credentials/credential_provider_chain.d.ts
+  Imported via './credentials/credential_provider_chain' from file 'node_modules/aws-sdk/lib/config-base.d.ts' with packageId 'aws-sdk/lib/credentials/credential_provider_chain.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/token.d.ts
+  Imported via './token' from file 'node_modules/aws-sdk/lib/config-base.d.ts' with packageId 'aws-sdk/lib/token.d.ts@2.1233.0'
+  Imported via '../token' from file 'node_modules/aws-sdk/lib/token/token_provider_chain.d.ts' with packageId 'aws-sdk/lib/token.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/token/token_provider_chain.d.ts
+  Imported via './token/token_provider_chain' from file 'node_modules/aws-sdk/lib/config-base.d.ts' with packageId 'aws-sdk/lib/token/token_provider_chain.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/config-base.d.ts
+  Imported via './config-base' from file 'node_modules/aws-sdk/lib/service.d.ts' with packageId 'aws-sdk/lib/config-base.d.ts@2.1233.0'
+  Imported via '../lib/config-base' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/config-base.d.ts@2.1233.0'
+  Imported via './config-base' from file 'node_modules/aws-sdk/lib/config_use_dualstack.d.ts' with packageId 'aws-sdk/lib/config-base.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/endpoint.d.ts
+  Imported via './endpoint' from file 'node_modules/aws-sdk/lib/service.d.ts' with packageId 'aws-sdk/lib/endpoint.d.ts@2.1233.0'
+  Imported via './endpoint' from file 'node_modules/aws-sdk/lib/http_request.d.ts' with packageId 'aws-sdk/lib/endpoint.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/service.d.ts
+  Imported via './service' from file 'node_modules/aws-sdk/lib/request.d.ts' with packageId 'aws-sdk/lib/service.d.ts@2.1233.0'
+  Imported via '../service' from file 'node_modules/aws-sdk/lib/services/s3.d.ts' with packageId 'aws-sdk/lib/service.d.ts@2.1233.0'
+  Imported via '../lib/service' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/service.d.ts@2.1233.0'
+  Imported via '../lib/service' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/service.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/http_response.d.ts
+  Imported via './http_response' from file 'node_modules/aws-sdk/lib/response.d.ts' with packageId 'aws-sdk/lib/http_response.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/response.d.ts
+  Imported via './response' from file 'node_modules/aws-sdk/lib/request.d.ts' with packageId 'aws-sdk/lib/response.d.ts@2.1233.0'
+  Imported via '../lib/response' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/response.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/http_request.d.ts
+  Imported via './http_request' from file 'node_modules/aws-sdk/lib/request.d.ts' with packageId 'aws-sdk/lib/http_request.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/request.d.ts
+  Imported via '../lib/request' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/request.d.ts@2.1233.0'
+  Imported via './request' from file 'node_modules/aws-sdk/lib/service.d.ts' with packageId 'aws-sdk/lib/request.d.ts@2.1233.0'
+  Imported via './request' from file 'node_modules/aws-sdk/lib/response.d.ts' with packageId 'aws-sdk/lib/request.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/s3/managed_upload.d.ts
+  Imported via '../s3/managed_upload' from file 'node_modules/aws-sdk/lib/services/s3.d.ts' with packageId 'aws-sdk/lib/s3/managed_upload.d.ts@2.1233.0'
+  Imported via '../lib/s3/managed_upload' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/s3/managed_upload.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/services/s3.d.ts
+  Imported via '../lib/services/s3' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/services/s3.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/config_use_dualstack.d.ts
+  Imported via '../lib/config_use_dualstack' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/config_use_dualstack.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/event-stream/event-stream.d.ts
+  Imported via '../lib/event-stream/event-stream' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/event-stream/event-stream.d.ts@2.1233.0'
+node_modules/aws-sdk/lib/s3/presigned_post.d.ts
+  Imported via '../lib/s3/presigned_post' from file 'node_modules/aws-sdk/clients/s3.d.ts' with packageId 'aws-sdk/lib/s3/presigned_post.d.ts@2.1233.0'
+node_modules/aws-sdk/clients/s3.d.ts
+  Imported via "aws-sdk/clients/s3" from file 'src/AdapterAmazonS3.ts' with packageId 'aws-sdk/clients/s3.d.ts@2.1233.0'
+  Imported via '../../clients/s3' from file 'node_modules/aws-sdk/lib/s3/managed_upload.d.ts' with packageId 'aws-sdk/clients/s3.d.ts@2.1233.0'
+  Imported via '../../clients/s3' from file 'node_modules/aws-sdk/lib/services/s3.d.ts' with packageId 'aws-sdk/clients/s3.d.ts@2.1233.0'
+src/AdapterAmazonS3.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+src/AdapterBackblazeB2.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+node_modules/await-to-js/dist/types/await-to-js.d.ts
+  Imported via "await-to-js" from file 'src/AdapterBackblazeB2F.ts' with packageId 'await-to-js/dist/types/await-to-js.d.ts@3.0.0'
+src/AdapterBackblazeB2F.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+node_modules/@types/node/ts4.8/assert.d.ts
+  Referenced via 'assert.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/assert/strict.d.ts
+  Referenced via 'assert/strict.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/globals.d.ts
+  Referenced via 'globals.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/async_hooks.d.ts
+  Referenced via 'async_hooks.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/buffer.d.ts
+  Referenced via 'buffer.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/child_process.d.ts
+  Referenced via 'child_process.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/cluster.d.ts
+  Referenced via 'cluster.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/console.d.ts
+  Referenced via 'console.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/constants.d.ts
+  Referenced via 'constants.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/crypto.d.ts
+  Referenced via 'crypto.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/dgram.d.ts
+  Referenced via 'dgram.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/diagnostics_channel.d.ts
+  Referenced via 'diagnostics_channel.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/dns.d.ts
+  Referenced via 'dns.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/dns/promises.d.ts
+  Referenced via 'dns/promises.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+  Referenced via 'dns/promises.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/domain.d.ts
+  Referenced via 'domain.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/dom-events.d.ts
+  Referenced via 'dom-events.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/events.d.ts
+  Referenced via 'events.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/fs.d.ts
+  Referenced via 'fs.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/fs/promises.d.ts
+  Referenced via 'fs/promises.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/http.d.ts
+  Referenced via 'http.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/http2.d.ts
+  Referenced via 'http2.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/https.d.ts
+  Referenced via 'https.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/inspector.d.ts
+  Referenced via 'inspector.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/module.d.ts
+  Referenced via 'module.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/net.d.ts
+  Referenced via 'net.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/os.d.ts
+  Referenced via 'os.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/path.d.ts
+  Referenced via 'path.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/perf_hooks.d.ts
+  Referenced via 'perf_hooks.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/process.d.ts
+  Referenced via 'process.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/punycode.d.ts
+  Referenced via 'punycode.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/querystring.d.ts
+  Referenced via 'querystring.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/readline.d.ts
+  Referenced via 'readline.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/readline/promises.d.ts
+  Referenced via 'readline/promises.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/repl.d.ts
+  Referenced via 'repl.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/stream.d.ts
+  Referenced via 'stream.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/stream/promises.d.ts
+  Referenced via 'stream/promises.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/stream/consumers.d.ts
+  Referenced via 'stream/consumers.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/stream/web.d.ts
+  Referenced via 'stream/web.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/string_decoder.d.ts
+  Referenced via 'string_decoder.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/test.d.ts
+  Referenced via 'test.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/timers.d.ts
+  Referenced via 'timers.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/timers/promises.d.ts
+  Referenced via 'timers/promises.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/tls.d.ts
+  Referenced via 'tls.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/trace_events.d.ts
+  Referenced via 'trace_events.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/tty.d.ts
+  Referenced via 'tty.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/url.d.ts
+  Referenced via 'url.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/util.d.ts
+  Referenced via 'util.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/v8.d.ts
+  Referenced via 'v8.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/vm.d.ts
+  Referenced via 'vm.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/wasi.d.ts
+  Referenced via 'wasi.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/worker_threads.d.ts
+  Referenced via 'worker_threads.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/zlib.d.ts
+  Referenced via 'zlib.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/globals.global.d.ts
+  Referenced via 'globals.global.d.ts' from file 'node_modules/@types/node/ts4.8/index.d.ts'
+node_modules/@types/node/ts4.8/index.d.ts
+  Type library referenced via 'node' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId '@types/node/ts4.8/index.d.ts@18.11.0'
+node_modules/gaxios/build/src/common.d.ts
+  Imported via './common' from file 'node_modules/gaxios/build/src/index.d.ts' with packageId 'gaxios/build/src/common.d.ts@5.0.2'
+  Imported via './common' from file 'node_modules/gaxios/build/src/gaxios.d.ts' with packageId 'gaxios/build/src/common.d.ts@5.0.2'
+  Imported via './common' from file 'node_modules/gaxios/build/src/index.d.ts' with packageId 'gaxios/build/src/common.d.ts@5.0.2'
+  Imported via "./common" from file 'node_modules/gaxios/build/src/index.d.ts' with packageId 'gaxios/build/src/common.d.ts@5.0.2'
+node_modules/gaxios/build/src/gaxios.d.ts
+  Imported via './gaxios' from file 'node_modules/gaxios/build/src/index.d.ts' with packageId 'gaxios/build/src/gaxios.d.ts@5.0.2'
+node_modules/gaxios/build/src/index.d.ts
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/transporters.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/auth/computeclient.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/auth/oauth2client.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/auth/authclient.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/gtoken/build/src/index.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/auth/baseexternalclient.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+  Imported via 'gaxios' from file 'node_modules/google-auth-library/build/src/auth/downscopedclient.d.ts' with packageId 'gaxios/build/src/index.d.ts@5.0.2'
+node_modules/google-auth-library/build/src/transporters.d.ts
+  Imported via '../transporters' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/transporters.d.ts@8.5.2'
+  Imported via '../transporters' from file 'node_modules/google-auth-library/build/src/auth/oauth2client.d.ts' with packageId 'google-auth-library/build/src/transporters.d.ts@8.5.2'
+  Imported via '../transporters' from file 'node_modules/google-auth-library/build/src/auth/authclient.d.ts' with packageId 'google-auth-library/build/src/transporters.d.ts@8.5.2'
+  Imported via '../transporters' from file 'node_modules/google-auth-library/build/src/auth/baseexternalclient.d.ts' with packageId 'google-auth-library/build/src/transporters.d.ts@8.5.2'
+  Imported via '../transporters' from file 'node_modules/google-auth-library/build/src/auth/downscopedclient.d.ts' with packageId 'google-auth-library/build/src/transporters.d.ts@8.5.2'
+  Imported via './transporters' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/transporters.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/crypto/crypto.d.ts
+  Imported via '../crypto/crypto' from file 'node_modules/google-auth-library/build/src/auth/oauth2client.d.ts' with packageId 'google-auth-library/build/src/crypto/crypto.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/credentials.d.ts
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/authclient.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/oauth2client.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/jwtclient.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/refreshclient.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/baseexternalclient.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './auth/credentials' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/jwtaccess.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+  Imported via './credentials' from file 'node_modules/google-auth-library/build/src/auth/downscopedclient.d.ts' with packageId 'google-auth-library/build/src/auth/credentials.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/authclient.d.ts
+  Imported via './authclient' from file 'node_modules/google-auth-library/build/src/auth/oauth2client.d.ts' with packageId 'google-auth-library/build/src/auth/authclient.d.ts@8.5.2'
+  Imported via './authclient' from file 'node_modules/google-auth-library/build/src/auth/impersonated.d.ts' with packageId 'google-auth-library/build/src/auth/authclient.d.ts@8.5.2'
+  Imported via './authclient' from file 'node_modules/google-auth-library/build/src/auth/baseexternalclient.d.ts' with packageId 'google-auth-library/build/src/auth/authclient.d.ts@8.5.2'
+  Imported via './authclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/authclient.d.ts@8.5.2'
+  Imported via './auth/authclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/authclient.d.ts@8.5.2'
+  Imported via './authclient' from file 'node_modules/google-auth-library/build/src/auth/downscopedclient.d.ts' with packageId 'google-auth-library/build/src/auth/authclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/loginticket.d.ts
+  Imported via './loginticket' from file 'node_modules/google-auth-library/build/src/auth/oauth2client.d.ts' with packageId 'google-auth-library/build/src/auth/loginticket.d.ts@8.5.2'
+  Imported via './auth/loginticket' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/loginticket.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/oauth2client.d.ts
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/computeclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/authclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/idtokenclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/jwtclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/refreshclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/impersonated.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/externalclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/baseexternalclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/identitypoolclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/awsclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/pluggable-auth-client.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/jwtaccess.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './auth/oauth2client' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+  Imported via './oauth2client' from file 'node_modules/google-auth-library/build/src/auth/downscopedclient.d.ts' with packageId 'google-auth-library/build/src/auth/oauth2client.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/computeclient.d.ts
+  Imported via './computeclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/computeclient.d.ts@8.5.2'
+  Imported via './auth/computeclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/computeclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/idtokenclient.d.ts
+  Imported via './idtokenclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/idtokenclient.d.ts@8.5.2'
+  Imported via './idtokenclient' from file 'node_modules/google-auth-library/build/src/auth/jwtclient.d.ts' with packageId 'google-auth-library/build/src/auth/idtokenclient.d.ts@8.5.2'
+  Imported via './idtokenclient' from file 'node_modules/google-auth-library/build/src/auth/impersonated.d.ts' with packageId 'google-auth-library/build/src/auth/idtokenclient.d.ts@8.5.2'
+  Imported via './auth/idtokenclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/idtokenclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/envDetect.d.ts
+  Imported via './envDetect' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/envDetect.d.ts@8.5.2'
+  Imported via './auth/envDetect' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/envDetect.d.ts@8.5.2'
+node_modules/gtoken/build/src/index.d.ts
+  Imported via 'gtoken' from file 'node_modules/google-auth-library/build/src/auth/jwtclient.d.ts' with packageId 'gtoken/build/src/index.d.ts@6.1.2'
+node_modules/google-auth-library/build/src/auth/jwtclient.d.ts
+  Imported via './jwtclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/jwtclient.d.ts@8.5.2'
+  Imported via './auth/jwtclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/jwtclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/refreshclient.d.ts
+  Imported via './refreshclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/refreshclient.d.ts@8.5.2'
+  Imported via './auth/refreshclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/refreshclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/impersonated.d.ts
+  Imported via './impersonated' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/impersonated.d.ts@8.5.2'
+  Imported via './auth/impersonated' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/impersonated.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/baseexternalclient.d.ts
+  Imported via './baseexternalclient' from file 'node_modules/google-auth-library/build/src/auth/externalclient.d.ts' with packageId 'google-auth-library/build/src/auth/baseexternalclient.d.ts@8.5.2'
+  Imported via './baseexternalclient' from file 'node_modules/google-auth-library/build/src/auth/identitypoolclient.d.ts' with packageId 'google-auth-library/build/src/auth/baseexternalclient.d.ts@8.5.2'
+  Imported via './baseexternalclient' from file 'node_modules/google-auth-library/build/src/auth/awsclient.d.ts' with packageId 'google-auth-library/build/src/auth/baseexternalclient.d.ts@8.5.2'
+  Imported via './baseexternalclient' from file 'node_modules/google-auth-library/build/src/auth/pluggable-auth-client.d.ts' with packageId 'google-auth-library/build/src/auth/baseexternalclient.d.ts@8.5.2'
+  Imported via './baseexternalclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/baseexternalclient.d.ts@8.5.2'
+  Imported via './auth/baseexternalclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/baseexternalclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/identitypoolclient.d.ts
+  Imported via './identitypoolclient' from file 'node_modules/google-auth-library/build/src/auth/externalclient.d.ts' with packageId 'google-auth-library/build/src/auth/identitypoolclient.d.ts@8.5.2'
+  Imported via './auth/identitypoolclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/identitypoolclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/awsclient.d.ts
+  Imported via './awsclient' from file 'node_modules/google-auth-library/build/src/auth/externalclient.d.ts' with packageId 'google-auth-library/build/src/auth/awsclient.d.ts@8.5.2'
+  Imported via './auth/awsclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/awsclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/pluggable-auth-client.d.ts
+  Imported via './pluggable-auth-client' from file 'node_modules/google-auth-library/build/src/auth/externalclient.d.ts' with packageId 'google-auth-library/build/src/auth/pluggable-auth-client.d.ts@8.5.2'
+  Imported via './auth/pluggable-auth-client' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/pluggable-auth-client.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/externalclient.d.ts
+  Imported via './externalclient' from file 'node_modules/google-auth-library/build/src/auth/googleauth.d.ts' with packageId 'google-auth-library/build/src/auth/externalclient.d.ts@8.5.2'
+  Imported via './auth/externalclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/externalclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/googleauth.d.ts
+  Imported via './auth/googleauth' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/googleauth.d.ts@8.5.2'
+  Imported via './auth/googleauth' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/googleauth.d.ts@8.5.2'
+  Imported via "./auth/googleauth" from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/googleauth.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/iam.d.ts
+  Imported via './auth/iam' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/iam.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/jwtaccess.d.ts
+  Imported via './auth/jwtaccess' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/jwtaccess.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/auth/downscopedclient.d.ts
+  Imported via './auth/downscopedclient' from file 'node_modules/google-auth-library/build/src/index.d.ts' with packageId 'google-auth-library/build/src/auth/downscopedclient.d.ts@8.5.2'
+node_modules/google-auth-library/build/src/index.d.ts
+  Imported via 'google-auth-library' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/index.d.ts' with packageId 'google-auth-library/build/src/index.d.ts@8.5.2'
+  Imported via 'google-auth-library' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/service.d.ts' with packageId 'google-auth-library/build/src/index.d.ts@8.5.2'
+  Imported via 'google-auth-library' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/util.d.ts' with packageId 'google-auth-library/build/src/index.d.ts@8.5.2'
+  Imported via 'google-auth-library' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/util.d.ts' with packageId 'google-auth-library/build/src/index.d.ts@8.5.2'
+node_modules/teeny-request/build/src/TeenyStatistics.d.ts
+  Imported via './TeenyStatistics' from file 'node_modules/teeny-request/build/src/index.d.ts' with packageId 'teeny-request/build/src/TeenyStatistics.d.ts@8.0.2'
+node_modules/teeny-request/build/src/index.d.ts
+  Imported via 'teeny-request' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/service.d.ts' with packageId 'teeny-request/build/src/index.d.ts@8.0.2'
+  Imported via 'teeny-request' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/service-object.d.ts' with packageId 'teeny-request/build/src/index.d.ts@8.0.2'
+  Imported via 'teeny-request' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/util.d.ts' with packageId 'teeny-request/build/src/index.d.ts@8.0.2'
+  Imported via 'teeny-request' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId 'teeny-request/build/src/index.d.ts@8.0.2'
+node_modules/@google-cloud/storage/build/src/nodejs-common/util.d.ts
+  Imported via './util' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/service-object.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/util.d.ts@6.5.2'
+  Imported via './util' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/service.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/util.d.ts@6.5.2'
+  Imported via './util' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/index.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/util.d.ts@6.5.2'
+  Imported via './nodejs-common/util' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/util.d.ts@6.5.2'
+  Imported via './nodejs-common/util' from file 'node_modules/@google-cloud/storage/build/src/notification.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/util.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/nodejs-common/service-object.d.ts
+  Imported via './service-object' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/service.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service-object.d.ts@6.5.2'
+  Imported via './service-object' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/util.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service-object.d.ts@6.5.2'
+  Imported via './service-object' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/index.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service-object.d.ts@6.5.2'
+  Imported via './nodejs-common/service-object' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service-object.d.ts@6.5.2'
+  Imported via './nodejs-common/service-object' from file 'node_modules/@google-cloud/storage/build/src/hmacKey.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service-object.d.ts@6.5.2'
+  Imported via './nodejs-common/service-object' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service-object.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/nodejs-common/service.d.ts
+  Imported via './service' from file 'node_modules/@google-cloud/storage/build/src/nodejs-common/index.d.ts' with packageId '@google-cloud/storage/build/src/nodejs-common/service.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/nodejs-common/index.d.ts
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/acl.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/channel.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/storage.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/hmacKey.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/iam.d.ts'
+  Imported via './nodejs-common' from file 'node_modules/@google-cloud/storage/build/src/notification.d.ts'
+node_modules/@google-cloud/storage/build/src/acl.d.ts
+  Imported via './acl' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/acl.d.ts@6.5.2'
+  Imported via './acl' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/acl.d.ts@6.5.2'
+  Imported via './acl' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/acl.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/signer.d.ts
+  Imported via './signer' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/signer.d.ts@6.5.2'
+  Imported via './signer' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/signer.d.ts@6.5.2'
+  Imported via './signer' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/signer.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/crc32c.d.ts
+  Imported via './crc32c' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/crc32c.d.ts@6.5.2'
+  Imported via './crc32c' from file 'node_modules/@google-cloud/storage/build/src/storage.d.ts' with packageId '@google-cloud/storage/build/src/crc32c.d.ts@6.5.2'
+  Imported via './crc32c' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/crc32c.d.ts@6.5.2'
+  Imported via './crc32c' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/crc32c.d.ts@6.5.2'
+  Imported via './crc32c' from file 'node_modules/@google-cloud/storage/build/src/hash-stream-validator.d.ts' with packageId '@google-cloud/storage/build/src/crc32c.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/file.d.ts
+  Imported via './file' from file 'node_modules/@google-cloud/storage/build/src/storage.d.ts' with packageId '@google-cloud/storage/build/src/file.d.ts@6.5.2'
+  Imported via './file' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/file.d.ts@6.5.2'
+  Imported via './file' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/file.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/hmacKey.d.ts
+  Imported via './hmacKey' from file 'node_modules/@google-cloud/storage/build/src/storage.d.ts' with packageId '@google-cloud/storage/build/src/hmacKey.d.ts@6.5.2'
+  Imported via './hmacKey' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/hmacKey.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/storage.d.ts
+  Imported via './storage' from file 'node_modules/@google-cloud/storage/build/src/channel.d.ts' with packageId '@google-cloud/storage/build/src/storage.d.ts@6.5.2'
+  Imported via './storage' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/storage.d.ts@6.5.2'
+  Imported via './storage' from file 'node_modules/@google-cloud/storage/build/src/hmacKey.d.ts' with packageId '@google-cloud/storage/build/src/storage.d.ts@6.5.2'
+  Imported via './storage' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/storage.d.ts@6.5.2'
+  Imported via './storage' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/storage.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/channel.d.ts
+  Imported via './channel' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/channel.d.ts@6.5.2'
+  Imported via './channel' from file 'node_modules/@google-cloud/storage/build/src/storage.d.ts' with packageId '@google-cloud/storage/build/src/channel.d.ts@6.5.2'
+  Imported via './channel' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/channel.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/iam.d.ts
+  Imported via './iam' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/iam.d.ts@6.5.2'
+  Imported via './iam' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/iam.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/notification.d.ts
+  Imported via './notification' from file 'node_modules/@google-cloud/storage/build/src/bucket.d.ts' with packageId '@google-cloud/storage/build/src/notification.d.ts@6.5.2'
+  Imported via './notification' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/notification.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/bucket.d.ts
+  Imported via './bucket' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/bucket.d.ts@6.5.2'
+  Imported via './bucket' from file 'node_modules/@google-cloud/storage/build/src/storage.d.ts' with packageId '@google-cloud/storage/build/src/bucket.d.ts@6.5.2'
+  Imported via './bucket' from file 'node_modules/@google-cloud/storage/build/src/file.d.ts' with packageId '@google-cloud/storage/build/src/bucket.d.ts@6.5.2'
+  Imported via './bucket' from file 'node_modules/@google-cloud/storage/build/src/iam.d.ts' with packageId '@google-cloud/storage/build/src/bucket.d.ts@6.5.2'
+  Imported via './bucket' from file 'node_modules/@google-cloud/storage/build/src/notification.d.ts' with packageId '@google-cloud/storage/build/src/bucket.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/hash-stream-validator.d.ts
+  Imported via './hash-stream-validator' from file 'node_modules/@google-cloud/storage/build/src/index.d.ts' with packageId '@google-cloud/storage/build/src/hash-stream-validator.d.ts@6.5.2'
+node_modules/@google-cloud/storage/build/src/index.d.ts
+  Imported via "@google-cloud/storage" from file 'src/AdapterGoogleCloudStorage.ts' with packageId '@google-cloud/storage/build/src/index.d.ts@6.5.2'
+src/AdapterGoogleCloudStorage.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+src/AdapterLocal.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+src/Storage.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+  Imported via "./Storage" from file 'src/index.ts'
+src/index.ts
+  Matched by include pattern 'src/*.ts' in 'tsconfig.json'
+node_modules/@types/jasmine/index.d.ts
+  Entry point for implicit type library 'jasmine' with packageId '@types/jasmine/index.d.ts@4.3.0'
+node_modules/@types/json-schema/index.d.ts
+  Entry point for implicit type library 'json-schema' with packageId '@types/json-schema/index.d.ts@7.0.11'
+node_modules/@types/retry/index.d.ts
+  Entry point for implicit type library 'retry' with packageId '@types/retry/index.d.ts@0.12.0'

@@ -7,3 +7,4 @@ tests/keyFile1.json
 tests/keyFile2.json
 .env
 .idea
+.yarn

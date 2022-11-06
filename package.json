@@ -10,6 +10,7 @@
     "dist/*",
     "tests/test.ts"
   ],
+  "packageManager": "yarn@3.2.4",
   "dependencies": {
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.3",
     "@google-cloud/storage": "^6.5.2",
@@ -24,7 +25,7 @@
     "uniquid": "^1.1.4"
   },
   "devDependencies": {
-    "@types/jasmine": "^4.3.0",
+    "@types/jasmine": "^4",
     "@types/node": "^18.11.0",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",
@@ -33,7 +34,8 @@
     "eslint": "^8.25.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "jasmine": "^4.4.0",
+    "jasmine": "^4.5.0",
+    "jasmine-ts": "^0.4.0",
     "markdown-toc": "^1.2.0",
     "prettier": "^2.7.1",
     "ts-node": "^10.9.1",
@@ -44,11 +46,11 @@
     "test-await": "ts-node ./tests/test-await.ts",
     "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
-    "test-config-b2": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-b2.jasmine.ts",
+    "test-config-b2": "ts-node ./tests/test-config-b2.jasmine.ts",
     "test-config-s3": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-s3.jasmine.ts",
     "test-config-gcs": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-gcs.jasmine.ts",
     "test-config-local": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-local.jasmine.ts",
-    "test-local": "TYPE='local' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-local": "TYPE='local' jasmine ./tests/test.jasmine.js",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-b2": "TYPE='b2' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
@@ -59,7 +61,8 @@
     "test6": "ts-node ./tests/test6.ts",
     "ts": "ts-node",
     "test-urls": "ts-node ./tests/test-urls.ts",
-    "tsc": "node_modules/.bin/tsc",
+    "tsc": "tsc",
+    "transpile-tests": "tsc -P ./tsconfig-tests.json",
     "copy-readme": "copy ./README.md ./publish",
     "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",
     "toc": "markdown-toc -i README.md"

@@ -1,9 +1,9 @@
 import "jasmine";
-import fs from "fs";
+import * as fs from "fs";
 import to from "await-to-js";
-import path from "path";
+import * as path from "path";
 import rimraf from "rimraf";
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 import uniquid from "uniquid";
 import slugify from "slugify";
 import { Storage } from "../src/Storage";
@@ -84,7 +84,7 @@ let storage: Storage;
 // }
 
 const waitABit = async (millis = 100): Promise<void> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     setTimeout(() => {
       // console.log(`just wait a bit (${millis}ms)`);
       resolve();

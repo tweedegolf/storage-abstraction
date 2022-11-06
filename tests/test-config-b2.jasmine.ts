@@ -1,18 +1,21 @@
 import "jasmine";
 import { Storage } from "../src/Storage";
-import { StorageType } from "../src/types";
+import { ConfigBackblazeB2, StorageType } from "../src/types";
 
 describe(`testing backblaze b2 urls`, () => {
   it("[0]", () => {
-    this.storage = new Storage("b2://application-key-id:application-key/can/contain/slashes");
-    expect(this.storage.getType()).toBe(StorageType.B2);
-    expect(this.storage.getSelectedBucket()).toBe("");
-    expect(this.storage.getConfiguration().applicationKeyId).toBe("application-key-id");
-    expect(this.storage.getConfiguration().applicationKey).toBe(
+    const storage = new Storage("b2://application-key-id:application-key/can/contain/slashes");
+    expect(storage.getType()).toBe(StorageType.B2);
+    expect(storage.getSelectedBucket()).toBe("");
+    expect((storage.getConfiguration() as ConfigBackblazeB2).applicationKeyId).toBe(
+      "application-key-id"
+    );
+    expect((storage.getConfiguration() as ConfigBackblazeB2).applicationKey).toBe(
       "application-key/can/contain/slashes"
     );
   });
 
+  /*
   it("[1]", () => {
     this.storage = new Storage(
       "b2://application-key-id:application-key/can/contain/slashes@the-buck"
@@ -59,4 +62,5 @@ describe(`testing backblaze b2 urls`, () => {
     expect(this.storage.getConfiguration().applicationKeyId).toBe("keyId");
     expect(this.storage.getConfiguration().applicationKey).toBe("key");
   });
+*/
 });
