@@ -137,7 +137,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           })
         )
     );
-    this.files = this.files.filter(file => file.fileName !== name);
+    this.files = this.files.filter((file) => file.fileName !== name);
     return "file removed";
   }
 
@@ -146,7 +146,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (this.buckets.length === 0) {
       return null;
     }
-    const index = this.buckets.findIndex(b => b.bucketName === name);
+    const index = this.buckets.findIndex((b) => b.bucketName === name);
     if (index !== -1) {
       return this.buckets[index];
     }
@@ -208,7 +208,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         bucketName: n,
         bucketType: "allPrivate", // should be a config option!
       })
-      .catch(e => {
+      .catch((e) => {
         throw new Error(e.response.data.message);
       });
 
@@ -291,7 +291,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } catch (e) {
       return e.response.data.message;
     }
-    this.buckets = this.buckets.filter(b => b.bucketName !== n);
+    this.buckets = this.buckets.filter((b) => b.bucketName !== n);
     this.bucketId = "";
     this.bucketName = "";
     return "bucket deleted";
@@ -306,7 +306,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     //   return acc;
     // }, {});
     this.buckets = buckets;
-    const names = this.buckets.map(b => b.bucketName);
+    const names = this.buckets.map((b) => b.bucketName);
     return names;
   }
 
@@ -330,7 +330,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // console.log(nextFileName);
       this.nextFileName = nextFileName;
     }
-    return this.files.map(f => [f.fileName, f.contentLength]);
+    return this.files.map((f) => [f.fileName, f.contentLength]);
   }
 
   private async findFile(name: string): Promise<BackblazeB2File | null> {

@@ -8,7 +8,7 @@ import uniquid from "uniquid";
 import slugify from "slugify";
 import { Storage } from "../src/Storage";
 import { AdapterConfig, StorageType } from "../src/types";
-import { copyFile } from "./util";
+import { copyFile, deleteFile } from "./util";
 dotenv.config();
 
 const type = process.env["TYPE"];
@@ -71,7 +71,7 @@ if (type === StorageType.LOCAL) {
 const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 
 console.log("CONFIG", config);
-console.log("newBucketName:", newBucketName, '\n');
+console.log("newBucketName:", newBucketName, "\n");
 
 let storage: Storage;
 // try {
@@ -84,14 +84,14 @@ let storage: Storage;
 // }
 
 const waitABit = async (millis = 100): Promise<void> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     setTimeout(() => {
       // console.log(`just wait a bit (${millis}ms)`);
       resolve();
     }, millis);
   });
 
-describe(`[testing ${type} storage]`, async () => {
+describe(`[testing ${type || "local"} storage]`, async () => {
   // beforeAll(async () => {
   //   storage = new Storage(config);
   //   await storage.init();
@@ -107,7 +107,18 @@ describe(`[testing ${type} storage]`, async () => {
   afterAll(async () => {
     await storage.clearBucket(slugify(bucketName as string));
     if (storage.getType() === StorageType.LOCAL) {
-      await storage.deleteBucket("new-bucket");
+      const d = await storage.deleteBucket(newBucketName);
+      console.log("afterAll", newBucketName, d);
+      let b = storage.getConfiguration().bucketName;
+      console.log("afterAll", b);
+      if (b) {
+        await storage.deleteBucket(b);
+      }
+      b = storage.getSelectedBucket();
+      console.log("afterAll", b);
+      if (b) {
+        await storage.deleteBucket(b);
+      }
     }
     // cleaning up test data
     rimraf(path.join(process.cwd(), `test-*.jpg`), () => {
@@ -135,7 +146,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("create bucket", async () => {
-    // console.log(storage.getSelectedBucket());
+    console.log("selected bucket", storage.getSelectedBucket());
     await expectAsync(storage.createBucket(storage.getSelectedBucket())).toBeResolved();
   });
 
@@ -148,7 +159,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("check if bucket is empty", async () => {
-    const files = await storage.listFiles().catch(e => {
+    const files = await storage.listFiles().catch((e) => {
       console.log(e.message);
     });
     expect(files).toEqual([]);
@@ -211,7 +222,7 @@ describe(`[testing ${type} storage]`, async () => {
   it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(process.cwd(), 'tests', 'tmp', `test-${storage.getType()}.jpg`);
+      const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}.jpg`);
       const writeStream = fs.createWriteStream(filePath);
       await copyFile(readStream, writeStream);
     } catch (e) {
@@ -221,7 +232,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("get readable stream partially and save file", async () => {
-    const filePath = path.join(process.cwd(), 'tests', 'tmp', `test-${storage.getType()}-part.jpg`);
+    const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}-part.jpg`);
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
       const writeStream = fs.createWriteStream(filePath);
@@ -245,6 +256,10 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("list files 3", async () => {
+    // if (type == "local") {
+    //   await deleteFile(path.join(process.cwd(), "tests", "tmp", "test-part.jpg"));
+    //   await deleteFile(path.join(process.cwd(), "tests", "tmp", "test-local-part.jpg"));
+    // }
     const expectedResult: [string, number][] = [
       ["image1.jpg", 32201],
       ["image2.jpg", 42908],
@@ -274,6 +289,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("create bucket error", async () => {
+    // we intentionally invoke an error here so ignore the ts-lint error
     await expectAsync(storage.createBucket(null)).toBeRejectedWith(
       "Can not use `null` as bucket name"
     );

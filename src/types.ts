@@ -106,9 +106,9 @@ export interface IStorage {
   addFileFromReadable(stream: Readable, targetPath: string, options?: UploadOptions): Promise<void>;
 
   /**
-   * @param name: name of the file to be returned as a readable stream
-   * @param start?: the byte of the file where the stream starts (default: 0)
-   * @param end?: the byte in the file where the stream ends (default: last byte of file)
+   * @param name     name of the file to be returned as a readable stream
+   * @param options  start: the byte of the file where the stream starts (default: 0)
+   *                 end: the byte in the file where the stream ends (default: last byte of file)
    */
   getFileAsReadable(
     name: string,

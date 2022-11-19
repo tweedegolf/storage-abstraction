@@ -15,10 +15,10 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
     options = url
       .substring(questionMark + 1)
       .split("&")
-      .map(pair => pair.split("="))
+      .map((pair) => pair.split("="))
       .reduce((acc, val) => {
         // acc[val[0]] = `${val[1]}`.valueOf();
-        acc[val[0]] = val[1];
+        acc[val[0]] = parseBooleanFromString(val[1]);
         return acc;
       }, {});
   }
@@ -104,6 +104,22 @@ export const parseIntFromString = (s: string): number => {
   return parseInt(s);
 };
 
+/**
+ * @param s
+ *
+ * Parses a string that may contain a boolean into a real boolean
+ *
+ */
+export const parseBooleanFromString = (s: string): boolean | string => {
+  if (s == "true") {
+    return true;
+  }
+  if (s == "false") {
+    return false;
+  }
+  return s;
+};
+
 export const parseMode = (s: number | string): number | string => {
   if (typeof s === "number") {
     if (s < 0) {
@@ -130,13 +146,13 @@ export const getProtocol = (url: string): string => {
 
 /**
  * @param p
- * @param settings
+ * @param slug
  *
  * Slugifies a path if `slug` is true
  */
 export const generateSlugPath = (p: string, slug: boolean | number | string): string => {
   if (slug === "true" || slug === true || slug == 1) {
-    const paths = p.split("/").map(d => slugify(d));
+    const paths = p.split("/").map((d) => slugify(d));
     return path.join(...paths);
   }
   return p;
@@ -144,7 +160,7 @@ export const generateSlugPath = (p: string, slug: boolean | number | string): st
 
 /**
  * @param url
- * @param doSlug
+ * @param slug
  *
  * Slugifies a url if the `slug` is true
  */

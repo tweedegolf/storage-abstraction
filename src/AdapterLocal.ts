@@ -27,7 +27,7 @@ export class AdapterLocal extends AbstractAdapter {
 
     this.directory = this.generateSlug(path.dirname(directory), this.slug);
     this.bucketName = this.generateSlug(path.basename(directory), this.slug);
-    // console.log("INIT", this.directory, this.bucketName);
+    console.log("INIT", this.directory, this.bucketName);
 
     this.config = {
       type: this.type,
@@ -83,7 +83,7 @@ export class AdapterLocal extends AbstractAdapter {
           recursive: true,
           mode: parseMode(this.mode as string | number),
         })
-        .catch(e => {
+        .catch((e) => {
           throw e;
           // console.error(`\x1b[31m${e.message}`);
           // return false;
@@ -115,10 +115,7 @@ export class AdapterLocal extends AbstractAdapter {
       readStream = arg;
     }
     return new Promise((resolve, reject) => {
-      readStream
-        .pipe(writeStream)
-        .on("error", reject)
-        .on("finish", resolve);
+      readStream.pipe(writeStream).on("error", reject).on("finish", resolve);
       writeStream.on("error", reject);
     });
   }
@@ -147,7 +144,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
     // remove all files and folders inside bucket directory, but not the directory itself
     const p = path.join(this.directory, bn, "*");
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       rimraf(p, (e: Error) => {
         if (e) {
           throw e;
@@ -165,8 +162,8 @@ export class AdapterLocal extends AbstractAdapter {
       return;
     }
     const p = path.join(this.directory, bn);
-    return new Promise(resolve => {
-      rimraf(p, e => {
+    return new Promise((resolve) => {
+      rimraf(p, (e) => {
         if (e !== null) {
           throw e;
         }
@@ -181,15 +178,18 @@ export class AdapterLocal extends AbstractAdapter {
   async selectBucket(name?: string | null): Promise<string> {
     if (!name) {
       this.bucketName = "";
-      return;
+      return "bucket deselected";
     }
     await this.createBucket(name);
     this.bucketName = name;
+    return "bucket selected";
   }
 
   async listBuckets(): Promise<string[]> {
     const files = await fs.promises.readdir(this.directory);
-    const stats = await Promise.all(files.map(f => fs.promises.stat(path.join(this.directory, f))));
+    const stats = await Promise.all(
+      files.map((f) => fs.promises.stat(path.join(this.directory, f)))
+    );
     this.buckets = files.filter((_, i) => stats[i].isDirectory());
     return this.buckets;
   }
@@ -239,7 +239,7 @@ export class AdapterLocal extends AbstractAdapter {
       .then(() => {
         return "";
       })
-      .catch(err => {
+      .catch((err) => {
         // don't throw an error if the file has already been removed (or didn't exist at all)
         if (err.message.indexOf("no such file or directory") !== -1) {
           return "";

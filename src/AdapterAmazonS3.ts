@@ -103,7 +103,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     const n = this.generateSlug(name);
-    if (this.bucketNames.findIndex(b => b === n) !== -1) {
+    if (this.bucketNames.findIndex((b) => b === n) !== -1) {
       return;
     }
 
@@ -158,7 +158,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const params2 = {
       Bucket: n,
       Delete: {
-        Objects: content.map(value => ({ Key: value.Key })),
+        Objects: content.map((value) => ({ Key: value.Key })),
         Quiet: false,
       },
     };
@@ -189,7 +189,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (n === this.bucketName) {
         this.bucketName = "";
       }
-      this.bucketNames = this.bucketNames.filter(b => b !== n);
+      this.bucketNames = this.bucketNames.filter((b) => b !== n);
       return "bucket deleted";
       // console.log(this.buckets, result);
     } catch (e) {
@@ -202,7 +202,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   async listBuckets(): Promise<string[]> {
     const data = await this.storage.listBuckets().promise();
-    this.bucketNames = data.Buckets.map(d => d.Name);
+    this.bucketNames = data.Buckets.map((d) => d.Name);
     return this.bucketNames;
   }
 
@@ -242,7 +242,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       MaxKeys: maxFiles,
     };
     const { Contents: content } = await this.storage.listObjects(params).promise();
-    return content.map(o => [o.Key, o.Size]) as [string, number][];
+    return content.map((o) => [o.Key, o.Size]) as [string, number][];
   }
 
   async sizeOf(name: string): Promise<number> {
@@ -256,7 +256,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return await this.storage
       .headObject(params)
       .promise()
-      .then(res => res.ContentLength);
+      .then((res) => res.ContentLength);
   }
 
   async fileExists(name: string): Promise<boolean> {

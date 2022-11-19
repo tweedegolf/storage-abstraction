@@ -18,7 +18,7 @@ const adapterFunctions = {
 const availableAdapters: string = Object.keys(adapterClasses)
   .concat(Object.keys(adapterFunctions))
   .reduce((acc, val) => {
-    if (acc.findIndex(v => v === val) === -1) {
+    if (acc.findIndex((v) => v === val) === -1) {
       acc.push(val);
     }
     return acc;
@@ -46,7 +46,7 @@ export class Storage implements IStorage {
   }
 
   public switchAdapter(args: string | AdapterConfig): void {
-    // console.log(args);
+    // console.log("switchAdapter", args);
     let type: string;
     if (typeof args === "string") {
       type = args.substring(0, args.indexOf("://"));

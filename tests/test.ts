@@ -5,7 +5,7 @@ import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
- dotenv.config();
+dotenv.config();
 
 /**
  * Below 4 examples of how you can populate a config object using environment variables.
@@ -158,22 +158,21 @@ const run = async (): Promise<void> => {
   // const storage = new Storage(configS3);
   // const storage = new Storage(configGoogle);
   // const storage = new Storage(process.env.STORAGE_URL);
-  const storage = new Storage(configLocal);
-
-  test(storage);
+  // const storage = new Storage(configLocal);
+  // test(storage);
 
   /* or run all tests */
-  // test(new Storage(configLocal))
-  //   .then(() => test(new Storage(configS3)))
-  //   .then(() => test(new Storage(configGoogle)))
-  //   .then(() => test(new Storage(configBackblaze)))
-  //   .then(() => test(new Storage(process.env.CONFIG_URL)))
-  //   .then(() => {
-  //     console.log("done");
-  //   })
-  //   .catch(e => {
-  //     console.log(e);
-  //   });
+  test(new Storage(configLocal))
+    .then(() => test(new Storage(configS3)))
+    .then(() => test(new Storage(configGoogle)))
+    .then(() => test(new Storage(configBackblaze)))
+    .then(() => test(new Storage(process.env.CONFIG_URL || "")))
+    .then(() => {
+      console.log("done");
+    })
+    .catch((e) => {
+      console.log(e);
+    });
 };
 
 run();

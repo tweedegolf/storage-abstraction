@@ -664,7 +664,7 @@ To run a generic Jasmine test that uses local storage and does not require any c
 
 `npm run test-jasmine`
 
-There are also Jamine tests that test a set of configuration objects and URLs per storage type:
+There are also Jasmine tests that test a set of configuration objects and URLs per storage type:
 
 ```bash
 # test config local disk
