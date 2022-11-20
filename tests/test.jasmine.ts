@@ -96,6 +96,7 @@ describe(`[testing ${type || "local"} storage]`, async () => {
     storage = new Storage(config);
     await storage.init();
     console.log("beforeAll", storage.getConfiguration());
+    bucketName = storage.getConfiguration().bucketName;
   });
 
   beforeEach(() => {
@@ -105,16 +106,23 @@ describe(`[testing ${type || "local"} storage]`, async () => {
 
   afterAll(async () => {
     if (storage.getType() === StorageType.LOCAL) {
-      // await storage.deleteBucket(bucketName);
-      // console.log(path.join(process.cwd(), "tests", "tmp"));
-      // rimraf(path.join(process.cwd(), "tests", "tmp"), (err: Error | null | undefined) => {
-      //   console.log("rimraf", err);
-      //   if (err) {
-      //     console.error(err);
-      //   } else {
-      //     console.log("all cleaned up!");
-      //   }
-      // });
+      await storage.clearBucket(bucketName);
+      await storage.deleteBucket(bucketName);
+      const p = path.join(process.cwd(), "tests", "tmp");
+      rimraf(
+        p,
+        {
+          disableGlob: true,
+        },
+        (err: Error | null | undefined) => {
+          console.log("rimraf", err);
+          if (err) {
+            console.error(err);
+          } else {
+            console.log("all cleaned up!");
+          }
+        }
+      );
     } else {
       await storage.clearBucket(bucketName as string);
       await deleteFile(path.join(process.cwd(), "tests", `test-${type}.jpg`));
@@ -370,15 +378,15 @@ describe(`[testing ${type || "local"} storage]`, async () => {
   });
 
   it("delete bucket currently selected non-empty bucket", async () => {
-    // const msg = await storage.deleteBucket();
-    // expect(storage.getSelectedBucket()).toBe("");
-    // const buckets = await storage.listBuckets();
-    // const index = buckets.indexOf(newBucketName);
-    // expect(index).toBe(-1);
+    const msg = await storage.deleteBucket();
+    expect(storage.getSelectedBucket()).toBe("");
+    const buckets = await storage.listBuckets();
+    const index = buckets.indexOf(newBucketName);
+    expect(index).toBe(-1);
   });
 
   it("create bucket", async () => {
-    // expectAsync(storage.createBucket(newBucketName)).toBeResolved();
+    expectAsync(storage.createBucket(newBucketName)).toBeResolved();
     try {
       await storage.createBucket(newBucketName);
     } catch (e) {

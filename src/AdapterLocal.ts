@@ -27,10 +27,11 @@ export class AdapterLocal extends AbstractAdapter {
 
     this.directory = this.generateSlug(path.dirname(directory), this.slug);
     this.bucketName = this.generateSlug(path.basename(directory), this.slug);
-    console.log("INIT", this.directory, this.bucketName);
+    // console.log("INIT", this.directory, this.bucketName);
 
     this.config = {
       type: this.type,
+      bucketName: this.bucketName,
       directory,
       mode,
       slug,
