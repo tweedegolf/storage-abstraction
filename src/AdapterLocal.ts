@@ -64,7 +64,8 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   async init(): Promise<boolean> {
-    await this.createDirectory(path.join(this.directory, this.bucketName));
+    // await this.createDirectory(path.join(this.directory, this.bucketName));
+    await this.createDirectory(this.directory);
     this.initialized = true;
     return true;
   }
@@ -126,7 +127,6 @@ export class AdapterLocal extends AbstractAdapter {
       return Promise.reject(msg);
     }
     const bn = this.generateSlug(name, this.slug);
-    // console.log(bn, name);
     const created = await this.createDirectory(path.join(this.directory, bn));
     if (created) {
       this.buckets.push(bn);
@@ -143,9 +143,9 @@ export class AdapterLocal extends AbstractAdapter {
       return;
     }
     // remove all files and folders inside bucket directory, but not the directory itself
-    const p = path.join(this.directory, bn, "*");
+    const p = path.join(process.cwd(), this.directory, bn.replace(" ", "\\ "), "*.*");
     return new Promise((resolve) => {
-      rimraf(p, (e: Error) => {
+      rimraf(p, {}, (e: Error) => {
         if (e) {
           throw e;
         }
@@ -161,7 +161,7 @@ export class AdapterLocal extends AbstractAdapter {
     if (!bn) {
       return;
     }
-    const p = path.join(this.directory, bn);
+    const p = path.join(process.cwd(), this.directory, bn);
     return new Promise((resolve) => {
       rimraf(p, (e) => {
         if (e !== null) {
@@ -169,6 +169,8 @@ export class AdapterLocal extends AbstractAdapter {
         }
         if (bn === this.bucketName) {
           this.bucketName = "";
+          const index = this.buckets.indexOf(bn);
+          this.buckets = this.buckets.filter((_, i) => i != index);
         }
         resolve("");
       });
