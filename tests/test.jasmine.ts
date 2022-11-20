@@ -11,9 +11,9 @@ import { AdapterConfig, StorageType } from "../src/types";
 import { copyFile, deleteFile } from "./util";
 dotenv.config();
 
-const type = process.env["TYPE"];
+let type = process.env["TYPE"];
+let bucketName = process.env["BUCKET_NAME"];
 const configUrl = process.env["CONFIG_URL"];
-const bucketName = process.env["BUCKET_NAME"];
 const directory = process.env["LOCAL_DIRECTORY"];
 const projectId = process.env["GOOGLE_CLOUD_PROJECT_ID"];
 const keyFilename = process.env["GOOGLE_CLOUD_KEYFILE"];
@@ -62,7 +62,7 @@ if (type === StorageType.LOCAL) {
   };
 } else {
   if (!configUrl) {
-    config = `local://${process.cwd()}/the-buck`;
+    config = `local://${process.cwd()}/the-buck1`;
   } else {
     config = configUrl;
   }
@@ -105,31 +105,31 @@ describe(`[testing ${type || "local"} storage]`, async () => {
   });
 
   afterAll(async () => {
-    await storage.clearBucket(slugify(bucketName as string));
+    await storage.clearBucket(bucketName as string);
+    console.log("TYPE", type, storage.getType());
     if (storage.getType() === StorageType.LOCAL) {
-      const d = await storage.deleteBucket(newBucketName);
-      console.log("afterAll", newBucketName, d);
-      let b = storage.getConfiguration().bucketName;
-      console.log("afterAll", b);
-      if (b) {
-        await storage.deleteBucket(b);
-      }
-      b = storage.getSelectedBucket();
-      console.log("afterAll", b);
-      if (b) {
-        await storage.deleteBucket(b);
-      }
+      await storage.deleteBucket(bucketName);
+    } else {
+      await deleteFile(path.join(process.cwd(), "tests", `test-${type}.jpg`));
+      await deleteFile(path.join(process.cwd(), "tests", `test-${type}-part.jpg`));
+      // await storage.deleteBucket(bucketName);
     }
-    // cleaning up test data
-    rimraf(path.join(process.cwd(), `test-*.jpg`), () => {
-      console.log("all cleaned up!");
-    });
+    // // cleaning up test data
+    // rimraf(path.join(process.cwd(), `test-*.jpg`), () => {
+    //   console.log("all cleaned up!");
+    // });
   });
 
   it("init", async () => {
     try {
       storage = new Storage(config);
       await storage.init();
+      if (type == "" || typeof type == undefined) {
+        type = StorageType.LOCAL;
+      }
+      if (typeof bucketName == undefined) {
+        bucketName = storage.getSelectedBucket();
+      }
     } catch (e) {
       console.error(e);
       return;
@@ -222,7 +222,7 @@ describe(`[testing ${type || "local"} storage]`, async () => {
   it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}.jpg`);
+      const filePath = path.join(process.cwd(), "tests", `test-${storage.getType()}.jpg`);
       const writeStream = fs.createWriteStream(filePath);
       await copyFile(readStream, writeStream);
     } catch (e) {
@@ -232,7 +232,7 @@ describe(`[testing ${type || "local"} storage]`, async () => {
   });
 
   it("get readable stream partially and save file", async () => {
-    const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}-part.jpg`);
+    const filePath = path.join(process.cwd(), "tests", `test-${storage.getType()}-part.jpg`);
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
       const writeStream = fs.createWriteStream(filePath);
@@ -256,10 +256,10 @@ describe(`[testing ${type || "local"} storage]`, async () => {
   });
 
   it("list files 3", async () => {
-    // if (type == "local") {
-    //   await deleteFile(path.join(process.cwd(), "tests", "tmp", "test-part.jpg"));
-    //   await deleteFile(path.join(process.cwd(), "tests", "tmp", "test-local-part.jpg"));
-    // }
+    if (type == "local") {
+      await deleteFile(path.join(process.cwd(), "tests", "test-local.jpg"));
+      await deleteFile(path.join(process.cwd(), "tests", "test-local-part.jpg"));
+    }
     const expectedResult: [string, number][] = [
       ["image1.jpg", 32201],
       ["image2.jpg", 42908],
@@ -309,15 +309,17 @@ describe(`[testing ${type || "local"} storage]`, async () => {
 
   it("create already existing bucket that you are not allowed to access", async () => {
     // the name "new-bucket" has already been taken by someone else (not for local)
-    let r = storage.getType() === StorageType.LOCAL;
-    try {
-      const msg = await storage.createBucket("new-bucket");
-      // console.log(msg);
-    } catch (e) {
-      r = e.message !== "ok" && e.message !== "";
-      // console.log("R", r);
+    if (storage.getType() != StorageType.LOCAL) {
+      let r;
+      try {
+        const msg = await storage.createBucket("new-bucket");
+        // console.log(msg);
+      } catch (e) {
+        r = e.message !== "ok" && e.message !== "";
+        // console.log("R", r);
+      }
+      expect(r).toEqual(true);
     }
-    expect(r).toEqual(true);
   });
 
   it("create bucket", async () => {

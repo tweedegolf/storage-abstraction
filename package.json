@@ -45,7 +45,7 @@
   "scripts": {
     "test-await": "ts-node ./tests/test-await.ts",
     "test-all": "npm run test-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2",
-    "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-jasmine": "TYPE='' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-config-b2": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-b2.jasmine.ts",
     "test-config-s3": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-s3.jasmine.ts",
     "test-config-gcs": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-gcs.jasmine.ts",

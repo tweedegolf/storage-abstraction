@@ -2,7 +2,7 @@
 node_modules
 publish/dist
 publish/README.md
-tests/tmp/*.jpg
+tests/tmp/
 tests/keyFile1.json
 tests/keyFile2.json
 .env
