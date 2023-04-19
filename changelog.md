@@ -1,3 +1,7 @@
+# 2.0.3
+
+- Fix peerDependencies and remove unused dependencies
+
 # 2.0.2
 
 - Breaking change: uses `@aws-sdk/client-s3` instead of `aws-sdk`

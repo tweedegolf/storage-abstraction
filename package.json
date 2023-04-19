@@ -1,6 +1,6 @@
 {
   "name": "@ianatha/storage-abstraction",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud. Fork of tweedegolf/storage-abstraction.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
