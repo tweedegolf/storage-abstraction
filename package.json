@@ -1,11 +1,11 @@
 {
-  "name": "@tweedegolf/storage-abstraction",
-  "version": "1.4.4",
-  "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
+  "name": "@ianatha/storage-abstraction",
+  "version": "2.0.2",
+  "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud. Fork of tweedegolf/storage-abstraction.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "homepage": "https://github.com/tweedegolf/storage-abstraction/",
-  "repository": "https://github.com/tweedegolf/storage-abstraction/",
+  "homepage": "https://github.com/ianatha/storage-abstraction/",
+  "repository": "https://github.com/ianatha/storage-abstraction/",
   "files": [
     "dist/*",
     "README.md",
@@ -43,7 +43,7 @@
   },
   "scripts": {
     "test-await": "ts-node ./tests/test-await.ts",
-    "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2",
+    "test-all": "yarn run test-urls-jasmine && yarn run test-local && yarn run test-gcs && yarn run test-s3 && yarn run test-b2",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-config-b2": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-b2.jasmine.ts",
     "test-config-s3": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-s3.jasmine.ts",
@@ -72,7 +72,7 @@
     "amazon s3",
     "backblaze b2"
   ],
-  "author": "daniel@tweedegolf.nl",
+  "author": "ian@atha.io",
   "license": "MIT",
   "publishConfig": {
     "access": "public"

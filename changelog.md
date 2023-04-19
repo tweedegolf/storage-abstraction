@@ -1,3 +1,10 @@
+# 2.0.2
+
+- Breaking change: uses `@aws-sdk/client-s3` instead of `aws-sdk`
+  - You must explicitly provide the `region` in your `AdapterConfig`
+  - You must install `@aws-sdk/client-s3` as a peer dependency instead of `aws-sdk`.
+- Breaking change: now targeting ES2015
+
 # 1.4.3
 
 - Removed `await-to-js` dependency in local storage adapter
