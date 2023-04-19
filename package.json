@@ -8,7 +8,8 @@
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "files": [
     "dist/*",
-    "tests/test.ts"
+    "README.md",
+    "changelog.md"
   ],
   "dependencies": {
     "@aws-sdk/client-s3": "^3.245.0",
@@ -60,8 +61,7 @@
     "ts": "ts-node",
     "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",
-    "copy-readme": "copy ./README.md ./publish",
-    "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",
+    "prepublishOnly": "yarn run tsc && yarn run toc",
     "toc": "markdown-toc -i README.md"
   },
   "keywords": [
