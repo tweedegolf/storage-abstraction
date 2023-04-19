@@ -19,6 +19,7 @@ const projectId = process.env["GOOGLE_CLOUD_PROJECT_ID"];
 const keyFilename = process.env["GOOGLE_CLOUD_KEYFILE"];
 const accessKeyId = process.env["AWS_ACCESS_KEY_ID"];
 const secretAccessKey = process.env["AWS_SECRET_ACCESS_KEY"];
+const region = process.env["AWS_REGION"];
 const applicationKeyId = process.env["B2_APPLICATION_KEY_ID"];
 const applicationKey = process.env["B2_APPLICATION_KEY"];
 
@@ -52,6 +53,7 @@ if (type === StorageType.LOCAL) {
     bucketName,
     accessKeyId,
     secretAccessKey,
+    region,
   };
 } else if (type === StorageType.B2) {
   config = {
@@ -71,7 +73,7 @@ if (type === StorageType.LOCAL) {
 const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 
 console.log("CONFIG", config);
-console.log("newBucketName:", newBucketName, '\n');
+console.log("newBucketName:", newBucketName, "\n");
 
 let storage: Storage;
 // try {
@@ -84,12 +86,21 @@ let storage: Storage;
 // }
 
 const waitABit = async (millis = 100): Promise<void> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     setTimeout(() => {
       // console.log(`just wait a bit (${millis}ms)`);
       resolve();
     }, millis);
   });
+
+function streamToString(stream) {
+  const chunks = [];
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    stream.on("error", (err) => reject(err));
+    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+  });
+}
 
 describe(`[testing ${type} storage]`, async () => {
   // beforeAll(async () => {
@@ -148,7 +159,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("check if bucket is empty", async () => {
-    const files = await storage.listFiles().catch(e => {
+    const files = await storage.listFiles().catch((e) => {
       console.log(e.message);
     });
     expect(files).toEqual([]);
@@ -167,11 +178,6 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("add with new name and dir", async () => {
-    // const [err, result] = await to(storage.addFileFromPath('./tests/data/image1.jpg', {
-    //   dir: 'subdir',
-    //   name: 'renamed.jpg',
-    // }));
-
     await expectAsync(
       storage.addFileFromPath("./tests/data/image1.jpg", "subdir/renamed.jpg")
     ).toBeResolved();
@@ -186,8 +192,6 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("remove file success", async () => {
-    // const [err, result] = await to(storage.removeFile('subdir/renamed.jpg'));
-    // console.log(err, result);
     await expectAsync(storage.removeFile("subdir/renamed.jpg")).toBeResolved();
   });
 
@@ -211,7 +215,7 @@ describe(`[testing ${type} storage]`, async () => {
   it("get readable stream and save file", async () => {
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(process.cwd(), 'tests', 'tmp', `test-${storage.getType()}.jpg`);
+      const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}.jpg`);
       const writeStream = fs.createWriteStream(filePath);
       await copyFile(readStream, writeStream);
     } catch (e) {
@@ -221,7 +225,7 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("get readable stream partially and save file", async () => {
-    const filePath = path.join(process.cwd(), 'tests', 'tmp', `test-${storage.getType()}-part.jpg`);
+    const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}-part.jpg`);
     try {
       const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
       const writeStream = fs.createWriteStream(filePath);
@@ -251,6 +255,16 @@ describe(`[testing ${type} storage]`, async () => {
       ["image3.jpg", 42908],
     ];
     await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
+  });
+
+  it("add & read file from storage", async () => {
+    const buffer = await fs.promises.readFile("./tests/data/input.txt");
+    await expectAsync(storage.addFileFromBuffer(buffer, "input.txt")).toBeResolved();
+
+    const fileReadable = await storage.getFileAsReadable("input.txt");
+    const data = await streamToString(fileReadable);
+
+    expect(data).toEqual("hello world");
   });
 
   it("sizeOf", async () => {
