@@ -12,7 +12,7 @@ export const copyFile = (
   new Promise((resolve, reject) => {
     readStream
       .pipe(writeStream)
-      .on("error", e => {
+      .on("error", (e) => {
         console.error("\x1b[31m", e, "\n");
         reject();
       })
@@ -22,7 +22,7 @@ export const copyFile = (
         }
       });
     writeStream
-      .on("error", e => {
+      .on("error", (e) => {
         console.error("\x1b[31m", e, "\n");
         reject();
       })
@@ -35,7 +35,7 @@ export const copyFile = (
   });
 
 export const promiseRimraf = async (path: string): Promise<boolean> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     try {
       rimraf(path, () => {
         resolve(true);

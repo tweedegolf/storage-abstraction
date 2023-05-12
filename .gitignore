@@ -3,7 +3,6 @@ node_modules
 publish/dist
 publish/README.md
 tests/tmp/*.jpg
-tests/keyFile1.json
-tests/keyFile2.json
+keyFile.json
 .env
 .idea

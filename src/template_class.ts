@@ -73,9 +73,13 @@ export class AdapterTemplate extends AbstractAdapter {
       // The parseUrl function is defined in ./util.js, see the documentation
       // in that file or hover your mouse over the function name if you IDE
       // supports it.
-      const { type, part1: someKey, part2: someOtherKey, bucketName, queryString } = parseUrl(
-        config
-      );
+      const {
+        type,
+        part1: someKey,
+        part2: someOtherKey,
+        bucketName,
+        queryString,
+      } = parseUrl(config);
       cfg = {
         type,
         someKey,
@@ -151,7 +155,7 @@ export class AdapterTemplate extends AbstractAdapter {
   // storage you could save the names of the buckets that you've already
   // checked so you don't need to check their existence again.
   private checkBucket(name: string): boolean {
-    return this.bucketNames.findIndex(n => n === name) !== -1;
+    return this.bucketNames.findIndex((n) => n === name) !== -1;
   }
 
   async createBucket(name: string): Promise<string> {
@@ -216,7 +220,7 @@ export class AdapterTemplate extends AbstractAdapter {
     }
 
     // And you should remove the name from your saved bucket names.
-    this.bucketNames = this.bucketNames.filter(bn => bn !== n);
+    this.bucketNames = this.bucketNames.filter((bn) => bn !== n);
     return "bucket deleted";
   }
 

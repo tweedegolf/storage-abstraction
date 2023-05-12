@@ -5,7 +5,7 @@ import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
- dotenv.config();
+dotenv.config();
 
 /**
  * Below 4 examples of how you can populate a config object using environment variables.
@@ -16,7 +16,7 @@ const configS3 = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   bucketName: process.env.BUCKET_NAME,
-  region: process.env.AWS_REGION
+  region: process.env.AWS_REGION,
 };
 
 const configGoogle = {

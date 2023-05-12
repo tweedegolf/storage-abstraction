@@ -15,7 +15,7 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
     options = url
       .substring(questionMark + 1)
       .split("&")
-      .map(pair => pair.split("="))
+      .map((pair) => pair.split("="))
       .reduce((acc, val) => {
         // acc[val[0]] = `${val[1]}`.valueOf();
         acc[val[0]] = val[1];
@@ -136,7 +136,7 @@ export const getProtocol = (url: string): string => {
  */
 export const generateSlugPath = (p: string, slug: boolean | number | string): string => {
   if (slug === "true" || slug === true || slug == 1) {
-    const paths = p.split("/").map(d => slugify(d));
+    const paths = p.split("/").map((d) => slugify(d));
     return path.join(...paths);
   }
   return p;

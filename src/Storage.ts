@@ -18,7 +18,7 @@ const adapterFunctions = {
 const availableAdapters: string = Object.keys(adapterClasses)
   .concat(Object.keys(adapterFunctions))
   .reduce((acc, val) => {
-    if (acc.findIndex(v => v === val) === -1) {
+    if (acc.findIndex((v) => v === val) === -1) {
       acc.push(val);
     }
     return acc;

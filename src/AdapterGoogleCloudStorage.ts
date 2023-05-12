@@ -38,9 +38,13 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
     let cfg: ConfigGoogleCloud;
     if (typeof config === "string") {
-      const { type, part1: keyFilename, part2: projectId, bucketName, queryString } = parseUrl(
-        config
-      );
+      const {
+        type,
+        part1: keyFilename,
+        part2: projectId,
+        bucketName,
+        queryString,
+      } = parseUrl(config);
       cfg = {
         type,
         keyFilename,
@@ -71,7 +75,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     const [exists] = await file.exists();
     if (!exists && retries !== 0) {
       const r = retries - 1;
-      await new Promise(res => {
+      await new Promise((res) => {
         setTimeout(res, 250);
       });
       // console.log('RETRY', r, fileName);
@@ -104,10 +108,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
   async removeFile(fileName: string): Promise<string> {
     try {
-      await this.storage
-        .bucket(this.bucketName)
-        .file(fileName)
-        .delete();
+      await this.storage.bucket(this.bucketName).file(fileName).delete();
       return "file deleted";
     } catch (e) {
       if (e.message.indexOf("No such object") !== -1) {
@@ -141,15 +142,9 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     } else if (arg instanceof Readable) {
       readStream = arg;
     }
-    const writeStream = this.storage
-      .bucket(this.bucketName)
-      .file(targetPath)
-      .createWriteStream();
+    const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
     return new Promise((resolve, reject) => {
-      readStream
-        .pipe(writeStream)
-        .on("error", reject)
-        .on("finish", resolve);
+      readStream.pipe(writeStream).on("error", reject).on("finish", resolve);
       writeStream.on("error", reject);
     });
   }
@@ -161,7 +156,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     const n = this.generateSlug(name);
-    if (this.bucketNames.findIndex(b => b === n) !== -1) {
+    if (this.bucketNames.findIndex((b) => b === n) !== -1) {
       return "bucket exists";
     }
 
@@ -227,7 +222,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         this.bucketName = name;
         return "bucket selected";
       })
-      .catch(e => {
+      .catch((e) => {
         throw e;
       });
   }
@@ -248,13 +243,13 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     if (n === this.bucketName) {
       this.bucketName = "";
     }
-    this.bucketNames = this.bucketNames.filter(b => b !== n);
+    this.bucketNames = this.bucketNames.filter((b) => b !== n);
     return "bucket deleted";
   }
 
   async listBuckets(): Promise<string[]> {
     const [buckets] = await this.storage.getBuckets();
-    this.bucketNames = buckets.map(b => b.metadata.id);
+    this.bucketNames = buckets.map((b) => b.metadata.id);
     return this.bucketNames;
   }
 
@@ -274,7 +269,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       throw new Error("no bucket selected");
     }
     const data = await this.storage.bucket(this.bucketName).getFiles();
-    const names = data[0].map(f => f.name);
+    const names = data[0].map((f) => f.name);
     const sizes = await this.getMetaData(names);
     return zip(names, sizes) as [string, number][];
   }
@@ -289,10 +284,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   }
 
   async fileExists(name: string): Promise<boolean> {
-    const data = await this.storage
-      .bucket(this.bucketName)
-      .file(name)
-      .exists();
+    const data = await this.storage.bucket(this.bucketName).file(name).exists();
 
     // console.log(data);
     return data[0];
