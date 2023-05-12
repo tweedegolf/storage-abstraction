@@ -171,7 +171,7 @@ export type GenericKey = number | string | boolean | number[] | string[] | boole
 export interface ConfigAmazonS3 extends IAdapterConfig {
   accessKeyId: string;
   secretAccessKey: string;
-  region?: string;
+  region: string;
   endpoint?: string;
   useDualstack?: boolean;
   maxRetries?: number;

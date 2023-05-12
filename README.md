@@ -278,8 +278,8 @@ type ConfigAmazonS3 = {
   type: StorageType;
   accessKeyId: string;
   secretAccessKey: string;
+  region: string;
   slug?: boolean;
-  region?: string;
   bucketName?: string;
   endpoint?: string;
   useDualstack?: boolean;
