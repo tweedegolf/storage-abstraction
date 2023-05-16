@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { generateSlug, generateSlugPath, validateName } from "./util";
+import { validateName } from "./util";
 import { AdapterConfig, IStorage } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
@@ -8,7 +8,6 @@ export abstract class AbstractAdapter implements IStorage {
   protected config: AdapterConfig;
   protected bucketName: string = "";
   protected initialized: boolean = false;
-  protected slug: boolean = true;
 
   getType(): string {
     return this.type;
@@ -16,10 +15,6 @@ export abstract class AbstractAdapter implements IStorage {
 
   public getConfiguration(): AdapterConfig {
     return this.config;
-  }
-
-  protected generateSlug(url: string, slug: boolean = this.slug): string {
-    return generateSlug(url, slug);
   }
 
   protected validateName(name: string): string {
@@ -46,16 +41,28 @@ export abstract class AbstractAdapter implements IStorage {
     }
   }
 
-  async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    await this.store(origPath, generateSlugPath(targetPath, this.slug));
+  async addFileFromPath(
+    origPath: string,
+    targetPath: string,
+    options: object = {}
+  ): Promise<string> {
+    return await this.store(origPath, targetPath, options);
   }
 
-  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    await this.store(buffer, generateSlugPath(targetPath, this.slug));
+  async addFileFromBuffer(
+    buffer: Buffer,
+    targetPath: string,
+    options: object = {}
+  ): Promise<string> {
+    return await this.store(buffer, targetPath, options);
   }
 
-  async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    await this.store(stream, generateSlugPath(targetPath, this.slug));
+  async addFileFromReadable(
+    stream: Readable,
+    targetPath: string,
+    options: object = {}
+  ): Promise<string> {
+    return await this.store(stream, targetPath, options);
   }
 
   public getSelectedBucket(): string {
@@ -64,17 +71,29 @@ export abstract class AbstractAdapter implements IStorage {
 
   // stubs
 
-  protected abstract store(filePath: string, targetFileName: string): Promise<void>;
+  protected abstract store(
+    filePath: string,
+    targetFileName: string,
+    options: object
+  ): Promise<string>;
 
-  protected abstract store(buffer: Buffer, targetFileName: string): Promise<void>;
+  protected abstract store(
+    buffer: Buffer,
+    targetFileName: string,
+    options: object
+  ): Promise<string>;
 
-  protected abstract store(stream: Readable, targetFileName: string): Promise<void>;
+  protected abstract store(
+    stream: Readable,
+    targetFileName: string,
+    options: object
+  ): Promise<string>;
 
   abstract init(): Promise<boolean>;
 
   abstract selectBucket(name: string | null): Promise<string>;
 
-  abstract createBucket(name: string): Promise<string>;
+  abstract createBucket(name: string, options?: object): Promise<string>;
 
   abstract clearBucket(name?: string): Promise<string>;
 

@@ -9,27 +9,28 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   protected type = StorageType.S3;
   private storage: S3;
   private bucketNames: string[] = [];
+  private region: string = "";
 
   constructor(config: string | AdapterConfig) {
     super();
-    const cfg = this.parseConfig(config as ConfigAmazonS3);
-    this.config = { ...cfg };
-
-    if (cfg.slug) {
-      this.slug = cfg.slug;
-      delete cfg.slug;
+    this.config = this.parseConfig(config as ConfigAmazonS3);
+    if (typeof this.config.bucketName !== "undefined") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      this.bucketName = this.config.bucketName;
     }
-
-    if (cfg.bucketName) {
-      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
-      delete cfg.bucketName;
+    if (typeof (this.config as ConfigAmazonS3).region !== "undefined") {
+      this.region = (this.config as ConfigAmazonS3).region;
     }
-
-    delete cfg.type;
-    this.storage = new S3(cfg);
+    this.storage = new S3(this.config);
   }
 
   async init(): Promise<boolean> {
+    if (this.initialized) {
+      return Promise.resolve(true);
+    }
     if (this.bucketName) {
       await this.createBucket(this.bucketName);
       this.bucketNames.push(this.bucketName);
@@ -62,6 +63,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       cfg = { ...config };
     }
 
+    if (cfg.skipCheck === true) {
+      return cfg;
+    }
+
     if (!cfg.accessKeyId || !cfg.secretAccessKey) {
       throw new Error(
         "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 's3'"
@@ -82,7 +87,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${options.start}-${options.end}`,
+      Range: `bytes=${options.start}-${options.end || ""}`,
     };
 
     await this.storage.headObject(params);
@@ -100,23 +105,23 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   // util members
 
-  async createBucket(name: string): Promise<string> {
+  async createBucket(name: string, options: object = {}): Promise<string> {
     const msg = this.validateName(name);
     if (msg !== null) {
       return Promise.reject(msg);
     }
 
-    const n = this.generateSlug(name);
-    if (this.bucketNames.findIndex((b) => b === n) !== -1) {
+    if (this.bucketNames.findIndex((b) => b === name) !== -1) {
       return;
     }
 
     try {
-      await this.storage.headBucket({ Bucket: n });
-      this.bucketNames.push(n);
+      await this.storage.headBucket({ Bucket: name });
+      this.bucketNames.push(name);
     } catch (e) {
       if (e.code === "Forbidden") {
         // BucketAlreadyExists
+        console.log(e);
         const msg = [
           "The requested bucket name is not available.",
           "The bucket namespace is shared by all users of the system.",
@@ -124,25 +129,27 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ];
         return Promise.reject(msg.join(" "));
       }
-      await this.storage.createBucket({ Bucket: n });
-      this.bucketNames.push(n);
+      await this.storage.createBucket({
+        ...options,
+        Bucket: name,
+      });
+      this.bucketNames.push(name);
     }
   }
 
   async selectBucket(name: string | null): Promise<string> {
     // add check if bucket exists!
-    if (name === null) {
+    if (!name) {
       this.bucketName = "";
-      return "bucket deselected";
+      return `bucket '${name}' deselected`;
     }
     await this.createBucket(name);
     this.bucketName = name;
-    return "bucket selected";
+    return `bucket '${name}' selected`;
   }
 
   async clearBucket(name?: string): Promise<string> {
-    let n = name || this.bucketName;
-    n = this.generateSlug(n);
+    const n = name || this.bucketName;
 
     if (!n) {
       throw new Error("no bucket selected");
@@ -170,8 +177,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   async deleteBucket(name?: string): Promise<string> {
-    let n = name || this.bucketName;
-    n = this.generateSlug(n);
+    const n = name || this.bucketName;
 
     if (n === "") {
       throw new Error("no bucket selected");
@@ -201,17 +207,24 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return this.bucketNames;
   }
 
-  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(stream: Readable, targetPath: string): Promise<void>;
-  protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
+  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
+  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
+  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
+  protected async store(
+    arg: string | Buffer | Readable,
+    targetPath: string,
+    options: object
+  ): Promise<string> {
     if (!this.bucketName) {
       throw new Error("no bucket selected");
     }
-
+    if (typeof options !== "object") {
+      options = {};
+    }
     await this.createBucket(this.bucketName);
 
     const params = {
+      ...options,
       Bucket: this.bucketName,
       Key: targetPath,
       Body: arg,
@@ -221,11 +234,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (!fs.existsSync(arg)) {
         throw new Error(`File with given path: ${arg}, was not found`);
       }
-
       params.Body = fs.createReadStream(arg);
     }
 
     await this.storage.putObject(params);
+    if (this.region !== "") {
+      this.region = (
+        await this.storage.getBucketLocation({ Bucket: this.bucketName })
+      ).LocationConstraint;
+    }
+    return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {

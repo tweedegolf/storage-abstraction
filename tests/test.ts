@@ -36,7 +36,6 @@ const configBackblaze = {
 const configLocal = {
   type: StorageType.LOCAL,
   directory: process.env.LOCAL_DIRECTORY,
-  // slug: true,
 };
 
 const generateBucketName = (): string => `bucket-${uniquid()}-${new Date().getTime()}`;

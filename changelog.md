@@ -1,3 +1,16 @@
+# 1.4.5
+
+- Remove option 'slug' in config: this makes the user responsible for choosing a valid bucket name.
+- Add `options` to `createBucket`.
+- Add `options` to `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable`.
+- Add `skipCheck` to configuration object and made all keys optional
+- Return public url after a file has been successfully added to a bucket
+
+# 1.4.4
+
+- use '@aws-sdk/client-s3' instead of 'aws-sdk'
+- eslint fixes
+
 # 1.4.3
 
 - Removed `await-to-js` dependency in local storage adapter

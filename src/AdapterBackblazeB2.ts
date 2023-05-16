@@ -16,18 +16,15 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
-    const cfg = this.parseConfig(config);
-    this.config = { ...cfg };
-    if (cfg.slug) {
-      this.slug = cfg.slug;
-      delete cfg.slug;
+    this.config = this.parseConfig(config);
+    if (typeof this.config.bucketName !== "undefined") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      this.bucketName = this.config.bucketName;
     }
-    if (cfg.bucketName) {
-      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
-      delete cfg.bucketName;
-    }
-    delete cfg.type;
-    this.storage = new B2(cfg);
+    this.storage = new B2(this.config);
   }
 
   private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
@@ -50,6 +47,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } else {
       cfg = { ...config };
     }
+
+    if (cfg.skipCheck === true) {
+      return cfg;
+    }
+
     if (!cfg.applicationKey || !cfg.applicationKeyId) {
       throw new Error(
         "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 'b2'"
@@ -102,7 +104,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       axios: {
         headers: {
           "Content-Type": file.contentType,
-          Range: `bytes=${options.start}-${options.end}`,
+          Range: `bytes=${options.start}-${options.end || ""}`,
         },
       },
     });
@@ -114,9 +116,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       throw new Error("no bucket selected");
     }
 
-    const n = this.generateSlug(name);
-
-    const file = await this.findFile(n);
+    const file = await this.findFile(name);
     if (file === null) {
       return "file not found";
     }
@@ -129,7 +129,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     Promise.all(
       files
-        .filter((f: BackblazeB2File) => f.fileName === n)
+        .filter((f: BackblazeB2File) => f.fileName === name)
         .map(({ fileId, fileName }) =>
           this.storage.deleteFileVersion({
             fileId,
@@ -169,43 +169,47 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // util members
 
-  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(stream: Readable, targetPath: string): Promise<void>;
-  protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
+  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
+  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
+  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
+  protected async store(
+    arg: string | Buffer | Readable,
+    targetPath: string,
+    options: object
+  ): Promise<string> {
     if (!this.bucketName) {
       throw new Error("no bucket selected");
     }
     await this.createBucket(this.bucketName);
     try {
       const file: BackblazeB2File = await this.storage.uploadAny({
+        ...options,
         bucketId: this.bucketId,
         fileName: targetPath,
         data: arg,
       });
       this.files.push(file);
-      return;
+      return `${this.storage.downloadUrl}/file/${this.bucketName}/${targetPath}`;
     } catch (e) {
       return Promise.reject();
     }
   }
 
-  async createBucket(name: string): Promise<string> {
+  async createBucket(name: string, options: object = {}): Promise<string> {
     const msg = this.validateName(name);
     if (msg !== null) {
       return Promise.reject(msg);
     }
 
-    const n = this.generateSlug(name);
-
-    const b = await this.findBucket(n);
+    const b = await this.findBucket(name);
     if (b !== null) {
       return;
     }
 
     const d = await this.storage
       .createBucket({
-        bucketName: n,
+        ...options,
+        bucketName: name,
         bucketType: "allPrivate", // should be a config option!
       })
       .catch((e) => {
@@ -220,11 +224,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   async selectBucket(name: string): Promise<string> {
     if (!name) {
       this.bucketName = "";
-      return "bucket deselected";
+      return `bucket '${name}' deselected`;
     }
 
     if (name === this.bucketName) {
-      return "bucket selected";
+      return `bucket '${name}' selected`;
     }
 
     const b = await this.findBucket(name);
@@ -232,7 +236,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       this.bucketName = name;
       this.bucketId = b.bucketId;
       this.files = [];
-      return "bucket selected";
+      return `bucket '${name}' selected`;
     }
 
     // return `bucket ${name} not found`;
@@ -240,12 +244,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     this.bucketName = name;
     this.bucketId = this.getBucketId();
     this.files = [];
-    return "bucket selected";
+    return `bucket '${name}' selected`;
   }
 
   async clearBucket(name?: string): Promise<string> {
-    let n = name || this.bucketName;
-    n = super.generateSlug(n);
+    const n = name || this.bucketName;
 
     const b = await this.findBucket(n);
     if (b === null) {
@@ -271,8 +274,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   async deleteBucket(name?: string): Promise<string> {
-    let n = name || this.bucketName;
-    n = super.generateSlug(n);
+    const n = name || this.bucketName;
 
     const b = await this.findBucket(n);
     if (b === null) {

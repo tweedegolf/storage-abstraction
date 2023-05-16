@@ -147,16 +147,4 @@ describe(`testing local urls`, () => {
     expect(mode).toBe(16877);
     await promiseRimraf(path.join(process.cwd(), "tests", "tmp"));
   });
-
-  it("[7] slufigy is disabled by default", async () => {
-    const storage = new Storage("local://tests/tmp/the buck");
-    await storage.init();
-    expect(storage.getSelectedBucket()).toBe("the buck");
-  });
-
-  it("[7a] but you can turn it on using the `slug` option", async () => {
-    const storage = new Storage("local://tests/tmp/the buck?slug=true");
-    await storage.init();
-    expect(storage.getSelectedBucket()).toBe("the-buck");
-  });
 });

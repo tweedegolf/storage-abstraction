@@ -1,18 +1,9 @@
 import fs, { ReadStream } from "fs";
-import path from "path";
-import to from "await-to-js";
 import { Readable } from "stream";
 import B2 from "backblaze-b2";
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
-import {
-  StorageType,
-  IStorage,
-  ConfigBackblazeB2,
-  UploadOptions,
-  AdapterConfig,
-  JSON as TypeJSON,
-} from "./types";
+import { StorageType, IStorage, ConfigBackblazeB2, AdapterConfig, JSON as TypeJSON } from "./types";
 import { parseUrl } from "./util";
 
 const init = async (): Promise<boolean> => {
@@ -37,13 +28,15 @@ const clearBucket = (name?: string): Promise<string> => Promise.resolve("ok");
 const deleteBucket = (name?: string): Promise<string> => Promise.resolve("ok");
 const listBuckets = (): Promise<string[]> => Promise.resolve(["string", "string"]);
 const getSelectedBucket = (): string => "string";
-const addFileFromPath = (origPath: string, targetPath: string): Promise<void> => Promise.resolve();
-const addFileFromBuffer = (buffer: Buffer, targetPath: string): Promise<void> => Promise.resolve();
+const addFileFromPath = (origPath: string, targetPath: string, options?: object): Promise<string> =>
+  Promise.resolve("public url");
+const addFileFromBuffer = (buffer: Buffer, targetPath: string, options?: object): Promise<string> =>
+  Promise.resolve("public url");
 const addFileFromReadable = (
   stream: Readable,
   targetPath: string,
-  options?: UploadOptions
-): Promise<void> => Promise.resolve();
+  options?: object
+): Promise<string> => Promise.resolve("public url");
 const getFileAsReadable = (
   name: string,
   options?: {

@@ -1,5 +1,5 @@
 import fs, { ReadStream } from "fs";
-import { AdapterConfig, UploadOptions, IStorage, JSON as TypeJSON } from "./types";
+import { AdapterConfig, IStorage, JSON as TypeJSON } from "./types";
 import { Readable } from "stream";
 
 /**
@@ -21,12 +21,14 @@ const clearBucket = (name?: string): Promise<string> => Promise.resolve("bucket 
 const deleteBucket = (name?: string): Promise<string> => Promise.resolve("bucket deleted");
 const listBuckets = (): Promise<string[]> => Promise.resolve(["string", "string"]);
 const getSelectedBucket = (): string => "string";
-const addFileFromPath = (origPath: string, targetPath: string): Promise<void> => Promise.resolve();
-const addFileFromBuffer = (buffer: Buffer, targetPath: string): Promise<void> => Promise.resolve();
+const addFileFromPath = (origPath: string, targetPath: string, options?: object): Promise<void> =>
+  Promise.resolve();
+const addFileFromBuffer = (buffer: Buffer, targetPath: string, options?: object): Promise<void> =>
+  Promise.resolve();
 const addFileFromReadable = (
   stream: Readable,
   targetPath: string,
-  options?: UploadOptions
+  options?: object
 ): Promise<void> => Promise.resolve();
 const getFileAsReadable = (
   name: string,

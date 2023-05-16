@@ -1,8 +1,3 @@
-import fs from "fs";
-import path from "path";
-import { GenericKey } from "./types";
-import slugify from "slugify";
-
 /**
  * @param: url
  *
@@ -126,40 +121,6 @@ export const parseMode = (s: number | string): number | string => {
  */
 export const getProtocol = (url: string): string => {
   return;
-};
-
-/**
- * @param p
- * @param settings
- *
- * Slugifies a path if `slug` is true
- */
-export const generateSlugPath = (p: string, slug: boolean | number | string): string => {
-  if (slug === "true" || slug === true || slug == 1) {
-    const paths = p.split("/").map((d) => slugify(d));
-    return path.join(...paths);
-  }
-  return p;
-};
-
-/**
- * @param url
- * @param doSlug
- *
- * Slugifies a url if the `slug` is true
- */
-export const generateSlug = (url: string, slug: boolean | number | string): string => {
-  if (!url || url === "null" || url === "undefined") {
-    return "";
-  }
-  if (url.indexOf("/") !== -1) {
-    return generateSlugPath(url, slug);
-  }
-  if (slug === "true" || slug === true || slug == 1) {
-    const s = slugify(url);
-    return s;
-  }
-  return url;
 };
 
 /**

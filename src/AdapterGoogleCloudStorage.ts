@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { zip } from "ramda";
+import zip from "@ramda/zip";
 import { Readable } from "stream";
 import {
   Storage as GoogleCloudStorage,
@@ -15,24 +15,30 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected type = StorageType.GCS;
   private bucketNames: string[] = [];
   private storage: GoogleCloudStorage;
-  public static defaultOptions = {
-    slug: true,
-  };
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
-    const cfg = this.parseConfig(config);
-    this.config = { ...cfg };
-    if (cfg.slug) {
-      this.slug = cfg.slug;
-      delete cfg.slug;
+    this.config = this.parseConfig(config);
+    if (typeof this.config.bucketName !== "undefined") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      this.bucketName = this.config.bucketName;
     }
-    if (cfg.bucketName) {
-      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
-      delete cfg.bucketName;
-    }
-    delete cfg.type;
-    this.storage = new GoogleCloudStorage(cfg);
+    this.storage = new GoogleCloudStorage(this.config as ConfigGoogleCloud);
+  }
+
+  /**
+   * @param {string} keyFile - path to the keyFile
+   *
+   * Read in the keyFile and retrieve the projectId, this is function
+   * is called when the user did not provide a projectId
+   */
+  private getGCSProjectId(keyFile: string): string {
+    const data = fs.readFileSync(keyFile).toString("utf-8");
+    const json = JSON.parse(data);
+    return json.project_id;
   }
 
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
@@ -55,10 +61,25 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     } else {
       cfg = { ...config };
     }
+
+    if (cfg.skipCheck === true) {
+      return cfg;
+    }
+
+    if (!cfg.keyFilename) {
+      throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
+    }
+    if (!cfg.projectId) {
+      cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
+    }
+
     return cfg;
   }
 
   async init(): Promise<boolean> {
+    if (this.initialized) {
+      return Promise.resolve(true);
+    }
     if (this.bucketName) {
       await this.createBucket(this.bucketName);
       this.bucketNames.push(this.bucketName);
@@ -121,10 +142,14 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
   // util members
 
-  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(stream: Readable, targetPath: string): Promise<void>;
-  protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
+  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
+  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
+  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
+  protected async store(
+    arg: string | Buffer | Readable,
+    targetPath: string,
+    options: object
+  ): Promise<string> {
     if (!this.bucketName) {
       throw new Error("no bucket selected");
     }
@@ -142,26 +167,31 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     } else if (arg instanceof Readable) {
       readStream = arg;
     }
-    const writeStream = this.storage.bucket(this.bucketName).file(targetPath).createWriteStream();
+    const file = this.storage.bucket(this.bucketName).file(targetPath, options);
+    const writeStream = file.createWriteStream();
     return new Promise((resolve, reject) => {
-      readStream.pipe(writeStream).on("error", reject).on("finish", resolve);
+      readStream
+        .pipe(writeStream)
+        .on("error", reject)
+        .on("finish", () => {
+          resolve(file.publicUrl());
+        });
       writeStream.on("error", reject);
     });
   }
 
-  async createBucket(name: string): Promise<string> {
+  async createBucket(name: string, options: object = {}): Promise<string> {
     const msg = this.validateName(name);
     if (msg !== null) {
       return Promise.reject(msg);
     }
 
-    const n = this.generateSlug(name);
-    if (this.bucketNames.findIndex((b) => b === n) !== -1) {
+    if (this.bucketNames.findIndex((b) => b === name) !== -1) {
       return "bucket exists";
     }
 
     try {
-      const bucket = this.storage.bucket(n);
+      const bucket = this.storage.bucket(name, options);
       const [exists] = await bucket.exists();
       if (exists) {
         return "bucket exists";
@@ -172,8 +202,8 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      await this.storage.createBucket(n);
-      this.bucketNames.push(n);
+      await this.storage.createBucket(name, options);
+      this.bucketNames.push(name);
       return "bucket created";
     } catch (e) {
       // console.log("ERROR", e.message, e.code);
@@ -210,7 +240,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   async selectBucket(name: string | null): Promise<string> {
     if (name === null) {
       this.bucketName = "";
-      return "bucket deselected";
+      return `bucket '${name}' deselected`;
     }
 
     // const [error] = await to(this.createBucket(name));
@@ -220,7 +250,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     this.createBucket(name)
       .then(() => {
         this.bucketName = name;
-        return "bucket selected";
+        return `bucket '${name}' selected`;
       })
       .catch((e) => {
         throw e;
@@ -228,15 +258,13 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   }
 
   async clearBucket(name?: string): Promise<string> {
-    let n = name || this.bucketName;
-    n = this.generateSlug(n);
+    const n = name || this.bucketName;
     await this.storage.bucket(n).deleteFiles({ force: true });
     return "bucket cleared";
   }
 
   async deleteBucket(name?: string): Promise<string> {
-    let n = name || this.bucketName;
-    n = this.generateSlug(n);
+    const n = name || this.bucketName;
     await this.clearBucket(n);
     const data = await this.storage.bucket(n).delete();
     // console.log(data);

@@ -79,14 +79,14 @@ A configuration object extends `IAdapterConfig`:
 ```typescript
 interface IAdapterConfig {
   type: string;
-  slug?: boolean;
+  skipCheck?: boolean;
   bucketName?: string;
 }
 ```
 
 Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `sslEnabled` for Amazon S3.
 
-The optional key `slug` determines if bucket names and paths to files in buckets are slugified automatically.
+When your create a storage instance a check is performed if the storage-specific mandatory keys are set in the configuration object. You can skip this check by setting `skipCheck` to `true`.
 
 Another optional key is `bucketName`; for most cloud storage services it is required to select a bucket after a connection to the service has been made. If you don't want or can't provide a bucket name on initialization you can use `selectBucket` to do so afterwards.
 
@@ -138,8 +138,8 @@ Configuration object:
 type ConfigLocal = {
   type: StorageType;
   directory: string;
-  slug?: boolean;
   mode?: string | number;
+  [id: string]: boolean | string | number; // configuration is extensible
 };
 ```
 
@@ -211,14 +211,14 @@ type ConfigGoogleCloud = {
   keyFilename?: string; // path to keyFile.json
   projectId?: string;
   bucketName?: string;
-  slug?: boolean;
+  [id: string]: boolean | string | number; // configuration is extensible
 };
 ```
 
 Configuration url:
 
 ```typescript
-const url = "gcs://path/to/keyFile.json:projectId@bucketName?slug=false";
+const url = "gcs://path/to/keyFile.json:projectId@bucketName";
 ```
 
 The key filename is optional; if you omit the value for key filename, application default credentials with be loaded:
@@ -279,7 +279,6 @@ type ConfigAmazonS3 = {
   accessKeyId: string;
   secretAccessKey: string;
   region: string;
-  slug?: boolean;
   bucketName?: string;
   endpoint?: string;
   useDualstack?: boolean;
@@ -339,6 +338,7 @@ type ConfigBackBlazeB2 = {
   applicationKeyId: string;
   applicationKey: string;
   bucketName?: string;
+  [id: string]: boolean | string | number; // configuration is extensible
 };
 ```
 
@@ -384,10 +384,10 @@ Runs a simple test to test the storage configuration. The test is a call to `lis
 ### <a name='createbucket'></a>createBucket
 
 ```typescript
-createBucket(name: string): Promise<string>;
+createBucket(name: string, options?: object): Promise<string>;
 ```
 
-Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully it returns "bucket created" or if already existed "bucket exists", else it will reject with an error message.
+Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully it returns "bucket created" or if already existed "bucket exists", else it will reject with an error message. You can provide extra storage-specific settings such as access rights using the `options` object.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
@@ -448,26 +448,26 @@ Returns the name of the currently selected bucket or an empty string ("") if no 
 ### <a name='addfilefrompath'></a>addFileFromPath
 
 ```typescript
-addFileFromPath(filePath: string, targetPath: string): Promise<void>;
+addFileFromPath(filePath: string, targetPath: string, options?: object): Promise<string>;
 ```
 
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically if `slug` is to true, see [default options](#default-options).
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. Returns the public url to the file.
 
 ### <a name='addfilefrombuffer'></a>addFileFromBuffer
 
 ```typescript
-addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void>;
+addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string>;
 ```
 
-Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically if `slug` is to true, see [default options](#default-options). This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
+Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage). Returns the public url to the file.
 
 ### <a name='addfilefromreadable'></a>addFileFromReadable
 
 ```typescript
-addFileFromReadable(stream: Readable, targetPath: string): Promise<void>;
+addFileFromReadable(stream: Readable, targetPath: string, options?: object): Promise<string>;
 ```
 
-Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name; the value will be slugified automatically if `slug` is to true, see [default options](#default-options). This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
+Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage. Returns the public url to the file.
 
 ### <a name='getfileasreadable'></a>getFileAsReadable
 

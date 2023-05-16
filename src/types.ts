@@ -4,13 +4,13 @@ import { Readable } from "stream";
 // import { ConfigAmazonS3 } from "../adapters/amazon/types";
 // import { ConfigGoogleCloud } from "../adapters/google/types";
 
-export type UploadOptions = {
-  gzip?: boolean;
-  contentType?: string;
-  metadata?: {
-    [key: string]: string;
-  };
-};
+// export type UploadOptions = {
+//   gzip?: boolean;
+//   contentType?: string;
+//   metadata?: {
+//     [key: string]: string;
+//   };
+// };
 
 export interface IStorage {
   /**
@@ -53,15 +53,15 @@ export interface IStorage {
 
   /**
    * @param name: name of the bucket to create, returns true once the bucket has been created but
-   * also when the bucket already exists. Note that the provided name will be slugified. Also note that
-   * you have to use `selectBucket` to start using the newly created bucket
+   * also when the bucket already exists. Note that you have to use `selectBucket` to start using
+   * the newly created bucket.
+   * @param: options: additional options for creating a bucket such as access rights
    */
-  createBucket(name: string): Promise<string>;
+  createBucket(name: string, options?: object): Promise<string>;
 
   /**
    * @param name: name of the bucket that will be used to store files, if the bucket does not exist it
-   * will be created. Note that the provided name will be slugified. If you pass null, "" or no value the
-   * currently selected bucket will be deselected.
+   * will be created. If you pass null, "" or no value the currently selected bucket will be deselected.
    */
   selectBucket(name?: string | null): Promise<string>;
 
@@ -90,20 +90,26 @@ export interface IStorage {
   /**
    * @param origPath: path of the file to be copied
    * @param targetPath: path to copy the file to, folders will be created automatically
+   * @param options: additional option such as access rights
+   * @returns the public url to the file
    */
-  addFileFromPath(origPath: string, targetPath: string): Promise<void>;
+  addFileFromPath(origPath: string, targetPath: string, options?: object): Promise<string>;
 
   /**
    * @param buffer: file as buffer
    * @param targetPath: path to the file to save the buffer to, folders will be created automatically
+   * @param options: additional option such as access rights
+   * @returns the public url to the file
    */
-  addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void>;
+  addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string>;
 
   /**
    * @param stream: a read stream
    * @param targetPath: path to the file to save the stream to, folders will be created automatically
+   * @param options: additional option such as access rights
+   * @returns the public url to the file
    */
-  addFileFromReadable(stream: Readable, targetPath: string, options?: UploadOptions): Promise<void>;
+  addFileFromReadable(stream: Readable, targetPath: string, options?: object): Promise<string>;
 
   /**
    * @param name: name of the file to be returned as a readable stream
@@ -162,16 +168,16 @@ export type JSON = {
 export interface IAdapterConfig {
   // type: StorageType;
   type: string;
-  slug?: boolean;
+  skipCheck?: boolean;
   bucketName?: string;
 }
 
 export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
 
 export interface ConfigAmazonS3 extends IAdapterConfig {
-  accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  region?: string;
   endpoint?: string;
   useDualstack?: boolean;
   maxRetries?: number;
@@ -181,8 +187,8 @@ export interface ConfigAmazonS3 extends IAdapterConfig {
 }
 
 export interface ConfigBackblazeB2 extends IAdapterConfig {
-  applicationKeyId: string;
-  applicationKey: string;
+  applicationKeyId?: string;
+  applicationKey?: string;
   // [id: string]: GenericKey;
 }
 

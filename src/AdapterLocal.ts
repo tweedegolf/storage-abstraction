@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import glob from "glob";
-import rimraf from "rimraf";
+import { glob } from "glob";
+import { rimraf } from "rimraf";
 import { Readable } from "stream";
 import { StorageType, ConfigLocal } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
@@ -10,31 +10,26 @@ import { parseQuerystring, parseMode } from "./util";
 export class AdapterLocal extends AbstractAdapter {
   protected type = StorageType.LOCAL;
   // protected bucketName: string;
-  protected slug = false;
   private directory: string;
   private buckets: string[] = [];
   private mode: number | string = 0o777;
 
   constructor(config: ConfigLocal) {
     super();
-    const { directory, slug, mode } = this.parseConfig(config);
-    if (slug) {
-      this.slug = slug;
+    this.config = this.parseConfig(config);
+    if (typeof this.config.bucketName !== "undefined") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      this.bucketName = this.config.bucketName;
     }
-    if (mode) {
+    const mode = (this.config as ConfigLocal).mode;
+    if (typeof mode !== "undefined") {
       this.mode = mode;
     }
-
-    this.directory = this.generateSlug(path.dirname(directory), this.slug);
-    this.bucketName = this.generateSlug(path.basename(directory), this.slug);
-    // console.log("INIT", this.directory, this.bucketName);
-
-    this.config = {
-      type: this.type,
-      directory,
-      mode,
-      slug,
-    };
+    const directory = (this.config as ConfigLocal).directory;
+    this.directory = directory;
   }
 
   private parseConfig(config: string | ConfigLocal): ConfigLocal {
@@ -43,20 +38,26 @@ export class AdapterLocal extends AbstractAdapter {
       const qm = config.indexOf("?");
       const sep = config.indexOf("://");
       const type = config.substring(0, sep);
-      const { slug, mode } = parseQuerystring(config);
+      // const { mode } = parseQuerystring(config);
+      const querystring = parseQuerystring(config);
       const end = qm !== -1 ? qm : config.length;
       const directory = config.substring(sep + 3, end);
       // console.log("DIR", directory, end, qm);
       cfg = {
         type,
         directory,
-        slug: slug === "true",
-        mode: mode as string,
+        ...querystring,
+        // mode: mode as string,
       };
       // console.log(cfg);
     } else {
       cfg = { ...config };
     }
+
+    if (cfg.skipCheck === true) {
+      return cfg;
+    }
+
     if (!cfg.directory) {
       throw new Error("You must specify a value for 'directory' for storage type 'local'");
     }
@@ -64,9 +65,15 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   async init(): Promise<boolean> {
-    await this.createDirectory(path.join(this.directory, this.bucketName));
+    if (this.initialized) {
+      return Promise.resolve(true);
+    }
+
+    if (typeof this.bucketName !== "undefined") {
+      await this.createDirectory(path.join(this.directory, this.bucketName));
+    }
     this.initialized = true;
-    return true;
+    return Promise.resolve(true);
   }
 
   /**
@@ -94,15 +101,15 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(stream: Readable, targetPath: string): Promise<void>;
-  protected async store(filePath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
+  protected async store(buffer: Buffer, targetPath: string): Promise<string>;
+  protected async store(stream: Readable, targetPath: string): Promise<string>;
+  protected async store(filePath: string, targetPath: string): Promise<string>;
+  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<string> {
     const dest = path.join(this.directory, this.bucketName, targetPath);
     await this.createDirectory(path.dirname(dest));
     if (typeof arg === "string") {
       await fs.promises.copyFile(arg, dest);
-      return;
+      return dest;
     }
     const writeStream = fs.createWriteStream(dest);
     let readStream: Readable = null;
@@ -115,7 +122,12 @@ export class AdapterLocal extends AbstractAdapter {
       readStream = arg;
     }
     return new Promise((resolve, reject) => {
-      readStream.pipe(writeStream).on("error", reject).on("finish", resolve);
+      readStream
+        .pipe(writeStream)
+        .on("error", reject)
+        .on("finish", () => {
+          resolve(dest);
+        });
       writeStream.on("error", reject);
     });
   }
@@ -125,63 +137,61 @@ export class AdapterLocal extends AbstractAdapter {
     if (msg !== null) {
       return Promise.reject(msg);
     }
-    const bn = this.generateSlug(name, this.slug);
     // console.log(bn, name);
-    const created = await this.createDirectory(path.join(this.directory, bn));
+    const created = await this.createDirectory(path.join(this.directory, name));
     if (created) {
-      this.buckets.push(bn);
+      this.buckets.push(name);
       return "ok";
     }
   }
 
   async clearBucket(name?: string): Promise<string> {
-    let bn = name || this.bucketName;
-    // console.log(`clear bucket "${bn}"`);
-    // slugify in case an un-slugified name is supplied
-    bn = this.generateSlug(bn, this.slug);
-    if (!bn) {
+    const n = name || this.bucketName;
+    if (!n) {
       return;
     }
     // remove all files and folders inside bucket directory, but not the directory itself
-    const p = path.join(this.directory, bn, "*");
-    return new Promise((resolve) => {
-      rimraf(p, (e: Error) => {
-        if (e) {
-          throw e;
-        }
-        resolve("");
+    const p = path.join(this.directory, n, "*");
+    return rimraf(p)
+      .then(() => {
+        return "";
+      })
+      .catch((e: Error) => {
+        throw e;
       });
-    });
   }
 
   async deleteBucket(name?: string): Promise<string> {
-    let bn = name || this.bucketName;
-    // slugify in case an un-slugified name is supplied
-    bn = this.generateSlug(bn, this.slug);
-    if (!bn) {
-      return;
+    const n = name || this.bucketName;
+    if (!n) {
+      return Promise.resolve("");
     }
-    const p = path.join(this.directory, bn);
-    return new Promise((resolve) => {
-      rimraf(p, (e) => {
-        if (e !== null) {
-          throw e;
-        }
-        if (bn === this.bucketName) {
+    const p = path.join(this.directory, n);
+    return rimraf(p)
+      .then(() => {
+        if (n === this.bucketName) {
           this.bucketName = "";
         }
-        resolve("");
+        return "";
+      })
+      .catch((e: Error) => {
+        if (n === this.bucketName) {
+          this.bucketName = "";
+        }
+        if (e !== null) {
+          return Promise.reject(e);
+        }
       });
-    });
   }
 
   async selectBucket(name?: string | null): Promise<string> {
     if (!name) {
       this.bucketName = "";
-      return;
+      return `bucket '${name}' deselected`;
     }
     await this.createBucket(name);
     this.bucketName = name;
+    return `bucket '${name}' selected`;
   }
 
   async listBuckets(): Promise<string[]> {
@@ -194,15 +204,13 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   private async globFiles(folder: string): Promise<string[]> {
-    return new Promise<string[]>((resolve, reject) => {
-      glob(`${folder}/**/*.*`, {}, (err, files) => {
-        if (err !== null) {
-          reject(err);
-        } else {
-          resolve(files);
-        }
+    return glob(`${folder}/**/*.*`, {})
+      .then((files) => {
+        return Promise.resolve(files);
+      })
+      .catch((err) => {
+        return Promise.reject(err);
       });
-    });
   }
 
   async listFiles(): Promise<[string, number][]> {

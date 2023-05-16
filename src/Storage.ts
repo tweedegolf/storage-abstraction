@@ -1,6 +1,6 @@
 import path from "path";
 import { Readable } from "stream";
-import { IStorage, AdapterConfig, JSON as TypeJSON } from "./types";
+import { IStorage, AdapterConfig } from "./types";
 
 //  add new storage adapters here
 const adapterClasses = {
@@ -79,20 +79,24 @@ export class Storage implements IStorage {
     return this.adapter.test();
   }
 
-  async addFileFromBuffer(buffer: Buffer, targetPath: string): Promise<void> {
-    return this.adapter.addFileFromBuffer(buffer, targetPath);
+  async addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string> {
+    return this.adapter.addFileFromBuffer(buffer, targetPath, options);
   }
 
-  async addFileFromPath(origPath: string, targetPath: string): Promise<void> {
-    return this.adapter.addFileFromPath(origPath, targetPath);
+  async addFileFromPath(origPath: string, targetPath: string, options?: object): Promise<string> {
+    return this.adapter.addFileFromPath(origPath, targetPath, options);
   }
 
-  async addFileFromReadable(stream: Readable, targetPath: string): Promise<void> {
-    return this.adapter.addFileFromReadable(stream, targetPath);
+  async addFileFromReadable(
+    stream: Readable,
+    targetPath: string,
+    options?: object
+  ): Promise<string> {
+    return this.adapter.addFileFromReadable(stream, targetPath, options);
   }
 
-  async createBucket(name?: string): Promise<string> {
-    return this.adapter.createBucket(name);
+  async createBucket(name?: string, options?: object): Promise<string> {
+    return this.adapter.createBucket(name, options);
   }
 
   async clearBucket(name?: string): Promise<string> {

@@ -17,34 +17,20 @@ export class AdapterTemplate extends AbstractAdapter {
   // around the API of your storage service, e.g. aws-sdk for Amazon S3.
   private storage: any;
 
-  // It is recommended to use slugify for cloud storage so in most cases you should
-  // set `slug` to true. The member property `slug` is defined in AbstractAdapter
-  protected slug: true;
-
   // The constructor can take both a string and an object. You should define an interface
   // for the object that extends IConfig, see the file ./types.ts. You can use any name
   // for your interface but it is convenient if you start your name with Config and then
   // the name of your storage service in camelcase, e.g. ConfigMyStorageType.
   constructor(config: string | ConfigTemplate) {
     super();
-    const cfg = this.parseConfig(config);
-    // Clone the parsed configuration object so users cannot modify the
-    // configuration after instantiating
-    this.config = { ...cfg };
-    if (cfg.slug) {
-      this.slug = cfg.slug;
-      delete cfg.slug;
+    this.config = this.parseConfig(config);
+    if (typeof this.config.bucketName !== "undefined") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      this.bucketName = this.config.bucketName;
     }
-    if (cfg.bucketName) {
-      // The function generateSlug is defined in ./util.js, it slugifies the
-      // name of the bucket if `slug` is true
-      this.bucketName = this.generateSlug(cfg.bucketName, this.slug);
-      delete cfg.bucketName;
-    }
-    // remove keys from the configuration object that are not needed for
-    // creating an instance of the wrapper library (only necessary if you
-    // use a wrapper library, such as aws-sdk)
-    delete cfg.type;
     // If you are using a wrapper library, create an instance here
     // this.storage = new WrapperLibrary(cfg);
   }
@@ -68,6 +54,8 @@ export class AdapterTemplate extends AbstractAdapter {
   // }
   //
   private parseConfig(config: string | ConfigTemplate): ConfigTemplate {
+    // Make sure this method return a new object, not the modified config
+    // object that is passed as argument
     let cfg: ConfigTemplate;
     if (typeof config === "string") {
       // The parseUrl function is defined in ./util.js, see the documentation
@@ -140,10 +128,14 @@ export class AdapterTemplate extends AbstractAdapter {
   // 1. addFileFromPath
   // 2. addFileFromBuffer
   // 3. addFileFromReadable
-  protected async store(buffer: Buffer, targetPath: string): Promise<void>;
-  protected async store(stream: Readable, targetPath: string): Promise<void>;
-  protected async store(origPath: string, targetPath: string): Promise<void>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<void> {
+  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<void>;
+  protected async store(stream: Readable, targetPath: string, options: object): Promise<void>;
+  protected async store(origPath: string, targetPath: string, options: object): Promise<void>;
+  protected async store(
+    arg: string | Buffer | Readable,
+    targetPath: string,
+    options: object
+  ): Promise<void> {
     // Always check if a bucket has been selected before bucket actions.
     if (!this.bucketName) {
       throw new Error("no bucket selected");
@@ -167,17 +159,14 @@ export class AdapterTemplate extends AbstractAdapter {
       return Promise.reject(msg);
     }
 
-    // You can use the generateSlug method of AbstractStorage to slugify
-    // the provided name. note that this method checks the value of `slug`
-    // in the options, see the file ./util.js
-    const n = this.generateSlug(name);
-    if (this.checkBucket(n)) {
-      return;
+    if (this.checkBucket(name)) {
+      return Promise.resolve("bucket exists");
     }
 
     // Create bucket, if bucket has been created successfully you could
     // add it to this.bucketNames so you don't have to check its existence
     // again.
+    return Promise.resolve("bucket created");
   }
 
   async selectBucket(name: string): Promise<string> {
@@ -194,19 +183,14 @@ export class AdapterTemplate extends AbstractAdapter {
 
   async clearBucket(name?: string): Promise<string> {
     // If no name has been provided the currently selected bucket will be cleared.
-    let n = name || this.bucketName;
+    const n = name || this.bucketName;
 
-    // Slugify the name in case the user provide the unslugified version.
-    n = this.generateSlug(n);
     return "bucket cleared";
   }
 
   async deleteBucket(name?: string): Promise<string> {
     // If no name has been provided the currently selected bucket will be deleted.
-    let n = name || this.bucketName;
-
-    // Slugify the name in case the user provide the unslugified version.
-    n = this.generateSlug(n);
+    const n = name || this.bucketName;
 
     if (!n) {
       throw new Error("bucket not found");

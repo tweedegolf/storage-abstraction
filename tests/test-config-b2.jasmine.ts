@@ -21,23 +21,7 @@ describe(`testing backblaze b2 urls`, () => {
     expect(this.storage.getSelectedBucket()).toBe("the-buck");
   });
 
-  it("[2a] slug is true by default", () => {
-    this.storage = new Storage(
-      "b2://application-key-id:application-key/can/contain/slashes@the buck"
-    );
-    expect(this.storage.getType()).toBe(StorageType.B2);
-    expect(this.storage.getSelectedBucket()).toBe("the-buck");
-  });
-
-  it("[2b] slug is true by default", () => {
-    this.storage = new Storage(
-      "b2://application-key-id:application-key/can/contain/slashes@the buck?slug=false"
-    );
-    expect(this.storage.getType()).toBe(StorageType.B2);
-    expect(this.storage.getSelectedBucket()).toBe("the buck"); // not recommended!
-  });
-
-  it("[3a] object", () => {
+  it("[2a] object", () => {
     this.storage = new Storage({
       type: StorageType.B2,
       applicationKeyId: "keyId",
@@ -47,7 +31,7 @@ describe(`testing backblaze b2 urls`, () => {
     expect(this.storage.getSelectedBucket()).toBe("");
   });
 
-  it("[3b] object", () => {
+  it("[2b] object", () => {
     this.storage = new Storage({
       type: StorageType.B2,
       applicationKeyId: "keyId",
