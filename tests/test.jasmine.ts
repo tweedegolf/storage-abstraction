@@ -22,6 +22,8 @@ const secretAccessKey = process.env["AWS_SECRET_ACCESS_KEY"];
 const region = process.env["AWS_REGION"];
 const applicationKeyId = process.env["B2_APPLICATION_KEY_ID"];
 const applicationKey = process.env["B2_APPLICATION_KEY"];
+const storageAccount = process.env["AZURE_STORAGE_ACCOUNT"];
+const accessKey = process.env["AZURE_STORAGE_ACCESS_KEY"];
 
 console.group(".env");
 console.log({
@@ -33,6 +35,8 @@ console.log({
   keyFilename,
   accessKeyId,
   secretAccessKey,
+  storageAccount,
+  accessKey,
 });
 console.groupEnd();
 
@@ -66,6 +70,13 @@ if (type === StorageType.LOCAL) {
     applicationKeyId,
     applicationKey,
   };
+} else if (type === StorageType.AZURESTORAGEBLOB) {
+  config = {
+    type,
+    storageAccount,
+    accessKey,
+    bucketName
+  };
 } else {
   if (!configUrl) {
     config = `local://${process.cwd()}/the-buck`;
@@ -84,7 +95,6 @@ const test = async () => {
   try {
     storage = new Storage(config);
     await storage.init();
-    console.log("configuration", storage.getConfiguration());
   } catch (e) {
     console.error(`\x1b[31m${e.message}`);
     process.exit(0);
@@ -116,10 +126,11 @@ describe(`[testing ${type} storage]`, async () => {
   //   console.log("beforeAll");
   //   console.log(storage.getConfiguration());
   // });
+  
 
   beforeEach(() => {
     // increase this value if you experience a lot of timeouts
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   });
 
   afterAll(async () => {
@@ -401,7 +412,9 @@ describe(`[testing ${type} storage]`, async () => {
   it("create bucket", async () => {
     // expectAsync(storage.createBucket(newBucketName)).toBeResolved();
     try {
-      await storage.createBucket(newBucketName);
+      const msg = await storage.createBucket(newBucketName);
+      console.log('create bucket msg: ',msg);
+      
     } catch (e) {
       console.error("\x1b[31m", e, "\n");
     }
@@ -409,6 +422,8 @@ describe(`[testing ${type} storage]`, async () => {
 
   it("check created bucket", async () => {
     const buckets = await storage.listBuckets();
+    console.log(buckets);
+    
     const index = buckets.indexOf(newBucketName);
     expect(index).not.toBe(-1);
   });
@@ -426,7 +441,7 @@ describe(`[testing ${type} storage]`, async () => {
 
   it("delete bucket by providing a bucket name", async () => {
     const msg = await storage.deleteBucket(newBucketName);
-    // console.log(msg);
+    console.log(msg);
     const buckets = await storage.listBuckets();
     const index = buckets.indexOf(newBucketName);
     expect(index).toBe(-1);

@@ -8,6 +8,7 @@ const adapterClasses = {
   s3: "AdapterAmazonS3",
   gcs: "AdapterGoogleCloudStorage",
   local: "AdapterLocal",
+  azure: "AdapterAzureStorageBlob",
 };
 
 // or here for functional adapters
