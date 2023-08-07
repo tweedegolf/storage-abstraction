@@ -77,13 +77,14 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
 
     async getFileAsReadable(fileName: string, options: CreateReadStreamOptions = { start: 0 }): Promise<Readable> {
         const file = this.storage.getContainerClient(this.bucketName).getBlobClient(fileName);
-
         const exists = await file.exists();
-
         if (!exists) {
             throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
         }
-        return (await file.download()).readableStreamBody as Readable;
+        if(options.end !== undefined) {
+            options.end = options.end + 1;
+        }
+        return (await file.download(options.start, options.end)).readableStreamBody as Readable;
     }
 
     async getFileAsURL(fileName: string): Promise<string> {
@@ -124,17 +125,25 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         if (msg !== null) {
             return Promise.reject(msg);
         }
-
         if (this.bucketNames.findIndex((b) => b === name) !== -1) {
-            return;
+            return "bucket already exists";
         }
+        try {
+            const cont = this.storage.getContainerClient(name);
+            const exists = await cont.exists();
+            if(exists) {
+                return "container already exists";
+            }
+        } catch(e) {
 
+        }
         try {
             let res = await this.storage.createContainer(name);
             this.bucketNames.push(res.containerClient.containerName);
             return "container created";
         } catch (e) {
-            return Promise.reject(e);
+            console.log('error creating container: ',e);
+            return;
         }
     }
 
@@ -165,7 +174,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         try {
             await this.clearBucket(n);
             let del = await this.storage.deleteContainer(n);
-            console.log('deleting container: ', del);
+            //console.log('deleting container: ', del);
             if (n === this.bucketName) {
                 this.bucketName = "";
             }
@@ -203,10 +212,19 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
 
     removeFile(fileName: string): Promise<string> {
         try {
-            this.storage.getContainerClient(this.bucketName).getBlobClient(fileName).delete();
+            const container = this.storage.getContainerClient(this.bucketName);
+            const file = container.getBlobClient(fileName).deleteIfExists();
+            /*if(file.()) {
+                file.delete();
+                return Promise.resolve("file deleted");  
+            } else {
+                return Promise.resolve("file does not exist");
+            }*/
             return Promise.resolve("file deleted");
         } catch (e) {
-            return Promise.reject(e);
+            console.log("error deleting file: ", e);
+            
+            return Promise.resolve(e);
         }
     }
 

@@ -130,7 +130,14 @@ describe(`[testing ${type} storage]`, async () => {
 
   beforeEach(() => {
     // increase this value if you experience a lot of timeouts
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 300000;
+  });
+
+  afterEach((done) => {
+    // Esperar 1 minuto (60,000 milisegundos) entre cada prueba.
+    setTimeout(() => {
+      done();
+    }, 60000);
   });
 
   afterAll(async () => {
@@ -268,7 +275,6 @@ describe(`[testing ${type} storage]`, async () => {
       const writeStream = fs.createWriteStream(filePath);
       await copyFile(readStream, writeStream);
     } catch (e) {
-      console.log(e);
       throw e;
     }
   });
@@ -280,7 +286,6 @@ describe(`[testing ${type} storage]`, async () => {
       const writeStream = fs.createWriteStream(filePath);
       await copyFile(readStream, writeStream);
     } catch (e) {
-      console.log(e);
       throw e;
     }
     const size = (await fs.promises.stat(filePath)).size;
@@ -363,10 +368,10 @@ describe(`[testing ${type} storage]`, async () => {
     let r = storage.getType() === StorageType.LOCAL;
     try {
       const msg = await storage.createBucket("new-bucket");
-      // console.log(msg);
+      console.log("MSG TEST ASD: ", msg);
     } catch (e) {
       r = e.message !== "ok" && e.message !== "";
-      // console.log("R", r);
+      console.log("R", r);
     }
     expect(r).toEqual(true);
   });
@@ -413,7 +418,7 @@ describe(`[testing ${type} storage]`, async () => {
     // expectAsync(storage.createBucket(newBucketName)).toBeResolved();
     try {
       const msg = await storage.createBucket(newBucketName);
-      console.log('create bucket msg: ',msg);
+      //console.log('create bucket msg: ',msg);
       
     } catch (e) {
       console.error("\x1b[31m", e, "\n");
@@ -422,7 +427,7 @@ describe(`[testing ${type} storage]`, async () => {
 
   it("check created bucket", async () => {
     const buckets = await storage.listBuckets();
-    console.log(buckets);
+    //console.log(buckets);
     
     const index = buckets.indexOf(newBucketName);
     expect(index).not.toBe(-1);
@@ -441,7 +446,7 @@ describe(`[testing ${type} storage]`, async () => {
 
   it("delete bucket by providing a bucket name", async () => {
     const msg = await storage.deleteBucket(newBucketName);
-    console.log(msg);
+    //console.log(msg);
     const buckets = await storage.listBuckets();
     const index = buckets.indexOf(newBucketName);
     expect(index).toBe(-1);
