@@ -1,11 +1,11 @@
 {
-  "name": "@tweedegolf/storage-abstraction",
+  "name": "@tesirm99/storage-abstraction",
   "version": "1.4.6",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "homepage": "https://github.com/tweedegolf/storage-abstraction/",
-  "repository": "https://github.com/tweedegolf/storage-abstraction/",
+  "homepage": "https://github.com/tesirm99/storage-abstraction/",
+  "repository": "https://github.com/tesirm99/storage-abstraction/",
   "files": [
     "dist/*"
   ],
@@ -13,6 +13,7 @@
     "@aws-sdk/client-s3": "^3.332.0",
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
     "@google-cloud/storage": "^6.10.1",
+    "@azure/storage-blob": "^12.15.0",
     "@ramda/zip": "^0.26.1",
     "backblaze-b2": "^1.7.0",
     "glob": "^10.2.3",
