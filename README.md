@@ -16,7 +16,6 @@ Because the API only provides basic storage operations (see [below](#api-methods
   * [Google Cloud](#google-cloud)
   * [Amazon S3](#amazon-s3)
   * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
   * [init](#init)
   * [test](#test)

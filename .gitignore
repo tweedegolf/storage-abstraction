@@ -1,5 +1,6 @@
 .vscode
 node_modules
+publish/dist
 publish/README.md
 tests/tmp/*.jpg
 keyFile.json
