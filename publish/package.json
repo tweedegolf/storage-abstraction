@@ -1,11 +1,11 @@
 {
-  "name": "@tweedegolf/storage-abstraction",
+  "name": "@tesirm99/storage-abstraction",
   "version": "1.4.6",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "homepage": "https://github.com/tweedegolf/storage-abstraction/",
-  "repository": "https://github.com/tweedegolf/storage-abstraction/",
+  "homepage": "https://github.com/tesirm99/storage-abstraction/",
+  "repository": "https://github.com/tesirm99/storage-abstraction/",
   "files": [
     "dist/*"
   ],
