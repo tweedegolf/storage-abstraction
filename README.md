@@ -98,6 +98,7 @@ Configuration urls always start with a protocol that defines the type of storage
 - `gcs://` &rarr; Google Cloud
 - `s3://` &rarr; Amazon S3
 - `b2://` &rarr; Backblaze B2
+- `azure://` &rarr; Azure Blob Storage
 
 These values match the values in the enum `StorageType` shown above. What follows after the protocol is the part that contains the configuration of the storage. The format of the URL differs per storage type, see the documentation per adapter [below](#adapters) for details.
 
@@ -116,6 +117,10 @@ const url =
 // Backblaze B2
 const url =
   "b2://applicationKeyId:applicationKey@bucketName?extraOption1=value1&extraOption2=value2...";
+
+// Azure Blob Storage
+const url =
+  "azure://accountName:accountKey@containerName";
 ```
 
 ## <a name='adapters'></a>Adapters
@@ -359,6 +364,40 @@ const s = new Storage({
 });
 
 const s = new Storage("b2://keyId:key@bucket");
+```
+
+### <a name='backblaze-b2'></a>Azure Blob Storage
+
+> peer dependencies: <br/> > `npm i @azure/storage-blob`
+
+Config object:
+
+```typescript
+type ConfigAzureStorageBlob = {
+  type: StorageType;
+  storageAccount: string;
+  accessKey: string;
+  bucketName?: string;
+};
+```
+
+Configuration url:
+
+```typescript
+const url = "azure://account:accessKey@containerName";
+```
+
+Example:
+
+```typescript
+const s = new Storage({
+  type: StorageType.AZURESTORAGEBLOB,
+  storageAccount: "storage1",
+  accessKey: "accessKey1",
+  bucketName?: "container1",
+});
+
+const s = new Storage("azure://storage1:accessKey1@container1");
 ```
 
 ## <a name='api-methods'></a>API methods
