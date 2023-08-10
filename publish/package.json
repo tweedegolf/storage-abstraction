@@ -20,7 +20,13 @@
     "rimraf": "^5.0.0"
   },
   "devDependencies": {},
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "prepare": "npm run build"
+  },
   "keywords": [
     "storage",
     "storage abstraction",

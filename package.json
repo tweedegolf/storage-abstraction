@@ -64,7 +64,8 @@
     "copy-readme": "copy ./README.md ./publish",
     "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",
     "toc": "markdown-toc -i README.md",
-    "prepare": "npm run tsc"
+    "build": "tsc",
+    "prepare": "npm run build"
   },
   "keywords": [
     "storage",
