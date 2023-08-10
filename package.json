@@ -100,8 +100,7 @@
       "prettier"
     ],
     "ignorePatterns": [
-      "node_modules/",
-      "dist/"
+      "node_modules/"
     ],
     "rules": {
       "prettier/prettier": "error",
