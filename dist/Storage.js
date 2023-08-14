@@ -130,6 +130,11 @@ class Storage {
             return this.adapter.getFileAsReadable(name, { start, end });
         });
     }
+    getFileAsURL(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.adapter.getFileAsURL(name);
+        });
+    }
     removeFile(fileName) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.adapter.removeFile(fileName);

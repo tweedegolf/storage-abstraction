@@ -22,6 +22,7 @@ export declare class Storage implements IStorage {
         start?: number;
         end?: number;
     }): Promise<Readable>;
+    getFileAsURL(name: string): Promise<string>;
     removeFile(fileName: string): Promise<string>;
     listFiles(numFiles?: number): Promise<[string, number][]>;
     selectBucket(name?: string): Promise<string>;
