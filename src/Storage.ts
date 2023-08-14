@@ -125,6 +125,10 @@ export class Storage implements IStorage {
     return this.adapter.getFileAsReadable(name, { start, end });
   }
 
+  async getFileAsURL(name: string): Promise<string> {
+    return this.adapter.getFileAsURL(name);
+  }
+
   async removeFile(fileName: string): Promise<string> {
     return this.adapter.removeFile(fileName);
   }

@@ -146,6 +146,8 @@ export interface IStorage {
    * @param name
    */
   fileExists(name: string): Promise<boolean>;
+
+  getFileAsURL?(name: string): Promise<string>;
 }
 
 export enum StorageType {
