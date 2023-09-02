@@ -8,6 +8,7 @@ const adapterClasses = {
   s3: "AdapterAmazonS3",
   gcs: "AdapterGoogleCloudStorage",
   local: "AdapterLocal",
+  azure: "AdapterAzureStorageBlob",
 };
 
 // or here for functional adapters
@@ -122,6 +123,10 @@ export class Storage implements IStorage {
     const { start = 0, end } = options;
     // console.log(start, end, options);
     return this.adapter.getFileAsReadable(name, { start, end });
+  }
+
+  async getFileAsURL(name: string): Promise<string> {
+    return this.adapter.getFileAsURL(name);
   }
 
   async removeFile(fileName: string): Promise<string> {

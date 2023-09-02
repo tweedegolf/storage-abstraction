@@ -13,6 +13,7 @@
     "@aws-sdk/client-s3": "^3.332.0",
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
     "@google-cloud/storage": "^6.10.1",
+    "@azure/storage-blob": "^12.15.0",
     "@ramda/zip": "^0.26.1",
     "backblaze-b2": "^1.7.0",
     "glob": "^10.2.3",

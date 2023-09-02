@@ -146,6 +146,8 @@ export interface IStorage {
    * @param name
    */
   fileExists(name: string): Promise<boolean>;
+
+  getFileAsURL?(name: string): Promise<string>;
 }
 
 export enum StorageType {
@@ -153,6 +155,7 @@ export enum StorageType {
   GCS = "gcs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
   B2 = "b2", // BackBlaze B2
+  AZURESTORAGEBLOB = "azure", // Azure Storage Blob
 }
 
 export type JSON = {
@@ -184,6 +187,11 @@ export interface ConfigAmazonS3 extends IAdapterConfig {
   maxRedirects?: number;
   sslEnabled?: boolean;
   [id: string]: GenericKey;
+}
+
+export interface ConfigAzureStorageBlob extends IAdapterConfig {
+  storageAccount?: string;
+  accessKey?: string;
 }
 
 export interface ConfigBackblazeB2 extends IAdapterConfig {

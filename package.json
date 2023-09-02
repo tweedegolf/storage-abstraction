@@ -12,6 +12,8 @@
   ],
   "dependencies": {
     "@aws-sdk/client-s3": "^3.332.0",
+    "@azure/identity": "^3.2.4",
+    "@azure/storage-blob": "^12.15.0",
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
     "@google-cloud/storage": "^6.10.1",
     "@ramda/zip": "^0.26.1",
@@ -45,10 +47,12 @@
     "test-config-s3": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-s3.jasmine.ts",
     "test-config-gcs": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-gcs.jasmine.ts",
     "test-config-local": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-local.jasmine.ts",
+    "test-config-azure": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-azure.jasmine.ts",
     "test-local": "TYPE='local' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-b2": "TYPE='b2' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-azure": "TYPE='azure' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test": "ts-node ./tests/test.ts",
     "test1": "ts-node ./tests/test1.ts",
     "test2": "ts-node ./tests/test2.ts",
@@ -59,7 +63,8 @@
     "tsc": "node_modules/.bin/tsc",
     "copy-readme": "copy ./README.md ./publish",
     "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",
-    "toc": "markdown-toc -i README.md"
+    "toc": "markdown-toc -i README.md",
+    "prepare": "npm run prepublishOnly"
   },
   "keywords": [
     "storage",

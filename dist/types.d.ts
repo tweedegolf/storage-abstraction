@@ -1,0 +1,191 @@
+/// <reference types="node" />
+/// <reference types="node" />
+import { Readable } from "stream";
+export interface IStorage {
+    /**
+     * Initializes the storage. Some storage types don't need any initialization, others
+     * may require async actions such as an initial authorization. Because you can't (and don't
+     * want to) handle async action in the constructor all storage types have an init() method
+     * that needs to be called before any other API method call
+     */
+    init(): Promise<boolean>;
+    /**
+     * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
+     */
+    getType(): string;
+    /**
+     * Returns configuration settings that you've provided when instantiating as an object.
+     * Use this only for debugging and with great care as it may expose sensitive information.
+     *
+     * The object contains the key `bucketName` which is the initial value that you've set during
+     * initialization; if you have selected another bucket after initialization it will still show
+     * the original value. Use `getSelectedBucket()` to retrieve the current value.
+     *
+     * The object also contains the key `options` which are only the options passed in during
+     * initialization; if you want all options, including the default options use `getOptions()`
+     */
+    getConfiguration(): AdapterConfig;
+    /**
+     * Returns an object that contains both the options passed with the configuration and the
+     * default options of the storage type if not overruled by the options you passed in.
+     */
+    /**
+     * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
+     * if it fails and if so, it throws an error.
+     */
+    test(): Promise<string>;
+    /**
+     * @param name: name of the bucket to create, returns true once the bucket has been created but
+     * also when the bucket already exists. Note that you have to use `selectBucket` to start using
+     * the newly created bucket.
+     * @param: options: additional options for creating a bucket such as access rights
+     */
+    createBucket(name: string, options?: object): Promise<string>;
+    /**
+     * @param name: name of the bucket that will be used to store files, if the bucket does not exist it
+     * will be created. If you pass null, "" or no value the currently selected bucket will be deselected.
+     */
+    selectBucket(name?: string | null): Promise<string>;
+    /**
+     * @param name?: deletes all file in the bucket. If no name is provided the currently selected bucket
+     * of the storage will be emptied. If no bucket is selected an error will be thrown.
+     */
+    clearBucket(name?: string): Promise<string>;
+    /**
+     * @param name?: deletes the bucket with this name. If no name is provided the currently selected bucket
+     * of the storage will be deleted. If no bucket is selected an error will be thrown.
+     */
+    deleteBucket(name?: string): Promise<string>;
+    /**
+     * Retrieves a list of the names of the buckets in this storage
+     */
+    listBuckets(): Promise<string[]>;
+    /**
+     * Returns the name of the currently selected bucket or an empty string ("") if no bucket has been selected yet
+     */
+    getSelectedBucket(): string;
+    /**
+     * @param origPath: path of the file to be copied
+     * @param targetPath: path to copy the file to, folders will be created automatically
+     * @param options: additional option such as access rights
+     * @returns the public url to the file
+     */
+    addFileFromPath(origPath: string, targetPath: string, options?: object): Promise<string>;
+    /**
+     * @param buffer: file as buffer
+     * @param targetPath: path to the file to save the buffer to, folders will be created automatically
+     * @param options: additional option such as access rights
+     * @returns the public url to the file
+     */
+    addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string>;
+    /**
+     * @param stream: a read stream
+     * @param targetPath: path to the file to save the stream to, folders will be created automatically
+     * @param options: additional option such as access rights
+     * @returns the public url to the file
+     */
+    addFileFromReadable(stream: Readable, targetPath: string, options?: object): Promise<string>;
+    /**
+     * @param name: name of the file to be returned as a readable stream
+     * @param start?: the byte of the file where the stream starts (default: 0)
+     * @param end?: the byte in the file where the stream ends (default: last byte of file)
+     */
+    getFileAsReadable(name: string, options?: {
+        start?: number;
+        end?: number;
+    }): Promise<Readable>;
+    /**
+     * @param name: name of the file to be removed
+     */
+    removeFile(name: string): Promise<string>;
+    /**
+     * Returns an array of tuples containing the file path and the file size of all files in the currently
+     * selected bucket. If no bucket is selected an error will be thrown.
+     */
+    listFiles(numFiles?: number): Promise<[string, number][]>;
+    /**
+     * Returns the size in bytes of the file
+     * @param name
+     */
+    sizeOf(name: string): Promise<number>;
+    /**
+     * Check if a file with the provided name exists
+     * @param name
+     */
+    fileExists(name: string): Promise<boolean>;
+    getFileAsURL?(name: string): Promise<string>;
+}
+export declare enum StorageType {
+    LOCAL = "local",
+    GCS = "gcs",
+    S3 = "s3",
+    B2 = "b2",
+    AZURESTORAGEBLOB = "azure"
+}
+export type JSON = {
+    [id: string]: string | number | boolean | string[] | number[] | boolean[] | {
+        [id: string]: JSON;
+    };
+};
+export interface IAdapterConfig {
+    type: string;
+    skipCheck?: boolean;
+    bucketName?: string;
+}
+export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
+export interface ConfigAmazonS3 extends IAdapterConfig {
+    accessKeyId?: string;
+    secretAccessKey?: string;
+    region?: string;
+    endpoint?: string;
+    useDualstack?: boolean;
+    maxRetries?: number;
+    maxRedirects?: number;
+    sslEnabled?: boolean;
+    [id: string]: GenericKey;
+}
+export interface ConfigAzureStorageBlob extends IAdapterConfig {
+    storageAccount?: string;
+    accessKey?: string;
+}
+export interface ConfigBackblazeB2 extends IAdapterConfig {
+    applicationKeyId?: string;
+    applicationKey?: string;
+}
+export interface ConfigGoogleCloud extends IAdapterConfig {
+    keyFilename?: string;
+    projectId?: string;
+}
+export interface ConfigLocal extends IAdapterConfig {
+    directory: string;
+    mode?: number | string;
+}
+export interface ConfigTemplate extends IAdapterConfig {
+    someKey: string;
+    someOtherKey: string;
+}
+export type AdapterConfig = ConfigLocal | ConfigAmazonS3 | ConfigGoogleCloud | ConfigBackblazeB2 | ConfigTemplate;
+export type BackblazeB2Bucket = {
+    accountId: "string";
+    bucketId: "string";
+    bucketInfo: "object";
+    bucketName: "string";
+    bucketType: "string";
+    corsRules: string[];
+    lifecycleRules: string[];
+    options: string[];
+    revision: number;
+};
+export type BackblazeB2File = {
+    accountId: string;
+    action: string;
+    bucketId: string;
+    contentLength: number;
+    contentMd5: string;
+    contentSha1: string;
+    contentType: string;
+    fileId: string;
+    fileInfo: [object];
+    fileName: string;
+    uploadTimestamp: number;
+};
