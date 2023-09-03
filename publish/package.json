@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +27,8 @@
     "cloud filesystem",
     "google cloud",
     "amazon s3",
-    "backblaze b2"
+    "backblaze b2",
+    "azure"
   ],
   "author": "daniel@tweedegolf.nl",
   "license": "MIT",

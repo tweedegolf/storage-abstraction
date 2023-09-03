@@ -75,7 +75,7 @@ if (type === StorageType.LOCAL) {
     type,
     storageAccount,
     accessKey,
-    bucketName
+    bucketName,
   };
 } else {
   if (!configUrl) {
@@ -86,6 +86,7 @@ if (type === StorageType.LOCAL) {
 }
 
 const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
+const newBucketName2 = `bucket-${uniquid()}-${new Date().getTime()}`;
 
 // console.log("CONFIG", config);
 // console.log("newBucketName:", newBucketName, "\n");
@@ -94,6 +95,7 @@ let storage: Storage;
 const test = async () => {
   try {
     storage = new Storage(config);
+    // console.log(storage);
     await storage.init();
   } catch (e) {
     console.error(`\x1b[31m${e.message}`);
@@ -120,25 +122,28 @@ function streamToString(stream: Readable) {
 }
 
 describe(`[testing ${type} storage]`, async () => {
-  // beforeAll(async () => {
-  //   storage = new Storage(config);
-  //   await storage.init();
-  //   console.log("beforeAll");
-  //   console.log(storage.getConfiguration());
-  // });
-  
+  beforeAll(async () => {
+    try {
+      storage = new Storage(config);
+      await storage.init();
+      console.log("beforeAll");
+      console.log(storage.getConfiguration());
+    } catch (e) {
+      console.error(e);
+    }
+  });
 
   beforeEach(() => {
     // increase this value if you experience a lot of timeouts
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 300000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   });
 
-  afterEach((done) => {
-    // Esperar 1 minuto (60,000 milisegundos) entre cada prueba.
-    setTimeout(() => {
-      done();
-    }, 60000);
-  });
+  // afterEach((done) => {
+  //   // Esperar 1 minuto (60,000 milisegundos) entre cada prueba.
+  //   setTimeout(() => {
+  //     done();
+  //   }, 60000);
+  // });
 
   afterAll(async () => {
     // await storage.clearBucket(bucketName);
@@ -269,25 +274,25 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("get readable stream and save file", async () => {
-    try {
-      const readStream = await storage.getFileAsReadable("image1.jpg");
-      const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}.jpg`);
-      const writeStream = fs.createWriteStream(filePath);
-      await copyFile(readStream, writeStream);
-    } catch (e) {
-      throw e;
-    }
+    // try {
+    const readStream = await storage.getFileAsReadable("image1.jpg");
+    const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}.jpg`);
+    const writeStream = fs.createWriteStream(filePath);
+    await copyFile(readStream, writeStream);
+    // } catch (e) {
+    //   throw e;
+    // }
   });
 
   it("get readable stream partially and save file", async () => {
     const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}-part.jpg`);
-    try {
-      const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
-      const writeStream = fs.createWriteStream(filePath);
-      await copyFile(readStream, writeStream);
-    } catch (e) {
-      throw e;
-    }
+    // try {
+    const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
+    const writeStream = fs.createWriteStream(filePath);
+    await copyFile(readStream, writeStream);
+    // } catch (e) {
+    //   throw e;
+    // }
     const size = (await fs.promises.stat(filePath)).size;
     expect(size).toBe(3000);
   });
@@ -368,10 +373,11 @@ describe(`[testing ${type} storage]`, async () => {
     let r = storage.getType() === StorageType.LOCAL;
     try {
       const msg = await storage.createBucket("new-bucket");
-      console.log("MSG TEST ASD: ", msg);
+      r = msg !== "" && msg !== "ok";
+      // console.log("msg:", msg);
     } catch (e) {
       r = e.message !== "ok" && e.message !== "";
-      console.log("R", r);
+      // console.log("R", r);
     }
     expect(r).toEqual(true);
   });
@@ -417,9 +423,8 @@ describe(`[testing ${type} storage]`, async () => {
   it("create bucket", async () => {
     // expectAsync(storage.createBucket(newBucketName)).toBeResolved();
     try {
-      const msg = await storage.createBucket(newBucketName);
+      const msg = await storage.createBucket(newBucketName2);
       //console.log('create bucket msg: ',msg);
-      
     } catch (e) {
       console.error("\x1b[31m", e, "\n");
     }
@@ -428,27 +433,27 @@ describe(`[testing ${type} storage]`, async () => {
   it("check created bucket", async () => {
     const buckets = await storage.listBuckets();
     //console.log(buckets);
-    
-    const index = buckets.indexOf(newBucketName);
+
+    const index = buckets.indexOf(newBucketName2);
     expect(index).not.toBe(-1);
   });
 
   it("clear bucket by providing a bucket name", async () => {
-    await expectAsync(storage.clearBucket(newBucketName)).toBeResolved();
+    await expectAsync(storage.clearBucket(newBucketName2)).toBeResolved();
   });
 
   it("bucket should contain no files", async () => {
     const buckets = await storage.listBuckets();
     // await expectAsync(storage.selectBucket(newBucketName)).toBeResolvedTo("bucket selected");
-    const b = await storage.selectBucket(newBucketName);
+    const b = await storage.selectBucket(newBucketName2);
     await expectAsync(storage.listFiles()).toBeResolvedTo([]);
   });
 
   it("delete bucket by providing a bucket name", async () => {
-    const msg = await storage.deleteBucket(newBucketName);
+    const msg = await storage.deleteBucket(newBucketName2);
     //console.log(msg);
     const buckets = await storage.listBuckets();
-    const index = buckets.indexOf(newBucketName);
+    const index = buckets.indexOf(newBucketName2);
     expect(index).toBe(-1);
   });
 });

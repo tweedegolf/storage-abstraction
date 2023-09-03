@@ -53,8 +53,8 @@ export const parseUrl = (
   if (questionMark !== -1) {
     config = config.substring(0, questionMark);
   }
-  console.log("config", config);
-  
+  // console.log("config", config);
+
   // get bucket name and region
   let bucketString = "";
   if (at !== -1) {
