@@ -287,7 +287,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       const file = this.storage.bucket(this.bucketName).file(files[i]);
       const [metadata] = await file.getMetadata();
       // console.log(metadata);
-      sizes.push(parseInt(metadata.size, 10));
+      sizes.push(parseInt(metadata.size as string, 10));
     }
     return sizes;
   }
@@ -308,7 +308,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
     const file = this.storage.bucket(this.bucketName).file(name);
     const [metadata] = await file.getMetadata();
-    return parseInt(metadata.size, 10);
+    return parseInt(metadata.size as string, 10);
   }
 
   async fileExists(name: string): Promise<boolean> {

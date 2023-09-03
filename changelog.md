@@ -1,3 +1,7 @@
+# 1.4.7
+
+- Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)
+- Upgrade all packages
 # 1.4.5
 
 - Remove option 'slug' in config: this makes the user responsible for choosing a valid bucket name.
