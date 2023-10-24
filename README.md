@@ -1,5 +1,7 @@
 # <a name='storage-abstraction'></a>Storage Abstraction
 
+[![Build Status](https://github.com/tweedegolf/storage-abstraction/workflows/ci/badge.svg?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions?query=workflow%3Amaster)
+
 Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Currently local disk storage, Backblaze B2, Google Cloud and Amazon S3 and compliant cloud services are supported.
 
 Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
