@@ -70,6 +70,7 @@ enum StorageType {
   GCS = "gcs",
   S3 = "s3",
   B2 = "b2",
+  AZURE = "azure",
 }
 ```
 
@@ -120,8 +121,7 @@ const url =
   "b2://applicationKeyId:applicationKey@bucketName?extraOption1=value1&extraOption2=value2...";
 
 // Azure Blob Storage
-const url =
-  "azure://accountName:accountKey@containerName";
+const url = "azure://accountName:accountKey@containerName";
 ```
 
 ## <a name='adapters'></a>Adapters

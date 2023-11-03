@@ -1,3 +1,4 @@
+import { BucketLocationConstraint } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 // import { ConfigLocal } from "../adapters/local/types";
 // import { ConfigBackblazeB2 } from "../adapters/backblaze/types";
@@ -155,7 +156,7 @@ export enum StorageType {
   GCS = "gcs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
   B2 = "b2", // BackBlaze B2
-  AZURESTORAGEBLOB = "azure", // Azure Storage Blob
+  AZURE = "azure", // Azure Storage Blob
 }
 
 export type JSON = {

@@ -70,7 +70,7 @@ if (type === StorageType.LOCAL) {
     applicationKeyId,
     applicationKey,
   };
-} else if (type === StorageType.AZURESTORAGEBLOB) {
+} else if (type === StorageType.AZURE) {
   config = {
     type,
     storageAccount,
@@ -113,7 +113,7 @@ const waitABit = async (millis = 100): Promise<void> =>
   });
 
 function streamToString(stream: Readable) {
-  const chunks: any = [];
+  const chunks: Array<Uint8Array> = [];
   return new Promise((resolve, reject) => {
     stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
     stream.on("error", (err) => reject(err));
@@ -145,22 +145,22 @@ describe(`[testing ${type} storage]`, async () => {
   //   }, 60000);
   // });
 
-  afterAll(async () => {
-    // await storage.clearBucket(bucketName);
-    if (storage.getType() === StorageType.LOCAL) {
-      // cleaning up test data
-      const p = path.normalize(path.join(process.cwd(), (config as ConfigLocal).directory));
-      await rimraf(p, {
-        preserveRoot: false,
-      })
-        .then((success: boolean) => {
-          console.log("\nall cleaned up!", success);
-        })
-        .catch((e: Error) => {
-          console.log(e);
-        });
-    }
-  });
+  // afterAll(async () => {
+  //   // await storage.clearBucket(bucketName);
+  //   if (storage.getType() === StorageType.LOCAL) {
+  //     // cleaning up test data
+  //     const p = path.normalize(path.join(process.cwd(), (config as ConfigLocal).directory));
+  //     await rimraf(p, {
+  //       preserveRoot: false,
+  //     })
+  //       .then((success: boolean) => {
+  //         console.log("\nall cleaned up!", success);
+  //       })
+  //       .catch((e: Error) => {
+  //         console.log(e);
+  //       });
+  //   }
+  // });
 
   it("init", async () => {
     try {
@@ -294,6 +294,7 @@ describe(`[testing ${type} storage]`, async () => {
     //   throw e;
     // }
     const size = (await fs.promises.stat(filePath)).size;
+    // console.log(size);
     expect(size).toBe(3000);
   });
 
@@ -308,12 +309,6 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("list files 3", async () => {
-    // const expectedResult: [string, number][] = [
-    //   ["image1.jpg", 32201],
-    //   ["image2.jpg", 42908],
-    //   ["image3.jpg", 42908],
-    // ];
-    // await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
     const files = await storage.listFiles();
     expect(files.findIndex(([a, b]) => a === "image1.jpg" && b === 32201) !== -1).toBeTrue();
     expect(files.findIndex(([a, b]) => a === "image2.jpg" && b === 42908) !== -1).toBeTrue();

@@ -13,7 +13,7 @@ import { parseUrl } from "./util";
 import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
-  protected type = StorageType.AZURESTORAGEBLOB;
+  protected type = StorageType.AZURE;
   private storage: BlobServiceClient;
   private bucketNames: string[] = [];
   private sharedKeyCredential: StorageSharedKeyCredential;

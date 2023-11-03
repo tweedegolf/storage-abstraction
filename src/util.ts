@@ -1,3 +1,5 @@
+import { BucketLocationConstraint } from "@aws-sdk/client-s3";
+
 /**
  * @param: url
  *
@@ -144,6 +146,10 @@ export const validateName = (name: string): string => {
     // throw new Error("Please provide a bucket name");
     return "Please provide a bucket name";
   }
+  if (name.indexOf(" ") !== -1) {
+    // throw new Error("Please provide a bucket name");
+    return "Please provide a valid bucket name";
+  }
   return null;
 };
 
@@ -169,3 +175,7 @@ export const readFilePromise = (path: string): Promise<Buffer> =>
     });
   });
 */
+
+export const BucketLocationConstraintAsString = (c: BucketLocationConstraint): string => {
+  return;
+};
