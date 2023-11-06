@@ -40,8 +40,6 @@
     "typescript": "^5.0.4"
   },
   "scripts": {
-    "test-await": "ts-node ./tests/test-await.ts",
-    "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-config-b2": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-b2.jasmine.ts",
     "test-config-s3": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-s3.jasmine.ts",
@@ -54,9 +52,8 @@
     "test-b2": "TYPE='b2' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-azure": "TYPE='azure' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test": "ts-node ./tests/test.ts",
-    "test_all": "ts-node ./tests/test_all.ts",
+    "test-mode": "ts-node ./tests/test-mode.ts",
     "ts": "ts-node",
-    "test-urls": "ts-node ./tests/test-urls.ts",
     "tsc": "node_modules/.bin/tsc",
     "copy-readme": "cp ./README.md ./publish",
     "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",

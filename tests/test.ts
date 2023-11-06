@@ -33,52 +33,109 @@ const configBackblaze = {
   bucketName: process.env.BUCKET_NAME,
 };
 
+const configAzure = {
+  type: StorageType.AZURE,
+  storageAccount: process.env.AZURE_STORAGE_ACCOUNT,
+  accessKey: process.env.AZURE_STORAGE_ACCESS_KEY,
+  bucketName: process.env.BUCKET_NAME,
+};
+
 const configLocal = {
   type: StorageType.LOCAL,
   directory: process.env.LOCAL_DIRECTORY,
 };
 
+async function timeout(millis: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      return resolve();
+    }, millis);
+  });
+}
+
+async function removeAllBuckets(list: Array<string>, storage: IStorage) {
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    console.log("remove", b);
+    try {
+      await storage.clearBucket(b);
+      if (storage.getType() === StorageType.AZURE) {
+        await timeout(1000);
+      }
+      await storage.deleteBucket(b);
+    } catch (e) {
+      console.error("\x1b[31m", "[Error removeAllBuckets]", e);
+    }
+  }
+}
+
+async function selectBucket(storage: IStorage) {
+  let bucket = storage.getSelectedBucket();
+  if (!bucket) {
+    bucket = "the-buck-2023";
+    try {
+      console.log("SELECT BUCKET");
+      await storage.selectBucket(bucket);
+    } catch (e) {
+      console.error("\x1b[31m", "selectBucket", e, "\n");
+      return;
+    }
+  } else {
+    console.log("GET SELECTED BUCKET");
+  }
+  console.log(`\tselected bucket ${bucket}`);
+}
+
 const generateBucketName = (): string => `bucket-${uniquid()}-${new Date().getTime()}`;
 const bucketNames = [generateBucketName(), generateBucketName(), generateBucketName()];
 
-/**
- * A set of tests
- */
-const test = async (storage: IStorage): Promise<void> => {
-  console.log("=>", storage.getType());
-  const bucket = storage.getSelectedBucket();
-
-  // Note that since 1.4 you have to call `init()` before you can make API calls
+const test1 = async (storage: IStorage): Promise<void> => {
   try {
-    await storage.init();
-  } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
-    process.exit(0);
-  }
-
-  try {
+    console.log("TEST");
     await storage.test();
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", "test", e, "\n");
     return;
   }
 
   try {
-    const r = await storage.selectBucket(bucket);
-    console.log(`select bucket "${bucket}": ${r}`);
+    console.log("LIST BUCKETS");
+    const buckets = await storage.listBuckets();
+    console.log(`\tbuckets: ${buckets}`);
   } catch (e) {
-    console.error("\x1b[31m", e.message, "\n");
+    console.error("\x1b[31m", "listBuckets", e, "\n");
     return;
   }
+  console.log("----------");
+};
+
+const test2 = async (storage: IStorage) => {
+  await selectBucket(storage);
 
   try {
-    const readStream = createReadStream(path.join("tests", "data", "image1.jpg"));
-    await storage.addFileFromReadable(readStream, "/test.jpg");
+    console.log("ADD FILE FROM READABLE");
+    const readStream = createReadStream(path.join(process.cwd(), "tests", "data", "image1.jpg"));
+    await storage.addFileFromReadable(readStream, "test.jpg");
+    const files = await storage.listFiles();
+    console.log("\tfiles", files);
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", "addFileFromReadable", e, "\n");
   }
 
   try {
+    console.log("GET FILE AS READABLE");
+    const readStream = await storage.getFileAsReadable("test.jpg");
+    const p = path.join(process.cwd(), "test.jpg");
+    const writeStream = fs.createWriteStream(p);
+    await copyFile(readStream, writeStream);
+    // cleanup
+    await fs.promises.unlink(p);
+  } catch (e) {
+    console.error("\x1b[31m", "getFileAsReadable", e, "\n");
+  }
+
+  try {
+    console.log("GET FILE AS READABLE (PARTIAL)");
     const readStream = await storage.getFileAsReadable("test.jpg", {
       end: 4000,
     });
@@ -86,94 +143,138 @@ const test = async (storage: IStorage): Promise<void> => {
     const writeStream = fs.createWriteStream(p);
     await copyFile(readStream, writeStream);
     const size = (await fs.promises.stat(p)).size;
-    console.log("size partial", size);
+    console.log("\tsize", size);
+    // cleanup
+    await fs.promises.unlink(p);
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", "getFileAsReadable (partial)", e, "\n");
   }
-  await fs.promises.unlink(path.join(process.cwd(), "test-partial.jpg"));
 
   try {
-    const readStream = await storage.getFileAsReadable("test.jpg");
-    const p = path.join(process.cwd(), "test.jpg");
-    const writeStream = fs.createWriteStream(p);
-    await copyFile(readStream, writeStream);
+    console.log("CLEAR BUCKET");
+    // await storage.clearBucket(bucket);
+    await storage.clearBucket();
   } catch (e) {
-    console.error("\x1b[31m", e, "\n");
+    console.error("\x1b[31m", "clearBucket", e, "\n");
   }
-  await fs.promises.unlink(path.join(process.cwd(), "test.jpg"));
 
-  let buckets = await storage.listBuckets();
-  console.log("list buckets", buckets);
+  console.log("----------");
+};
 
-  await storage.createBucket(bucketNames[0]);
-  await storage.createBucket(bucketNames[1]);
-  await storage.createBucket(bucketNames[2]);
+const test3 = async (storage: IStorage) => {
+  try {
+    console.log("ADD 3 NEW BUCKETS");
+    let buckets = await storage.listBuckets();
+    console.log("\tlist buckets before", buckets);
 
-  buckets = await storage.listBuckets();
-  console.log("list buckets", buckets);
+    await storage.createBucket(bucketNames[0]);
+    await storage.createBucket(bucketNames[1]);
+    await storage.createBucket(bucketNames[2]);
 
-  await storage.deleteBucket(bucketNames[2]);
-
-  buckets = await storage.listBuckets();
-  console.log("list buckets", buckets);
+    buckets = await storage.listBuckets();
+    console.log("\tlist buckets after", buckets);
+  } catch (e) {
+    console.error("\x1b[31m", "createBucket", e, "\n");
+  }
 
   try {
-    await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
+    console.log("DELETE 2 BUCKETS");
+    await storage.deleteBucket(bucketNames[1]);
+    await storage.deleteBucket(bucketNames[2]);
+    const buckets = await storage.listBuckets();
+    console.log("\tlist buckets after", buckets);
   } catch (e) {
-    console.log(e.message);
+    console.error("\x1b[31m", "deleteBucket", e, "\n");
+  }
+  console.log("----------");
+};
+
+const test4 = async (storage: IStorage) => {
+  await selectBucket(storage);
+
+  const source = path.join(process.cwd(), "tests", "data", "image1.jpg");
+  let target = "subdir/sub subdir/new name.jpg";
+  if (storage.getType() === StorageType.B2) {
+    // Backblaze does not support white spaces
+    target = target.replace(/\s/g, "-");
   }
 
-  await storage.selectBucket(bucketNames[0]);
-  console.log(`select bucket "${storage.getSelectedBucket()}"`);
-  await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
+  try {
+    console.log("ADD FILE FROM PATH");
+    await storage.addFileFromPath(source, target);
+    const files = await storage.listFiles();
+    console.log("\tlist files", files);
+  } catch (e) {
+    console.error("\x1b[31m", "addFileFromPath", e, "\n");
+  }
 
-  let files = await storage.listFiles();
-  console.log("list files", files);
+  try {
+    console.log("REMOVE FILE");
+    await storage.removeFile(target);
+    const files = await storage.listFiles();
+    console.log("\tremove file", files);
+  } catch (e) {
+    console.error("\x1b[31m", "removeFile", e, "\n");
+  }
 
-  await storage.clearBucket();
+  console.log("----------");
+};
 
-  files = await storage.listFiles();
-  console.log("list files", files);
+const test5 = async (storage: IStorage) => {
+  await selectBucket(storage);
 
-  await storage.addFileFromPath("./tests/data/image1.jpg", "subdir/sub subdir/new name.jpg");
-  files = await storage.listFiles();
-  console.log("add file", files);
+  try {
+    console.log("ADD FILE FROM READABLE");
+    const readStream = createReadStream(path.join(process.cwd(), "tests", "data", "image1.jpg"));
+    await storage.addFileFromReadable(readStream, "subdir/sub subdir/test.jpg");
+    const files = await storage.listFiles();
+    console.log("\tfiles", files);
+  } catch (e) {
+    console.error("\x1b[31m", "addFileFromReadable", e, "\n");
+  }
 
-  await storage.removeFile("subdir/sub subdir/new name.jpg");
-  files = await storage.listFiles();
-  console.log("remove file", files);
-
-  await storage.addFileFromPath("./tests/data/image1.jpg", "tmp.jpg");
-
-  await storage.deleteBucket(bucketNames[0]);
-  await storage.deleteBucket(bucketNames[1]);
-  buckets = await storage.listBuckets();
-  console.log(`cleanup buckets ${buckets}`);
-  console.log("\n");
+  try {
+    console.log("REMOVE ALL BUCKETS");
+    let buckets = await storage.listBuckets();
+    console.log(`\tbuckets before ${buckets}`);
+    await removeAllBuckets(buckets, storage);
+    buckets = await storage.listBuckets();
+    console.log(`\tbuckets after ${buckets}`);
+    console.log("\n");
+  } catch (e) {
+    console.error("\x1b[31m", "deleteBucket", e, "\n");
+  }
+  console.log("----------");
 };
 
 const run = async (): Promise<void> => {
   /* uncomment one of the following lines to test a single storage type: */
   // const storage = new Storage(configLocal);
   // const storage = new Storage(configS3);
+  // const storage = new Storage(configBackblaze);
   // const storage = new Storage(configGoogle);
+  const storage = new Storage(configAzure);
   // const storage = new Storage(process.env.STORAGE_URL);
-  const storage = new Storage(configLocal);
 
-  test(storage);
+  console.log("=>", storage.getConfiguration());
 
-  /* or run all tests */
-  // test(new Storage(configLocal))
-  //   .then(() => test(new Storage(configS3)))
-  //   .then(() => test(new Storage(configGoogle)))
-  //   .then(() => test(new Storage(configBackblaze)))
-  //   .then(() => test(new Storage(process.env.CONFIG_URL)))
-  //   .then(() => {
-  //     console.log("done");
-  //   })
-  //   .catch(e => {
-  //     console.log(e);
-  //   });
+  const tests = [test5];
+  for (let i = 0; i < tests.length; i++) {
+    try {
+      // Note that since 1.4 you have to call `init()` before you can make API calls.
+      // You have to call `init()` only once in the lifetime of a storage but since it
+      // should be possible to run every test both individually and in any order,
+      // we call it right before every test.
+      // There is no performance hit because a storage that has already been initialized
+      // directly returns true.
+      await storage.init();
+    } catch (e) {
+      console.error("\x1b[31m", "[init]", e, "\n");
+      process.exit(0);
+    }
+    const t = tests[i];
+    await t(storage);
+  }
 };
 
 run();

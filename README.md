@@ -9,40 +9,40 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-  * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+  - [Backblaze B2](#backblaze-b2)
+  - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  * [init](#init)
-  * [test](#test)
-  * [createBucket](#createbucket)
-  * [selectBucket](#selectbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [getSelectedBucket](#getselectedbucket)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromReadable](#addfilefromreadable)
-  * [getFileAsReadable](#getfileasreadable)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [switchAdapter](#switchadapter)
+  - [init](#init)
+  - [test](#test)
+  - [createBucket](#createbucket)
+  - [selectBucket](#selectbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [getSelectedBucket](#getselectedbucket)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromReadable](#addfilefromreadable)
+  - [getFileAsReadable](#getfileasreadable)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -155,11 +155,11 @@ Configuration url:
 const url = "local://path/to/your/bucket?mode=750";
 ```
 
-The key `mode` is used to set the access rights when creating new buckets. The default value is `0o777`. You can pass this value both as a string and as a number.
+With key `mode` you can set the access rights when you create new buckets. The default value is `0o777`. You can pass this value both in decimal and in octal format. E.g. `rwxrwxrwx` is `0o777` in octal format or `511` in decimal format.
 
-If you use a configuration URL you can only pass values as strings; string values without radix prefix will be interpreted as octal numbers, so "750" is the same as "0o750" and both yield the same numeric value `0o750` or `488` decimal.
+When you use a configuration object you can also pass `mode` as a decimal or octal number. If you use a configuration URL you can only pass values as strings.
 
-When using a configuration object you can also pass `mode` as a number, please don't forget the radix prefix if you don't use decimal numbers, e.g. `750` is probably not what you want, pass `0o750` or `488` instead. Best is to use strings to avoid confusion.
+String values without radix prefix will be interpreted as decimal numbers, so "777" is _not_ the same as "0o777" and yields `41411`. This is probably not what you want. The configuration parser handles this by returning the default value in case you pass a value over decimal `511`.
 
 Example:
 
@@ -167,12 +167,25 @@ Example:
 const config = {
   type: StorageType.LOCAL,
   directory: "path/to/folder/bucket",
-  mode: "750",
+  mode: 488, // decimal literal
 };
 const s = new Storage(config);
 
 // or
-const url = "local://path/to/folder/bucket?mode=750";
+const url = "local://path/to/folder/bucket?mode=488";
+const s = new Storage(url);
+
+// and the same with octal values:
+
+const config = {
+  type: StorageType.LOCAL,
+  directory: "path/to/folder/bucket",
+  mode: 0o750, // octal literal
+};
+const s = new Storage(config);
+
+// or
+const url = "local://path/to/folder/bucket?mode=0o750";
 const s = new Storage(url);
 ```
 

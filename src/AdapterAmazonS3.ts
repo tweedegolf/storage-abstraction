@@ -30,7 +30,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   constructor(config: string | AdapterConfig) {
     super();
     this.config = this.parseConfig(config as ConfigAmazonS3);
-    if (typeof this.config.bucketName !== "undefined") {
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
       const msg = this.validateName(this.config.bucketName);
       if (msg !== null) {
         throw new Error(msg);
@@ -47,16 +47,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (this.initialized) {
       return Promise.resolve(true);
     }
-    // if (this.bucketName) {
-    //   this.createBucket(this.bucketName)
-    //     .then((data) => {
-    //       this.bucketNames.push(this.bucketName);
-    //     })
-    //     .catch((message: string) => {
-    //       console.log(message);
-    //       return Promise.reject(message);
-    //     });
-    // }
+    if (this.bucketName) {
+      await this.createBucket(this.bucketName)
+        .then((_data) => {
+          this.bucketNames.push(this.bucketName);
+        })
+        .catch((message: string) => {
+          return Promise.reject(message);
+        });
+    }
     // no further initialization required
     this.initialized = true;
     return Promise.resolve(true);
@@ -171,6 +170,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       }
       const command = new CreateBucketCommand(input);
       const response = await this.storage.send(command);
+      // console.log("response", response);
       if (response.$metadata.httpStatusCode === 200) {
         this.bucketNames.push(name);
         this.bucketName = name;
@@ -223,9 +223,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   async deleteBucket(name?: string): Promise<string> {
     const n = name || this.bucketName;
+    // console.log("deleteBucket", n);
 
     if (n === "") {
-      throw new Error("no bucket selected");
+      throw new Error("deleteBucket: no bucket selected");
     }
     try {
       const input = {
@@ -238,7 +239,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (n === this.bucketName) {
         this.bucketName = "";
       }
-
+      // console.log("selected bucket", this.bucketName);
       this.bucketNames = this.bucketNames.filter((b) => b !== n);
 
       return "bucket deleted";
@@ -260,7 +261,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return this.bucketNames;
       })
       .catch((e) => {
-        console.log(e);
+        console.log("[ERROR listBuckets]", e);
         return [];
       });
   }
