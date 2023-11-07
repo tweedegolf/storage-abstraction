@@ -162,6 +162,13 @@ describe(`[testing ${type} storage]`, async () => {
   //   }
   // });
 
+  afterAll(async () => {
+    const p = path.normalize(path.join(process.cwd(), "test_directory"));
+    await rimraf(p, {
+      preserveRoot: false,
+    });
+  });
+
   it("init", async () => {
     try {
       storage = new Storage(config);
@@ -368,7 +375,7 @@ describe(`[testing ${type} storage]`, async () => {
     let r = storage.getType() === StorageType.LOCAL;
     try {
       const msg = await storage.createBucket("new-bucket");
-      r = msg !== "" && msg !== "ok";
+      r = msg === "ok";
       // console.log("msg:", msg);
     } catch (e) {
       r = e.message !== "ok" && e.message !== "";
