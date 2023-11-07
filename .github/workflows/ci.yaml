@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
     branches:
-      - '*'
+      - "*"
 
 jobs:
   test-local:
@@ -14,7 +14,7 @@ jobs:
     name: Test Node.JS ${{matrix.node-version}}
     strategy:
       matrix:
-        node-version: ['18.x', '20.x', '21.x']
+        node-version: ["18.x", "20.x", "21.x"]
     steps:
       - uses: actions/checkout@v4.1.1
       - uses: actions/setup-node@v4.0.0
@@ -29,4 +29,4 @@ jobs:
             node-modules-cache-${{matrix.node-version}}-${{runner.os}}-${{hashFiles('package-lock.json')}}-
             node-modules-cache-${{matrix.node-version}}-${{runner.os}}-
       - run: npm ci
-      - run: npm test-local
+      - run: npm run test-local
