@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  test-local:
+    runs-on: ubuntu-latest
+    name: Test Node.JS ${{matrix.node-version}}
+    strategy:
+      matrix:
+        node-version: ['18.x', '20.x', '21.x']
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-node@v4.0.0
+        with:
+          node-version: ${{matrix.node-version}}
+      - uses: actions/cache@v3.3.2
+        with:
+          path: |
+            node_modules
+          key: node-modules-cache-${{matrix.node-version}}-${{runner.os}}-${{hashFiles('package-lock.json')}}-${{github.ref}}
+          restore-keys: |
+            node-modules-cache-${{matrix.node-version}}-${{runner.os}}-${{hashFiles('package-lock.json')}}-
+            node-modules-cache-${{matrix.node-version}}-${{runner.os}}-
+      - run: npm ci
+      - run: npm test-local
