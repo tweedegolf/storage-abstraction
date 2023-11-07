@@ -1,6 +1,6 @@
 # <a name='storage-abstraction'></a>Storage Abstraction
 
-[![Build Status](https://github.com/tweedegolf/storage-abstraction/workflows/ci/badge.svg?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions?query=workflow%3Aci)
+[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
 Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Currently local disk storage, Backblaze B2, Google Cloud and Amazon S3 and compliant cloud services are supported.
 
