@@ -1,3 +1,8 @@
+# 1.4.8
+
+- use `s3-request-presigner` to create links to objects
+- added support for S3 compatible storages (tested with Cloudflare R2 and Backblaze S3)
+
 # 1.4.7
 
 - Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)

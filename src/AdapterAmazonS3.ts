@@ -17,6 +17,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { ConfigAmazonS3, AdapterConfig, StorageType } from "./types";
 import { parseUrl } from "./util";
 
@@ -37,10 +38,24 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       }
       this.bucketName = this.config.bucketName;
     }
-    if (typeof (this.config as ConfigAmazonS3).region !== "undefined") {
+
+    if (typeof (this.config as ConfigAmazonS3).region === "undefined") {
+      this.region = "auto";
+    } else {
       this.region = (this.config as ConfigAmazonS3).region;
     }
-    this.storage = new S3Client({ region: this.region });
+    if (typeof this.config.endpoint === "undefined") {
+      this.storage = new S3Client({ region: this.region });
+    } else {
+      this.storage = new S3Client({
+        region: this.region,
+        endpoint: this.config.endpoint,
+        credentials: {
+          accessKeyId: this.config.accessKeyId,
+          secretAccessKey: this.config.secretAccessKey,
+        },
+      });
+    }
   }
 
   async init(): Promise<boolean> {
@@ -94,7 +109,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       );
     }
 
-    if (!cfg.region) {
+    let isAmazon = true;
+    if (typeof cfg.endpoint !== "undefined") {
+      if (
+        cfg.endpoint.indexOf("r2.cloudflarestorage.com") !== -1 ||
+        cfg.endpoint.indexOf("backblazeb2.com") !== -1
+      ) {
+        isAmazon = false;
+      }
+    }
+    if (!cfg.region && isAmazon) {
       throw new Error("You must specify a default region for storage type 's3'");
     }
 
@@ -163,7 +187,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      if (this.config.region !== "us-east-1") {
+      if (typeof this.config.region !== "undefined" && this.config.region !== "us-east-1") {
         input.CreateBucketConfiguration = {
           LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")],
         };
@@ -307,7 +331,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this.storage.send(command);
       this.region = response.LocationConstraint;
     }
-    return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
+    // return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
+    return await getSignedUrl(
+      this.storage,
+      new GetObjectCommand({ Bucket: this.bucketName, Key: targetPath })
+      // { expiresIn: 3600 }
+    );
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {

@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,11 +11,11 @@
     "tests/test.ts"
   ],
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.441.0",
-    "@azure/identity": "^3.3.2",
-    "@azure/storage-blob": "^12.16.0",
+    "@aws-sdk/client-s3": "^3.445.0",
+    "@aws-sdk/s3-request-presigner": "^3.445.0",
+    "@azure/storage-blob": "^12.17.0",
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
-    "@google-cloud/storage": "^7.5.0",
+    "@google-cloud/storage": "^7.6.0",
     "@ramda/zip": "^0.26.1",
     "backblaze-b2": "^1.7.0",
     "glob": "^10.3.10",
@@ -23,12 +23,12 @@
     "uniquid": "^1.1.4"
   },
   "devDependencies": {
-    "@types/jasmine": "^5.1.1",
-    "@types/node": "^20.8.10",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1",
+    "@types/jasmine": "^5.1.2",
+    "@types/node": "^20.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
     "dotenv": "^16.0.3",
-    "eslint": "^8.52.0",
+    "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
     "jasmine": "^5.1.0",
@@ -46,7 +46,7 @@
     "test-config-gcs": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-gcs.jasmine.ts",
     "test-config-local": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-local.jasmine.ts",
     "test-config-azure": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-azure.jasmine.ts",
-    "test-local": "TYPE='local' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-local": "TYPE='local' BUCKET_NAME='the-buck' LOCAL_DIRECTORY='test_directory' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-b2": "TYPE='b2' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
@@ -67,6 +67,7 @@
     "google cloud",
     "amazon s3",
     "backblaze b2",
+    "cloudflare r2",
     "azure"
   ],
   "author": "daniel@tweedegolf.nl",

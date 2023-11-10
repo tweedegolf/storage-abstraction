@@ -19,6 +19,25 @@ const configS3 = {
   region: process.env.AWS_REGION,
 };
 
+const configR2 = {
+  type: StorageType.S3,
+  accessKeyId: process.env.R2_ACCESS_KEY_ID,
+  secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  endpoint: process.env.R2_ENDPOINT,
+  bucketName: process.env.BUCKET_NAME,
+  // region: process.env.AWS_REGION,
+};
+
+const configMinio = {
+  type: StorageType.MINIO,
+  accessKeyId: process.env.MINIO_ACCESS_KEY,
+  secretAccessKey: process.env.MINIO_SECRET_KEY,
+  endPoint: process.env.MINIO_ENDPOINT,
+  port: process.env.MINIO_PORT,
+  useSSL: process.env.MINIO_USE_SSL,
+  bucketName: process.env.BUCKET_NAME,
+};
+
 const configGoogle = {
   type: StorageType.GCS,
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
@@ -31,6 +50,14 @@ const configBackblaze = {
   applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
   applicationKey: process.env.B2_APPLICATION_KEY,
   bucketName: process.env.BUCKET_NAME,
+};
+
+const configBackblazeS3 = {
+  type: StorageType.S3,
+  accessKeyId: process.env.B2_APPLICATION_KEY_ID,
+  secretAccessKey: process.env.B2_APPLICATION_KEY,
+  bucketName: process.env.BUCKET_NAME,
+  endpoint: process.env.B2_ENDPOINT,
 };
 
 const configAzure = {
@@ -115,7 +142,8 @@ const test2 = async (storage: IStorage) => {
   try {
     console.log("ADD FILE FROM READABLE");
     const readStream = createReadStream(path.join(process.cwd(), "tests", "data", "image1.jpg"));
-    await storage.addFileFromReadable(readStream, "test.jpg");
+    const url = await storage.addFileFromReadable(readStream, "test.jpg");
+    console.log("\tpresigned url", url);
     const files = await storage.listFiles();
     console.log("\tfiles", files);
   } catch (e) {
@@ -250,15 +278,18 @@ const test5 = async (storage: IStorage) => {
 const run = async (): Promise<void> => {
   /* uncomment one of the following lines to test a single storage type: */
   // const storage = new Storage(configLocal);
-  // const storage = new Storage(configS3);
+  const storage = new Storage(configS3);
   // const storage = new Storage(configBackblaze);
   // const storage = new Storage(configGoogle);
-  const storage = new Storage(configAzure);
+  // const storage = new Storage(configAzure);
+  // const storage = new Storage(configR2);
+  // const storage = new Storage(configBackblazeS3);
+  // const storage = new Storage(configMinio);
   // const storage = new Storage(process.env.STORAGE_URL);
 
   console.log("=>", storage.getConfiguration());
 
-  const tests = [test5];
+  const tests = [test1, test2, test3, test4, test5];
   for (let i = 0; i < tests.length; i++) {
     try {
       // Note that since 1.4 you have to call `init()` before you can make API calls.
