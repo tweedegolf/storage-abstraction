@@ -46,7 +46,7 @@
     "test-config-gcs": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-gcs.jasmine.ts",
     "test-config-local": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-local.jasmine.ts",
     "test-config-azure": "ts-node ./node_modules/.bin/jasmine ./tests/test-config-azure.jasmine.ts",
-    "test-local": "TYPE='local' BUCKET_NAME='the-buck' LOCAL_DIRECTORY='test_directory' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
+    "test-local": "TYPE='local' BUCKET_NAME='the-buck' LOCAL_DIRECTORY='tests/test_directory' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-s3": "TYPE='s3' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-b2": "TYPE='b2' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",

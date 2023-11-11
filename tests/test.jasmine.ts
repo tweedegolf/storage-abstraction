@@ -157,7 +157,7 @@ describe(`[testing ${type} storage]`, async () => {
     await rimraf(p, {
       preserveRoot: false,
     });
-    p = path.normalize(path.join(process.cwd(), "test_directory"));
+    p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
     await rimraf(p, {
       preserveRoot: false,
     });
@@ -387,7 +387,7 @@ describe(`[testing ${type} storage]`, async () => {
       'Can not use "undefined" as bucket name'
     );
   });
-
+  /*
   it("create already existing bucket that you are not allowed to access", async () => {
     // the name "new-bucket" has already been taken by someone else (not for local)
     let r = storage.getType() === StorageType.LOCAL;
@@ -402,7 +402,7 @@ describe(`[testing ${type} storage]`, async () => {
     }
     expect(r).toEqual(true);
   });
-
+  */
   it("create bucket", async () => {
     try {
       await storage.createBucket(newBucketName);

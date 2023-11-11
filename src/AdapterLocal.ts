@@ -229,7 +229,7 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   async listBuckets(): Promise<string[]> {
-    console.log(this.directory);
+    // console.log(this.directory);
     const files = await fs.promises.readdir(this.directory);
     const stats = await Promise.all(
       files.map((f) => fs.promises.stat(path.join(this.directory, f)))
