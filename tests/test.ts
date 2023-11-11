@@ -5,6 +5,7 @@ import path from "path";
 import { Storage } from "../src/Storage";
 import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
+import { rimraf } from "rimraf";
 dotenv.config();
 
 let delay = 100;
@@ -281,9 +282,9 @@ const test5 = async (storage: IStorage) => {
 
 const run = async (): Promise<void> => {
   /* uncomment one of the following lines to test a single storage type: */
-  // const storage = new Storage(configLocal);
+  const storage = new Storage(configLocal);
   // const storage = new Storage(configS3);
-  const storage = new Storage(configBackblaze);
+  // const storage = new Storage(configBackblaze);
   // const storage = new Storage(configGoogle);
   // const storage = new Storage(configAzure);
   // const storage = new Storage(configR2);
@@ -315,6 +316,13 @@ const run = async (): Promise<void> => {
     }
     const t = tests[i];
     await t(storage);
+  }
+
+  if (storage.getType() === StorageType.LOCAL) {
+    const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
+    await rimraf(p, {
+      preserveRoot: false,
+    });
   }
 };
 
