@@ -51,9 +51,10 @@ export class AdapterLocal extends AbstractAdapter {
         if (lastSlash > sep + 3) {
           directory = config.substring(sep + 3, lastSlash);
         }
-        const bucketName = config.substring(lastSlash + 1, end);
+        bucketName = config.substring(lastSlash + 1, end);
       }
       // console.log("DIR", sep, directory, end, lastSlash, qm);
+      // console.log("DIR", config, directory, bucketName, lastSlash);
       cfg = {
         type,
         directory,

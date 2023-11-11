@@ -69,6 +69,7 @@ export const parseUrl = (
     } else {
       bucketName = bucketString;
     }
+    // console.log(bucketName, bucketString, slash);
     config = config.substring(0, at);
   }
 

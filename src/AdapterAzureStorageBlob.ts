@@ -21,14 +21,15 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   constructor(config: string | ConfigAzureStorageBlob) {
     super();
     this.config = this.parseConfig(config as ConfigAzureStorageBlob);
+    // console.log(this.config);
 
-    // if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-    //   const msg = this.validateName(this.config.bucketName);
-    //   if (msg !== null) {
-    //     throw new Error(msg);
-    //   }
-    //   this.bucketName = this.config.bucketName;
-    // }
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      this.bucketName = this.config.bucketName;
+    }
     this.sharedKeyCredential = new StorageSharedKeyCredential(
       (this.config as ConfigAzureStorageBlob).storageAccount,
       (this.config as ConfigAzureStorageBlob).accessKey

@@ -50,17 +50,18 @@ describe(`testing local urls`, () => {
     });
     await storage.init();
     expect(storage.getType()).toBe(StorageType.LOCAL);
-    expect(storage.getSelectedBucket()).toBe("the-buck");
+    expect(storage.getSelectedBucket()).toBe("");
   });
 
   it("[4]", async () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
+      bucketName: "the-buck",
     });
     await storage.init();
     expect(storage.getType()).toBe(StorageType.LOCAL);
-    expect(storage.getSelectedBucket()).toBe("tmp");
+    expect(storage.getSelectedBucket()).toBe("the-buck");
   });
 
   it("[5] numeric values in options stay numeric and keep their radix (8)", async () => {
@@ -107,12 +108,14 @@ describe(`testing local urls`, () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
+      bucketName: "the-buck",
       mode: 0o777,
     });
     await storage.init();
-    expect(storage.getSelectedBucket()).toBe("tmp");
+    expect(storage.getSelectedBucket()).toBe("the-buck");
     expect((storage.getConfiguration() as ConfigLocal).mode).toBe(511);
-    const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
+    const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp", "the-buck")))
+      .mode;
     expect(mode.toString(8)).toBe("40777");
     await rimraf(path.join(process.cwd(), "tests", "tmp"));
   });
@@ -121,22 +124,20 @@ describe(`testing local urls`, () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
       directory: "tests/tmp",
+      bucketName: "the-buck",
       mode: 511,
     });
     await storage.init();
-    expect(storage.getSelectedBucket()).toBe("tmp");
+    expect(storage.getSelectedBucket()).toBe("the-buck");
     expect((storage.getConfiguration() as ConfigLocal).mode).toBe(511);
-    const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp"))).mode;
+    const mode = (await fs.promises.stat(path.join(process.cwd(), "tests", "tmp", "the-buck")))
+      .mode;
     expect(mode.toString(8)).toBe("40777");
     await rimraf(path.join(process.cwd(), "tests", "tmp"));
   });
 
   it("[6e]", async () => {
-    const storage = new Storage({
-      type: StorageType.LOCAL,
-      directory: "tests/tmp",
-      mode: "0o777",
-    });
+    const storage = new Storage("local://tests/tmp?mode=0o777");
     await storage.init();
     expect(storage.getSelectedBucket()).toBe("tmp");
     expect((storage.getConfiguration() as ConfigLocal).mode).toBe("0o777");
@@ -149,7 +150,8 @@ describe(`testing local urls`, () => {
   it("[6f]", async () => {
     const storage = new Storage({
       type: StorageType.LOCAL,
-      directory: "tests/tmp",
+      directory: "tests",
+      bucketName: "tmp",
       mode: "755", // this is an error! the parseMode function will return the default value 0o777
     });
     await storage.init();
