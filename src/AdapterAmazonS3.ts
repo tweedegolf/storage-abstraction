@@ -18,7 +18,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { ConfigAmazonS3, AdapterConfig, StorageType } from "./types";
+import { ConfigAmazonS3, AdapterConfig, StorageType, S3Compatible } from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
@@ -26,6 +26,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   private storage: S3Client;
   private bucketNames: string[] = [];
   private region: string = "";
+  private s3Compatible: S3Compatible = S3Compatible.Amazon;
   protected config: ConfigAmazonS3;
 
   constructor(config: string | AdapterConfig) {
@@ -40,7 +41,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     if (typeof (this.config as ConfigAmazonS3).region === "undefined") {
-      this.region = "auto";
+      if (this.s3Compatible === S3Compatible.R2) {
+        this.config.region = "auto";
+        this.region = this.config.region;
+      } else if (this.s3Compatible === S3Compatible.Backblaze) {
+        let ep = this.config.endpoint;
+        ep = ep.substring(ep.indexOf("s3.") + 3);
+        this.config.region = ep.substring(0, ep.indexOf("."));
+        // console.log(this.config.region);
+        this.region = this.config.region;
+      }
     } else {
       this.region = (this.config as ConfigAmazonS3).region;
     }
@@ -109,16 +119,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       );
     }
 
-    let isAmazon = true;
     if (typeof cfg.endpoint !== "undefined") {
-      if (
-        cfg.endpoint.indexOf("r2.cloudflarestorage.com") !== -1 ||
-        cfg.endpoint.indexOf("backblazeb2.com") !== -1
-      ) {
-        isAmazon = false;
+      if (cfg.endpoint.indexOf("r2.cloudflarestorage.com") !== -1) {
+        this.s3Compatible = S3Compatible.R2;
+      } else if (cfg.endpoint.indexOf("backblazeb2.com") !== -1) {
+        this.s3Compatible = S3Compatible.Backblaze;
       }
     }
-    if (!cfg.region && isAmazon) {
+    if (!cfg.region && this.s3Compatible === S3Compatible.Amazon) {
       throw new Error("You must specify a default region for storage type 's3'");
     }
 
@@ -192,6 +200,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")],
         };
       }
+
       const command = new CreateBucketCommand(input);
       const response = await this.storage.send(command);
       // console.log("response", response);
@@ -229,6 +238,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const command1 = new ListObjectsCommand(input1);
     const response1 = await this.storage.send(command1);
     const Contents = response1.Contents;
+    console.log(Contents);
     if (!Contents || Contents.length === 0) {
       return;
     }

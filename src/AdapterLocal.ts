@@ -45,11 +45,14 @@ export class AdapterLocal extends AbstractAdapter {
       const end = qm !== -1 ? qm : config.length;
       const lastSlash = config.lastIndexOf("/");
       // console.log(end, lastSlash);
-      let directory = "";
-      if (lastSlash > sep + 3) {
-        directory = config.substring(sep + 3, lastSlash);
+      let directory = config.substring(sep + 3, end);
+      let bucketName: string;
+      if (lastSlash !== -1) {
+        if (lastSlash > sep + 3) {
+          directory = config.substring(sep + 3, lastSlash);
+        }
+        const bucketName = config.substring(lastSlash + 1, end);
       }
-      const bucketName = config.substring(lastSlash + 1, end);
       // console.log("DIR", sep, directory, end, lastSlash, qm);
       cfg = {
         type,
@@ -61,28 +64,26 @@ export class AdapterLocal extends AbstractAdapter {
     } else {
       cfg = { ...config };
 
-      if (!cfg.directory && !cfg.bucketName) {
-        throw new Error(
-          "You must specify a value for 'directory' and/or 'bucketName' for storage type 'local'"
-        );
+      if (!cfg.directory) {
+        throw new Error("You must specify a value for 'directory' for storage type 'local'");
       }
 
       // retrieve bucketName from directory
-      if (!cfg.bucketName) {
-        const lastSlash = cfg.directory.lastIndexOf("/");
-        if (lastSlash === -1) {
-          cfg.bucketName = cfg.directory;
-          cfg.directory = "";
-        } else {
-          const dir = cfg.directory;
-          cfg.directory = dir.substring(0, lastSlash);
-          cfg.bucketName = dir.substring(lastSlash + 1);
-        }
-      }
+      // if (!cfg.bucketName) {
+      //   const lastSlash = cfg.directory.lastIndexOf("/");
+      //   if (lastSlash === -1) {
+      //     cfg.bucketName = cfg.directory;
+      //     cfg.directory = "";
+      //   } else {
+      //     const dir = cfg.directory;
+      //     cfg.directory = dir.substring(0, lastSlash);
+      //     cfg.bucketName = dir.substring(lastSlash + 1);
+      //   }
+      // }
 
-      if (!cfg.directory) {
-        cfg.directory = process.cwd();
-      }
+      // if (cfg.directory === "") {
+      //   cfg.directory = process.cwd();
+      // }
     }
     if (cfg.mode) {
       this.mode = cfg.mode;
@@ -227,6 +228,7 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   async listBuckets(): Promise<string[]> {
+    console.log(this.directory);
     const files = await fs.promises.readdir(this.directory);
     const stats = await Promise.all(
       files.map((f) => fs.promises.stat(path.join(this.directory, f)))

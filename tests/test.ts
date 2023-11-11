@@ -7,16 +7,18 @@ import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
 
+const delay = 3000;
+
 /**
- * Below 4 examples of how you can populate a config object using environment variables.
+ * Below some examples of how you can populate a config object using environment variables.
  * Note that you name the environment variables to your liking.
  */
 const configS3 = {
   type: StorageType.S3,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  bucketName: process.env.BUCKET_NAME,
   region: process.env.AWS_REGION,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
 const configR2 = {
@@ -24,52 +26,52 @@ const configR2 = {
   accessKeyId: process.env.R2_ACCESS_KEY_ID,
   secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   endpoint: process.env.R2_ENDPOINT,
-  bucketName: process.env.BUCKET_NAME,
-  // region: process.env.AWS_REGION,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
-const configMinio = {
-  type: StorageType.MINIO,
-  accessKeyId: process.env.MINIO_ACCESS_KEY,
-  secretAccessKey: process.env.MINIO_SECRET_KEY,
-  endPoint: process.env.MINIO_ENDPOINT,
-  port: process.env.MINIO_PORT,
-  useSSL: process.env.MINIO_USE_SSL,
-  bucketName: process.env.BUCKET_NAME,
-};
+// const configMinio = {
+//   type: StorageType.MINIO,
+//   accessKeyId: process.env.MINIO_ACCESS_KEY,
+//   secretAccessKey: process.env.MINIO_SECRET_KEY,
+//   endPoint: process.env.MINIO_ENDPOINT,
+//   port: process.env.MINIO_PORT,
+//   useSSL: process.env.MINIO_USE_SSL,
+//   bucketName: process.env.BUCKET_NAME,
+// };
 
 const configGoogle = {
   type: StorageType.GCS,
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
   keyFilename: process.env.GOOGLE_CLOUD_KEYFILE,
-  bucketName: process.env.BUCKET_NAME,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
 const configBackblaze = {
   type: StorageType.B2,
   applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
   applicationKey: process.env.B2_APPLICATION_KEY,
-  bucketName: process.env.BUCKET_NAME,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
 const configBackblazeS3 = {
   type: StorageType.S3,
   accessKeyId: process.env.B2_APPLICATION_KEY_ID,
   secretAccessKey: process.env.B2_APPLICATION_KEY,
-  bucketName: process.env.BUCKET_NAME,
   endpoint: process.env.B2_ENDPOINT,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
 const configAzure = {
   type: StorageType.AZURE,
   storageAccount: process.env.AZURE_STORAGE_ACCOUNT,
   accessKey: process.env.AZURE_STORAGE_ACCESS_KEY,
-  bucketName: process.env.BUCKET_NAME,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
 const configLocal = {
   type: StorageType.LOCAL,
   directory: process.env.LOCAL_DIRECTORY,
+  // bucketName: process.env.BUCKET_NAME,
 };
 
 async function timeout(millis: number): Promise<void> {
@@ -80,16 +82,18 @@ async function timeout(millis: number): Promise<void> {
   });
 }
 
-async function removeAllBuckets(list: Array<string>, storage: IStorage) {
+async function removeAllBuckets(list: Array<string>, storage: IStorage, delay: number) {
   for (let i = 0; i < list.length; i++) {
     const b = list[i];
     console.log("remove", b);
     try {
       await storage.clearBucket(b);
-      if (storage.getType() === StorageType.AZURE) {
-        await timeout(1000);
+      if (delay) {
+        await timeout(delay);
       }
-      await storage.deleteBucket(b);
+      const files = await storage.listFiles();
+      console.log(`\t${files}`);
+      // await storage.deleteBucket(b);
     } catch (e) {
       console.error("\x1b[31m", "[Error removeAllBuckets]", e);
     }
@@ -265,7 +269,7 @@ const test5 = async (storage: IStorage) => {
     console.log("REMOVE ALL BUCKETS");
     let buckets = await storage.listBuckets();
     console.log(`\tbuckets before ${buckets}`);
-    await removeAllBuckets(buckets, storage);
+    await removeAllBuckets(buckets, storage, delay);
     buckets = await storage.listBuckets();
     console.log(`\tbuckets after ${buckets}`);
     console.log("\n");
@@ -278,18 +282,20 @@ const test5 = async (storage: IStorage) => {
 const run = async (): Promise<void> => {
   /* uncomment one of the following lines to test a single storage type: */
   // const storage = new Storage(configLocal);
-  const storage = new Storage(configS3);
+  // const storage = new Storage(configS3);
   // const storage = new Storage(configBackblaze);
   // const storage = new Storage(configGoogle);
   // const storage = new Storage(configAzure);
   // const storage = new Storage(configR2);
-  // const storage = new Storage(configBackblazeS3);
+  const storage = new Storage(configBackblazeS3);
   // const storage = new Storage(configMinio);
   // const storage = new Storage(process.env.STORAGE_URL);
+  // const storage = new Storage("local://test_directory");
 
   console.log("=>", storage.getConfiguration());
 
-  const tests = [test1, test2, test3, test4, test5];
+  // const tests = [test1, test2, test3, test4, test5];
+  const tests = [test5];
   for (let i = 0; i < tests.length; i++) {
     try {
       // Note that since 1.4 you have to call `init()` before you can make API calls.

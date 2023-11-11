@@ -9,43 +9,43 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-    + [S3 Compatible Storage](#s3-compatible-storage)
-    + [Cloudflare R2](#cloudflare-r2)
-    + [Backblaze S3](#backblaze-s3)
-  * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+    - [S3 Compatible Storage](#s3-compatible-storage)
+    - [Cloudflare R2](#cloudflare-r2)
+    - [Backblaze S3](#backblaze-s3)
+  - [Backblaze B2](#backblaze-b2)
+  - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  * [init](#init)
-  * [test](#test)
-  * [createBucket](#createbucket)
-  * [selectBucket](#selectbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [getSelectedBucket](#getselectedbucket)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromReadable](#addfilefromreadable)
-  * [getFileAsReadable](#getfileasreadable)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [switchAdapter](#switchadapter)
+  - [init](#init)
+  - [test](#test)
+  - [createBucket](#createbucket)
+  - [selectBucket](#selectbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [getSelectedBucket](#getselectedbucket)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromReadable](#addfilefromreadable)
+  - [getFileAsReadable](#getfileasreadable)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -192,7 +192,7 @@ const url = "local://path/to/folder/bucket?mode=0o750";
 const s = new Storage(url);
 ```
 
-Files will be stored in `path/to/folder/bucket`, folders will be created if necessary. As you can see the last folder of the directory will be used as bucket; if you call `getSelectedBucket()` the name of this folder will be returned.
+Files will be stored in `path/to/folder/bucket`, folders will be created if necessary. As you can see the last folder of the directory will be used as bucket; if you call `getSelectedBucket()` the name of this folder will be returned. If the path does not contain at least one slash `bucketName` will be undefined.
 
 Note the use of double and triple slashes:
 
@@ -205,8 +205,8 @@ const s = new Storage {
 
 const s = new Storage("local://files") // note: 2 slashes
 
-s.getConfiguration().directory;  // folder where the process runs, process.cwd()
-s.getConfiguration().bucketName; // 'files'
+s.getConfiguration().directory;  // ./files
+s.getConfiguration().bucketName; // undefined
 
 // example #3
 const s = new Storage {
@@ -216,8 +216,8 @@ const s = new Storage {
 
 const s = new Storage("local:///files") // note: 3 slashes
 
-s.getConfiguration().directory;  // '/' root folder (may require extra permissions)
-s.getConfiguration().bucketName; // 'files'
+s.getConfiguration().directory;  // '/files' in root folder (may require extra permissions)
+s.getConfiguration().bucketName; // undefined
 
 ```
 
