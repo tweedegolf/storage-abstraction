@@ -13,6 +13,7 @@ import {
   HeadBucketCommand,
   HeadObjectCommand,
   ListBucketsCommand,
+  // ListObjectVersionsCommand,
   ListObjectsCommand,
   PutObjectCommand,
   S3Client,
@@ -231,6 +232,33 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (!n) {
       throw new Error("no bucket selected");
     }
+
+    /*
+    const input1 = {
+      Bucket: n,
+      MaxKeys: 1000,
+    };
+    const command = new ListObjectVersionsCommand(input1);
+    const { Versions } = await this.storage.send(command);
+    // console.log("Versions", Versions);
+    if (typeof Versions === "undefined") {
+      return "bucket is empty";
+    }
+    const input2 = {
+      Bucket: n,
+      Delete: {
+        Objects: Versions.map((value) => ({
+          Key: value.Key,
+          VersionId: value.VersionId,
+        })),
+        Quiet: false,
+      },
+    };
+    const command2 = new DeleteObjectsCommand(input2);
+    const response = await this.storage.send(command2);
+    return "bucket cleared";
+    */
+
     const input1 = {
       Bucket: n,
       MaxKeys: 1000,
@@ -238,11 +266,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const command1 = new ListObjectsCommand(input1);
     const response1 = await this.storage.send(command1);
     const Contents = response1.Contents;
-    console.log(Contents);
+
     if (!Contents || Contents.length === 0) {
       return;
     }
-
+    // console.log(Contents);
     const input2 = {
       Bucket: n,
       Delete: {
@@ -252,6 +280,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     };
     const command2 = new DeleteObjectsCommand(input2);
     const response = await this.storage.send(command2);
+    // console.log(response);
     return "bucket cleared";
   }
 

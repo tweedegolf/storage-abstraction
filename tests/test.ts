@@ -7,7 +7,7 @@ import { IStorage, StorageType, AdapterConfig } from "../src/types";
 import { copyFile } from "./util";
 dotenv.config();
 
-const delay = 3000;
+let delay = 100;
 
 /**
  * Below some examples of how you can populate a config object using environment variables.
@@ -91,11 +91,11 @@ async function removeAllBuckets(list: Array<string>, storage: IStorage, delay: n
       if (delay) {
         await timeout(delay);
       }
-      const files = await storage.listFiles();
-      console.log(`\t${files}`);
-      // await storage.deleteBucket(b);
+      // const files = await storage.listFiles();
+      // console.log(`\tfiles: ${files}`);
+      await storage.deleteBucket(b);
     } catch (e) {
-      console.error("\x1b[31m", "[Error removeAllBuckets]", e);
+      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e);
     }
   }
 }
@@ -283,19 +283,23 @@ const run = async (): Promise<void> => {
   /* uncomment one of the following lines to test a single storage type: */
   // const storage = new Storage(configLocal);
   // const storage = new Storage(configS3);
-  // const storage = new Storage(configBackblaze);
+  const storage = new Storage(configBackblaze);
   // const storage = new Storage(configGoogle);
   // const storage = new Storage(configAzure);
   // const storage = new Storage(configR2);
-  const storage = new Storage(configBackblazeS3);
+  // const storage = new Storage(configBackblazeS3);
   // const storage = new Storage(configMinio);
   // const storage = new Storage(process.env.STORAGE_URL);
   // const storage = new Storage("local://test_directory");
 
+  if (storage.getType() === StorageType.AZURE) {
+    delay = 1000;
+  }
+
   console.log("=>", storage.getConfiguration());
 
-  // const tests = [test1, test2, test3, test4, test5];
-  const tests = [test5];
+  const tests = [test1, test2, test3, test4, test5];
+  // const tests = [test5];
   for (let i = 0; i < tests.length; i++) {
     try {
       // Note that since 1.4 you have to call `init()` before you can make API calls.
