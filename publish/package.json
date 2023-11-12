@@ -10,14 +10,15 @@
     "dist/*"
   ],
   "peerDependencies": {
-    "@aws-sdk/client-s3": "^3.332.0",
+    "@aws-sdk/client-s3": "^3.445.0",
+    "@aws-sdk/s3-request-presigner": "^3.445.0",
+    "@azure/storage-blob": "^12.17.0",
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
-    "@google-cloud/storage": "^6.10.1",
-    "@azure/storage-blob": "^12.15.0",
+    "@google-cloud/storage": "^7.6.0",
     "@ramda/zip": "^0.26.1",
     "backblaze-b2": "^1.7.0",
-    "glob": "^10.2.3",
-    "rimraf": "^5.0.0"
+    "glob": "^10.3.10",
+    "rimraf": "^5.0.5"
   },
   "devDependencies": {},
   "scripts": {},
@@ -28,6 +29,7 @@
     "google cloud",
     "amazon s3",
     "backblaze b2",
+    "cloudflare r2",
     "azure"
   ],
   "author": "daniel@tweedegolf.nl",

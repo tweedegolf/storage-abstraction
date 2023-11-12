@@ -23,7 +23,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   constructor(config: string | ConfigBackblazeB2) {
     super();
     this.config = this.parseConfig(config);
-    if (typeof this.config.bucketName !== "undefined") {
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
       const msg = this.validateName(this.config.bucketName);
       if (msg !== null) {
         throw new Error(msg);
@@ -187,18 +187,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       throw new Error("no bucket selected");
     }
     await this.createBucket(this.bucketName);
-    try {
-      const file: BackblazeB2File = await this.storage.uploadAny({
+    return await this.storage
+      .uploadAny({
         ...options,
         bucketId: this.bucketId,
         fileName: targetPath,
         data: arg,
+      })
+      .then((file: BackblazeB2File) => {
+        this.files.push(file);
+        // console.log("FILE", file);
+        return `${this.storage.downloadUrl}/file/${this.bucketName}/${targetPath}`;
+      })
+      .catch((err: Error) => {
+        // console.log("ERROR", err);
+        return Promise.reject(err);
       });
-      this.files.push(file);
-      return `${this.storage.downloadUrl}/file/${this.bucketName}/${targetPath}`;
-    } catch (e) {
-      return Promise.reject();
-    }
   }
 
   async createBucket(name: string, options: object = {}): Promise<string> {
@@ -300,8 +304,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return e.response.data.message;
     }
     this.buckets = this.buckets.filter((b) => b.bucketName !== n);
-    this.bucketId = "";
-    this.bucketName = "";
+    if (n === this.bucketName) {
+      this.bucketId = "";
+      this.bucketName = "";
+    }
     return "bucket deleted";
   }
 
@@ -342,7 +348,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   private async findFile(name: string): Promise<BackblazeB2File | null> {
-    let i = this.files.findIndex((file: BackblazeB2File) => file.fileName === name);
+    let i = this.files.findIndex((file: BackblazeB2File) => file?.fileName === name);
     if (i > -1) {
       return this.files[i];
     }

@@ -19,7 +19,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   constructor(config: string | ConfigGoogleCloud) {
     super();
     this.config = this.parseConfig(config);
-    if (typeof this.config.bucketName !== "undefined") {
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
       const msg = this.validateName(this.config.bucketName);
       if (msg !== null) {
         throw new Error(msg);
@@ -66,10 +66,10 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       return cfg;
     }
 
-    if (!cfg.keyFilename) {
-      throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
-    }
-    if (!cfg.projectId) {
+    // if (!cfg.keyFilename) {
+    //   throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
+    // }
+    if (cfg.projectId === "" && cfg.keyFilename !== "") {
       cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
     }
 
@@ -247,7 +247,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     // if (error !== null) {
     //   throw error;
     // }
-    this.createBucket(name)
+    return await this.createBucket(name)
       .then(() => {
         this.bucketName = name;
         return `bucket '${name}' selected`;
@@ -258,7 +258,10 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   }
 
   async clearBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
+    let n = name;
+    if (typeof n === "undefined" || n === null || n === "") {
+      n = this.bucketName;
+    }
     await this.storage.bucket(n).deleteFiles({ force: true });
     return "bucket cleared";
   }
@@ -272,6 +275,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       this.bucketName = "";
     }
     this.bucketNames = this.bucketNames.filter((b) => b !== n);
+    // console.log(this.bucketName, this.bucketNames);
     return "bucket deleted";
   }
 

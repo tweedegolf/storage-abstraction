@@ -251,3 +251,9 @@ export type BackblazeB2File = {
   fileName: string;
   uploadTimestamp: number;
 };
+
+export enum S3Compatible {
+  Amazon,
+  R2,
+  Backblaze,
+}

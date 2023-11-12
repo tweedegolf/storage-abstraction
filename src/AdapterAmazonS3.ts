@@ -13,11 +13,13 @@ import {
   HeadBucketCommand,
   HeadObjectCommand,
   ListBucketsCommand,
+  // ListObjectVersionsCommand,
   ListObjectsCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { ConfigAmazonS3, AdapterConfig, StorageType } from "./types";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { ConfigAmazonS3, AdapterConfig, StorageType, S3Compatible } from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
@@ -25,38 +27,61 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   private storage: S3Client;
   private bucketNames: string[] = [];
   private region: string = "";
+  private s3Compatible: S3Compatible = S3Compatible.Amazon;
   protected config: ConfigAmazonS3;
 
   constructor(config: string | AdapterConfig) {
     super();
     this.config = this.parseConfig(config as ConfigAmazonS3);
-    if (typeof this.config.bucketName !== "undefined") {
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
       const msg = this.validateName(this.config.bucketName);
       if (msg !== null) {
         throw new Error(msg);
       }
       this.bucketName = this.config.bucketName;
     }
-    if (typeof (this.config as ConfigAmazonS3).region !== "undefined") {
+
+    if (typeof (this.config as ConfigAmazonS3).region === "undefined") {
+      if (this.s3Compatible === S3Compatible.R2) {
+        this.config.region = "auto";
+        this.region = this.config.region;
+      } else if (this.s3Compatible === S3Compatible.Backblaze) {
+        let ep = this.config.endpoint;
+        ep = ep.substring(ep.indexOf("s3.") + 3);
+        this.config.region = ep.substring(0, ep.indexOf("."));
+        // console.log(this.config.region);
+        this.region = this.config.region;
+      }
+    } else {
       this.region = (this.config as ConfigAmazonS3).region;
     }
-    this.storage = new S3Client({ region: this.region });
+    if (typeof this.config.endpoint === "undefined") {
+      this.storage = new S3Client({ region: this.region });
+    } else {
+      this.storage = new S3Client({
+        region: this.region,
+        endpoint: this.config.endpoint,
+        credentials: {
+          accessKeyId: this.config.accessKeyId,
+          secretAccessKey: this.config.secretAccessKey,
+        },
+      });
+    }
   }
 
   async init(): Promise<boolean> {
     if (this.initialized) {
       return Promise.resolve(true);
     }
-    // if (this.bucketName) {
-    //   this.createBucket(this.bucketName)
-    //     .then((data) => {
-    //       this.bucketNames.push(this.bucketName);
-    //     })
-    //     .catch((message: string) => {
-    //       console.log(message);
-    //       return Promise.reject(message);
-    //     });
-    // }
+    if (this.bucketName) {
+      await this.createBucket(this.bucketName)
+        .then((_data) => {
+          this.bucketNames.push(this.bucketName);
+        })
+        .catch((message: string) => {
+          return Promise.reject(message);
+        });
+    }
     // no further initialization required
     this.initialized = true;
     return Promise.resolve(true);
@@ -95,7 +120,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       );
     }
 
-    if (!cfg.region) {
+    if (typeof cfg.endpoint !== "undefined") {
+      if (cfg.endpoint.indexOf("r2.cloudflarestorage.com") !== -1) {
+        this.s3Compatible = S3Compatible.R2;
+      } else if (cfg.endpoint.indexOf("backblazeb2.com") !== -1) {
+        this.s3Compatible = S3Compatible.Backblaze;
+      }
+    }
+    if (!cfg.region && this.s3Compatible === S3Compatible.Amazon) {
       throw new Error("You must specify a default region for storage type 's3'");
     }
 
@@ -164,13 +196,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      if (this.config.region !== "us-east-1") {
+      if (typeof this.config.region !== "undefined" && this.config.region !== "us-east-1") {
         input.CreateBucketConfiguration = {
           LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")],
         };
       }
+
       const command = new CreateBucketCommand(input);
       const response = await this.storage.send(command);
+      // console.log("response", response);
       if (response.$metadata.httpStatusCode === 200) {
         this.bucketNames.push(name);
         this.bucketName = name;
@@ -198,6 +232,33 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (!n) {
       throw new Error("no bucket selected");
     }
+
+    /*
+    const input1 = {
+      Bucket: n,
+      MaxKeys: 1000,
+    };
+    const command = new ListObjectVersionsCommand(input1);
+    const { Versions } = await this.storage.send(command);
+    // console.log("Versions", Versions);
+    if (typeof Versions === "undefined") {
+      return "bucket is empty";
+    }
+    const input2 = {
+      Bucket: n,
+      Delete: {
+        Objects: Versions.map((value) => ({
+          Key: value.Key,
+          VersionId: value.VersionId,
+        })),
+        Quiet: false,
+      },
+    };
+    const command2 = new DeleteObjectsCommand(input2);
+    const response = await this.storage.send(command2);
+    return "bucket cleared";
+    */
+
     const input1 = {
       Bucket: n,
       MaxKeys: 1000,
@@ -205,10 +266,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const command1 = new ListObjectsCommand(input1);
     const response1 = await this.storage.send(command1);
     const Contents = response1.Contents;
+
     if (!Contents || Contents.length === 0) {
       return;
     }
-
+    // console.log(Contents);
     const input2 = {
       Bucket: n,
       Delete: {
@@ -218,14 +280,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     };
     const command2 = new DeleteObjectsCommand(input2);
     const response = await this.storage.send(command2);
+    // console.log(response);
     return "bucket cleared";
   }
 
   async deleteBucket(name?: string): Promise<string> {
     const n = name || this.bucketName;
+    // console.log("deleteBucket", n);
 
     if (n === "") {
-      throw new Error("no bucket selected");
+      throw new Error("deleteBucket: no bucket selected");
     }
     try {
       const input = {
@@ -238,7 +302,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (n === this.bucketName) {
         this.bucketName = "";
       }
-
+      // console.log("selected bucket", this.bucketName);
       this.bucketNames = this.bucketNames.filter((b) => b !== n);
 
       return "bucket deleted";
@@ -260,7 +324,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return this.bucketNames;
       })
       .catch((e) => {
-        console.log(e);
+        console.log("[ERROR listBuckets]", e);
         return [];
       });
   }
@@ -306,7 +370,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this.storage.send(command);
       this.region = response.LocationConstraint;
     }
-    return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
+    // return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
+    return await getSignedUrl(
+      this.storage,
+      new GetObjectCommand({ Bucket: this.bucketName, Key: targetPath })
+      // { expiresIn: 3600 }
+    );
   }
 
   async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {

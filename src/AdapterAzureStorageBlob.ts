@@ -21,8 +21,9 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   constructor(config: string | ConfigAzureStorageBlob) {
     super();
     this.config = this.parseConfig(config as ConfigAzureStorageBlob);
+    // console.log(this.config);
 
-    if (typeof this.config.bucketName !== "undefined") {
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
       const msg = this.validateName(this.config.bucketName);
       if (msg !== null) {
         throw new Error(msg);
@@ -81,9 +82,15 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     if (this.initialized) {
       return Promise.resolve(true);
     }
-    if (this.bucketName) {
-      await this.createBucket(this.bucketName);
-      this.bucketNames.push(this.bucketName);
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
+      const msg = this.validateName(this.config.bucketName);
+      if (msg !== null) {
+        throw new Error(msg);
+      }
+      await this.createBucket(this.config.bucketName).then(() => {
+        this.bucketName = this.config.bucketName;
+        this.bucketNames.push(this.bucketName);
+      });
     }
     // no further initialization required
     this.initialized = true;
@@ -128,7 +135,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       return `bucket '${name}' deselected`;
     }
 
-    this.createBucket(name)
+    return await this.createBucket(name)
       .then(() => {
         this.bucketName = name;
         return `bucket '${name}' selected`;
@@ -173,10 +180,20 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
+      // const containerClient = this.storage.getContainerClient(n);
+      // const blobs = containerClient.listBlobsFlat();
+      // for await (const blob of blobs) {
+      //   console.log(blob.name);
+      //   await containerClient.deleteBlob(blob.name);
+      // }
       const containerClient = this.storage.getContainerClient(n);
-      const blobs = containerClient.listBlobsFlat();
+      const blobs = containerClient.listBlobsByHierarchy("/");
       for await (const blob of blobs) {
-        await containerClient.deleteBlob(blob.name);
+        if (blob.kind === "prefix") {
+          // console.log("prefix", blob);
+        } else {
+          await containerClient.deleteBlob(blob.name);
+        }
       }
       return "bucket cleared";
     } catch (e) {
@@ -205,10 +222,12 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   }
 
   async listBuckets(): Promise<string[]> {
+    this.bucketNames = [];
+    // let i = 0;
     for await (const container of this.storage.listContainers()) {
-      this.bucketNames.map((b) => (b = container.name));
+      // console.log(`${i++} ${container.name}`);
+      this.bucketNames.push(container.name);
     }
-
     return this.bucketNames;
   }
 

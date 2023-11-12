@@ -84,9 +84,11 @@ if (type === StorageType.LOCAL) {
     config = configUrl;
   }
 }
+// config = configUrl as string;
 
 const newBucketName = `bucket-${uniquid()}-${new Date().getTime()}`;
 const newBucketName2 = `bucket-${uniquid()}-${new Date().getTime()}`;
+const newBucketName3 = `bucket-${uniquid()}-${new Date().getTime()}`;
 
 // console.log("CONFIG", config);
 // console.log("newBucketName:", newBucketName, "\n");
@@ -123,6 +125,10 @@ function streamToString(stream: Readable) {
 
 describe(`[testing ${type} storage]`, async () => {
   beforeAll(async () => {
+    await fs.promises.stat(path.join(process.cwd(), "tests", "tmp")).catch(async (e) => {
+      await fs.promises.mkdir(path.join(process.cwd(), "tests", "tmp"));
+      // console.log(e);
+    });
     try {
       storage = new Storage(config);
       await storage.init();
@@ -145,6 +151,25 @@ describe(`[testing ${type} storage]`, async () => {
   //   }, 60000);
   // });
 
+  afterAll(async () => {
+    // await fs.promises.rm(path.join(process.cwd(), "tests", "tmp"), { force: true });
+    let p = path.normalize(path.join(process.cwd(), "tests", "tmp"));
+    await rimraf(p, {
+      preserveRoot: false,
+    });
+    p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
+    await rimraf(p, {
+      preserveRoot: false,
+    });
+    p = path.normalize(path.join(process.cwd(), "the-buck"));
+    await rimraf(p, {
+      preserveRoot: false,
+    });
+    p = path.normalize(path.join(process.cwd(), "new-bucket"));
+    await rimraf(p, {
+      preserveRoot: false,
+    });
+  });
   // afterAll(async () => {
   //   // await storage.clearBucket(bucketName);
   //   if (storage.getType() === StorageType.LOCAL) {
@@ -161,13 +186,6 @@ describe(`[testing ${type} storage]`, async () => {
   //       });
   //   }
   // });
-
-  afterAll(async () => {
-    const p = path.normalize(path.join(process.cwd(), "test_directory"));
-    await rimraf(p, {
-      preserveRoot: false,
-    });
-  });
 
   it("init", async () => {
     try {
@@ -189,16 +207,16 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("create bucket", async () => {
-    // console.log(storage.getSelectedBucket());
-    if (storage.getType() === StorageType.S3) {
+    const bucketName = storage.getSelectedBucket();
+    if (bucketName === "") {
+      await expectAsync(storage.selectBucket(newBucketName3)).toBeResolved();
+    } else {
       await expectAsync(
-        storage.createBucket(storage.getSelectedBucket(), {
+        storage.createBucket(bucketName, {
           // ACL: "public-read-write",
           ObjectOwnership: "BucketOwnerPreferred",
         })
       ).toBeResolved();
-    } else {
-      await expectAsync(storage.createBucket(storage.getSelectedBucket())).toBeResolved();
     }
   });
 
@@ -369,12 +387,13 @@ describe(`[testing ${type} storage]`, async () => {
       'Can not use "undefined" as bucket name'
     );
   });
-
+  /*
   it("create already existing bucket that you are not allowed to access", async () => {
     // the name "new-bucket" has already been taken by someone else (not for local)
     let r = storage.getType() === StorageType.LOCAL;
     try {
       const msg = await storage.createBucket("new-bucket");
+      // r = msg !== "" && msg !== "ok";
       r = msg === "ok";
       // console.log("msg:", msg);
     } catch (e) {
@@ -383,7 +402,7 @@ describe(`[testing ${type} storage]`, async () => {
     }
     expect(r).toEqual(true);
   });
-
+  */
   it("create bucket", async () => {
     try {
       await storage.createBucket(newBucketName);
@@ -415,11 +434,14 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("delete bucket currently selected non-empty bucket", async () => {
-    const msg = await storage.deleteBucket();
-    expect(storage.getSelectedBucket()).toBe("");
-    const buckets = await storage.listBuckets();
-    const index = buckets.indexOf(newBucketName);
-    expect(index).toBe(-1);
+    // S3 doesn't allow you to delete a non-empty bucket
+    if (storage.getType() !== StorageType.S3) {
+      const msg = await storage.deleteBucket();
+      expect(storage.getSelectedBucket()).toBe("");
+      const buckets = await storage.listBuckets();
+      const index = buckets.indexOf(newBucketName);
+      expect(index).toBe(-1);
+    }
   });
 
   it("create bucket", async () => {

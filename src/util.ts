@@ -69,6 +69,7 @@ export const parseUrl = (
     } else {
       bucketName = bucketString;
     }
+    // console.log(bucketName, bucketString, slash);
     config = config.substring(0, at);
   }
 
@@ -102,7 +103,8 @@ export const parseIntFromString = (s: string): number => {
   return parseInt(s);
 };
 
-export const parseMode = (s: number | string): number | string => {
+export const parseMode = (s: number | string): string | number => {
+  // if mode is a number, parseMode assumes it is a decimal number
   if (typeof s === "number") {
     if (s < 0) {
       throw new Error(
@@ -111,10 +113,17 @@ export const parseMode = (s: number | string): number | string => {
     }
     return s;
   }
+
+  // mode is a string
+
+  // e.g "0x755" (octal)
   if (s.startsWith("0o")) {
-    return s.substring(2);
+    return parseInt(s.substring(2), 8).toString(8);
   }
-  return s;
+  // e.g '511' (decimal)
+  const i = parseInt(s, 10);
+  // quick fix for erroneously passed octal number as string (without 0o prefix)
+  return i > 511 ? 511 : i;
 };
 
 /**

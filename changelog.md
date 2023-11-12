@@ -2,6 +2,12 @@
 
 - Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)
 - Upgrade all packages
+- Fixed numerous async errors
+- AdapterAmazonS3: use `s3-request-presigner` to create links to objects
+- AdapterAmazonS3: added support for S3 compatible storages (tested with Cloudflare R2 and Backblaze S3)
+- AdapterLocal now treats values without prefix passed to `mode` as decimal number instead of octal numbers
+- AdapterLocal: if you pass the config as an object and you don't provide a value for `bucketName`, the bucketName will no longer be set to the last folder of the value you provide for `directory`. In other words: if you want to set a value for `bucketName` you have to add it specifically to the config object.
+
 # 1.4.5
 
 - Remove option 'slug' in config: this makes the user responsible for choosing a valid bucket name.
