@@ -1,4 +1,4 @@
-# 1.4.7
+# 1.4.7 / 1.4.8
 
 - Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)
 - Upgrade all packages
