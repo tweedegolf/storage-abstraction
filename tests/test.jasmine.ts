@@ -187,13 +187,6 @@ describe(`[testing ${type} storage]`, async () => {
   //   }
   // });
 
-  afterAll(async () => {
-    const p = path.normalize(path.join(process.cwd(), "test_directory"));
-    await rimraf(p, {
-      preserveRoot: false,
-    });
-  });
-
   it("init", async () => {
     try {
       storage = new Storage(config);
