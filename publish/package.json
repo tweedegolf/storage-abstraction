@@ -1,14 +1,11 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "1.4.8",
+  "version": "1.5.1",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
-  "files": [
-    "dist"
-  ],
   "peerDependencies": {
     "@aws-sdk/client-s3": "^3.445.0",
     "@aws-sdk/s3-request-presigner": "^3.445.0",
