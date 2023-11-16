@@ -1,3 +1,146 @@
+# 2.0.0
+
+- Every API method that needs access to the abstracted cloud storage service returns a Promise that resolves to an object:
+  ```typescript
+  type ReturnObject = {
+    error: string | null;
+    value: string | number | Array<[string, number]> | Readable; // depends on method
+  };
+  ```
+- `init` will automatically select (and if necessary create) the bucket if your configuration object or url has a value set for `bucketName`
+- The storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.
+- The storage instance will also no longer hold a reference to all available buckets; a call to `listBuckets` will access the cloud storage service every time it is called; this is handy in case another process or user has created a new bucket.
+- `validateName` will not only perform a local check, it will also check if the name is valid and/or not taken at the cloud storage service.
+
+### Old API (1.5.x) compared to new API (2.x)
+
+#### init
+
+`init(config):Promise<boolean>`<br/>
+`init(config):Promise<ReturnObject>`
+
+#### test
+
+`test():Promise<string>`<br/>
+`test():Promise<ReturnObject>`
+
+#### selectBucket
+
+`selectBucket(name: string | null): Promise<string>`<br/>
+`N/A`
+
+#### getSelectedBucket
+
+`getSelectedBucket(): string`<br/>
+`N/A`
+
+#### createBucket
+
+`createBucket(name: string, options?: object): Promise<string>`<br/>
+`createBucket(name: string, options?: object): Promise<ReturnObject>`
+
+#### clearBucket
+
+`clearBucket(name?: string): Promise<string>`<br/>
+`clearBucket(name: string): Promise<ReturnObject>`
+
+#### deleteBucket
+
+`deleteBucket(name?: string): Promise<string>`<br/>
+`deleteBucket(name: string): Promise<ReturnObject>`
+
+#### removeFile
+
+`removeFile(fileName: string): Promise<string>`<br/>
+`removeFile(bucketName: string, fileName: string): Promise<ReturnObject>`
+
+#### listFiles
+
+`listFiles(): Promise<[string, number][]>`<br/>
+`listFiles(bucketName: string): Promise<ReturnObject>`
+
+#### listBuckets
+
+`listBuckets(): Promise<string[]>`<br/>
+`listBuckets(): Promise<ReturnObject>`
+
+#### sizeOf
+
+`sizeOf(name: string): Promise<number>`<br/>
+`sizeOf(bucketName: string, fileName: string): Promise<ReturnObject>`
+
+#### fileExists
+
+`fileExists(name: string): Promise<boolean>`<br/>
+`fileExists(bucketName: string, fileName: string): Promise<ReturnObject>`
+
+#### validateName
+
+`validateName(name: string): string`<br/>
+`validateName(name: string): Promise<ReturnObject>`
+
+#### getFileAsReadable
+
+```typescript
+getFileAsReadable(
+    name: string,
+    options?: { start?: number; end?: number }
+  ): Promise<Readable>
+```
+
+```typescript
+getFileAsReadable(
+    bucketName: string,
+    fileName: string,
+    options?: { start?: number; end?: number }
+  ): Promise<ReturnObject>
+```
+
+#### addFileFromPath
+
+```typescript
+addFileFromPath(origPath: string, targetPath: string, options: object = {}): Promise<string>
+```
+
+```typescript
+addFileFromPath({
+  bucketName: string,
+  origPath: string,
+  targetPath: string,
+  options: object = {}
+  }): Promise<ReturnObject>
+```
+
+#### addFileFromBuffer
+
+```typescript
+addFileFromBuffer(buffer: Buffer, targetPath: string, options: object = {}): Promise<string>
+```
+
+```typescript
+addFileFromBuffer({
+  bucketName: string,
+  buffer: Buffer,
+  targetPath: string,
+  options: object = {}
+  }): Promise<ReturnObject>
+```
+
+#### addFileFromReadable
+
+```typescript
+addFileFromReadable(stream: Readable, targetPath: string, options: object = {}): Promise<string>
+```
+
+```typescript
+addFileFromReadable({
+  bucketName: string,
+  stream: Readable,
+  targetPath: string,
+  options: object = {}
+  }): Promise<ReturnObject>
+```
+
 # 1.4.7 - 1.5.2
 
 - Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)
