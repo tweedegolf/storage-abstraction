@@ -1,4 +1,3 @@
-import { BucketLocationConstraint } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 // import { ConfigLocal } from "../adapters/local/types";
 // import { ConfigBackblazeB2 } from "../adapters/backblaze/types";
@@ -20,7 +19,7 @@ export interface IStorage {
    * want to) handle async action in the constructor all storage types have an init() method
    * that needs to be called before any other API method call
    */
-  init(): Promise<boolean>;
+  init(): Promise<ResultObject>;
 
   /**
    * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
@@ -50,72 +49,53 @@ export interface IStorage {
    * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
    * if it fails and if so, it throws an error.
    */
-  test(): Promise<string>;
+  test(): Promise<ResultObject>;
 
   /**
-   * @param name: name of the bucket to create, returns true once the bucket has been created but
+   * @param name name of the bucket to create, returns true once the bucket has been created but
    * also when the bucket already exists. Note that you have to use `selectBucket` to start using
    * the newly created bucket.
    * @param: options: additional options for creating a bucket such as access rights
    */
-  createBucket(name: string, options?: object): Promise<string>;
+  createBucket(name: string, options?: object): Promise<ResultObject>;
 
   /**
-   * @param name: name of the bucket that will be used to store files, if the bucket does not exist it
-   * will be created. If you pass null, "" or no value the currently selected bucket will be deselected.
+   * @param name: deletes all file in the bucket.
    */
-  selectBucket(name?: string | null): Promise<string>;
+  clearBucket(name: string): Promise<ResultObject>;
 
   /**
-   * @param name?: deletes all file in the bucket. If no name is provided the currently selected bucket
-   * of the storage will be emptied. If no bucket is selected an error will be thrown.
+   * @param name: deletes the bucket with this name.
    */
-  clearBucket(name?: string): Promise<string>;
+  deleteBucket(name: string): Promise<ResultObject>;
 
   /**
-   * @param name?: deletes the bucket with this name. If no name is provided the currently selected bucket
-   * of the storage will be deleted. If no bucket is selected an error will be thrown.
+   * Retrieves an array of the names of the buckets in this storage
    */
-  deleteBucket(name?: string): Promise<string>;
+  listBuckets(): Promise<ResultObjectBuckets>;
 
   /**
-   * Retrieves a list of the names of the buckets in this storage
-   */
-  listBuckets(): Promise<string[]>;
-
-  /**
-   * Returns the name of the currently selected bucket or an empty string ("") if no bucket has been selected yet
-   */
-  getSelectedBucket(): string;
-
-  /**
-   * @param origPath: path of the file to be copied
-   * @param targetPath: path to copy the file to, folders will be created automatically
-   * @param options: additional option such as access rights
+   * @paramObject data about the file to be added
    * @returns the public url to the file
    */
-  addFileFromPath(origPath: string, targetPath: string, options?: object): Promise<string>;
+  addFileFromPath(paramObject: FilePath): Promise<ResultObject>;
 
   /**
-   * @param buffer: file as buffer
-   * @param targetPath: path to the file to save the buffer to, folders will be created automatically
-   * @param options: additional option such as access rights
+   * @paramObject data about the file to be added
    * @returns the public url to the file
    */
-  addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string>;
+  addFileFromBuffer(paramObject: FileBuffer): Promise<ResultObject>;
 
   /**
-   * @param stream: a read stream
-   * @param targetPath: path to the file to save the stream to, folders will be created automatically
-   * @param options: additional option such as access rights
+   * @paramObject data about the file to be added
    * @returns the public url to the file
    */
-  addFileFromReadable(stream: Readable, targetPath: string, options?: object): Promise<string>;
+  addFileFromReadable(paramObject: FileStream): Promise<ResultObject>;
 
   /**
-   * @param name: name of the file to be returned as a readable stream
-   * @param start?: the byte of the file where the stream starts (default: 0)
-   * @param end?: the byte in the file where the stream ends (default: last byte of file)
+   * @param name name of the file to be returned as a readable stream
+   * @param start? the byte of the file where the stream starts (default: 0)
+   * @param end? the byte in the file where the stream ends (default: last byte of file)
    */
   getFileAsReadable(
     name: string,
@@ -123,32 +103,44 @@ export interface IStorage {
       start?: number;
       end?: number;
     }
-  ): Promise<Readable>;
+  ): Promise<ResultObjectReadable>;
 
   /**
-   * @param name: name of the file to be removed
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file to be removed
    */
-  removeFile(name: string): Promise<string>;
+  removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
 
   /**
-   * Returns an array of tuples containing the file path and the file size of all files in the currently
-   * selected bucket. If no bucket is selected an error will be thrown.
+   * @param bucketName name of the bucket
+   * @param numFiles optional, only works for S3 compatible storages: the maximal number of files to retrieve
+   * Returns an array of tuples containing the file path and the file size of all files in the bucket.
    */
-  listFiles(numFiles?: number): Promise<[string, number][]>;
+  listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
 
   /**
    * Returns the size in bytes of the file
-   * @param name
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
    */
-  sizeOf(name: string): Promise<number>;
+  sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
   /**
-   * Check if a file with the provided name exists
-   * @param name
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
    */
-  fileExists(name: string): Promise<boolean>;
+  fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
 
-  getFileAsURL?(name: string): Promise<string>;
+  /**
+   * @param bucketName name of the bucket
+   */
+  bucketExists(bucketName: string): Promise<ResultObjectBoolean>;
+
+  /**
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
+   */
+  getFileAsURL?(bucketName: string, fileName: string): Promise<ResultObject>;
 }
 
 export enum StorageType {
@@ -257,3 +249,72 @@ export enum S3Compatible {
   R2,
   Backblaze,
 }
+
+export type ResultObject = {
+  error: string | null;
+  value: string | null;
+};
+
+export type ResultObjectNumber = {
+  error: string | null;
+  value: number | null;
+};
+
+export type ResultObjectBoolean = {
+  error: string | null;
+  value: boolean | null;
+};
+
+export type ResultObjectFiles = {
+  error: string | null;
+  value: Array<[string, number]> | null;
+};
+
+export type ResultObjectBuckets = {
+  error: string | null;
+  value: Array<string> | null;
+};
+
+export type ResultObjectReadable = {
+  error: string | null;
+  value: Readable | null;
+};
+
+/**
+ * @param bucketName name of the bucket you want to use
+ * @param origPath path of the file to be copied
+ * @param targetPath path to copy the file to, folders will be created automatically
+ * @param options additional option such as access rights
+ **/
+export type FilePath = {
+  bucketName: string;
+  origPath: string;
+  targetPath: string;
+  options?: object;
+};
+
+/**
+ * @param bucketName name of the bucket you want to use
+ * @param buffer file as buffer
+ * @param targetPath path to the file to save the buffer to, folders will be created automatically
+ * @param options additional option such as access rights
+ **/
+export type FileBuffer = {
+  bucketName: string;
+  buffer: Buffer;
+  targetPath: string;
+  options?: object;
+};
+
+/**
+ * @param bucketName name of the bucket you want to use
+ * @param stream a read stream
+ * @param targetPath path to the file to save the stream to, folders will be created automatically
+ * @param options additional option such as access rights
+ **/
+export type FileStream = {
+  bucketName: string;
+  stream: Readable;
+  targetPath: string;
+  options?: object;
+};

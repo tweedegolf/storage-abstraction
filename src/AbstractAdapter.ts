@@ -1,6 +1,16 @@
-import { Readable } from "stream";
-import { validateName } from "./util";
-import { AdapterConfig, IStorage } from "./types";
+import {
+  AdapterConfig,
+  FileBuffer,
+  FilePath,
+  FileStream,
+  IStorage,
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectReadable,
+} from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
   // protected type: StorageType;
@@ -17,100 +27,108 @@ export abstract class AbstractAdapter implements IStorage {
     return this.config;
   }
 
-  protected validateName(name: string): string {
-    return validateName(name);
-  }
-
-  async test(): Promise<string> {
+  async test(): Promise<ResultObject> {
     if (this.initialized === false) {
-      return Promise.reject("storage has not been initialized yet; call Storage.init() first");
+      return Promise.resolve({
+        value: null,
+        error: "storage has not been initialized yet; call Storage.init() first",
+      });
     }
+
     if (this.bucketName) {
+      let result: ResultObject;
       try {
-        await this.listFiles();
-        return Promise.resolve("ok");
+        const { error } = await this.bucketExists(this.bucketName);
+        if (error === null) {
+          result = { value: "ok", error };
+        } else {
+          result = { value: null, error };
+        }
       } catch (e) {
-        throw new Error(`Looks like the storage configuration is not correct (${e.message})`);
+        result = {
+          value: null,
+          error: `Looks like the storage configuration is not correct (${e.message})`,
+        };
       }
+      return Promise.resolve(result);
     }
+
+    let result: ResultObject;
     try {
-      await this.listBuckets();
-      return Promise.resolve("ok");
+      const { error } = await this.listBuckets();
+      if (error === null) {
+        result = { value: "ok", error };
+      } else {
+        result = { value: null, error };
+      }
     } catch (e) {
-      throw new Error(`Looks like the storage configuration is not correct (${e.message})`);
+      result = {
+        value: null,
+        error: `Looks like the storage configuration is not correct (${e.message})`,
+      };
     }
+    return Promise.resolve(result);
   }
 
-  async addFileFromPath(
-    origPath: string,
-    targetPath: string,
-    options: object = {}
-  ): Promise<string> {
-    return await this.store(origPath, targetPath, options);
+  async addFileFromPath(params: FilePath): Promise<ResultObject> {
+    if (this.initialized === false) {
+      return Promise.resolve({
+        value: null,
+        error: "storage has not been initialized yet; call Storage.init() first",
+      });
+    }
+
+    return await this.store(params);
   }
 
-  async addFileFromBuffer(
-    buffer: Buffer,
-    targetPath: string,
-    options: object = {}
-  ): Promise<string> {
-    return await this.store(buffer, targetPath, options);
+  async addFileFromBuffer(params: FileBuffer): Promise<ResultObject> {
+    if (this.initialized === false) {
+      return Promise.resolve({
+        value: null,
+        error: "storage has not been initialized yet; call Storage.init() first",
+      });
+    }
+    return await this.store(params);
   }
 
-  async addFileFromReadable(
-    stream: Readable,
-    targetPath: string,
-    options: object = {}
-  ): Promise<string> {
-    return await this.store(stream, targetPath, options);
-  }
-
-  public getSelectedBucket(): string {
-    return this.bucketName;
+  async addFileFromReadable(params: FileStream): Promise<ResultObject> {
+    if (this.initialized === false) {
+      return Promise.resolve({
+        value: null,
+        error: "storage has not been initialized yet; call Storage.init() first",
+      });
+    }
+    return await this.store(params);
   }
 
   // stubs
 
-  protected abstract store(
-    filePath: string,
-    targetFileName: string,
-    options: object
-  ): Promise<string>;
+  protected abstract store(param: FilePath): Promise<ResultObject>;
+  protected abstract store(param: FileBuffer): Promise<ResultObject>;
+  protected abstract store(param: FileStream): Promise<ResultObject>;
 
-  protected abstract store(
-    buffer: Buffer,
-    targetFileName: string,
-    options: object
-  ): Promise<string>;
+  abstract init(): Promise<ResultObject>;
 
-  protected abstract store(
-    stream: Readable,
-    targetFileName: string,
-    options: object
-  ): Promise<string>;
+  abstract createBucket(name: string, options?: object): Promise<ResultObject>;
 
-  abstract init(): Promise<boolean>;
+  abstract clearBucket(name: string): Promise<ResultObject>;
 
-  abstract selectBucket(name: string | null): Promise<string>;
+  abstract deleteBucket(name: string): Promise<ResultObject>;
 
-  abstract createBucket(name: string, options?: object): Promise<string>;
-
-  abstract clearBucket(name?: string): Promise<string>;
-
-  abstract deleteBucket(name?: string): Promise<string>;
-
-  abstract listBuckets(): Promise<string[]>;
+  abstract listBuckets(): Promise<ResultObjectBuckets>;
 
   abstract getFileAsReadable(
     name: string,
     options?: { start?: number; end?: number }
-  ): Promise<Readable>;
+  ): Promise<ResultObjectReadable>;
 
-  abstract removeFile(fileName: string): Promise<string>;
+  abstract removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
 
-  abstract listFiles(): Promise<[string, number][]>;
+  abstract listFiles(bucketName: string): Promise<ResultObjectFiles>;
 
-  abstract sizeOf(name: string): Promise<number>;
+  abstract sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
-  abstract fileExists(name: string): Promise<boolean>;
+  abstract fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+
+  abstract bucketExists(name: string): Promise<ResultObjectBoolean>;
 }

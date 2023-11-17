@@ -9,29 +9,17 @@ import { parseQuerystring, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected type = StorageType.LOCAL;
-  // protected bucketName: string;
-  private directory: string;
-  private buckets: string[] = [];
-  private mode: number | string = 0o777;
 
   constructor(config: ConfigLocal) {
     super();
     this.config = this.parseConfig(config);
     // console.log(config);
     // console.log(this.config);
-    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-      const msg = this.validateName(this.config.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this.config.bucketName;
-    }
     const mode = (this.config as ConfigLocal).mode;
-    if (typeof mode !== "undefined") {
-      this.mode = mode;
+    if (typeof mode === "undefined") {
+      (this.config as ConfigLocal).mode = 0o777;
     }
     const directory = (this.config as ConfigLocal).directory;
-    this.directory = directory;
   }
 
   private parseConfig(config: string | ConfigLocal): ConfigLocal {
@@ -86,11 +74,6 @@ export class AdapterLocal extends AbstractAdapter {
       //   cfg.directory = process.cwd();
       // }
     }
-    if (cfg.mode) {
-      this.mode = cfg.mode;
-    }
-    // console.log(cfg);
-
     if (cfg.skipCheck === true) {
       return cfg;
     }
@@ -101,6 +84,14 @@ export class AdapterLocal extends AbstractAdapter {
   async init(): Promise<boolean> {
     if (this.initialized) {
       return Promise.resolve(true);
+    }
+
+    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
+      const { error } = await this.validateName(this.config.bucketName);
+      if (error !== null) {
+        Promise.resolve({ error, value: null });
+        return;
+      }
     }
 
     if (typeof this.bucketName !== "undefined") {

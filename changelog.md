@@ -2,7 +2,7 @@
 
 - Every API method that needs access to the abstracted cloud storage service returns a Promise that resolves to an object:
   ```typescript
-  type ReturnObject = {
+  type ResultObject = {
     error: string | null;
     value: string | number | Array<[string, number]> | Array<String> | Readable; // depends on method
   };
@@ -11,27 +11,27 @@
 
   ```typescript
   // most common type
-  type ReturnObject = {
+  type ResultObject = {
     error: string | null;
     value: string | null;
   };
 
-  type ReturnObjectNumber = {
+  type ResultObjectNumber = {
     error: string | null;
     value: number | null;
   };
 
-  type ReturnObjectFiles = {
+  type ResultObjectFiles = {
     error: string | null;
     value: Array<[string, number]> | null;
   };
 
-  type ReturnObjectBuckets = {
+  type ResultObjectBuckets = {
     error: string | null;
     value: Array<string> | null;
   };
 
-  type ReturnObjectReadable = {
+  type ResultObjectReadable = {
     error: string | null;
     value: Readable | null;
   };
@@ -47,12 +47,12 @@
 #### init
 
 `init(config):Promise<boolean>`<br/>
-`init(config):Promise<ReturnObject>`
+`init(config):Promise<ResultObject>`
 
 #### test
 
 `test():Promise<string>`<br/>
-`test():Promise<ReturnObject>`
+`test():Promise<ResultObject>`
 
 #### selectBucket
 
@@ -67,47 +67,47 @@
 #### createBucket
 
 `createBucket(name: string, options?: object): Promise<string>`<br/>
-`createBucket(name: string, options?: object): Promise<ReturnObject>`
+`createBucket(name: string, options?: object): Promise<ResultObject>`
 
 #### clearBucket
 
 `clearBucket(name?: string): Promise<string>`<br/>
-`clearBucket(name: string): Promise<ReturnObject>`
+`clearBucket(name: string): Promise<ResultObject>`
 
 #### deleteBucket
 
 `deleteBucket(name?: string): Promise<string>`<br/>
-`deleteBucket(name: string): Promise<ReturnObject>`
+`deleteBucket(name: string): Promise<ResultObject>`
 
 #### removeFile
 
 `removeFile(fileName: string): Promise<string>`<br/>
-`removeFile(bucketName: string, fileName: string): Promise<ReturnObject>`
+`removeFile(bucketName: string, fileName: string): Promise<ResultObject>`
 
 #### listFiles
 
 `listFiles(): Promise<[string, number][]>`<br/>
-`listFiles(bucketName: string): Promise<ReturnObject>`
+`listFiles(bucketName: string): Promise<ResultObject>`
 
 #### listBuckets
 
 `listBuckets(): Promise<string[]>`<br/>
-`listBuckets(): Promise<ReturnObject>`
+`listBuckets(): Promise<ResultObject>`
 
 #### sizeOf
 
 `sizeOf(name: string): Promise<number>`<br/>
-`sizeOf(bucketName: string, fileName: string): Promise<ReturnObject>`
+`sizeOf(bucketName: string, fileName: string): Promise<ResultObject>`
 
 #### fileExists
 
 `fileExists(name: string): Promise<boolean>`<br/>
-`fileExists(bucketName: string, fileName: string): Promise<ReturnObject>`
+`fileExists(bucketName: string, fileName: string): Promise<ResultObject>`
 
 #### validateName
 
 `validateName(name: string): string`<br/>
-`validateName(name: string): Promise<ReturnObject>`
+`validateName(name: string): Promise<ResultObject>`
 
 #### getFileAsReadable
 
@@ -123,7 +123,7 @@ getFileAsReadable(
     bucketName: string,
     fileName: string,
     options?: { start?: number; end?: number }
-  ): Promise<ReturnObject>
+  ): Promise<ResultObject>
 ```
 
 #### addFileFromPath
@@ -138,7 +138,7 @@ addFileFromPath({
   origPath: string,
   targetPath: string,
   options: object = {}
-  }): Promise<ReturnObject>
+  }): Promise<ResultObject>
 ```
 
 #### addFileFromBuffer
@@ -153,7 +153,7 @@ addFileFromBuffer({
   buffer: Buffer,
   targetPath: string,
   options: object = {}
-  }): Promise<ReturnObject>
+  }): Promise<ResultObject>
 ```
 
 #### addFileFromReadable
@@ -167,8 +167,8 @@ addFileFromReadable({
   bucketName: string,
   stream: Readable,
   targetPath: string,
-  options: object = {}
-  }): Promise<ReturnObject>
+  options: object = {},
+  }): Promise<ResultObject>
 ```
 
 ### Some other ideas
@@ -176,28 +176,28 @@ addFileFromReadable({
 Maybe merge all `addFileFrom*` methods into a single `addFile` method that behaves differently dependent on the given argument/parameter:
 
 ```typescript
-type FilePath ={
+type FilePath = {
   bucketName: string,
   origPath: string,
   targetPath: string,
-  options: object = {}
+  options?: object,
 }
 
-type FileBuffer ={
+type FileBuffer = {
   bucketName: string,
   buffer: Buffer,
   targetPath: string,
-  options: object = {}
+  options?: object,
 }
 
-type FileStream ={
+type FileStream = {
   bucketName: string,
   stream: Readable,
   targetPath: string,
-  options: object = {}
+  options?: object,
 }
 
-addFile(FilePath | FileBuffer | FileStream): Promise<ReturnObject>
+addFile(FilePath | FileBuffer | FileStream): Promise<ResultObject>
 ```
 
 And analogue to this:
@@ -216,7 +216,7 @@ type GetFile = {
   options?: { start?: number; end?: number }
 }
 
-getFile(GetFile): Promise<ReturnObjectStream | ReturnObject>
+getFile(GetFile): Promise<ResultObjectStream | ResultObject>
 ```
 
 # 1.4.7 - 1.5.2
