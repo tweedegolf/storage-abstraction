@@ -4,9 +4,39 @@
   ```typescript
   type ReturnObject = {
     error: string | null;
-    value: string | number | Array<[string, number]> | Readable; // depends on method
+    value: string | number | Array<[string, number]> | Array<String> | Readable; // depends on method
   };
   ```
+- Perhaps a type for all possible return values:
+
+  ```typescript
+  // most common type
+  type ReturnObject = {
+    error: string | null;
+    value: string | null;
+  };
+
+  type ReturnObjectNumber = {
+    error: string | null;
+    value: number | null;
+  };
+
+  type ReturnObjectFiles = {
+    error: string | null;
+    value: Array<[string, number]> | null;
+  };
+
+  type ReturnObjectBuckets = {
+    error: string | null;
+    value: Array<string> | null;
+  };
+
+  type ReturnObjectReadable = {
+    error: string | null;
+    value: Readable | null;
+  };
+  ```
+
 - `init` will automatically select (and if necessary create) the bucket if your configuration object or url has a value set for `bucketName`
 - The storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.
 - The storage instance will also no longer hold a reference to all available buckets; a call to `listBuckets` will access the cloud storage service every time it is called; this is handy in case another process or user has created a new bucket.
@@ -139,6 +169,54 @@ addFileFromReadable({
   targetPath: string,
   options: object = {}
   }): Promise<ReturnObject>
+```
+
+### Some other ideas
+
+Maybe merge all `addFileFrom*` methods into a single `addFile` method that behaves differently dependent on the given argument/parameter:
+
+```typescript
+type FilePath ={
+  bucketName: string,
+  origPath: string,
+  targetPath: string,
+  options: object = {}
+}
+
+type FileBuffer ={
+  bucketName: string,
+  buffer: Buffer,
+  targetPath: string,
+  options: object = {}
+}
+
+type FileStream ={
+  bucketName: string,
+  stream: Readable,
+  targetPath: string,
+  options: object = {}
+}
+
+addFile(FilePath | FileBuffer | FileStream): Promise<ReturnObject>
+```
+
+And analogue to this:
+
+```typescript
+enum FileReturnType = {
+  Stream,
+  SomethingElse,
+  ...
+}
+
+type GetFile = {
+  bucketName: string,
+  fileName: string,
+  type: FileReturnType,
+  options?: { start?: number; end?: number }
+}
+
+getFile(GetFile): Promise<ReturnObjectStream | ReturnObject>
 ```
 
 # 1.4.7 - 1.5.2
