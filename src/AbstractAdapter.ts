@@ -21,12 +21,12 @@ export abstract class AbstractAdapter implements IStorage {
     return this.type;
   }
 
-  public async init(): Promise<ResultObject> {
-    // Except for Backblaze B2 Native API this method doesn't have to do anything
-    // so it doesn't have to be overridden at all, it is only here to make the
-    // API consistent.
-    return Promise.resolve({ error: null, value: "ok" });
-  }
+  // public async init(): Promise<ResultObject> {
+  //   // Except for Backblaze B2 Native API this method doesn't have to do anything
+  //   // so it doesn't have to be overridden at all, it is only here to make the
+  //   // API consistent.
+  //   return Promise.resolve({ error: null, value: "ok" });
+  // }
 
   public getConfiguration(): AdapterConfig {
     return this.config;

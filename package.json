@@ -49,6 +49,7 @@
     "test-azure": "TYPE='azure' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test": "ts-node ./tests/test.ts",
     "test-mode": "ts-node ./tests/test-mode.ts",
+    "testB2": "ts-node ./tests/testB2.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
     "copy-readme": "cp ./README.md ./publish",

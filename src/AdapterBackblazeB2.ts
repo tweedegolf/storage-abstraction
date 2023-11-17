@@ -7,6 +7,8 @@ import {
   BackblazeB2Bucket,
   BackblazeB2File,
   IStorage,
+  ResultObjectBoolean,
+  ResultObject,
 } from "./types";
 import { parseUrl } from "./util";
 
@@ -18,18 +20,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   private storage: B2;
   private buckets: BackblazeB2Bucket[] = [];
   private files: BackblazeB2File[] = [];
-  private nextFileName: string;
+  private initialized: boolean = false;
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
     this.config = this.parseConfig(config);
-    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-      const msg = this.validateName(this.config.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this.config.bucketName;
-    }
     this.storage = new B2(this.config);
   }
 
@@ -66,38 +61,42 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return cfg;
   }
 
-  public async init(): Promise<boolean> {
-    // console.log("init()", this.initialized, this.bucketName);
+  private async init(): Promise<ResultObject> {
     if (this.initialized) {
-      return Promise.resolve(true);
+      return Promise.resolve({ value: "ok", error: null });
     }
     try {
       await this.storage.authorize();
+      this.initialized = true;
+      return Promise.resolve({ value: "ok", error: null });
     } catch (e) {
-      throw new Error(e.message);
-    }
-    // check if the bucket already exists
-    if (this.bucketName) {
-      // create new bucket if it doesn't exist
-      await this.createBucket(this.bucketName);
-      this.bucketId = this.getBucketId();
-    }
-    this.initialized = true;
-    return true;
-  }
-
-  private getBucketId(): string {
-    // console.log(this.buckets);
-    const index = this.buckets.findIndex(
-      (b: BackblazeB2Bucket) => b.bucketName === this.bucketName
-    );
-    if (index !== -1) {
-      return this.buckets[index].bucketId;
+      return Promise.resolve({ value: null, error: e.message });
     }
   }
 
-  async getFileAsReadable(
-    name: string,
+  private async getBucketId(name: string) {
+    const { error } = await this.init();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
+    }
+    const {
+      data: { buckets },
+    } = await this.storage.listBuckets();
+
+    let id = null;
+    for (let i = 0; i < buckets.length; i++) {
+      const { bucketId, bucketName } = buckets[i];
+      if (bucketName === name) {
+        id = bucketId;
+        return Promise.resolve({ value: bucketId, error: null });
+      }
+    }
+    return Promise.resolve({ value: null, error: `could not find bucket ${name}` });
+  }
+
+  public async getFileAsReadable(
+    bucketName: string,
+    fileName: string,
     options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
     const file = await this.findFile(name);
@@ -117,16 +116,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return d.data;
   }
 
-  async removeFile(name: string): Promise<string> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-
-    const file = await this.findFile(name);
-    if (file === null) {
-      return "file not found";
-    }
-
+  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     const {
       data: { files },
     } = await this.storage.listFileVersions({
@@ -167,10 +157,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     await this.listBuckets();
     return this.findBucketLocal(name);
-  }
-
-  public getSelectedBucket(): string | null {
-    return this.bucketName;
   }
 
   // util members
@@ -229,32 +215,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     this.buckets.push(d.data);
     // console.log("createBucket", this.buckets, d.data);
     return "bucket created";
-  }
-
-  async selectBucket(name: string): Promise<string> {
-    if (!name) {
-      this.bucketName = "";
-      return `bucket '${name}' deselected`;
-    }
-
-    if (name === this.bucketName) {
-      return `bucket '${name}' selected`;
-    }
-
-    const b = await this.findBucket(name);
-    if (b !== null) {
-      this.bucketName = name;
-      this.bucketId = b.bucketId;
-      this.files = [];
-      return `bucket '${name}' selected`;
-    }
-
-    // return `bucket ${name} not found`;
-    await this.createBucket(name);
-    this.bucketName = name;
-    this.bucketId = this.getBucketId();
-    this.files = [];
-    return `bucket '${name}' selected`;
   }
 
   async clearBucket(name?: string): Promise<string> {

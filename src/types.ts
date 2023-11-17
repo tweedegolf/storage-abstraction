@@ -22,7 +22,7 @@ export interface IStorage {
    * For all other storage types this method is only a stub: you don't need to call it and if you do,
    * it does noting.
    */
-  init(): Promise<ResultObject>;
+  // init(): Promise<ResultObject>;
 
   /**
    * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
