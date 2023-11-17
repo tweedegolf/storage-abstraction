@@ -14,10 +14,13 @@ import { Readable } from "stream";
 
 export interface IStorage {
   /**
-   * Initializes the storage. Some storage types don't need any initialization, others
-   * may require async actions such as an initial authorization. Because you can't (and don't
-   * want to) handle async action in the constructor all storage types have an init() method
-   * that needs to be called before any other API method call
+   * This method is only implemented for Backblaze B2 native API because this type of storage
+   * requires an async authorization step; because a constructor function can not be async,
+   * you need to call this method right after instantiation and before you can use the other API
+   * methods.
+   *
+   * For all other storage types this method is only a stub: you don't need to call it and if you do,
+   * it does noting.
    */
   init(): Promise<ResultObject>;
 
@@ -36,6 +39,8 @@ export interface IStorage {
    *
    * The object also contains the key `options` which are only the options passed in during
    * initialization; if you want all options, including the default options use `getOptions()`
+   *
+   * @returns adapter configuration as object
    */
   getConfiguration(): AdapterConfig;
 
@@ -46,16 +51,11 @@ export interface IStorage {
   // getOptions(): JSON;
 
   /**
-   * Runs a simple test to test the storage configuration: calls `listBuckets` only to check
-   * if it fails and if so, it throws an error.
-   */
-  test(): Promise<ResultObject>;
-
-  /**
    * @param name name of the bucket to create, returns true once the bucket has been created but
    * also when the bucket already exists. Note that you have to use `selectBucket` to start using
    * the newly created bucket.
-   * @param: options: additional options for creating a bucket such as access rights
+   * @param options: additional options for creating a bucket such as access rights
+   * @returns string or error
    */
   createBucket(name: string, options?: object): Promise<ResultObject>;
 
@@ -70,7 +70,7 @@ export interface IStorage {
   deleteBucket(name: string): Promise<ResultObject>;
 
   /**
-   * Retrieves an array of the names of the buckets in this storage
+   * @returns an array of the names of the buckets in this storage
    */
   listBuckets(): Promise<ResultObjectBuckets>;
 
@@ -93,17 +93,25 @@ export interface IStorage {
   addFileFromReadable(paramObject: FileStream): Promise<ResultObject>;
 
   /**
+   * @param bucketName name of the bucket where the file is stored
    * @param name name of the file to be returned as a readable stream
    * @param start? the byte of the file where the stream starts (default: 0)
    * @param end? the byte in the file where the stream ends (default: last byte of file)
    */
   getFileAsReadable(
-    name: string,
+    bucketName: string,
+    fileName: string,
     options?: {
       start?: number;
       end?: number;
     }
   ): Promise<ResultObjectReadable>;
+
+  /**
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
+   */
+  getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
@@ -114,25 +122,20 @@ export interface IStorage {
   /**
    * @param bucketName name of the bucket
    * @param numFiles optional, only works for S3 compatible storages: the maximal number of files to retrieve
-   * Returns an array of tuples containing the file path and the file size of all files in the bucket.
+   * @returns an array of tuples containing the file path and the file size of all files in the bucket.
    */
   listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
 
   /**
-   * Returns the size in bytes of the file
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
+   * @returns the size of the file in bytes
    */
   sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
   /**
-   * @param bucketName name of the bucket where the file is stored
-   * @param fileName name of the file
-   */
-  fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
-
-  /**
    * @param bucketName name of the bucket
+   * @returns boolean
    */
   bucketExists(bucketName: string): Promise<ResultObjectBoolean>;
 
@@ -140,7 +143,7 @@ export interface IStorage {
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
    */
-  getFileAsURL?(bucketName: string, fileName: string): Promise<ResultObject>;
+  fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
 }
 
 export enum StorageType {
