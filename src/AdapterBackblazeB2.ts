@@ -21,6 +21,7 @@ import {
   FilePath,
   ResultObjectBuckets,
   ResultObjectFiles,
+  ResultObjectNumber,
 } from "./types";
 import { parseUrl, validateName } from "./util";
 
@@ -392,41 +393,74 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  private async findFile(name: string): Promise<BackblazeB2File | null> {
-    let i = this.files.findIndex((file: BackblazeB2File) => file?.fileName === name);
-    if (i > -1) {
-      return this.files[i];
+  // probably not necessary
+  private async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
     }
-    const {
-      data: { files },
-    } = await this.storage.listFileNames({ bucketId: this.bucketId });
-    this.files = files;
-    i = this.files.findIndex((file: BackblazeB2File) => file.fileName === name);
-    if (i > -1) {
-      return this.files[i];
+
+    const data = await this.getBucket(bucketName);
+    if (data.error !== null) {
+      return Promise.resolve({ error: data.error, value: null });
     }
-    return null;
+
+    const { value: bucketId } = data;
+    return this.storage
+      .listFileNames({ bucketId: bucketId })
+      .then(({ data: { files } }) => {
+        return {
+          error: null,
+          value: files.map(({ fileName }) => {
+            return fileName;
+          }),
+        };
+      })
+      .catch((e: Error) => {
+        return {
+          error: e.message,
+          value: null,
+        };
+      });
   }
 
-  async sizeOf(name: string): Promise<number> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
     }
-    const file = await this.findFile(name);
-    if (file === null) {
-      throw new Error("File not found");
-    }
-    return file.contentLength;
+
+    return this.getFile(bucketName, fileName)
+      .then(({ value: file }) => {
+        return { error: null, value: file.contentLength };
+      })
+      .catch((e: Error) => {
+        return { error: e.message, value: null };
+      });
   }
 
-  async fileExists(name: string): Promise<boolean> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
     }
-    const file = await this.findFile(name);
-    if (file === null) {
-      return false;
-    }
-    return true;
+
+    return this.getBucket(bucketName)
+      .then(() => {
+        return { error: null, value: true };
+      })
+      .catch(() => {
+        return { error: null, value: false };
+      });
+  }
+
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    return this.sizeOf(bucketName, fileName)
+      .then(() => {
+        return { error: null, value: true };
+      })
+      .catch(() => {
+        return { error: null, value: false };
+      });
   }
 }
