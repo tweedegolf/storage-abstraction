@@ -19,6 +19,8 @@ import {
   FileBuffer,
   FileStream,
   FilePath,
+  ResultObjectBuckets,
+  ResultObjectFiles,
 } from "./types";
 import { parseUrl, validateName } from "./util";
 
@@ -329,67 +331,65 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   async deleteBucket(name: string): Promise<ResultObject> {
-    const n = name || this.bucketName;
-
-    const b = await this.findBucket(n);
-    if (b === null) {
-      throw new Error("bucket not found");
+    const data = await this.clearBucket(name);
+    if (data.error !== null) {
+      return Promise.resolve({ error: data.error, value: null });
     }
 
-    try {
-      await this.clearBucket(n);
-    } catch (e) {
-      return e.response.data.message;
+    const { error, value: bucket } = await this.getBucket(name);
+    if (error !== null) {
+      return Promise.resolve({ error: error, value: null });
     }
 
-    const { bucketId } = b;
-    try {
-      await this.storage.deleteBucket({ bucketId });
-    } catch (e) {
-      return e.response.data.message;
-    }
-    this.buckets = this.buckets.filter((b) => b.bucketName !== n);
-    if (n === this.bucketName) {
-      this.bucketId = "";
-      this.bucketName = "";
-    }
-    return "bucket deleted";
+    return this.storage
+      .deleteBucket({ bucketId: bucket.id })
+      .then(() => {
+        return { error: null, value: "ok" };
+      })
+      .catch((e: Error) => {
+        return { error: e.message, value: null };
+      });
   }
 
-  async listBuckets(): Promise<string[]> {
-    const {
-      data: { buckets },
-    } = await this.storage.listBuckets();
-    // this.bucketsById = buckets.reduce((acc: { [id: string]: string }, val: BackBlazeB2Bucket) => {
-    //   acc[val.bucketId] = val.bucketName;
-    //   return acc;
-    // }, {});
-    this.buckets = buckets;
-    const names = this.buckets.map((b) => b.bucketName);
-    return names;
+  async listBuckets(): Promise<ResultObjectBuckets> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
+    }
+
+    return this.getBuckets()
+      .then(({ value: buckets }) => {
+        return {
+          error: null,
+          value: buckets.map((b) => {
+            return b.name;
+          }),
+        };
+      })
+      .catch((e: Error) => {
+        return { error: e.message, value: null };
+      });
   }
 
-  async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    // console.log("ID", this.bucketId);
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
     }
 
-    const {
-      data: { files, nextFileName },
-    } = await this.storage.listFileNames({
-      bucketId: this.bucketId,
-      maxFileCount: numFiles,
-    });
-    // console.log(files);
-    this.files = [...files];
-
-    // @TODO; should loop this until all files are listed
-    if (nextFileName !== null) {
-      // console.log(nextFileName);
-      this.nextFileName = nextFileName;
-    }
-    return this.files.map((f) => [f.fileName, f.contentLength]);
+    return this.getFiles(bucketName)
+      .then(({ value: files }) => {
+        const f: Array<[string, number]> = files.map((f) => {
+          return [f.name, f.contentLength];
+        });
+        return {
+          error: null,
+          value: f,
+        };
+      })
+      .catch((e: Error) => {
+        return { error: e.message, value: null };
+      });
   }
 
   private async findFile(name: string): Promise<BackblazeB2File | null> {
