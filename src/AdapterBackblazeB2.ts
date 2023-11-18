@@ -4,15 +4,12 @@ import { AbstractAdapter } from "./AbstractAdapter";
 import {
   StorageType,
   ConfigBackblazeB2,
-  BackblazeB2Bucket,
   BackblazeB2File,
-  IStorage,
   ResultObjectBoolean,
   ResultObject,
   ResultObjectReadable,
   ResultObjectBucketsB2,
   ResultObjectFilesB2,
-  BucketB2,
   ResultObjectBucketB2,
   ResultObjectFileB2,
   FileB2,
@@ -29,16 +26,14 @@ require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected type = StorageType.B2;
-  private bucketId: string;
   private storage: B2;
-  private buckets: BackblazeB2Bucket[] = [];
-  private files: BackblazeB2File[] = [];
   private authorized: boolean = false;
+  private configError: string | null = null;
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
-    this.config = this.parseConfig(config);
-    this.storage = new B2(this.config);
+    this.configuration = this.parseConfig(config);
+    this.storage = new B2(this.configuration);
   }
 
   private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
@@ -67,16 +62,18 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     if (!cfg.applicationKey || !cfg.applicationKeyId) {
-      throw new Error(
-        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 'b2'"
-      );
+      this.configError =
+        "You must specify a value for both 'applicationKeyId' and 'applicationKey' for storage type 'b2'";
     }
     return cfg;
   }
 
   private async authorize(): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
     if (this.authorized) {
-      return Promise.resolve({ value: "ok", error: null });
+      return { value: "ok", error: null };
     }
 
     return this.storage
@@ -96,8 +93,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       .then(({ data: { buckets } }) => {
         const value = buckets.map(({ bucketId, bucketName }) => {
           return {
-            bucketId,
-            bucketName,
+            id: bucketId,
+            name: bucketName,
           };
         });
         return { value, error: null };
@@ -110,33 +107,35 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   private async getBucket(name: string): Promise<ResultObjectBucketB2> {
     const { value: buckets, error } = await this.getBuckets();
     if (error !== null) {
-      return Promise.resolve({ value: null, error });
+      return { value: null, error };
     }
 
     for (let i = 0; i < buckets.length; i++) {
       const bucket = buckets[i];
       if (bucket.name === name) {
-        return Promise.resolve({ value: bucket, error: null });
+        return { value: bucket, error: null };
       }
     }
-    return Promise.resolve({ value: null, error: `could not find bucket ${name}` });
+    return { value: null, error: `could not find bucket ${name}` };
   }
 
   private async getFiles(bucketName: string): Promise<ResultObjectFilesB2> {
     const { value: bucket, error } = await this.getBucket(bucketName);
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     return this.storage
       .listFileVersions({
         bucketId: bucket.id,
+        maxFileCount: 1000,
       })
       .then(({ data: { files } }) => {
+        // console.log(files);
         const value = files.map(({ fileId, fileName, contentType, contentLength }) => {
           return {
-            fileId,
-            fileName,
+            id: fileId,
+            name: fileName,
             contentType,
             contentLength,
           };
@@ -151,16 +150,49 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   private async getFile(bucketName: string, name: string): Promise<ResultObjectFileB2> {
     const { value: files, error } = await this.getFiles(bucketName);
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.name === name) {
-        return Promise.resolve({ value: file, error: null });
+        return { value: file, error: null };
       }
     }
-    return Promise.resolve({ value: null, error: `could not find file ${name}` });
+    return { value: null, error: `could not find file ${name}` };
+  }
+
+  // probably not necessary; may be a little bit more lightweight compared to listFileVersions
+  // if you don't have file versions
+  public async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { error, value: null };
+    }
+
+    const data = await this.getBucket(bucketName);
+    if (data.error !== null) {
+      return { error: data.error, value: null };
+    }
+
+    const { value: bucket } = data;
+    return this.storage
+      .listFileNames({ bucketId: bucket.id })
+      .then(({ data: { files } }) => {
+        // console.log(files);
+        return {
+          error: null,
+          value: files.map(({ fileName }) => {
+            return fileName;
+          }),
+        };
+      })
+      .catch((e: Error) => {
+        return {
+          error: e.message,
+          value: null,
+        };
+      });
   }
 
   public async getFileAsReadable(
@@ -170,12 +202,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   ): Promise<ResultObjectReadable> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     const data = await this.getFile(bucketName, fileName);
     if (data.error !== null) {
-      return Promise.resolve({ error: data.error, value: null });
+      return { error: data.error, value: null };
     }
     const { value: file } = data;
     const d = await this.storage.downloadFileById({
@@ -194,21 +226,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
-    return Promise.resolve({ value: "ok", error: null });
+    // return Promise.resolve({ value: "ok", error: null });
+    return { value: "ok", error: null };
   }
 
   public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     const data = await this.getFiles(bucketName);
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
     const { value: files } = data;
 
@@ -238,31 +271,36 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected async store(params: FilePath | FileBuffer | FileStream): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     const { bucketName, targetPath } = params;
+    const data = await this.getBucket(bucketName);
+    if (data.error !== null) {
+      return { error: data.error, value: null };
+    }
+    const { value: bucket } = data;
 
     let { options } = params;
     if (typeof options === "undefined") {
       options = {};
     }
 
-    let data: string | Buffer | Readable;
+    let fileData: string | Buffer | Readable;
     if (typeof (params as FilePath).origPath !== "undefined") {
-      data = (params as FilePath).origPath;
+      fileData = (params as FilePath).origPath;
     } else if (typeof (params as FileBuffer).buffer !== "undefined") {
-      data = (params as FileBuffer).buffer;
+      fileData = (params as FileBuffer).buffer;
     } else if (typeof (params as FileStream).stream !== "undefined") {
-      data = (params as FileStream).stream;
+      fileData = (params as FileStream).stream;
     }
 
     return this.storage
       .uploadAny({
         ...options,
-        bucketId: this.bucketId,
+        bucketId: bucket.id,
         fileName: targetPath,
-        data,
+        data: fileData,
       })
       .then((file: BackblazeB2File) => {
         console.log(file);
@@ -276,15 +314,15 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+  public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     const msg = validateName(name);
     if (msg !== null) {
-      return Promise.reject({ error: msg, value: null });
+      return { error: msg, value: null };
     }
 
     return this.storage
@@ -295,22 +333,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       })
       .then((what) => {
         console.log(what);
-        return Promise.reject({ error: null, value: "ok" });
+        return { error: null, value: "ok" };
       })
       .catch((e: Error) => {
-        return Promise.reject({ error: e.message, value: null });
+        return { error: e.message, value: null };
       });
   }
 
-  async clearBucket(name: string): Promise<ResultObject> {
+  public async clearBucket(name: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     const data = await this.getFiles(name);
     if (data.error !== null) {
-      return Promise.resolve({ error: data.error, value: null });
+      return { error: data.error, value: null };
     }
 
     const { value: files } = data;
@@ -331,15 +369,15 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
+  public async deleteBucket(name: string): Promise<ResultObject> {
     const data = await this.clearBucket(name);
     if (data.error !== null) {
-      return Promise.resolve({ error: data.error, value: null });
+      return { error: data.error, value: null };
     }
 
     const { error, value: bucket } = await this.getBucket(name);
     if (error !== null) {
-      return Promise.resolve({ error: error, value: null });
+      return { error: error, value: null };
     }
 
     return this.storage
@@ -352,10 +390,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  async listBuckets(): Promise<ResultObjectBuckets> {
+  public async listBuckets(): Promise<ResultObjectBuckets> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     return this.getBuckets()
@@ -372,10 +410,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     return this.getFiles(bucketName)
@@ -393,41 +431,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  // probably not necessary
-  private async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return Promise.resolve({ error, value: null });
-    }
-
-    const data = await this.getBucket(bucketName);
-    if (data.error !== null) {
-      return Promise.resolve({ error: data.error, value: null });
-    }
-
-    const { value: bucketId } = data;
-    return this.storage
-      .listFileNames({ bucketId: bucketId })
-      .then(({ data: { files } }) => {
-        return {
-          error: null,
-          value: files.map(({ fileName }) => {
-            return fileName;
-          }),
-        };
-      })
-      .catch((e: Error) => {
-        return {
-          error: e.message,
-          value: null,
-        };
-      });
-  }
-
   public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     return this.getFile(bucketName, fileName)
@@ -442,7 +449,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return Promise.resolve({ error, value: null });
+      return { error, value: null };
     }
 
     return this.getBucket(bucketName)

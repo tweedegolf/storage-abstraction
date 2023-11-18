@@ -15,14 +15,18 @@ import {
 export abstract class AbstractAdapter implements IStorage {
   // protected type: StorageType;
   protected type: string;
-  protected config: AdapterConfig;
+  protected configuration: AdapterConfig;
 
   getType(): string {
     return this.type;
   }
 
+  public get config(): AdapterConfig {
+    return this.configuration;
+  }
+
   public getConfiguration(): AdapterConfig {
-    return this.config;
+    return this.configuration;
   }
 
   async addFileFromPath(params: FilePath): Promise<ResultObject> {

@@ -20,22 +20,27 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
 
   constructor(config: string | ConfigAzureStorageBlob) {
     super();
-    this.config = this.parseConfig(config as ConfigAzureStorageBlob);
+    this.configuration = this.parseConfig(config as ConfigAzureStorageBlob);
     // console.log(this.config);
 
-    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-      const msg = this.validateName(this.config.bucketName);
+    if (
+      typeof this.configuration.bucketName !== "undefined" &&
+      this.configuration.bucketName !== ""
+    ) {
+      const msg = this.validateName(this.configuration.bucketName);
       if (msg !== null) {
         throw new Error(msg);
       }
-      this.bucketName = this.config.bucketName;
+      this.bucketName = this.configuration.bucketName;
     }
     this.sharedKeyCredential = new StorageSharedKeyCredential(
-      (this.config as ConfigAzureStorageBlob).storageAccount,
-      (this.config as ConfigAzureStorageBlob).accessKey
+      (this.configuration as ConfigAzureStorageBlob).storageAccount,
+      (this.configuration as ConfigAzureStorageBlob).accessKey
     );
     this.storage = new BlobServiceClient(
-      `https://${(this.config as ConfigAzureStorageBlob).storageAccount}.blob.core.windows.net`,
+      `https://${
+        (this.configuration as ConfigAzureStorageBlob).storageAccount
+      }.blob.core.windows.net`,
       this.sharedKeyCredential
     );
   }
@@ -82,13 +87,16 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     if (this.initialized) {
       return Promise.resolve(true);
     }
-    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-      const msg = this.validateName(this.config.bucketName);
+    if (
+      typeof this.configuration.bucketName !== "undefined" &&
+      this.configuration.bucketName !== ""
+    ) {
+      const msg = this.validateName(this.configuration.bucketName);
       if (msg !== null) {
         throw new Error(msg);
       }
-      await this.createBucket(this.config.bucketName).then(() => {
-        this.bucketName = this.config.bucketName;
+      await this.createBucket(this.configuration.bucketName).then(() => {
+        this.bucketName = this.configuration.bucketName;
         this.bucketNames.push(this.bucketName);
       });
     }

@@ -28,42 +28,45 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   private bucketNames: string[] = [];
   private region: string = "";
   private s3Compatible: S3Compatible = S3Compatible.Amazon;
-  protected config: ConfigAmazonS3;
+  protected configuration: ConfigAmazonS3;
 
   constructor(config: string | AdapterConfig) {
     super();
-    this.config = this.parseConfig(config as ConfigAmazonS3);
-    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-      const msg = this.validateName(this.config.bucketName);
+    this.configuration = this.parseConfig(config as ConfigAmazonS3);
+    if (
+      typeof this.configuration.bucketName !== "undefined" &&
+      this.configuration.bucketName !== ""
+    ) {
+      const msg = this.validateName(this.configuration.bucketName);
       if (msg !== null) {
         throw new Error(msg);
       }
-      this.bucketName = this.config.bucketName;
+      this.bucketName = this.configuration.bucketName;
     }
 
-    if (typeof (this.config as ConfigAmazonS3).region === "undefined") {
+    if (typeof (this.configuration as ConfigAmazonS3).region === "undefined") {
       if (this.s3Compatible === S3Compatible.R2) {
-        this.config.region = "auto";
-        this.region = this.config.region;
+        this.configuration.region = "auto";
+        this.region = this.configuration.region;
       } else if (this.s3Compatible === S3Compatible.Backblaze) {
-        let ep = this.config.endpoint;
+        let ep = this.configuration.endpoint;
         ep = ep.substring(ep.indexOf("s3.") + 3);
-        this.config.region = ep.substring(0, ep.indexOf("."));
+        this.configuration.region = ep.substring(0, ep.indexOf("."));
         // console.log(this.config.region);
-        this.region = this.config.region;
+        this.region = this.configuration.region;
       }
     } else {
-      this.region = (this.config as ConfigAmazonS3).region;
+      this.region = (this.configuration as ConfigAmazonS3).region;
     }
-    if (typeof this.config.endpoint === "undefined") {
+    if (typeof this.configuration.endpoint === "undefined") {
       this.storage = new S3Client({ region: this.region });
     } else {
       this.storage = new S3Client({
         region: this.region,
-        endpoint: this.config.endpoint,
+        endpoint: this.configuration.endpoint,
         credentials: {
-          accessKeyId: this.config.accessKeyId,
-          secretAccessKey: this.config.secretAccessKey,
+          accessKeyId: this.configuration.accessKeyId,
+          secretAccessKey: this.configuration.secretAccessKey,
         },
       });
     }
@@ -196,9 +199,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      if (typeof this.config.region !== "undefined" && this.config.region !== "us-east-1") {
+      if (
+        typeof this.configuration.region !== "undefined" &&
+        this.configuration.region !== "us-east-1"
+      ) {
         input.CreateBucketConfiguration = {
-          LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")],
+          LocationConstraint: BucketLocationConstraint[this.configuration.region.replace("-", "_")],
         };
       }
 
