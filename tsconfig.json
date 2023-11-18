@@ -15,7 +15,7 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/*.ts"],
+  "include": ["src/*.ts", "tests/testB2.ts"],
   // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",

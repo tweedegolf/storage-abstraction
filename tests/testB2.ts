@@ -35,6 +35,12 @@ async function testB2() {
   }
   console.log(2, new Date().getTime() - s);
   console.log("B2", id);
+
+  s = new Date().getTime();
+  const {
+    data: { files },
+  } = await storage.listFileVersions({ bucketId: id });
+  console.log("B2", files);
 }
 
 testB2();

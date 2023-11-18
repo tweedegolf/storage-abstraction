@@ -38,8 +38,9 @@
   ```
 
 - ~~`init` will automatically select (and if necessary create) the bucket if your configuration object or url has a value set for `bucketName`~~
-- Backblaze B2 native API storage requires initial authorization (by calling the async `authorize` function) so `init` will only be implemented for this type of storage. For other storage type `init` will be a stub.
-- The storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.
+- ~~Backblaze B2 native API storage requires initial authorization (by calling the async `authorize` function) so `init` will only be implemented for this type of storage. For other storage type `init` will be a stub.~~
+- No more magic behind the screen; `init` and `selectBucket` have been removed.
+- No more local state: the storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.
 - The storage instance will also no longer hold a reference to all available buckets; a call to `listBuckets` will access the cloud storage service every time it is called; this is handy in case another process or user has created a new bucket.
 - `validateName` will not only perform a local check, it will also check if the name is valid and/or not taken at the cloud storage service.
 
@@ -48,7 +49,7 @@
 #### init
 
 `init(config):Promise<boolean>`<br/>
-`init(config):Promise<ResultObject>`
+`N/A`
 
 #### test
 
@@ -222,20 +223,24 @@ getFile(GetFile): Promise<ResultObjectStream | ResultObject>
 
 ### The `init` function is not required anymore
 
-Only Backblaze B2 Native API storage requires initial authorization by calling the async `authorize` function. So only for this type of storage it is required to call `init` after instantiating and before you call any API method. Although it is implemented (as a stub) in all storage types, for other storage types you don't need to call this method:
+Only Backblaze B2 Native API storage requires initial authorization by calling the async `authorize` function. This authorization step was performed once by calling the `init` method. Although it would yield an error, it was still possible to call API methods without calling `init` prior to that. In the new version every API call checks if the initial authorization has been performed.
+
+Other storage services do not require initial authorization but their `init` method was used to select and/or create the bucket that was provided in the config.
+
+Because in the new API seeks to be more transparent, there will be no more 'magic behind the screen'. So if you want to create a bucket (provided you have the access rights to do so) you have to call `createBucket` explicitly.
+
+Also the new version tries to keep as little local state as possible so `selectBucket` and `getSelectedBucket` have been removed.
+
+Because of all aforementioned changes the `init` is no longer required! You can start calling API methods right after instantiating a storage:
 
 ```typescript
 const b2 = new Storage("b2://applicationKeyId:applicationKey");
-await b2.init(); // mandatory
 await b2.listBuckets();
-
-const gcs = new Storage("gcs://keyFile.json");
-await gcs.listBuckets();
 ```
 
-### The bucket in the config is not automatically selected or created
+### The bucket in the config is no longer automatically selected or created
 
-The bucket name that you've provided with the configuration url or object is available by calling `getConfig`:
+However, the bucket name that you've provided with the configuration url or object is available by calling `getConfig`:
 
 ```typescript
 const  s3 = new Storage("s3://key:secret@eu-west-2/bucketName");

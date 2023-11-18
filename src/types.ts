@@ -14,17 +14,6 @@ import { Readable } from "stream";
 
 export interface IStorage {
   /**
-   * This method is only implemented for Backblaze B2 native API because this type of storage
-   * requires an async authorization step; because a constructor function can not be async,
-   * you need to call this method right after instantiation and before you can use the other API
-   * methods.
-   *
-   * For all other storage types this method is only a stub: you don't need to call it and if you do,
-   * it does noting.
-   */
-  // init(): Promise<ResultObject>;
-
-  /**
    * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
    */
   getType(): string;
@@ -247,6 +236,18 @@ export type BackblazeB2File = {
   uploadTimestamp: number;
 };
 
+export type BucketB2 = {
+  id: string;
+  name: string;
+};
+
+export type FileB2 = {
+  id: string;
+  name: string;
+  contentType: string;
+  contentLength: number;
+};
+
 export enum S3Compatible {
   Amazon,
   R2,
@@ -276,6 +277,26 @@ export type ResultObjectFiles = {
 export type ResultObjectBuckets = {
   error: string | null;
   value: Array<string> | null;
+};
+
+export type ResultObjectBucketsB2 = {
+  error: string | null;
+  value: Array<BucketB2> | null;
+};
+
+export type ResultObjectBucketB2 = {
+  error: string | null;
+  value: BucketB2 | null;
+};
+
+export type ResultObjectFileB2 = {
+  error: string | null;
+  value: FileB2 | null;
+};
+
+export type ResultObjectFilesB2 = {
+  error: string | null;
+  value: Array<FileB2> | null;
 };
 
 export type ResultObjectReadable = {
