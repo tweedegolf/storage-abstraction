@@ -16,8 +16,11 @@ import {
   ResultObjectBucketB2,
   ResultObjectFileB2,
   FileB2,
+  FileBuffer,
+  FileStream,
+  FilePath,
 } from "./types";
-import { parseUrl } from "./util";
+import { parseUrl, validateName } from "./util";
 
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
@@ -72,13 +75,16 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (this.authorized) {
       return Promise.resolve({ value: "ok", error: null });
     }
-    try {
-      await this.storage.authorize();
-      this.authorized = true;
-      return Promise.resolve({ value: "ok", error: null });
-    } catch (e) {
-      return Promise.resolve({ value: null, error: e.message });
-    }
+
+    return this.storage
+      .authorize()
+      .then(() => {
+        this.authorized = true;
+        return { value: "ok", error: null };
+      })
+      .catch((e: Error) => {
+        return { value: null, error: e.message };
+      });
   }
 
   private async getBuckets(): Promise<ResultObjectBucketsB2> {
@@ -91,11 +97,26 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
             bucketName,
           };
         });
-        return Promise.resolve({ value, error: null });
+        return { value, error: null };
       })
       .catch((e: Error) => {
-        return Promise.resolve({ value: null, error: e.message });
+        return { value: null, error: e.message };
       });
+  }
+
+  private async getBucket(name: string): Promise<ResultObjectBucketB2> {
+    const { value: buckets, error } = await this.getBuckets();
+    if (error !== null) {
+      return Promise.resolve({ value: null, error });
+    }
+
+    for (let i = 0; i < buckets.length; i++) {
+      const bucket = buckets[i];
+      if (bucket.name === name) {
+        return Promise.resolve({ value: bucket, error: null });
+      }
+    }
+    return Promise.resolve({ value: null, error: `could not find bucket ${name}` });
   }
 
   private async getFiles(bucketName: string): Promise<ResultObjectFilesB2> {
@@ -117,26 +138,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
             contentLength,
           };
         });
-        return Promise.resolve({ value, error: null });
+        return { value, error: null };
       })
       .catch((e: Error) => {
-        return Promise.resolve({ value: null, error: e.message });
+        return { value: null, error: e.message };
       });
-  }
-
-  private async getBucket(name: string): Promise<ResultObjectBucketB2> {
-    const { value: buckets, error } = await this.getBuckets();
-    if (error !== null) {
-      return Promise.resolve({ value: null, error });
-    }
-
-    for (let i = 0; i < buckets.length; i++) {
-      const bucket = buckets[i];
-      if (bucket.name === name) {
-        return Promise.resolve({ value: bucket, error: null });
-      }
-    }
-    return Promise.resolve({ value: null, error: `could not find bucket ${name}` });
   }
 
   private async getFile(bucketName: string, name: string): Promise<ResultObjectFileB2> {
@@ -214,120 +220,115 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         )
     )
       .then(() => {
-        return Promise.resolve({ error: null, value: "ok" });
+        return { error: null, value: "ok" };
       })
       .catch((e: Error) => {
-        return Promise.resolve({ error: e.message, value: null });
+        return { error: e.message, value: null };
       });
-  }
-
-  // util function for findBucket
-  private findBucketLocal(name: string): BackblazeB2Bucket | null {
-    if (this.buckets.length === 0) {
-      return null;
-    }
-    const index = this.buckets.findIndex((b) => b.bucketName === name);
-    if (index !== -1) {
-      return this.buckets[index];
-    }
-    return null;
-  }
-
-  // check if we have accessed and stored the bucket earlier
-  private async findBucket(name: string): Promise<BackblazeB2Bucket | null> {
-    const b = this.findBucketLocal(name);
-    if (b !== null) {
-      return b;
-    }
-    await this.listBuckets();
-    return this.findBucketLocal(name);
   }
 
   // util members
 
-  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
-  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
-  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
-  protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string,
-    options: object
-  ): Promise<string> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  protected async store(params: FilePath): Promise<ResultObject>;
+  protected async store(params: FileBuffer): Promise<ResultObject>;
+  protected async store(params: FileStream): Promise<ResultObject>;
+  protected async store(params: FilePath | FileBuffer | FileStream): Promise<ResultObject> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
     }
-    await this.createBucket(this.bucketName);
-    return await this.storage
+
+    const { bucketName, targetPath } = params;
+
+    let { options } = params;
+    if (typeof options === "undefined") {
+      options = {};
+    }
+
+    let data: string | Buffer | Readable;
+    if (typeof (params as FilePath).origPath !== "undefined") {
+      data = (params as FilePath).origPath;
+    } else if (typeof (params as FileBuffer).buffer !== "undefined") {
+      data = (params as FileBuffer).buffer;
+    } else if (typeof (params as FileStream).stream !== "undefined") {
+      data = (params as FileStream).stream;
+    }
+
+    return this.storage
       .uploadAny({
         ...options,
         bucketId: this.bucketId,
         fileName: targetPath,
-        data: arg,
+        data,
       })
       .then((file: BackblazeB2File) => {
-        this.files.push(file);
-        // console.log("FILE", file);
-        return `${this.storage.downloadUrl}/file/${this.bucketName}/${targetPath}`;
+        console.log(file);
+        return {
+          error: null,
+          value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
+        };
       })
-      .catch((err: Error) => {
-        // console.log("ERROR", err);
-        return Promise.reject(err);
+      .catch((e: Error) => {
+        return { error: e.message, value: null };
       });
   }
 
-  async createBucket(name: string, options: object = {}): Promise<string> {
-    const msg = this.validateName(name);
+  async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
+    }
+
+    const msg = validateName(name);
     if (msg !== null) {
-      return Promise.reject(msg);
+      return Promise.reject({ error: msg, value: null });
     }
 
-    const b = await this.findBucket(name);
-    if (b !== null) {
-      return;
-    }
-
-    const d = await this.storage
+    return this.storage
       .createBucket({
         ...options,
         bucketName: name,
         bucketType: "allPrivate", // should be a config option!
       })
-      .catch((e) => {
-        throw new Error(e.response.data.message);
+      .then((what) => {
+        console.log(what);
+        return Promise.reject({ error: null, value: "ok" });
+      })
+      .catch((e: Error) => {
+        return Promise.reject({ error: e.message, value: null });
       });
-
-    this.buckets.push(d.data);
-    // console.log("createBucket", this.buckets, d.data);
-    return "bucket created";
   }
 
-  async clearBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-
-    const b = await this.findBucket(n);
-    if (b === null) {
-      throw new Error("bucket not found");
+  async clearBucket(name: string): Promise<ResultObject> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return Promise.resolve({ error, value: null });
     }
 
-    const {
-      data: { files },
-    } = await this.storage.listFileVersions({
-      bucketId: b.bucketId,
-    });
+    const data = await this.getFiles(name);
+    if (data.error !== null) {
+      return Promise.resolve({ error: data.error, value: null });
+    }
 
-    await Promise.all(
-      files.map((file: BackblazeB2File) =>
+    const { value: files } = data;
+    return Promise.all(
+      files.map((file: FileB2) =>
         this.storage.deleteFileVersion({
-          fileId: file.fileId,
-          fileName: file.fileName,
+          fileId: file.id,
+          fileName: file.name,
         })
       )
-    );
-
-    return "bucket cleared";
+    )
+      .then((what) => {
+        console.log(what);
+        return { error: null, value: "ok" };
+      })
+      .catch((e: Error) => {
+        return { error: e.message, value: null };
+      });
   }
 
-  async deleteBucket(name?: string): Promise<string> {
+  async deleteBucket(name: string): Promise<ResultObject> {
     const n = name || this.bucketName;
 
     const b = await this.findBucket(n);
