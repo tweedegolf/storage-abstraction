@@ -34,15 +34,20 @@ export interface IStorage {
   getConfiguration(): AdapterConfig;
 
   /**
+   * Same as `getConfiguration` but implemented as getter
+   * @returns adapter configuration as object
+   */
+  config: AdapterConfig;
+
+  /**
    * Returns an object that contains both the options passed with the configuration and the
    * default options of the storage type if not overruled by the options you passed in.
    */
   // getOptions(): JSON;
 
   /**
-   * @param name name of the bucket to create, returns true once the bucket has been created but
-   * also when the bucket already exists. Note that you have to use `selectBucket` to start using
-   * the newly created bucket.
+   * @param name name of the bucket to create, returns "ok" once the bucket has been created but
+   * also when the bucket already exists.
    * @param options: additional options for creating a bucket such as access rights
    * @returns string or error
    */
@@ -210,6 +215,19 @@ export type AdapterConfig =
   | ConfigBackblazeB2
   | ConfigTemplate;
 
+export type BackblazeAxiosResponse = {
+  response: {
+    data: {
+      code: string;
+      message: string;
+      status: number;
+      allowed?: {
+        capabilities: Array<string>;
+      };
+    };
+  };
+};
+
 export type BackblazeB2Bucket = {
   accountId: "string";
   bucketId: "string";
@@ -254,10 +272,22 @@ export enum S3Compatible {
   Backblaze,
 }
 
-export type ResultObject = {
+export type ParseUrlResult = {
+  error: string | null;
+  value: {
+    type: string;
+    part1: string;
+    part2: string;
+    part3: string;
+    bucketName: string;
+    queryString: { [key: string]: string };
+  };
+};
+
+export interface ResultObject {
   error: string | null;
   value: string | null;
-};
+}
 
 export type ResultObjectNumber = {
   error: string | null;

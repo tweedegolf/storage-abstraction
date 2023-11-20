@@ -94,17 +94,6 @@ const newBucketName3 = `bucket-${uniquid()}-${new Date().getTime()}`;
 // console.log("newBucketName:", newBucketName, "\n");
 
 let storage: Storage;
-const test = async () => {
-  try {
-    storage = new Storage(config);
-    // console.log(storage);
-    await storage.init();
-  } catch (e) {
-    console.error(`\x1b[31m${e.message}`);
-    process.exit(0);
-  }
-};
-// test();
 
 const waitABit = async (millis = 100): Promise<void> =>
   new Promise((resolve) => {
@@ -186,25 +175,6 @@ describe(`[testing ${type} storage]`, async () => {
   //       });
   //   }
   // });
-
-  it("init", async () => {
-    try {
-      storage = new Storage(config);
-      await storage.init();
-    } catch (e) {
-      console.error(e);
-      return;
-    }
-  });
-
-  it("test", async () => {
-    try {
-      await storage.test();
-    } catch (e) {
-      console.error(e);
-      return;
-    }
-  });
 
   it("create bucket", async () => {
     const bucketName = storage.getSelectedBucket();

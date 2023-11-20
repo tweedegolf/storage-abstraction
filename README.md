@@ -11,43 +11,43 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-    + [S3 Compatible Storage](#s3-compatible-storage)
-    + [Cloudflare R2](#cloudflare-r2)
-    + [Backblaze S3](#backblaze-s3)
-  * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+    - [S3 Compatible Storage](#s3-compatible-storage)
+    - [Cloudflare R2](#cloudflare-r2)
+    - [Backblaze S3](#backblaze-s3)
+  - [Backblaze B2](#backblaze-b2)
+  - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  * [init](#init)
-  * [test](#test)
-  * [createBucket](#createbucket)
-  * [selectBucket](#selectbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [getSelectedBucket](#getselectedbucket)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromReadable](#addfilefromreadable)
-  * [getFileAsReadable](#getfileasreadable)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [switchAdapter](#switchadapter)
+  - [init](#init)
+  - [test](#test)
+  - [createBucket](#createbucket)
+  - [selectBucket](#selectbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [getSelectedBucket](#getselectedbucket)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromReadable](#addfilefromreadable)
+  - [getFileAsReadable](#getfileasreadable)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -486,22 +486,10 @@ Runs a simple test to test the storage configuration. The test is a call to `lis
 ### <a name='createbucket'></a>createBucket
 
 ```typescript
-createBucket(name: string, options?: object): Promise<string>;
+createBucket(name: string, options?: object): Promise<ResponseObject>;
 ```
 
-Creates a new bucket, does not fail if the bucket already exists. If the bucket was created successfully it returns "bucket created" or if already existed "bucket exists", else it will reject with an error message. You can provide extra storage-specific settings such as access rights using the `options` object.
-
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
-
-### <a name='selectbucket'></a>selectBucket
-
-```typescript
-selectBucket(name: string | null): Promise<void>;
-```
-
-Selects a or another bucket for storing files, the bucket will be created automatically if it doesn't exist. If you pass `null` an empty string or nothing at all the currently selected bucket will be deselected.
-
-Returns "bucket selected" or "bucket deselected".
+Creates a new bucket. If the bucket was created successfully it resolves to "ok". If the bucket exists or the creating the bucket fails for another reason it resolves to an error message. You can provide extra storage-specific settings such as access rights using the `options` object.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 

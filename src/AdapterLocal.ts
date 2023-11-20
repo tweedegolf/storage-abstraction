@@ -12,14 +12,14 @@ export class AdapterLocal extends AbstractAdapter {
 
   constructor(config: ConfigLocal) {
     super();
-    this.configuration = this.parseConfig(config);
+    this.conf = this.parseConfig(config);
     // console.log(config);
     // console.log(this.config);
-    const mode = (this.configuration as ConfigLocal).mode;
+    const mode = (this.conf as ConfigLocal).mode;
     if (typeof mode === "undefined") {
-      (this.configuration as ConfigLocal).mode = 0o777;
+      (this.conf as ConfigLocal).mode = 0o777;
     }
-    const directory = (this.configuration as ConfigLocal).directory;
+    const directory = (this.conf as ConfigLocal).directory;
   }
 
   private parseConfig(config: string | ConfigLocal): ConfigLocal {
@@ -86,11 +86,8 @@ export class AdapterLocal extends AbstractAdapter {
       return Promise.resolve(true);
     }
 
-    if (
-      typeof this.configuration.bucketName !== "undefined" &&
-      this.configuration.bucketName !== ""
-    ) {
-      const { error } = await this.validateName(this.configuration.bucketName);
+    if (typeof this.conf.bucketName !== "undefined" && this.conf.bucketName !== "") {
+      const { error } = await this.validateName(this.conf.bucketName);
       if (error !== null) {
         Promise.resolve({ error, value: null });
         return;

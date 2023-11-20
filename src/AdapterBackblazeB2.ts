@@ -19,6 +19,7 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  BackblazeAxiosResponse,
 } from "./types";
 import { parseUrl, validateName } from "./util";
 
@@ -32,20 +33,33 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
-    this.configuration = this.parseConfig(config);
-    this.storage = new B2(this.configuration);
+    this.conf = this.parseConfig(config);
+    if (this.conf !== null) {
+      try {
+        this.storage = new B2(this.conf);
+      } catch (e) {
+        this.configError = e.message;
+      }
+    }
   }
 
-  private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 {
+  // util members
+
+  private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 | null {
     let cfg: ConfigBackblazeB2;
     if (typeof config === "string") {
+      const { error, value } = parseUrl(config);
+      if (error !== null) {
+        this.configError = error;
+        return null;
+      }
       const {
         type,
         part1: applicationKeyId,
         part2: applicationKey,
         bucketName,
         queryString,
-      } = parseUrl(config);
+      } = value;
       cfg = {
         type,
         applicationKeyId,
@@ -64,6 +78,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (!cfg.applicationKey || !cfg.applicationKeyId) {
       this.configError =
         "You must specify a value for both 'applicationKeyId' and 'applicationKey' for storage type 'b2'";
+      return null;
     }
     return cfg;
   }
@@ -78,12 +93,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     return this.storage
       .authorize()
-      .then(() => {
+      .then((r: BackblazeAxiosResponse) => {
+        // console.log(r.data.allowed.capabilities);
         this.authorized = true;
         return { value: "ok", error: null };
       })
-      .catch((e: Error) => {
-        return { value: null, error: e.message };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { value: null, error: r.response.data.message };
       });
   }
 
@@ -99,8 +115,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         });
         return { value, error: null };
       })
-      .catch((e: Error) => {
-        return { value: null, error: e.message };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { value: null, error: r.response.data.message };
       });
   }
 
@@ -142,8 +158,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         });
         return { value, error: null };
       })
-      .catch((e: Error) => {
-        return { value: null, error: e.message };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { value: null, error: r.response.data.message };
       });
   }
 
@@ -161,109 +177,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     return { value: null, error: `could not find file ${name}` };
   }
-
-  // probably not necessary; may be a little bit more lightweight compared to listFileVersions
-  // if you don't have file versions
-  public async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { error, value: null };
-    }
-
-    const data = await this.getBucket(bucketName);
-    if (data.error !== null) {
-      return { error: data.error, value: null };
-    }
-
-    const { value: bucket } = data;
-    return this.storage
-      .listFileNames({ bucketId: bucket.id })
-      .then(({ data: { files } }) => {
-        // console.log(files);
-        return {
-          error: null,
-          value: files.map(({ fileName }) => {
-            return fileName;
-          }),
-        };
-      })
-      .catch((e: Error) => {
-        return {
-          error: e.message,
-          value: null,
-        };
-      });
-  }
-
-  public async getFileAsReadable(
-    bucketName: string,
-    fileName: string,
-    options: { start?: number; end?: number } = { start: 0 }
-  ): Promise<ResultObjectReadable> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { error, value: null };
-    }
-
-    const data = await this.getFile(bucketName, fileName);
-    if (data.error !== null) {
-      return { error: data.error, value: null };
-    }
-    const { value: file } = data;
-    const d = await this.storage.downloadFileById({
-      fileId: file.id,
-      responseType: "stream",
-      axios: {
-        headers: {
-          "Content-Type": file.contentType,
-          Range: `bytes=${options.start}-${options.end || ""}`,
-        },
-      },
-    });
-    return d.data;
-  }
-
-  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { error, value: null };
-    }
-
-    // return Promise.resolve({ value: "ok", error: null });
-    return { value: "ok", error: null };
-  }
-
-  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { error, value: null };
-    }
-
-    const data = await this.getFiles(bucketName);
-    if (error !== null) {
-      return { error, value: null };
-    }
-    const { value: files } = data;
-
-    return Promise.all(
-      files
-        .filter((f: FileB2) => f.name === fileName)
-        .map(({ id: fileId, name: fileName }) =>
-          this.storage.deleteFileVersion({
-            fileId,
-            fileName,
-          })
-        )
-    )
-      .then(() => {
-        return { error: null, value: "ok" };
-      })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
-      });
-  }
-
-  // util members
 
   protected async store(params: FilePath): Promise<ResultObject>;
   protected async store(params: FileBuffer): Promise<ResultObject>;
@@ -309,8 +222,126 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
         };
       })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { error: r.response.data.message, value: null };
+      });
+  }
+
+  // probably not necessary; may be a little bit more lightweight compared to listFileVersions
+  // if you don't have file versions
+  public async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { error, value: null };
+    }
+
+    const data = await this.getBucket(bucketName);
+    if (data.error !== null) {
+      return { error: data.error, value: null };
+    }
+
+    const { value: bucket } = data;
+    return this.storage
+      .listFileNames({ bucketId: bucket.id })
+      .then(({ data: { files } }) => {
+        // console.log(files);
+        return {
+          error: null,
+          value: files.map(({ fileName }) => {
+            return fileName;
+          }),
+        };
+      })
+      .catch((e: BackblazeAxiosResponse) => {
+        return {
+          error: e.response.data.message,
+          value: null,
+        };
+      });
+  }
+
+  // public API
+
+  public async getFileAsReadable(
+    bucketName: string,
+    fileName: string,
+    options: { start?: number; end?: number } = { start: 0 }
+  ): Promise<ResultObjectReadable> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { error, value: null };
+    }
+
+    const data = await this.getFile(bucketName, fileName);
+    if (data.error !== null) {
+      return { error: data.error, value: null };
+    }
+    const { value: file } = data;
+    return this.storage
+      .downloadFileById({
+        fileId: file.id,
+        responseType: "stream",
+        axios: {
+          headers: {
+            "Content-Type": file.contentType,
+            Range: `bytes=${options.start}-${options.end || ""}`,
+          },
+        },
+      })
+      .then((r: BackblazeAxiosResponse) => {
+        return { error: null, value: r.response.data };
+      });
+  }
+
+  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { error, value: null };
+    }
+
+    const url = `${this.storage.downloadUrl}/file/${bucketName}/${fileName}`;
+    return { value: url, error: null };
+  }
+
+  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { error, value: null };
+    }
+
+    const data = await this.getFiles(bucketName);
+    if (error !== null) {
+      return { error, value: null };
+    }
+    const { value: files } = data;
+
+    // return this.storage
+    //   .deleteFileVersion({
+    //     fileId: "adadadad",
+    //     fileName: "adasdadad",
+    //   })
+
+    //   .then(() => {
+    //     return { error: null, value: "ok" };
+    //   })
+    //   .catch((r: BackblazeAxiosResponse) => {
+    //     return { error: r.response.data.message, value: null };
+    //   });
+    return Promise.all(
+      files
+        .filter((f: FileB2) => f.name === fileName)
+        .map(({ id: fileId, name: fileName }) =>
+          this.storage.deleteFileVersion({
+            fileId,
+            fileName,
+          })
+        )
+    )
+      .then(() => {
+        return { error: null, value: "ok" };
+      })
+      .catch((r: BackblazeAxiosResponse) => {
+        return { error: r.response.data.message, value: null };
       });
   }
 
@@ -331,12 +362,14 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         bucketName: name,
         bucketType: "allPrivate", // should be a config option!
       })
-      .then((what) => {
-        console.log(what);
+      .then((response: { data: { bucketType: string } }) => {
+        const {
+          data: { bucketType },
+        } = response;
         return { error: null, value: "ok" };
       })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { error: r.response.data.message, value: null };
       });
   }
 
@@ -355,7 +388,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return Promise.all(
       files.map((file: FileB2) =>
         this.storage.deleteFileVersion({
-          fileId: file.id,
+          fileId: "file.id",
           fileName: file.name,
         })
       )
@@ -364,8 +397,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         console.log(what);
         return { error: null, value: "ok" };
       })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { error: r.response.data.message, value: null };
       });
   }
 
@@ -385,8 +418,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       .then(() => {
         return { error: null, value: "ok" };
       })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
+      .catch((r: BackblazeAxiosResponse) => {
+        return { error: r.response.data.message, value: null };
       });
   }
 
@@ -396,18 +429,18 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error, value: null };
     }
 
-    return this.getBuckets()
-      .then(({ value: buckets }) => {
-        return {
-          error: null,
-          value: buckets.map((b) => {
-            return b.name;
-          }),
-        };
-      })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
-      });
+    const data = await this.getBuckets();
+    if (data.error === null) {
+      const { value: buckets } = data;
+      return {
+        error: null,
+        value: buckets.map((b) => {
+          return b.name;
+        }),
+      };
+    } else {
+      return { error: data.error, value: null };
+    }
   }
 
   public async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
@@ -416,19 +449,18 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error, value: null };
     }
 
-    return this.getFiles(bucketName)
-      .then(({ value: files }) => {
-        const f: Array<[string, number]> = files.map((f) => {
+    const data = await this.getFiles(bucketName);
+    if (data.error === null) {
+      const { value: files } = data;
+      return {
+        error: null,
+        value: files.map((f) => {
           return [f.name, f.contentLength];
-        });
-        return {
-          error: null,
-          value: f,
-        };
-      })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
-      });
+        }),
+      };
+    } else {
+      return { error: data.error, value: null };
+    }
   }
 
   public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
@@ -437,13 +469,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error, value: null };
     }
 
-    return this.getFile(bucketName, fileName)
-      .then(({ value: file }) => {
-        return { error: null, value: file.contentLength };
-      })
-      .catch((e: Error) => {
-        return { error: e.message, value: null };
-      });
+    const data = await this.getFile(bucketName, fileName);
+    if (data.error === null) {
+      const { value: file } = data;
+      return { error: null, value: file.contentLength };
+    } else {
+      return { error: data.error, value: null };
+    }
   }
 
   async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
@@ -452,22 +484,20 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error, value: null };
     }
 
-    return this.getBucket(bucketName)
-      .then(() => {
-        return { error: null, value: true };
-      })
-      .catch(() => {
-        return { error: null, value: false };
-      });
+    const data = await this.getBucket(bucketName);
+    if (data.error === null) {
+      return { error: null, value: true };
+    } else {
+      return { error: data.error, value: null };
+    }
   }
 
   async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    return this.sizeOf(bucketName, fileName)
-      .then(() => {
-        return { error: null, value: true };
-      })
-      .catch(() => {
-        return { error: null, value: false };
-      });
+    const { error, value } = await this.sizeOf(bucketName, fileName);
+    if (error === null) {
+      return { error: null, value: true };
+    } else {
+      return { error: null, value: false };
+    }
   }
 }

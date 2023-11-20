@@ -18,18 +18,15 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
-    this.configuration = this.parseConfig(config);
-    if (
-      typeof this.configuration.bucketName !== "undefined" &&
-      this.configuration.bucketName !== ""
-    ) {
-      const msg = this.validateName(this.configuration.bucketName);
+    this.conf = this.parseConfig(config);
+    if (typeof this.conf.bucketName !== "undefined" && this.conf.bucketName !== "") {
+      const msg = this.validateName(this.conf.bucketName);
       if (msg !== null) {
         throw new Error(msg);
       }
-      this.bucketName = this.configuration.bucketName;
+      this.bucketName = this.conf.bucketName;
     }
-    this.storage = new GoogleCloudStorage(this.configuration as ConfigGoogleCloud);
+    this.storage = new GoogleCloudStorage(this.conf as ConfigGoogleCloud);
   }
 
   /**

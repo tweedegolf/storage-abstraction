@@ -1,4 +1,6 @@
 import { BucketLocationConstraint } from "@aws-sdk/client-s3";
+import { ParseUrlResult } from "./types";
+import { StorageType } from "@tweedegolf/storage-abstraction";
 
 /**
  * @param: url
@@ -27,20 +29,14 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
  * Parses a url string into fragments and parses the query string into a
  * key-value object.
  */
-export const parseUrl = (
-  url: string
-): {
-  type: string;
-  part1: string;
-  part2: string;
-  part3: string;
-  bucketName: string;
-  queryString: { [key: string]: string };
-} => {
-  if (url === "" || typeof url === "undefined") {
-    throw new Error("please provide a configuration url");
+export const parseUrl = (url: string): ParseUrlResult => {
+  if (url.indexOf("://") === -1) {
+    return { value: null, error: "Please provide a valid configuration url" };
   }
   const type = url.substring(0, url.indexOf("://"));
+  if (Object.values(StorageType).includes(type as StorageType) === false) {
+    return { value: null, error: `"${type}" is not a valid storage type` };
+  }
   let config = url.substring(url.indexOf("://") + 3);
   const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
@@ -81,7 +77,7 @@ export const parseUrl = (
   }
 
   // console.log(type, part1, part2, region, bucketName, queryString);
-  return { type, part1, part2, part3, bucketName, queryString };
+  return { error: null, value: { type, part1, part2, part3, bucketName, queryString } };
 };
 
 /**
