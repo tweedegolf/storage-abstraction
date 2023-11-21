@@ -1,6 +1,17 @@
 import path from "path";
-import { Readable } from "stream";
-import { IStorage, AdapterConfig } from "./types";
+import {
+  IStorage,
+  AdapterConfig,
+  FileBufferParams,
+  ResultObject,
+  FilePathParams,
+  FileStreamParams,
+  ResultObjectBuckets,
+  ResultObjectReadable,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectBoolean,
+} from "./types";
 
 //  add new storage adapters here
 const adapterClasses = {
@@ -9,6 +20,7 @@ const adapterClasses = {
   gcs: "AdapterGoogleCloudStorage",
   local: "AdapterLocal",
   azure: "AdapterAzureStorageBlob",
+  minio: "AdapterMinIO",
 };
 
 // or here for functional adapters
@@ -38,9 +50,9 @@ export class Storage implements IStorage {
     return this.adapter.getType();
   }
 
-  // public getOptions(): TypeJSON {
-  //   return this.adapter.getOptions();
-  // }
+  get config(): AdapterConfig {
+    return this.adapter.getConfiguration();
+  }
 
   public getConfiguration(): AdapterConfig {
     return this.adapter.getConfiguration();
@@ -72,80 +84,75 @@ export class Storage implements IStorage {
 
   // all methods below are implementing IStorage
 
-  async init(): Promise<boolean> {
-    return this.adapter.init();
+  public async addFile(
+    paramObject: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    return this.adapter.addFile(paramObject);
   }
 
-  async test(): Promise<string> {
-    return this.adapter.test();
+  async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
+    return this.adapter.addFileFromPath(params);
   }
 
-  async addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string> {
-    return this.adapter.addFileFromBuffer(buffer, targetPath, options);
+  async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
+    return this.adapter.addFileFromBuffer(params);
   }
 
-  async addFileFromPath(origPath: string, targetPath: string, options?: object): Promise<string> {
-    return this.adapter.addFileFromPath(origPath, targetPath, options);
+  async addFileFromReadable(params: FileStreamParams): Promise<ResultObject> {
+    return this.adapter.addFileFromReadable(params);
   }
 
-  async addFileFromReadable(
-    stream: Readable,
-    targetPath: string,
-    options?: object
-  ): Promise<string> {
-    return this.adapter.addFileFromReadable(stream, targetPath, options);
-  }
-
-  async createBucket(name?: string, options?: object): Promise<string> {
+  async createBucket(name: string, options?: object): Promise<ResultObject> {
     return this.adapter.createBucket(name, options);
   }
 
-  async clearBucket(name?: string): Promise<string> {
+  async clearBucket(name: string): Promise<ResultObject> {
     return this.adapter.clearBucket(name);
   }
 
-  async deleteBucket(name?: string): Promise<string> {
+  async deleteBucket(name: string): Promise<ResultObject> {
     return this.adapter.deleteBucket(name);
   }
 
-  async listBuckets(): Promise<string[]> {
+  async listBuckets(): Promise<ResultObjectBuckets> {
     return this.adapter.listBuckets();
   }
 
-  public getSelectedBucket(): string {
-    return this.adapter.getSelectedBucket();
-  }
-
   async getFileAsReadable(
-    name: string,
+    bucketName: string,
+    fileName: string,
     options: { start?: number; end?: number } = {}
-  ): Promise<Readable> {
+  ): Promise<ResultObjectReadable> {
     const { start = 0, end } = options;
     // console.log(start, end, options);
-    return this.adapter.getFileAsReadable(name, { start, end });
+    return this.adapter.getFileAsReadable(bucketName, fileName, { start, end });
   }
 
-  async getFileAsURL(name: string): Promise<string> {
-    return this.adapter.getFileAsURL(name);
+  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+    return this.adapter.getFileAsURL(bucketName, fileName);
   }
 
-  async removeFile(fileName: string): Promise<string> {
-    return this.adapter.removeFile(fileName);
+  async removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions = false
+  ): Promise<ResultObject> {
+    return this.adapter.removeFile(bucketName, fileName, allVersions);
   }
 
-  async listFiles(numFiles?: number): Promise<[string, number][]> {
-    return this.adapter.listFiles(numFiles);
+  async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles> {
+    return this.adapter.listFiles(bucketName, numFiles);
   }
 
-  async selectBucket(name?: string): Promise<string> {
-    return this.adapter.selectBucket(name);
+  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    return this.adapter.sizeOf(bucketName, fileName);
   }
 
-  async sizeOf(name: string): Promise<number> {
-    return this.adapter.sizeOf(name);
+  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    return this.adapter.bucketExists(bucketName);
   }
 
-  async fileExists(name: string): Promise<boolean> {
-    return this.adapter.fileExists(name);
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    return this.adapter.fileExists(bucketName, fileName);
   }
 }

@@ -1,6 +1,5 @@
 import { BucketLocationConstraint } from "@aws-sdk/client-s3";
 import { ParseUrlResult } from "./types";
-import { StorageType } from "@tweedegolf/storage-abstraction";
 
 /**
  * @param: url
@@ -34,9 +33,9 @@ export const parseUrl = (url: string): ParseUrlResult => {
     return { value: null, error: "Please provide a valid configuration url" };
   }
   const type = url.substring(0, url.indexOf("://"));
-  if (Object.values(StorageType).includes(type as StorageType) === false) {
-    return { value: null, error: `"${type}" is not a valid storage type` };
-  }
+  // if (Object.values(StorageType).includes(type as StorageType) === false) {
+  //   return { value: null, error: `"${type}" is not a valid storage type` };
+  // }
   let config = url.substring(url.indexOf("://") + 3);
   const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
@@ -81,7 +80,7 @@ export const parseUrl = (url: string): ParseUrlResult => {
 };
 
 /**
- * @param s
+ * @param {string} s
  *
  * Parses a string that contains a radix prefix to a number
  *
@@ -123,7 +122,7 @@ export const parseMode = (s: number | string): string | number => {
 };
 
 /**
- * @param: url
+ * @param {string} url
  *
  * strips off the protocol of an url and returns it
  */
@@ -132,7 +131,7 @@ export const getProtocol = (url: string): string => {
 };
 
 /**
- * @param name
+ * @param {string} name
  *
  * Checks if the value of the name is not null or undefined
  */

@@ -13,13 +13,14 @@ import {
   ResultObjectBucketB2,
   ResultObjectFileB2,
   FileB2,
-  FileBuffer,
-  FileStream,
-  FilePath,
+  FileBufferParams,
+  FileStreamParams,
+  FilePathParams,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
   BackblazeAxiosResponse,
+  BackblazeBucketOptions,
 } from "./types";
 import { parseUrl, validateName } from "./util";
 
@@ -132,7 +133,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         return { value: bucket, error: null };
       }
     }
-    return { value: null, error: `could not find bucket ${name}` };
+    return { value: null, error: `Could not find bucket "${name}"` };
   }
 
   private async getFiles(bucketName: string): Promise<ResultObjectFilesB2> {
@@ -175,13 +176,18 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         return { value: file, error: null };
       }
     }
-    return { value: null, error: `could not find file ${name}` };
+    return { value: null, error: `Could not find file "${name}" in bucket "${bucketName}".` };
   }
 
-  protected async store(params: FilePath): Promise<ResultObject>;
-  protected async store(params: FileBuffer): Promise<ResultObject>;
-  protected async store(params: FileStream): Promise<ResultObject>;
-  protected async store(params: FilePath | FileBuffer | FileStream): Promise<ResultObject> {
+  /**
+   * Called by addFileFromPath, addFileFromBuffer and addFileFromReadable
+   */
+  // public async addFile(param: FilePathParams): Promise<ResultObject>;
+  // public async addFile(param: FileBufferParams): Promise<ResultObject>;
+  // public async addFile(param: FileStreamParams): Promise<ResultObject>;
+  public async addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { error, value: null };
@@ -200,12 +206,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     let fileData: string | Buffer | Readable;
-    if (typeof (params as FilePath).origPath !== "undefined") {
-      fileData = (params as FilePath).origPath;
-    } else if (typeof (params as FileBuffer).buffer !== "undefined") {
-      fileData = (params as FileBuffer).buffer;
-    } else if (typeof (params as FileStream).stream !== "undefined") {
-      fileData = (params as FileStream).stream;
+    if (typeof (params as FilePathParams).origPath !== "undefined") {
+      fileData = (params as FilePathParams).origPath;
+    } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      fileData = (params as FileBufferParams).buffer;
+    } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+      fileData = (params as FileStreamParams).stream;
     }
 
     return this.storage
@@ -216,7 +222,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         data: fileData,
       })
       .then((file: BackblazeB2File) => {
-        console.log(file);
+        // console.log(file);
         return {
           error: null,
           value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
@@ -252,9 +258,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           }),
         };
       })
-      .catch((e: BackblazeAxiosResponse) => {
+      .catch((r: BackblazeAxiosResponse) => {
         return {
-          error: e.response.data.message,
+          error: r.response.data.message,
           value: null,
         };
       });
@@ -313,20 +319,14 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (error !== null) {
       return { error, value: null };
     }
+
     const { value: files } = data;
+    const index = files.findIndex(({ name }) => name === fileName);
+    if (index === -1) {
+      return { error: `Could not find file "${fileName}"`, value: null };
+    }
+    const file = files[index];
 
-    // return this.storage
-    //   .deleteFileVersion({
-    //     fileId: "adadadad",
-    //     fileName: "adasdadad",
-    //   })
-
-    //   .then(() => {
-    //     return { error: null, value: "ok" };
-    //   })
-    //   .catch((r: BackblazeAxiosResponse) => {
-    //     return { error: r.response.data.message, value: null };
-    //   });
     return Promise.all(
       files
         .filter((f: FileB2) => f.name === fileName)
@@ -343,9 +343,24 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       .catch((r: BackblazeAxiosResponse) => {
         return { error: r.response.data.message, value: null };
       });
+
+    return this.storage
+      .deleteFileVersion({
+        fileId: file.id,
+        fileName: file.name,
+      })
+      .then(() => {
+        return { error: null, value: "ok" };
+      })
+      .catch((r: BackblazeAxiosResponse) => {
+        return { error: r.response.data.message, value: null };
+      });
   }
 
-  public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+  public async createBucket(
+    name: string,
+    options: BackblazeBucketOptions = { bucketType: "allPrivate" }
+  ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { error, value: null };
@@ -360,7 +375,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       .createBucket({
         ...options,
         bucketName: name,
-        bucketType: "allPrivate", // should be a config option!
+        bucketType: options.bucketType,
       })
       .then((response: { data: { bucketType: string } }) => {
         const {
@@ -388,7 +403,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return Promise.all(
       files.map((file: FileB2) =>
         this.storage.deleteFileVersion({
-          fileId: "file.id",
+          fileId: file.id,
           fileName: file.name,
         })
       )

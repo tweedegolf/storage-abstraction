@@ -465,24 +465,6 @@ const s = new Storage("azure://storage1:accessKey1@container1");
 
 ## <a name='api-methods'></a>API methods
 
-### <a name='init'></a>init
-
-```typescript
-init():Promise<boolean>;
-```
-
-Some cloud storage services need some initial setup that can't be handled in the constructor before they can be used, for instance an async authorization. Also if your storage is set to use a previously non-existing bucket, this bucket will be created in this method.
-
-If initial setup is required it is handled in this method, if no setup is required this method simply returns true. Note that you need to call this method even it the storage type doesn't need any setup; this is done to abstract away the differences between all types of storage.
-
-### <a name='test'></a>test
-
-```typescript
-test():Promise<void>;
-```
-
-Runs a simple test to test the storage configuration. The test is a call to `listFiles` and if it fails it throws an error.
-
 ### <a name='createbucket'></a>createBucket
 
 ```typescript
@@ -496,57 +478,45 @@ Creates a new bucket. If the bucket was created successfully it resolves to "ok"
 ### <a name='clearbucket'></a>clearBucket
 
 ```typescript
-clearBucket(name?: string): Promise<void>;
+clearBucket(name: string): Promise<ResponseObject>;
 ```
 
-Removes all files in the bucket. If you omit the `name` parameter all files in the currently selected bucket will be removed. If no bucket is selected an error will be thrown.
-
-Returns "bucket cleared".
+Removes all files in the bucket.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
 ### <a name='deletebucket'></a>deleteBucket
 
 ```typescript
-deleteBucket(name?: string): Promise<void>;
+deleteBucket(name: string): Promise<ResponseObject>;
 ```
 
-Deletes the bucket and all files in it. If you omit the `name` parameter the currently selected bucket will be deleted. If no bucket is selected an error will be thrown.
-
-Returns "bucket deleted"
+Deletes the bucket and all files in it.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
 ### <a name='listbuckets'></a>listBuckets
 
 ```typescript
-listBuckets(): Promise<string[]>
+listBuckets(): Promise<ResponseObjectBuckets>
 ```
 
-Returns a list with the names of all buckets in the storage.
+Returns an array with the names of all buckets in the storage.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
-
-### <a name='getselectedbucket'></a>getSelectedBucket
-
-```typescript
-getSelectedBucket(): string
-```
-
-Returns the name of the currently selected bucket or an empty string ("") if no bucket has been selected.
 
 ### <a name='addfilefrompath'></a>addFileFromPath
 
 ```typescript
-addFileFromPath(filePath: string, targetPath: string, options?: object): Promise<string>;
+addFileFromPath({filePath: string, targetPath: string, options?: object}: FilePathParams): Promise<ResultObject>;
 ```
 
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. Returns the public url to the file.
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. Returns the public url to the file (if the bucket is publicly accessible).
 
 ### <a name='addfilefrombuffer'></a>addFileFromBuffer
 
 ```typescript
-addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string>;
+addFileFromBuffer({buffer: Buffer, targetPath: string, options?: object}: FileBufferParams): Promise<ResultObject>;
 ```
 
 Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage). Returns the public url to the file.
@@ -554,55 +524,71 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 ### <a name='addfilefromreadable'></a>addFileFromReadable
 
 ```typescript
-addFileFromReadable(stream: Readable, targetPath: string, options?: object): Promise<string>;
+addFileFromReadable({stream: Readable, targetPath: string, options?: object}: FileStreamParams): Promise<ResultObject>;
 ```
 
 Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage. Returns the public url to the file.
 
+### <a name='addfile'></a>addFile
+
+```typescript
+addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+```
+
+Generic method for adding a file to the storage; this method is actually called if you use one of the three aforementioned methods.
+
 ### <a name='getfileasreadable'></a>getFileAsReadable
 
 ```typescript
-getFileAsReadable(name: string, options?: {start?: number, end?: number}): Promise<Readable>;
+getFileAsReadable(bucketName: string, fileName: string, options?: {start?: number, end?: number}): Promise<ResultObjectReadable>;
 ```
 
 Returns a file in the storage as a readable stream. You can specify a byte range by using the extra range argument, see these examples:
 
 ```typescript
-getFileAsReadable("image.png"); // &rarr; reads whole file
+getFileAsReadable("bucket-name", "image.png"); // &rarr; reads whole file
 
-getFileAsReadable("image.png", {}); // &rarr; reads whole file
+getFileAsReadable("bucket-name", "image.png", {}); // &rarr; reads whole file
 
-getFileAsReadable("image.png", { start: 0 }); // &rarr; reads whole file
+getFileAsReadable("bucket-name", "image.png", { start: 0 }); // &rarr; reads whole file
 
-getFileAsReadable("image.png", { start: 0, end: 1999 }); // &rarr; reads first 2000 bytes
+getFileAsReadable("bucket-name", "image.png", { start: 0, end: 1999 }); // &rarr; reads first 2000 bytes
 
-getFileAsReadable("image.png", { end: 1999 }); // &rarr; reads first 2000 bytes
+getFileAsReadable("bucket-name", "image.png", { end: 1999 }); // &rarr; reads first 2000 bytes
 
-getFileAsReadable("image.png", { start: 2000 }); // &rarr; reads file from byte 2000
+getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads file from byte 2000
 ```
 
 ### <a name='removefile'></a>removeFile
 
 ```typescript
-removeFile(name: string): Promise<string>;
+removeFile(bucketName: string, fileName: string, allVersions: boolean = false): Promise<ResultObject>;
 ```
 
 Removes a file from the bucket. Does not fail if the file doesn't exist.
 
-Returns "file removed" or "file not found".
+Returns "ok" or "file not found".
 
 ### <a name='sizeof'></a>sizeOf
 
 ```typescript
-sizeOf(name: string): number;
+sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 ```
 
-Returns the size of a file in the currently selected bucket and throws an error if no bucket has been selected.
+Returns the size of a file.
+
+### <a name='bucketexists'></a>bucketExists
+
+```typescript
+bucketExists(name: string): Promise<ResultObjectBoolean>;
+```
+
+Returns whether a bucket exists or not.
 
 ### <a name='fileexists'></a>fileExists
 
 ```typescript
-fileExists(name: string): Promise<boolean>;
+fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
 ```
 
 Returns whether a file exists or not.
@@ -610,10 +596,10 @@ Returns whether a file exists or not.
 ### <a name='listfiles'></a>listFiles
 
 ```typescript
-listFiles(): Promise<[string, number][]>;
+listFiles(bucketName: string): Promise<ResultObjectFiles>;
 ```
 
-Returns a list of all files in the currently selected bucket; for each file a tuple is returned containing the path and the size of the file. If no bucket is selected an error will be thrown.
+Returns a list of all files in the bucket; for each file a tuple is returned containing the path and the size of the file.
 
 ### <a name='gettype'></a>getType
 
@@ -627,11 +613,14 @@ Returns the type of storage, value is one of the enum `StorageType`.
 
 ```typescript
 getConfiguration(): AdapterConfig
+
+// also implemented as getter:
+
+const storage = new Storage(config);
+console.log(storage.conf)
 ```
 
 Retrieves the configuration as provided during instantiation. If you have provided the configuration in url form, the function will return it as an configuration object.
-
-Note that in this configuration object the value of the key `bucketName` will not change if you have selected a different bucket after initialization, the key `bucketName` will still hold the value of the initially set bucket. Use `getSelectedBucket()` to retrieve the actual value of `bucketName`.
 
 ### <a name='switchadapter'></a>switchAdapter
 
@@ -647,7 +636,7 @@ A `Storage` instance is actually a thin wrapper around one of the available adap
 
 ```typescript
 // member function of class Storage
-async createBucket(name?: string): Promise<string> {
+async createBucket(name: string): Promise<ResultObject> {
   return this.adapter.createBucket(name);
 };
 ```
@@ -656,7 +645,9 @@ The class `Storage` implements the interface `IStorage` and this interface decla
 
 The adapter subsequently takes care of translating the generic API to storage specific functions. Therefor, dependent on what definitions you use, this library could be seen as a wrapper or a shim.
 
-The method `switchAdapter` is not declared in `IStorage` but in the `Storage` class itself; this method parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
+The method `switchAdapter` is not declared in `IStorage` but in the `Storage` class itself; this is because the adapter have to implement `IStorage` and an adapter cannot (and should not) switch itself into another adapter
+
+`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
 
 More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
 
@@ -691,6 +682,8 @@ enum StorageType {
   GCS = "gcs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
   B2 = "b2", // BackBlaze B2
+  AZURE = "azure", // Microsoft Azure Blob
+  MINIO = 'minio",
   YOUR_TYPE = "yourtype",
 }
 // your configuration URL
@@ -707,7 +700,7 @@ You can format the configuration URL completely as you like as long as your adap
 
 ### <a name='adapter-class'></a>Adapter class
 
-You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `test` method. Also it performs some sanity checking of parameters of a few API functions; this way you don't have to implement these checks in all derived classes.
+You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it performs some sanity checking of parameters of a few API functions; this way you don't have to implement these checks in all derived classes.
 
 One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the non-API function `store`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
 

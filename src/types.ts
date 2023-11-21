@@ -69,22 +69,31 @@ export interface IStorage {
   listBuckets(): Promise<ResultObjectBuckets>;
 
   /**
-   * @paramObject data about the file to be added
+   * @paramObject {filePathParams | FileBufferParams | FileStreamParams} - params related to the file to be added
    * @returns the public url to the file
    */
-  addFileFromPath(paramObject: FilePath): Promise<ResultObject>;
+  addFile(paramObject: FilePathParams): Promise<ResultObject>;
+  addFile(paramObject: FileBufferParams): Promise<ResultObject>;
+  addFile(paramObject: FileStreamParams): Promise<ResultObject>;
+  addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
 
   /**
-   * @paramObject data about the file to be added
+   * @paramObject  params related to the file to be added
    * @returns the public url to the file
    */
-  addFileFromBuffer(paramObject: FileBuffer): Promise<ResultObject>;
+  addFileFromPath(paramObject: FilePathParams): Promise<ResultObject>;
 
   /**
-   * @paramObject data about the file to be added
+   * @paramObject  params related to the file to be added
    * @returns the public url to the file
    */
-  addFileFromReadable(paramObject: FileStream): Promise<ResultObject>;
+  addFileFromBuffer(paramObject: FileBufferParams): Promise<ResultObject>;
+
+  /**
+   * @paramObject  params related to the file to be added
+   * @returns the public url to the file
+   */
+  addFileFromReadable(paramObject: FileStreamParams): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
@@ -108,10 +117,13 @@ export interface IStorage {
   getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
 
   /**
-   * @param bucketName name of the bucket where the file is stored
-   * @param fileName name of the file to be removed
+   * @param {string} bucketName name of the bucket where the file is stored
+   * @param {string} fileName name of the file to be removed
+   * @param {boolean} [allVersions = true] in case there are more versions of this file you can choose to remove
+   * all of them in one go or delete only the latest version (only if applicable such as with Backblaze B2 and S3
+   * when you've enabled versioning)
    */
-  removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
+  removeFile(bucketName: string, fileName: string, allVersions?: boolean): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket
@@ -146,6 +158,7 @@ export enum StorageType {
   S3 = "s3", // Amazon S3
   B2 = "b2", // BackBlaze B2
   AZURE = "azure", // Azure Storage Blob
+  MINIO = "minio",
 }
 
 export type JSON = {
@@ -266,6 +279,10 @@ export type FileB2 = {
   contentLength: number;
 };
 
+export type BackblazeBucketOptions = {
+  bucketType: string;
+};
+
 export enum S3Compatible {
   Amazon,
   R2,
@@ -340,7 +357,7 @@ export type ResultObjectReadable = {
  * @param targetPath path to copy the file to, folders will be created automatically
  * @param options additional option such as access rights
  **/
-export type FilePath = {
+export type FilePathParams = {
   bucketName: string;
   origPath: string;
   targetPath: string;
@@ -353,7 +370,7 @@ export type FilePath = {
  * @param targetPath path to the file to save the buffer to, folders will be created automatically
  * @param options additional option such as access rights
  **/
-export type FileBuffer = {
+export type FileBufferParams = {
   bucketName: string;
   buffer: Buffer;
   targetPath: string;
@@ -366,7 +383,7 @@ export type FileBuffer = {
  * @param targetPath path to the file to save the stream to, folders will be created automatically
  * @param options additional option such as access rights
  **/
-export type FileStream = {
+export type FileStreamParams = {
   bucketName: string;
   stream: Readable;
   targetPath: string;

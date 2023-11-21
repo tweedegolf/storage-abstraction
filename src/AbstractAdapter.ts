@@ -1,8 +1,8 @@
 import {
   AdapterConfig,
-  FileBuffer,
-  FilePath,
-  FileStream,
+  FileBufferParams,
+  FilePathParams,
+  FileStreamParams,
   IStorage,
   ResultObject,
   ResultObjectBoolean,
@@ -29,23 +29,30 @@ export abstract class AbstractAdapter implements IStorage {
     return this.conf;
   }
 
-  async addFileFromPath(params: FilePath): Promise<ResultObject> {
-    return await this.store(params);
+  /**
+   * @param FilePath
+   * @param {string} FilePath.bucketName
+   * @param {string} FilePath.origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
+   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+   * @param {object} FilePath.options
+   */
+  async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
+    return await this.addFile(params);
   }
 
-  async addFileFromBuffer(params: FileBuffer): Promise<ResultObject> {
-    return await this.store(params);
+  async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
+    return await this.addFile(params);
   }
 
-  async addFileFromReadable(params: FileStream): Promise<ResultObject> {
-    return await this.store(params);
+  async addFileFromReadable(params: FileStreamParams): Promise<ResultObject> {
+    return await this.addFile(params);
   }
 
   // stubs
 
-  protected abstract store(param: FilePath): Promise<ResultObject>;
-  protected abstract store(param: FileBuffer): Promise<ResultObject>;
-  protected abstract store(param: FileStream): Promise<ResultObject>;
+  abstract addFile(param: FilePathParams): Promise<ResultObject>;
+  abstract addFile(param: FileBufferParams): Promise<ResultObject>;
+  abstract addFile(param: FileStreamParams): Promise<ResultObject>;
 
   abstract createBucket(name: string, options?: object): Promise<ResultObject>;
 
@@ -63,7 +70,11 @@ export abstract class AbstractAdapter implements IStorage {
 
   abstract getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
 
-  abstract removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
+  abstract removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions?: boolean
+  ): Promise<ResultObject>;
 
   abstract listFiles(bucketName: string): Promise<ResultObjectFiles>;
 

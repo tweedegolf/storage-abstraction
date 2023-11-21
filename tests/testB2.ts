@@ -1,24 +1,25 @@
 import B2 from "backblaze-b2";
 import dotenv from "dotenv";
 import { AdapterBackblazeB2 } from "../src/AdapterBackblazeB2";
-import { StorageType } from "@tweedegolf/storage-abstraction";
+import { StorageType } from "../src/types";
+import { Storage } from "../src/Storage";
 
 dotenv.config();
 
 const applicationKeyId = process.env.B2_APPLICATION_KEY_ID;
 const applicationKey = process.env.B2_APPLICATION_KEY;
 const configBackblaze = {
-  type: "null", //StorageType.B2,
+  type: StorageType.B2,
   applicationKeyId,
   applicationKey,
   bucketName: process.env.BUCKET_NAME,
 };
 
 async function testB2() {
-  const storage = new AdapterBackblazeB2(configBackblaze);
-  // const storage = new AdapterBackblazeB2("opt://configBackblaze");
+  const storage = new Storage(configBackblaze);
+  // const storage = new Storage("opt://configBackblaze");
   // const storage = new AdapterBackblazeB2(`b2://${applicationKeyId}:${applicationKey}`);
-  console.log(storage.config);
+  // console.log(storage.config);
   // console.log(storage.getConfiguration());
 
   const type = storage.getType();
@@ -33,13 +34,13 @@ async function testB2() {
   // console.log(response);
   // console.timeEnd("removeFile");
 
-  console.time("clearBucket");
-  const response = await storage.clearBucket("the-buck");
-  console.log(response);
-  console.timeEnd("clearBucket");
+  // console.time("clearBucket");
+  // const response = await storage.clearBucket("the-buck");
+  // console.log(response);
+  // console.timeEnd("clearBucket");
 
   // console.time("fileExists");
-  // response = await storage.fileExists("the-buck", "input.txt");
+  // const response = await storage.fileExists("the-buck", "input.txt");
   // console.timeEnd("fileExists");
   // console.log(response);
 
@@ -52,9 +53,9 @@ async function testB2() {
   // const data = await storage.listBuckets();
   // console.timeEnd("listBuckets");
 
-  // console.time("listFiles");
-  // const data2 = await storage.listFiles("the-buck");
-  // console.timeEnd("listFiles");
+  console.time("listFiles");
+  const data2 = await storage.listFiles("the-buck");
+  console.timeEnd("listFiles");
 
   // console.time("listFileNames");
   // const data3 = await storage.listFileNames("the-buck");
@@ -62,6 +63,14 @@ async function testB2() {
 
   // const url = await storage.getFileAsURL("the-buck", "input.txt");
   // console.log(url);
+
+  console.time("addFileFromPath");
+  const data3 = await storage.addFile({
+    bucketName: "the-buck",
+    origPath: `${process.cwd()}/tests/data/image2.jpg`,
+    targetPath: "test/image1.jpg",
+  });
+  console.timeEnd("addFileFromPath");
 }
 
 async function testB2_2() {
@@ -71,6 +80,7 @@ async function testB2_2() {
   await storage.authorize();
   console.timeEnd("authorize");
 
+  /*
   const bucketName = configBackblaze.bucketName;
   const targetPath = "input.txt";
   const s = `${storage.downloadUrl}/file/${bucketName}/${targetPath}`;
@@ -100,6 +110,7 @@ async function testB2_2() {
   const r2 = await storage.listFileNames({ bucketId: id });
   console.timeEnd("listFileNames");
   // console.log("listFileNames", r2.data.files);
+*/
 }
 
 (async function run() {
