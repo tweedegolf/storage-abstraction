@@ -71,6 +71,10 @@ async function testB2() {
     targetPath: "test/image1.jpg",
   });
   console.timeEnd("addFileFromPath");
+
+  console.time("deleteBucket");
+  const r2 = await storage.deleteBucket("the-buck");
+  console.timeEnd("deleteBucket");
 }
 
 async function testB2_2() {

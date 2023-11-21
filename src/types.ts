@@ -72,10 +72,18 @@ export interface IStorage {
    * @paramObject {filePathParams | FileBufferParams | FileStreamParams} - params related to the file to be added
    * @returns the public url to the file
    */
-  addFile(paramObject: FilePathParams): Promise<ResultObject>;
-  addFile(paramObject: FileBufferParams): Promise<ResultObject>;
-  addFile(paramObject: FileStreamParams): Promise<ResultObject>;
+  /* no need to overload method anymore */
+  // addFile(paramObject: FilePathParams): Promise<ResultObject>;
+  // addFile(paramObject: FileBufferParams): Promise<ResultObject>;
+  // addFile(paramObject: FileStreamParams): Promise<ResultObject>;
   addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+
+  /**
+   * @paramObject {filePathParams} - params related to the file to be added
+   * @returns the public url to the file
+   */
+  // no need to overload method anymore
+  addFile(paramObject: FilePathParams): Promise<ResultObject>;
 
   /**
    * @paramObject  params related to the file to be added

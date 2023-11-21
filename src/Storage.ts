@@ -84,6 +84,27 @@ export class Storage implements IStorage {
 
   // all methods below are implementing IStorage
 
+  /**
+   * @paramObject FilePath
+   * @param {string} FilePath.bucketName
+   * @param {string} FilePath.origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
+   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+   * @param {object} FilePath.options
+   *
+   * @paramObject FileBufferParams
+   * @param {string} FilePath.bucketName
+   * @param {Buffer} FilePath.buffer - buffer
+   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+   * @param {object} FilePath.options
+   *
+   * @paramObject FileStreamParams
+   * @param {string} FilePath.bucketName
+   * @param {Readable} FilePath.readable - stream
+   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+   * @param {object} FilePath.options
+   *
+   * @returns {ResultObject}
+   */
   public async addFile(
     paramObject: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {

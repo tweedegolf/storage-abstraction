@@ -182,6 +182,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   /**
    * Called by addFileFromPath, addFileFromBuffer and addFileFromReadable
    */
+  /* no need to overload method anymore */
   // public async addFile(param: FilePathParams): Promise<ResultObject>;
   // public async addFile(param: FileBufferParams): Promise<ResultObject>;
   // public async addFile(param: FileStreamParams): Promise<ResultObject>;
