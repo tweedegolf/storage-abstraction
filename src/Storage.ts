@@ -7,7 +7,7 @@ import {
   FilePathParams,
   FileStreamParams,
   ResultObjectBuckets,
-  ResultObjectReadable,
+  ResultObjectStream,
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectBoolean,
@@ -84,27 +84,6 @@ export class Storage implements IStorage {
 
   // all methods below are implementing IStorage
 
-  /**
-   * @paramObject FilePath
-   * @param {string} FilePath.bucketName
-   * @param {string} FilePath.origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
-   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
-   * @param {object} FilePath.options
-   *
-   * @paramObject FileBufferParams
-   * @param {string} FilePath.bucketName
-   * @param {Buffer} FilePath.buffer - buffer
-   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
-   * @param {object} FilePath.options
-   *
-   * @paramObject FileStreamParams
-   * @param {string} FilePath.bucketName
-   * @param {Readable} FilePath.readable - stream
-   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
-   * @param {object} FilePath.options
-   *
-   * @returns {ResultObject}
-   */
   public async addFile(
     paramObject: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -119,8 +98,8 @@ export class Storage implements IStorage {
     return this.adapter.addFileFromBuffer(params);
   }
 
-  async addFileFromReadable(params: FileStreamParams): Promise<ResultObject> {
-    return this.adapter.addFileFromReadable(params);
+  async addFileFromStream(params: FileStreamParams): Promise<ResultObject> {
+    return this.adapter.addFileFromStream(params);
   }
 
   async createBucket(name: string, options?: object): Promise<ResultObject> {
@@ -139,14 +118,14 @@ export class Storage implements IStorage {
     return this.adapter.listBuckets();
   }
 
-  async getFileAsReadable(
+  async getFileAsStream(
     bucketName: string,
     fileName: string,
     options: { start?: number; end?: number } = {}
-  ): Promise<ResultObjectReadable> {
+  ): Promise<ResultObjectStream> {
     const { start = 0, end } = options;
     // console.log(start, end, options);
-    return this.adapter.getFileAsReadable(bucketName, fileName, { start, end });
+    return this.adapter.getFileAsStream(bucketName, fileName, { start, end });
   }
 
   async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {

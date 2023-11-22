@@ -1,8 +1,12 @@
+import fs from "fs";
 import B2 from "backblaze-b2";
 import dotenv from "dotenv";
 import { AdapterBackblazeB2 } from "../src/AdapterBackblazeB2";
 import { StorageType } from "../src/types";
 import { Storage } from "../src/Storage";
+import { Readable } from "stream";
+import { copyFile } from "./util";
+import path from "path";
 
 dotenv.config();
 
@@ -14,6 +18,15 @@ const configBackblaze = {
   applicationKey,
   bucketName: process.env.BUCKET_NAME,
 };
+
+function streamToString(stream: Readable) {
+  const chunks: Array<Uint8Array> = [];
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    stream.on("error", (err) => reject(err));
+    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+  });
+}
 
 async function testB2() {
   const storage = new Storage(configBackblaze);
@@ -53,10 +66,6 @@ async function testB2() {
   // const data = await storage.listBuckets();
   // console.timeEnd("listBuckets");
 
-  console.time("listFiles");
-  const data2 = await storage.listFiles("the-buck");
-  console.timeEnd("listFiles");
-
   // console.time("listFileNames");
   // const data3 = await storage.listFileNames("the-buck");
   // console.timeEnd("listFileNames");
@@ -64,17 +73,43 @@ async function testB2() {
   // const url = await storage.getFileAsURL("the-buck", "input.txt");
   // console.log(url);
 
-  console.time("addFileFromPath");
-  const data3 = await storage.addFile({
-    bucketName: "the-buck",
-    origPath: `${process.cwd()}/tests/data/image2.jpg`,
-    targetPath: "test/image1.jpg",
-  });
-  console.timeEnd("addFileFromPath");
+  // console.time("addFileFromPath");
+  // const data3 = await storage.addFileFromPath({
+  //   bucketName: "the-buck",
+  //   origPath: `${process.cwd()}/tests/data/image2.jpg`,
+  //   targetPath: "test/image1.jpg",
+  // });
+  // console.timeEnd("addFileFromPath");
 
-  console.time("deleteBucket");
-  const r2 = await storage.deleteBucket("the-buck");
-  console.timeEnd("deleteBucket");
+  console.time("addFileFromStream");
+  const data4 = await storage.addFileFromStream({
+    bucketName: "the-buck",
+    stream: fs.createReadStream("./tests/data/image2.jpg"),
+    targetPath: "test/image2.jpg",
+  });
+  console.timeEnd("addFileFromStream");
+
+  console.time("listFiles");
+  const data2 = await storage.listFiles("the-buck");
+  console.log(data2);
+  console.timeEnd("listFiles");
+
+  console.time("getFileAsStream");
+  const data = await storage.getFileAsStream("the-buck", "test/image2.jpg");
+  const filePath = path.join(process.cwd(), "tests", `test-${storage.getType()}.jpg`);
+  const writeStream = fs.createWriteStream(filePath);
+  if (data.value !== null) {
+    const { value: readStream } = data;
+    await copyFile(readStream, writeStream);
+  }
+
+  // fs.createWriteStream(filePath);
+  // console.log(data5);
+  console.timeEnd("getFileAsStream");
+
+  // console.time("deleteBucket");
+  // const r2 = await storage.deleteBucket("the-buck");
+  // console.timeEnd("deleteBucket");
 }
 
 async function testB2_2() {

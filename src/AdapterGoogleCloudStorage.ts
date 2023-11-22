@@ -108,7 +108,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     return file;
   }
 
-  async getFileAsReadable(
+  async getFileAsStream(
     fileName: string,
     options: CreateReadStreamOptions = { start: 0 }
   ): Promise<Readable> {

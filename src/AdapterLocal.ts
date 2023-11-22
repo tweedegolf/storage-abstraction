@@ -255,7 +255,7 @@ export class AdapterLocal extends AbstractAdapter {
     return result;
   }
 
-  async getFileAsReadable(
+  async getFileAsStream(
     name: string,
     options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {

@@ -97,7 +97,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     return Promise.resolve(true);
   }
 
-  async getFileAsReadable(
+  async getFileAsStream(
     fileName: string,
     options: CreateReadStreamOptions = { start: 0 }
   ): Promise<Readable> {

@@ -59,7 +59,12 @@ export interface IStorage {
   clearBucket(name: string): Promise<ResultObject>;
 
   /**
-   * @param name: deletes the bucket with this name.
+   * deletes the bucket with the provided name
+   * @param {string} name name of the bucket
+   * @returns {Promise<ResultObject>} a promise that always resolves in a ResultObject:
+   * ```typescript
+   * { error: null | string, value: null | string }
+   * ```
    */
   deleteBucket(name: string): Promise<ResultObject>;
 
@@ -86,10 +91,24 @@ export interface IStorage {
   addFile(paramObject: FilePathParams): Promise<ResultObject>;
 
   /**
-   * @paramObject  params related to the file to be added
-   * @returns the public url to the file
+   * @param {FilePathParams} params object that has the following keys:
+   * ```typescript
+   * {
+   *  bucketName: string
+   *  origPath: string //path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
+   *  targetPath: string //path on the storage, you can add a path or only provide name of the file
+   *  options?: object
+   * }
+   * ```
+   * @returns {ResultObject} a promise that always resolves in a ResultObject:
+   * ```typescript
+   * {
+   *  value: string | null
+   *  error: string | null
+   * }
+   * ```
    */
-  addFileFromPath(paramObject: FilePathParams): Promise<ResultObject>;
+  addFileFromPath(params: FilePathParams): Promise<ResultObject>;
 
   /**
    * @paramObject  params related to the file to be added
@@ -98,10 +117,24 @@ export interface IStorage {
   addFileFromBuffer(paramObject: FileBufferParams): Promise<ResultObject>;
 
   /**
-   * @paramObject  params related to the file to be added
-   * @returns the public url to the file
+   * @param {FileStreamParams} params object that contains the following keys:
+   * ```typescript
+   * {
+   * bucketName: string
+   * readable: Readable // stream from the local file, e.g. fs.createReadStream(path)
+   * targetPath: string // path on the storage, you can add a path or only provide name of the file
+   * options?: object
+   * }
+   * ```
+   * @returns {ResultObject} a promise that always resolves in a ResultObject
+   * ```typescript
+   * {
+   *  value: string | null // if success value is the public url to the file
+   *  error: string | null // if fails error is the error message
+   * }
+   * ```
    */
-  addFileFromReadable(paramObject: FileStreamParams): Promise<ResultObject>;
+  addFileFromStream(params: FileStreamParams): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
@@ -109,14 +142,14 @@ export interface IStorage {
    * @param start? the byte of the file where the stream starts (default: 0)
    * @param end? the byte in the file where the stream ends (default: last byte of file)
    */
-  getFileAsReadable(
+  getFileAsStream(
     bucketName: string,
     fileName: string,
     options?: {
       start?: number;
       end?: number;
     }
-  ): Promise<ResultObjectReadable>;
+  ): Promise<ResultObjectStream>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
@@ -354,7 +387,7 @@ export type ResultObjectFilesB2 = {
   value: Array<FileB2> | null;
 };
 
-export type ResultObjectReadable = {
+export type ResultObjectStream = {
   error: string | null;
   value: Readable | null;
 };
@@ -397,3 +430,49 @@ export type FileStreamParams = {
   targetPath: string;
   options?: object;
 };
+
+/**
+ * @paramObject FilePath
+ * @param {string} FilePath.bucketName
+ * @param {string} FilePath.origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
+ * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+ * @param {object} FilePath.options
+ * @returns {ResultObject}
+ */
+
+/**
+ * @paramObject FileBufferParams
+ * @param {string} FilePath.bucketName
+ * @param {Buffer} FilePath.buffer - buffer
+ * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+ * @param {object} FilePath.options
+ * @returns {ResultObject}
+ */
+
+/**
+ * @typedef {Object} FilePathParams
+ * @property {string} bucketName
+ * @property {string} origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
+ * @property {string} argetPath - path on the storage, you can add a path or only provide name of the file
+ * @property {Object} options
+ */
+
+/**
+ * @typedef {Object} ResultObject
+ * @property {string | null} value
+ * @property {string | null} error
+ */
+
+/**
+ * @param {FilePathParams} params
+ * @returns {ResultObject} result f
+ */
+
+/**
+ * Params for adding a file to the storage
+ * @typedef {Object} FilePathParams
+ * @property {string} bucketName
+ * @property {string} origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
+ * @property {string} argetPath - path on the storage, you can add a path or only provide name of the file
+ * @property {Object} options
+ */

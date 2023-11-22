@@ -7,7 +7,7 @@ import {
   BackblazeB2File,
   ResultObjectBoolean,
   ResultObject,
-  ResultObjectReadable,
+  ResultObjectStream,
   ResultObjectBucketsB2,
   ResultObjectFilesB2,
   ResultObjectBucketB2,
@@ -182,10 +182,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   /**
    * Called by addFileFromPath, addFileFromBuffer and addFileFromReadable
    */
-  /* no need to overload method anymore */
-  // public async addFile(param: FilePathParams): Promise<ResultObject>;
-  // public async addFile(param: FileBufferParams): Promise<ResultObject>;
-  // public async addFile(param: FileStreamParams): Promise<ResultObject>;
   public async addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -269,11 +265,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // public API
 
-  public async getFileAsReadable(
+  public async getFileAsStream(
     bucketName: string,
     fileName: string,
     options: { start?: number; end?: number } = { start: 0 }
-  ): Promise<ResultObjectReadable> {
+  ): Promise<ResultObjectStream> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { error, value: null };
@@ -295,8 +291,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           },
         },
       })
-      .then((r: BackblazeAxiosResponse) => {
-        return { error: null, value: r.response.data };
+      .then((r) => {
+        return { error: null, value: r.data };
       });
   }
 

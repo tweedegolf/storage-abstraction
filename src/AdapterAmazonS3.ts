@@ -134,7 +134,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return cfg;
   }
 
-  async getFileAsReadable(
+  async getFileAsStream(
     fileName: string,
     options: { start?: number; end?: number } = { start: 0 }
   ): Promise<Readable> {
