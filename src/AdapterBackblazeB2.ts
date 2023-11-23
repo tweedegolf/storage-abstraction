@@ -27,7 +27,7 @@ import { parseUrl, validateName } from "./util";
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
-  protected type = StorageType.B2;
+  protected _type = StorageType.B2;
   private storage: B2;
   private authorized: boolean = false;
   private configError: string | null = null;
@@ -179,9 +179,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return { value: null, error: `Could not find file "${name}" in bucket "${bucketName}".` };
   }
 
-  /**
-   * Called by addFileFromPath, addFileFromBuffer and addFileFromReadable
-   */
+  // public API
+
   public async addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -230,41 +229,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
   }
 
-  // probably not necessary; may be a little bit more lightweight compared to listFileVersions
-  // if you don't have file versions
-  public async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { error, value: null };
-    }
-
-    const data = await this.getBucket(bucketName);
-    if (data.error !== null) {
-      return { error: data.error, value: null };
-    }
-
-    const { value: bucket } = data;
-    return this.storage
-      .listFileNames({ bucketId: bucket.id })
-      .then(({ data: { files } }) => {
-        // console.log(files);
-        return {
-          error: null,
-          value: files.map(({ fileName }) => {
-            return fileName;
-          }),
-        };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return {
-          error: r.response.data.message,
-          value: null,
-        };
-      });
-  }
-
-  // public API
-
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
@@ -291,7 +255,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           },
         },
       })
-      .then((r) => {
+      .then((r: { data: Readable }) => {
         return { error: null, value: r.data };
       });
   }
@@ -511,5 +475,38 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } else {
       return { error: null, value: false };
     }
+  }
+
+  // probably not necessary; may be a little bit more lightweight compared to listFileVersions
+  // if you don't have file versions
+  public async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { error, value: null };
+    }
+
+    const data = await this.getBucket(bucketName);
+    if (data.error !== null) {
+      return { error: data.error, value: null };
+    }
+
+    const { value: bucket } = data;
+    return this.storage
+      .listFileNames({ bucketId: bucket.id })
+      .then(({ data: { files } }) => {
+        // console.log(files);
+        return {
+          error: null,
+          value: files.map(({ fileName }) => {
+            return fileName;
+          }),
+        };
+      })
+      .catch((r: BackblazeAxiosResponse) => {
+        return {
+          error: r.response.data.message,
+          value: null,
+        };
+      });
   }
 }

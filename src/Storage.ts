@@ -12,6 +12,8 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
 } from "./types";
+import { AdapterGoogleCloudStorage } from "./AdapterGoogleCloudStorage";
+import { AdapterLocal } from "./AdapterLocal";
 
 //  add new storage adapters here
 const adapterClasses = {
@@ -44,6 +46,10 @@ export class Storage implements IStorage {
 
   constructor(config: string | AdapterConfig) {
     this.switchAdapter(config);
+  }
+
+  get type(): string {
+    return this.adapter.getType();
   }
 
   public getType(): string {

@@ -19,6 +19,12 @@ export interface IStorage {
   getType(): string;
 
   /**
+   * Same as `getType` but implemented as getter
+   * @returns adapter tyoe
+   */
+  type: string;
+
+  /**
    * Returns configuration settings that you've provided when instantiating as an object.
    * Use this only for debugging and with great care as it may expose sensitive information.
    *
@@ -74,21 +80,11 @@ export interface IStorage {
   listBuckets(): Promise<ResultObjectBuckets>;
 
   /**
-   * @paramObject {filePathParams | FileBufferParams | FileStreamParams} - params related to the file to be added
+   * @param {filePathParams | FileBufferParams | FileStreamParams} params related to the file to be added
    * @returns the public url to the file
+   * Called internally by addFileFromPath, addFileFromBuffer and addFileFromReadable
    */
-  /* no need to overload method anymore */
-  // addFile(paramObject: FilePathParams): Promise<ResultObject>;
-  // addFile(paramObject: FileBufferParams): Promise<ResultObject>;
-  // addFile(paramObject: FileStreamParams): Promise<ResultObject>;
-  addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
-
-  /**
-   * @paramObject {filePathParams} - params related to the file to be added
-   * @returns the public url to the file
-   */
-  // no need to overload method anymore
-  addFile(paramObject: FilePathParams): Promise<ResultObject>;
+  addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
 
   /**
    * @param {FilePathParams} params object that has the following keys:
@@ -111,10 +107,13 @@ export interface IStorage {
   addFileFromPath(params: FilePathParams): Promise<ResultObject>;
 
   /**
-   * @paramObject  params related to the file to be added
-   * @returns the public url to the file
+   * @param {FileBufferParams} params
+   * @property {string} FilePath.bucketName
+   * @property {Buffer} FilePath.buffer - buffer
+   * @property {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
+   * @property {object} FilePath.options
    */
-  addFileFromBuffer(paramObject: FileBufferParams): Promise<ResultObject>;
+  addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;
 
   /**
    * @param {FileStreamParams} params object that contains the following keys:
@@ -212,25 +211,26 @@ export type JSON = {
     | boolean[]
     | { [id: string]: JSON };
 };
+
+// export interface Options {
+//   [key: string]: string | number | boolean;
+// }
+
+export type GenericKey = undefined | number | string | boolean | number[] | string[] | boolean[];
+
 export interface IAdapterConfig {
   // type: StorageType;
   type: string;
   skipCheck?: boolean;
   bucketName?: string;
+  // [id: string]: GenericKey;
 }
-
-export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
 
 export interface ConfigAmazonS3 extends IAdapterConfig {
   accessKeyId?: string;
   secretAccessKey?: string;
   region?: string;
   endpoint?: string;
-  useDualstack?: boolean;
-  maxRetries?: number;
-  maxRedirects?: number;
-  sslEnabled?: boolean;
-  [id: string]: GenericKey;
 }
 
 export interface ConfigAzureStorageBlob extends IAdapterConfig {
@@ -241,7 +241,6 @@ export interface ConfigAzureStorageBlob extends IAdapterConfig {
 export interface ConfigBackblazeB2 extends IAdapterConfig {
   applicationKeyId?: string;
   applicationKey?: string;
-  // [id: string]: GenericKey;
 }
 
 export interface ConfigGoogleCloud extends IAdapterConfig {
@@ -461,11 +460,6 @@ export type FileStreamParams = {
  * @typedef {Object} ResultObject
  * @property {string | null} value
  * @property {string | null} error
- */
-
-/**
- * @param {FilePathParams} params
- * @returns {ResultObject} result f
  */
 
 /**

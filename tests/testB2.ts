@@ -7,16 +7,18 @@ import { Storage } from "../src/Storage";
 import { Readable } from "stream";
 import { copyFile } from "./util";
 import path from "path";
+import { ConfigBackblazeB2 } from "@tweedegolf/storage-abstraction";
 
 dotenv.config();
 
 const applicationKeyId = process.env.B2_APPLICATION_KEY_ID;
 const applicationKey = process.env.B2_APPLICATION_KEY;
-const configBackblaze = {
+const configBackblaze: ConfigBackblazeB2 = {
   type: StorageType.B2,
   applicationKeyId,
   applicationKey,
   bucketName: process.env.BUCKET_NAME,
+  versioning: true,
 };
 
 function streamToString(stream: Readable) {
@@ -46,11 +48,6 @@ async function testB2() {
   // const response = await storage.removeFile("the-buck", "-2023/:{{{");
   // console.log(response);
   // console.timeEnd("removeFile");
-
-  // console.time("clearBucket");
-  // const response = await storage.clearBucket("the-buck");
-  // console.log(response);
-  // console.timeEnd("clearBucket");
 
   // console.time("fileExists");
   // const response = await storage.fileExists("the-buck", "input.txt");
@@ -89,23 +86,28 @@ async function testB2() {
   });
   console.timeEnd("addFileFromStream");
 
-  console.time("listFiles");
-  const data2 = await storage.listFiles("the-buck");
-  console.log(data2);
-  console.timeEnd("listFiles");
+  console.time("clearBucket");
+  const response = await storage.clearBucket("the-buck");
+  console.log(response);
+  console.timeEnd("clearBucket");
 
-  console.time("getFileAsStream");
-  const data = await storage.getFileAsStream("the-buck", "test/image2.jpg");
-  const filePath = path.join(process.cwd(), "tests", `test-${storage.getType()}.jpg`);
-  const writeStream = fs.createWriteStream(filePath);
-  if (data.value !== null) {
-    const { value: readStream } = data;
-    await copyFile(readStream, writeStream);
-  }
+  // console.time("listFiles");
+  // const data2 = await storage.listFiles("the-buck");
+  // console.log(data2);
+  // console.timeEnd("listFiles");
+
+  // console.time("getFileAsStream");
+  // const data = await storage.getFileAsStream("the-buck", "test/image2.jpg");
+  // const filePath = path.join(process.cwd(), "tests", `test-${storage.getType()}.jpg`);
+  // const writeStream = fs.createWriteStream(filePath);
+  // if (data.value !== null) {
+  //   const { value: readStream } = data;
+  //   await copyFile(readStream, writeStream);
+  // }
 
   // fs.createWriteStream(filePath);
   // console.log(data5);
-  console.timeEnd("getFileAsStream");
+  // console.timeEnd("getFileAsStream");
 
   // console.time("deleteBucket");
   // const r2 = await storage.deleteBucket("the-buck");

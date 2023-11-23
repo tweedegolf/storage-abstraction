@@ -44,8 +44,10 @@
 - The storage instance will also no longer hold a reference to all available buckets; a call to `listBuckets` will access the cloud storage service every time it is called; this is handy in case another process or user has created a new bucket.
 - `validateName` will not only perform a local check, it will also check if the name is valid and/or not taken at the cloud storage service.
 - `createBucket` resolves with an error when that bucket already exists
+- ~~`deleteBucket` has been renamed to `removeBucket` (analogue to `removeFile`)~~
 - `removeFile` has an additional optional boolean argument `allVersions`; if set to true all version of the specified file will be removed. Default: false
 - `addFile` is added; you can use this method whenever you use `addFileFromPath`, `addFileFromBuffer` or `addFileFromReadable`
+- `getConfig()` and `getType()` are implemented as getter as well, resp.: `storage.config` and `storage.type`
 
 ### Old API (1.5.x) compared to new API (2.x)
 

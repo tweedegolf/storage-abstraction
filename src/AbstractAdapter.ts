@@ -13,41 +13,29 @@ import {
 } from "./types";
 
 export abstract class AbstractAdapter implements IStorage {
-  // protected type: StorageType;
-  protected type: string;
+  protected _type = "abstract-adapter";
   protected conf: AdapterConfig;
 
+  get type(): string {
+    return this._type;
+  }
+
+  get config(): AdapterConfig {
+    return this.conf;
+  }
+
   getType(): string {
-    return this.type;
+    return this._type;
   }
 
-  public get config(): AdapterConfig {
+  getConfiguration(): AdapterConfig {
     return this.conf;
   }
-
-  public getConfiguration(): AdapterConfig {
-    return this.conf;
-  }
-
-  /**
-   * @paramObject FilePath
-   * @param {string} FilePath.bucketName
-   * @param {string} FilePath.origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
-   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
-   * @param {object} FilePath.options
-   */
 
   async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
     return await this.addFile(params);
   }
 
-  /**
-   * @paramObject FileBufferParams
-   * @param {string} FilePath.bucketName
-   * @param {Buffer} FilePath.buffer - buffer
-   * @param {string} FilePath.targetPath - path on the storage, you can add a path or only provide name of the file
-   * @param {object} FilePath.options
-   */
   async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
     return await this.addFile(params);
   }
