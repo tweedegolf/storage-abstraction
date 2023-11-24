@@ -14,22 +14,22 @@ import {
 
 export abstract class AbstractAdapter implements IStorage {
   protected _type = "abstract-adapter";
-  protected conf: AdapterConfig;
+  protected _config: AdapterConfig;
 
   get type(): string {
     return this._type;
   }
 
   get config(): AdapterConfig {
-    return this.conf;
+    return this._config;
   }
 
   getType(): string {
-    return this._type;
+    return this.type;
   }
 
   getConfiguration(): AdapterConfig {
-    return this.conf;
+    return this.config;
   }
 
   async addFileFromPath(params: FilePathParams): Promise<ResultObject> {

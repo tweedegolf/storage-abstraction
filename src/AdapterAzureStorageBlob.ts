@@ -5,37 +5,40 @@ import {
   BlobGenerateSasUrlOptions,
   BlobSASPermissions,
   BlobServiceClient,
-  ContainerCreateOptions,
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
-import { ConfigAzureStorageBlob, AdapterConfig, StorageType } from "./types";
+import {
+  ConfigAzureStorageBlob,
+  StorageType,
+  ResultObjectStream,
+  ResultObject,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectBoolean,
+  FileBufferParams,
+  FilePathParams,
+  FileStreamParams,
+} from "./types";
 import { parseUrl } from "./util";
 import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
-  protected type = StorageType.AZURE;
-  private storage: BlobServiceClient;
-  private bucketNames: string[] = [];
+  protected _type = StorageType.AZURE;
   private sharedKeyCredential: StorageSharedKeyCredential;
+  private configError: string | null = null;
+  private storage: BlobServiceClient;
 
   constructor(config: string | ConfigAzureStorageBlob) {
     super();
-    this.conf = this.parseConfig(config as ConfigAzureStorageBlob);
-    // console.log(this.config);
+    this._config = this.parseConfig(config as ConfigAzureStorageBlob);
 
-    if (typeof this.conf.bucketName !== "undefined" && this.conf.bucketName !== "") {
-      const msg = this.validateName(this.conf.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this.conf.bucketName;
-    }
     this.sharedKeyCredential = new StorageSharedKeyCredential(
-      (this.conf as ConfigAzureStorageBlob).storageAccount,
-      (this.conf as ConfigAzureStorageBlob).accessKey
+      (this._config as ConfigAzureStorageBlob).storageAccount,
+      (this._config as ConfigAzureStorageBlob).accessKey
     );
     this.storage = new BlobServiceClient(
-      `https://${(this.conf as ConfigAzureStorageBlob).storageAccount}.blob.core.windows.net`,
+      `https://${(this._config as ConfigAzureStorageBlob).storageAccount}.blob.core.windows.net`,
       this.sharedKeyCredential
     );
   }
@@ -43,13 +46,13 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   private parseConfig(config: string | ConfigAzureStorageBlob): ConfigAzureStorageBlob {
     let cfg: ConfigAzureStorageBlob;
     if (typeof config === "string") {
-      const {
-        type,
-        part1: storageAccount,
-        part2: accessKey,
-        bucketName,
-        queryString,
-      } = parseUrl(config);
+      const { value, error } = parseUrl(config);
+      if (error) {
+        this.configError = error;
+        return null;
+      }
+
+      const { type, part1: storageAccount, part2: accessKey, bucketName, queryString } = value;
       cfg = {
         type,
         storageAccount,
@@ -66,127 +69,108 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     if (!cfg.storageAccount) {
-      throw new Error(
-        "You must specify a value for 'storageAccount' for storage type 'azurestorageblob'"
-      );
+      this.configError =
+        "You must specify a value for 'storageAccount' for storage type 'azurestorageblob'";
+      return null;
     }
     if (!cfg.accessKey) {
-      throw new Error(
-        "You must specify a value for 'accessKey' for storage type 'azurestorageblob'"
-      );
+      this.configError =
+        "You must specify a value for 'accessKey' for storage type 'azurestorageblob'";
+      return null;
     }
     return cfg;
   }
 
-  async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
-    }
-    if (typeof this.conf.bucketName !== "undefined" && this.conf.bucketName !== "") {
-      const msg = this.validateName(this.conf.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      await this.createBucket(this.conf.bucketName).then(() => {
-        this.bucketName = this.conf.bucketName;
-        this.bucketNames.push(this.bucketName);
-      });
-    }
-    // no further initialization required
-    this.initialized = true;
-    return Promise.resolve(true);
-  }
-
   async getFileAsStream(
+    bucketName: string,
     fileName: string,
     options: CreateReadStreamOptions = { start: 0 }
-  ): Promise<Readable> {
-    const file = this.storage.getContainerClient(this.bucketName).getBlobClient(fileName);
-    const exists = await file.exists();
-    if (!exists) {
-      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
-    }
-    if (options.end !== undefined) {
-      options.end = options.end + 1;
-    }
-    return (await file.download(options.start, options.end)).readableStreamBody as Readable;
-  }
-
-  async getFileAsURL(fileName: string): Promise<string> {
-    const file = this.storage.getContainerClient(this.bucketName).getBlobClient(fileName);
-
-    const exists = await file.exists();
-
-    if (!exists) {
-      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
+  ): Promise<ResultObjectStream> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
-    const options: BlobGenerateSasUrlOptions = {
-      permissions: BlobSASPermissions.parse("r"),
-      expiresOn: new Date(new Date().valueOf() + 86400),
-    };
-
-    return file.generateSasUrl(options);
-  }
-
-  async selectBucket(name: string | null): Promise<string> {
-    if (name === null) {
-      this.bucketName = "";
-      return `bucket '${name}' deselected`;
-    }
-
-    return await this.createBucket(name)
-      .then(() => {
-        this.bucketName = name;
-        return `bucket '${name}' selected`;
-      })
-      .catch((e) => {
-        throw e;
-      });
-  }
-
-  async createBucket(name: string, options?: object): Promise<string> {
-    const msg = this.validateName(name);
-    if (msg !== null) {
-      return Promise.reject(msg);
-    }
-    if (this.bucketNames.findIndex((b) => b === name) !== -1) {
-      return "bucket already exists";
-    }
     try {
-      const cont = this.storage.getContainerClient(name);
-      const exists = await cont.exists();
-      if (exists) {
-        return "container already exists";
+      const file = this.storage.getContainerClient(bucketName).getBlobClient(fileName);
+      const exists = await file.exists();
+      if (!exists) {
+        return {
+          value: null,
+          error: `File ${fileName} could not be retrieved from bucket ${bucketName}`,
+        };
+      }
+      if (options.end !== undefined) {
+        options.end = options.end + 1;
+      }
+
+      try {
+        const stream = await file.download(options.start, options.end);
+        return { value: stream.readableStreamBody as Readable, error: null };
+      } catch (e) {
+        return { value: null, error: JSON.stringify(e) };
       }
     } catch (e) {
-      // console.log(e);
-      return `error creating container ${e.message}`;
-    }
-    try {
-      const res = await this.storage.createContainer(name);
-      this.bucketNames.push(res.containerClient.containerName);
-      return "container created";
-    } catch (e) {
-      // console.log("error creating container: ", e);
-      return `error creating container ${e.message}`;
+      return { value: null, error: JSON.stringify(e) };
     }
   }
 
-  async clearBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-    if (!n) {
-      return Promise.reject("no bucket selected");
+  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
     try {
-      // const containerClient = this.storage.getContainerClient(n);
+      const file = this.storage.getContainerClient(bucketName).getBlobClient(fileName);
+      const exists = await file.exists();
+
+      if (!exists) {
+        return {
+          value: null,
+          error: `File ${fileName} could not be retrieved from bucket ${bucketName}`,
+        };
+      }
+
+      try {
+        const options: BlobGenerateSasUrlOptions = {
+          permissions: BlobSASPermissions.parse("r"),
+          expiresOn: new Date(new Date().valueOf() + 86400),
+        };
+        const url = await file.generateSasUrl(options);
+        return { value: url, error: null };
+      } catch (e) {
+        return { value: null, error: JSON.stringify(e) };
+      }
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
+    }
+  }
+
+  async createBucket(name: string, options?: object): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const res = await this.storage.createContainer(name, options);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
+    }
+  }
+
+  async clearBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      // const containerClient = this.storage.getContainerClient(name);
       // const blobs = containerClient.listBlobsFlat();
       // for await (const blob of blobs) {
       //   console.log(blob.name);
       //   await containerClient.deleteBlob(blob.name);
       // }
-      const containerClient = this.storage.getContainerClient(n);
+      const containerClient = this.storage.getContainerClient(name);
       const blobs = containerClient.listBlobsByHierarchy("/");
       for await (const blob of blobs) {
         if (blob.kind === "prefix") {
@@ -195,138 +179,156 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
           await containerClient.deleteBlob(blob.name);
         }
       }
-      return "bucket cleared";
+      return { value: "ok", error: null };
     } catch (e) {
-      return Promise.reject(e);
+      return { value: null, error: JSON.stringify(e) };
     }
   }
 
-  async deleteBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-    if (!n) {
-      return Promise.reject("no bucket selected");
-    }
-
+  async deleteBucket(name: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(n);
-      const del = await this.storage.deleteContainer(n);
+      await this.clearBucket(name);
+      const del = await this.storage.deleteContainer(name);
       //console.log('deleting container: ', del);
-      if (n === this.bucketName) {
-        this.bucketName = "";
-      }
-      this.bucketNames = this.bucketNames.filter((b) => b !== n);
-      return "bucket deleted";
+      return { value: "ok", error: null };
     } catch (e) {
-      return Promise.reject(e);
+      return { value: null, error: JSON.stringify(e) };
     }
   }
 
-  async listBuckets(): Promise<string[]> {
-    this.bucketNames = [];
+  async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
     // let i = 0;
-    for await (const container of this.storage.listContainers()) {
-      // console.log(`${i++} ${container.name}`);
-      this.bucketNames.push(container.name);
-    }
-    return this.bucketNames;
-  }
-
-  async listFiles(): Promise<[string, number][]> {
-    if (!this.bucketName) {
-      return Promise.reject("no bucket selected");
-    }
-    const files: [string, number][] = [];
-    const data = this.storage.getContainerClient(this.bucketName).listBlobsFlat();
-    for await (const blob of data) {
-      if (blob.properties["ResourceType"] !== "directory") {
-        files.push([blob.name, blob.properties.contentLength]);
+    try {
+      const bucketNames = [];
+      for await (const container of this.storage.listContainers()) {
+        // console.log(`${i++} ${container.name}`);
+        bucketNames.push(container.name);
       }
-    }
-
-    return files;
-  }
-
-  removeFile(fileName: string): Promise<string> {
-    try {
-      const container = this.storage.getContainerClient(this.bucketName);
-      const file = container.getBlobClient(fileName).deleteIfExists();
-      /*if(file.()) {
-                file.delete();
-                return Promise.resolve("file deleted");  
-            } else {
-                return Promise.resolve("file does not exist");
-            }*/
-      return Promise.resolve("file deleted");
+      return { value: bucketNames, error: null };
     } catch (e) {
-      console.log("error deleting file: ", e);
-
-      return Promise.resolve(e);
+      return { value: null, error: JSON.stringify(e) };
     }
   }
 
-  async sizeOf(name: string): Promise<number> {
-    if (!this.bucketName) {
-      return Promise.reject("no bucket selected");
+  async listFiles(bucketName: string): Promise<ResultObjectFiles> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
     try {
-      const blob = this.storage.getContainerClient(this.bucketName).getBlobClient(name);
-      return Promise.resolve((await blob.getProperties()).contentLength);
+      const files: [string, number][] = [];
+      const data = this.storage.getContainerClient(bucketName).listBlobsFlat();
+      for await (const blob of data) {
+        if (blob.properties["ResourceType"] !== "directory") {
+          files.push([blob.name, blob.properties.contentLength]);
+        }
+      }
+      return { value: files, error: null };
     } catch (e) {
-      return Promise.reject(e);
+      return { value: null, error: JSON.stringify(e) };
     }
   }
 
-  async fileExists(name: string): Promise<boolean> {
-    if (!this.bucketName) {
-      return Promise.reject("no bucket selected");
+  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    const data = await this.storage
-      .getContainerClient(this.bucketName)
-      .getBlobClient(name)
-      .exists();
-    return data;
+
+    try {
+      const container = this.storage.getContainerClient(bucketName);
+      const file = await container.getBlobClient(fileName).deleteIfExists();
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
+    }
   }
 
-  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
-  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
-  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
-  protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string,
-    options: object
-  ): Promise<string> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    await this.createBucket(this.bucketName);
 
-    let readStream: Readable;
-    if (typeof arg === "string") {
-      await fs.promises.stat(arg); // throws error if path doesn't exist
-      readStream = fs.createReadStream(arg);
-    } else if (arg instanceof Buffer) {
-      readStream = new Readable();
-      readStream._read = (): void => {}; // _read is required but you can noop it
-      readStream.push(arg);
-      readStream.push(null);
-    } else if (arg instanceof Readable) {
-      readStream = arg;
+    try {
+      const blob = this.storage.getContainerClient(bucketName).getBlobClient(fileName);
+      const length = (await blob.getProperties()).contentLength;
+      return { value: length, error: null };
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
     }
-    const file = this.storage
-      .getContainerClient(this.bucketName)
-      .getBlobClient(targetPath)
-      .getBlockBlobClient();
-    const writeStream = await file.uploadStream(readStream, 64000, 20, {
-      onProgress: (ev) => null,
-    });
+  }
 
-    return new Promise((resolve, reject) => {
+  async bucketExists(name: string): Promise<ResultObjectBoolean> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const cont = this.storage.getContainerClient(name);
+      const exists = await cont.exists();
+      if (exists) {
+        return { value: null, error: "container already exists" };
+      }
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
+    }
+  }
+
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const data = await this.storage
+        .getContainerClient(bucketName)
+        .getBlobClient(fileName)
+        .exists();
+      return { value: data, error: null };
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
+    }
+  }
+
+  public async addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      let readStream: Readable;
+      if (typeof (params as FilePathParams).origPath === "string") {
+        const f = (params as FilePathParams).origPath;
+        if (!fs.existsSync(f)) {
+          return { value: null, error: `File with given path: ${f}, was not found` };
+        }
+        readStream = fs.createReadStream(f);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        readStream = new Readable();
+        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream.push((params as FileBufferParams).buffer);
+        readStream.push(null);
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        readStream = (params as FileStreamParams).stream;
+      }
+      const file = this.storage
+        .getContainerClient(params.bucketName)
+        .getBlobClient(params.targetPath)
+        .getBlockBlobClient();
+      const writeStream = await file.uploadStream(readStream, 64000, 20, {
+        onProgress: (ev) => null,
+      });
       if (writeStream.errorCode) {
-        reject(writeStream.errorCode);
+        return { value: null, error: writeStream.errorCode };
       } else {
-        resolve("file stored");
+        return this.getFileAsURL(params.bucketName, params.targetPath);
       }
-    });
+    } catch (e) {
+      return { value: null, error: JSON.stringify(e) };
+    }
   }
 }

@@ -34,10 +34,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   constructor(config: string | ConfigBackblazeB2) {
     super();
-    this.conf = this.parseConfig(config);
-    if (this.conf !== null) {
+    this._config = this.parseConfig(config);
+    if (this._config !== null) {
       try {
-        this.storage = new B2(this.conf);
+        this.storage = new B2(this._config);
       } catch (e) {
         this.configError = e.message;
       }

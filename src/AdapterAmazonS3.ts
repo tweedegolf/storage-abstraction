@@ -8,13 +8,11 @@ import {
   DeleteBucketCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
-  GetBucketLocationCommand,
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
   ListBucketsCommand,
   ListObjectVersionsCommand,
-  // ListObjectVersionsCommand,
   ListObjectsCommand,
   PutObjectCommand,
   S3Client,
@@ -39,34 +37,34 @@ import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
-  protected conf: ConfigAmazonS3;
+  protected _config: ConfigAmazonS3;
   private configError: string | null = null;
   private storage: S3Client;
   private s3Compatible: S3Compatible = S3Compatible.Amazon;
 
   constructor(config: string | AdapterConfig) {
     super();
-    this.conf = this.parseConfig(config as ConfigAmazonS3);
+    this._config = this.parseConfig(config as ConfigAmazonS3);
 
     // handle small differences in supported S3 compatible storages
-    if (typeof (this.conf as ConfigAmazonS3).region === "undefined") {
+    if (typeof (this._config as ConfigAmazonS3).region === "undefined") {
       if (this.s3Compatible === S3Compatible.R2) {
-        this.conf.region = "auto";
+        this._config.region = "auto";
       } else if (this.s3Compatible === S3Compatible.Backblaze) {
-        let ep = this.conf.endpoint;
+        let ep = this._config.endpoint;
         ep = ep.substring(ep.indexOf("s3.") + 3);
-        this.conf.region = ep.substring(0, ep.indexOf("."));
+        this._config.region = ep.substring(0, ep.indexOf("."));
       }
     }
-    if (typeof this.conf.endpoint === "undefined") {
-      this.storage = new S3Client({ region: this.conf.region });
+    if (typeof this._config.endpoint === "undefined") {
+      this.storage = new S3Client({ region: this._config.region });
     } else {
       this.storage = new S3Client({
-        region: this.conf.region,
-        endpoint: this.conf.endpoint,
+        region: this._config.region,
+        endpoint: this._config.endpoint,
         credentials: {
-          accessKeyId: this.conf.accessKeyId,
-          secretAccessKey: this.conf.secretAccessKey,
+          accessKeyId: this._config.accessKeyId,
+          secretAccessKey: this._config.secretAccessKey,
         },
       });
     }
@@ -192,9 +190,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      if (typeof this.conf.region !== "undefined" && this.conf.region !== "us-east-1") {
+      if (typeof this._config.region !== "undefined" && this._config.region !== "us-east-1") {
         input.CreateBucketConfiguration = {
-          LocationConstraint: BucketLocationConstraint[this.conf.region.replace("-", "_")],
+          LocationConstraint: BucketLocationConstraint[this._config.region.replace("-", "_")],
         };
       }
 
