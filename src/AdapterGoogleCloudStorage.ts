@@ -1,6 +1,4 @@
 import fs from "fs";
-import path from "path";
-import zip from "@ramda/zip";
 import { Readable } from "stream";
 import {
   Storage as GoogleCloudStorage,
@@ -8,24 +6,29 @@ import {
   CreateReadStreamOptions,
 } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, ConfigGoogleCloud } from "./types";
+import {
+  StorageType,
+  ConfigGoogleCloud,
+  ResultObject,
+  ResultObjectStream,
+  FileBufferParams,
+  FilePathParams,
+  FileStreamParams,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectBoolean,
+} from "./types";
 import { parseUrl } from "./util";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
-  protected type = StorageType.GCS;
-  private bucketNames: string[] = [];
+  protected _type = StorageType.GCS;
+  private configError: string | null = null;
   private storage: GoogleCloudStorage;
 
   constructor(config: string | ConfigGoogleCloud) {
     super();
     this._config = this.parseConfig(config);
-    if (typeof this._config.bucketName !== "undefined" && this._config.bucketName !== "") {
-      const msg = this.validateName(this._config.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this._config.bucketName;
-    }
     this.storage = new GoogleCloudStorage(this._config as ConfigGoogleCloud);
   }
 
@@ -44,13 +47,13 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
     let cfg: ConfigGoogleCloud;
     if (typeof config === "string") {
-      const {
-        type,
-        part1: keyFilename,
-        part2: projectId,
-        bucketName,
-        queryString,
-      } = parseUrl(config);
+      const { value, error } = parseUrl(config);
+      if (error) {
+        this.configError = error;
+        return null;
+      }
+
+      const { type, part1: keyFilename, part2: projectId, bucketName, queryString } = value;
       cfg = {
         type,
         keyFilename,
@@ -66,9 +69,6 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       return cfg;
     }
 
-    // if (!cfg.keyFilename) {
-    //   throw new Error("You must specify a value for 'keyFilename' for storage type 'gcs'");
-    // }
     if (cfg.projectId === "" && cfg.keyFilename !== "") {
       cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
     }
@@ -76,125 +76,112 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     return cfg;
   }
 
-  async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
+  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    if (this.bucketName) {
-      await this.createBucket(this.bucketName);
-      this.bucketNames.push(this.bucketName);
-    }
-    // no further initialization required
-    this.initialized = true;
-    return Promise.resolve(true);
-  }
 
-  // After uploading a file to Google Storage it may take a while before the file
-  // can be discovered and downloaded; this function adds a little delay
-  async getFile(fileName: string, retries: number = 5): Promise<File> {
-    const file = this.storage.bucket(this.bucketName).file(fileName);
-    const [exists] = await file.exists();
-    if (!exists && retries !== 0) {
-      const r = retries - 1;
-      await new Promise((res) => {
-        setTimeout(res, 250);
-      });
-      // console.log('RETRY', r, fileName);
-      return this.getFile(fileName, r);
+    try {
+      const file = this.storage.bucket(bucketName).file(fileName);
+      return { value: file.publicUrl(), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    if (!exists) {
-      throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
-    }
-    return file;
   }
 
   async getFileAsStream(
+    bucketName: string,
     fileName: string,
     options: CreateReadStreamOptions = { start: 0 }
-  ): Promise<Readable> {
-    const file = this.storage.bucket(this.bucketName).file(fileName);
-    const [exists] = await file.exists();
-    if (exists) {
-      return file.createReadStream(options);
+  ): Promise<ResultObjectStream> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    throw new Error(`File ${fileName} could not be retrieved from bucket ${this.bucketName}`);
-  }
 
-  // not in use
-  async downloadFile(fileName: string, downloadPath: string): Promise<void> {
-    const file = this.storage.bucket(this.bucketName).file(fileName);
-    const localFilename = path.join(downloadPath, fileName);
-    await file.download({ destination: localFilename });
-  }
-
-  async removeFile(fileName: string): Promise<string> {
     try {
-      await this.storage.bucket(this.bucketName).file(fileName).delete();
-      return "file deleted";
-    } catch (e) {
-      if (e.message.indexOf("No such object") !== -1) {
-        return "file deleted";
+      const file = this.storage.bucket(bucketName).file(fileName);
+      const [exists] = await file.exists();
+      if (exists) {
+        return { value: file.createReadStream(options), error: null };
       }
-      // console.log(e.message);
-      throw e;
+    } catch (e) {
+      return {
+        value: null,
+        error: `File ${fileName} could not be retrieved from bucket ${bucketName}`,
+      };
     }
   }
 
-  // util members
-
-  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
-  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
-  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
-  protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string,
-    options: object
-  ): Promise<string> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    await this.createBucket(this.bucketName);
 
-    let readStream: Readable;
-    if (typeof arg === "string") {
-      await fs.promises.stat(arg); // throws error if path doesn't exist
-      readStream = fs.createReadStream(arg);
-    } else if (arg instanceof Buffer) {
-      readStream = new Readable();
-      readStream._read = (): void => {}; // _read is required but you can noop it
-      readStream.push(arg);
-      readStream.push(null);
-    } else if (arg instanceof Readable) {
-      readStream = arg;
+    try {
+      await this.storage.bucket(bucketName).file(fileName).delete();
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    const file = this.storage.bucket(this.bucketName).file(targetPath, options);
-    const writeStream = file.createWriteStream();
-    return new Promise((resolve, reject) => {
+  }
+
+  public async addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    let { options } = params;
+    if (typeof options !== "object") {
+      options = {};
+    }
+
+    try {
+      let readStream: Readable;
+      if (typeof (params as FilePathParams).origPath === "string") {
+        const f = (params as FilePathParams).origPath;
+        if (!fs.existsSync(f)) {
+          return { value: null, error: `File with given path: ${f}, was not found` };
+        }
+        readStream = fs.createReadStream(f);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        readStream = new Readable();
+        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream.push((params as FileBufferParams).buffer);
+        readStream.push(null);
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        readStream = (params as FileStreamParams).stream;
+      }
+
+      const file = this.storage.bucket(params.bucketName).file(params.targetPath, options);
+      const writeStream = file.createWriteStream(options);
       readStream
         .pipe(writeStream)
-        .on("error", reject)
+        .on("error", (e) => {
+          return { value: null, error: e.message };
+        })
         .on("finish", () => {
-          resolve(file.publicUrl());
+          return { value: file.publicUrl(), error: null };
         });
-      writeStream.on("error", reject);
-    });
+      writeStream.on("error", (e) => {
+        return { value: null, error: e.message };
+      });
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  async createBucket(name: string, options: object = {}): Promise<string> {
-    const msg = this.validateName(name);
-    if (msg !== null) {
-      return Promise.reject(msg);
-    }
-
-    if (this.bucketNames.findIndex((b) => b === name) !== -1) {
-      return "bucket exists";
+  async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
     try {
       const bucket = this.storage.bucket(name, options);
       const [exists] = await bucket.exists();
       if (exists) {
-        return "bucket exists";
+        return { value: null, error: "bucket exists" };
       }
     } catch (e) {
       // console.log(e.message);
@@ -203,122 +190,119 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
     try {
       await this.storage.createBucket(name, options);
-      this.bucketNames.push(name);
-      return "bucket created";
+      return { value: "ok", error: null };
     } catch (e) {
-      // console.log("ERROR", e.message, e.code);
-      if (
-        e.code === 409 &&
-        e.message === "You already own this bucket. Please select another name."
-      ) {
-        // error code 409 can have messages like:
-        // "You already own this bucket. Please select another name." (bucket exists!)
-        // "Sorry, that name is not available. Please try a different one." (notably bucket name "new-bucket")
-        // So in some cases we can safely ignore this error, in some case we can't
-        return;
+      return { value: null, error: e.message };
+    }
+  }
+
+  async clearBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      await this.storage.bucket(name).deleteFiles({ force: true });
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async deleteBucket(name: string): Promise<ResultObject> {
+    try {
+      await this.clearBucket(name);
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+    try {
+      await this.storage.bucket(name).delete();
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const [buckets] = await this.storage.getBuckets();
+      return { value: buckets.map((b) => b.name), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  private async getFileSize(bucketName: string, fileNames: string[]): Promise<ResultObjectFiles> {
+    const result: Array<[string, number]> = [];
+    for (let i = 0; i < fileNames.length; i += 1) {
+      const file = this.storage.bucket(bucketName).file(fileNames[i]);
+      try {
+        const [metadata] = await file.getMetadata();
+        result.push([file.name, parseInt(metadata.size as string, 10)]);
+      } catch (e) {
+        return { value: null, error: e.message };
       }
-      throw new Error(e.message);
+    }
+    return { value: result, error: null };
+  }
+
+  async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
-    // ossia:
-    // await this.storage
-    //   .createBucket(n)
-    //   .then(() => {
-    //     this.bucketNames.push(n);
-    //     return "bucket created";
-    //   })
-    //   .catch(e => {
-    //     if (e.code === 409) {
-    //       // error code 409 is 'You already own this bucket. Please select another name.'
-    //       // so we can safely return true if this error occurs
-    //       return;
-    //     }
-    //     throw new Error(e.message);
-    //   });
+    try {
+      const data = await this.storage.bucket(bucketName).getFiles();
+      const names = data[0].map((f) => f.name);
+      return this.getFileSize(bucketName, names);
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  async selectBucket(name: string | null): Promise<string> {
-    if (name === null) {
-      this.bucketName = "";
-      return `bucket '${name}' deselected`;
+  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
-    // const [error] = await to(this.createBucket(name));
-    // if (error !== null) {
-    //   throw error;
-    // }
-    return await this.createBucket(name)
-      .then(() => {
-        this.bucketName = name;
-        return `bucket '${name}' selected`;
-      })
-      .catch((e) => {
-        throw e;
-      });
-  }
-
-  async clearBucket(name?: string): Promise<string> {
-    let n = name;
-    if (typeof n === "undefined" || n === null || n === "") {
-      n = this.bucketName;
-    }
-    await this.storage.bucket(n).deleteFiles({ force: true });
-    return "bucket cleared";
-  }
-
-  async deleteBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-    await this.clearBucket(n);
-    const data = await this.storage.bucket(n).delete();
-    // console.log(data);
-    if (n === this.bucketName) {
-      this.bucketName = "";
-    }
-    this.bucketNames = this.bucketNames.filter((b) => b !== n);
-    // console.log(this.bucketName, this.bucketNames);
-    return "bucket deleted";
-  }
-
-  async listBuckets(): Promise<string[]> {
-    const [buckets] = await this.storage.getBuckets();
-    this.bucketNames = buckets.map((b) => b.metadata.id);
-    return this.bucketNames;
-  }
-
-  private async getMetaData(files: string[]): Promise<number[]> {
-    const sizes: number[] = [];
-    for (let i = 0; i < files.length; i += 1) {
-      const file = this.storage.bucket(this.bucketName).file(files[i]);
+    try {
+      const file = this.storage.bucket(bucketName).file(fileName);
       const [metadata] = await file.getMetadata();
-      // console.log(metadata);
-      sizes.push(parseInt(metadata.size as string, 10));
+      return { value: parseInt(metadata.size as string, 10), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    return sizes;
   }
 
-  async listFiles(numFiles: number = 1000): Promise<[string, number][]> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async bucketExists(name: string): Promise<ResultObjectBoolean> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    const data = await this.storage.bucket(this.bucketName).getFiles();
-    const names = data[0].map((f) => f.name);
-    const sizes = await this.getMetaData(names);
-    return zip(names, sizes) as [string, number][];
+
+    try {
+      const data = await this.storage.bucket(name).exists();
+      // console.log(data);
+      return { value: data[0], error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  async sizeOf(name: string): Promise<number> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    const file = this.storage.bucket(this.bucketName).file(name);
-    const [metadata] = await file.getMetadata();
-    return parseInt(metadata.size as string, 10);
-  }
 
-  async fileExists(name: string): Promise<boolean> {
-    const data = await this.storage.bucket(this.bucketName).file(name).exists();
-
-    // console.log(data);
-    return data[0];
+    try {
+      const data = await this.storage.bucket(bucketName).file(fileName).exists();
+      // console.log(data);
+      return { value: data[0], error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 }

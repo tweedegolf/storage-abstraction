@@ -299,6 +299,11 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
+    let { options } = params;
+    if (typeof options !== "object") {
+      options = {};
+    }
+
     try {
       let readStream: Readable;
       if (typeof (params as FilePathParams).origPath === "string") {
@@ -319,9 +324,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         .getContainerClient(params.bucketName)
         .getBlobClient(params.targetPath)
         .getBlockBlobClient();
-      const writeStream = await file.uploadStream(readStream, 64000, 20, {
-        onProgress: (ev) => null,
-      });
+      const writeStream = await file.uploadStream(readStream, 64000, 20, options);
       if (writeStream.errorCode) {
         return { value: null, error: writeStream.errorCode };
       } else {
