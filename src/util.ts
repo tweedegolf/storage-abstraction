@@ -1,5 +1,5 @@
 import { BucketLocationConstraint } from "@aws-sdk/client-s3";
-import { ParseUrlResult } from "./types";
+import { ParseUrlResult, ResultObjectNumber } from "./types";
 
 /**
  * @param: url
@@ -98,27 +98,28 @@ export const parseIntFromString = (s: string): number => {
   return parseInt(s);
 };
 
-export const parseMode = (s: number | string): string | number => {
+export const parseMode = (mode: number | string): ResultObjectNumber => {
   // if mode is a number, parseMode assumes it is a decimal number
-  if (typeof s === "number") {
-    if (s < 0) {
-      throw new Error(
-        `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${s}`
-      );
+  if (typeof mode === "number") {
+    if (mode < 0) {
+      return {
+        value: null,
+        error: `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${mode}`,
+      };
     }
-    return s;
+    return { value: mode, error: null };
   }
 
   // mode is a string
 
   // e.g "0x755" (octal)
-  if (s.startsWith("0o")) {
-    return parseInt(s.substring(2), 8).toString(8);
+  if (mode.startsWith("0o")) {
+    return { value: parseInt(mode.substring(2), 8), error: null };
   }
   // e.g '511' (decimal)
-  const i = parseInt(s, 10);
+  const i = parseInt(mode, 10);
   // quick fix for erroneously passed octal number as string (without 0o prefix)
-  return i > 511 ? 511 : i;
+  return { value: i > 511 ? 511 : i, error: null };
 };
 
 /**
@@ -137,7 +138,6 @@ export const getProtocol = (url: string): string => {
  */
 export const validateName = (name: string): string => {
   if (name === null) {
-    // throw new Error("Can not use `null` as bucket name");
     return "Can not use `null` as bucket name";
   }
   if (name === "null") {
@@ -147,11 +147,9 @@ export const validateName = (name: string): string => {
     return 'Can not use "undefined" as bucket name';
   }
   if (name === "" || typeof name === "undefined") {
-    // throw new Error("Please provide a bucket name");
     return "Please provide a bucket name";
   }
   if (name.indexOf(" ") !== -1) {
-    // throw new Error("Please provide a bucket name");
     return "Please provide a valid bucket name";
   }
   return null;

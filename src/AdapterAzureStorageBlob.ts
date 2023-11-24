@@ -25,6 +25,7 @@ import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
+  protected _config: ConfigAzureStorageBlob;
   private sharedKeyCredential: StorageSharedKeyCredential;
   private configError: string | null = null;
   private storage: BlobServiceClient;

@@ -23,6 +23,7 @@ import { parseUrl } from "./util";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected _type = StorageType.GCS;
+  protected _config: ConfigGoogleCloud;
   private configError: string | null = null;
   private storage: GoogleCloudStorage;
 

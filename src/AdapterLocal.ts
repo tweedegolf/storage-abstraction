@@ -3,76 +3,67 @@ import path from "path";
 import { glob } from "glob";
 import { rimraf } from "rimraf";
 import { Readable } from "stream";
-import { StorageType, ConfigLocal } from "./types";
+import {
+  StorageType,
+  ConfigLocal,
+  ResultObjectBoolean,
+  FileBufferParams,
+  FilePathParams,
+  FileStreamParams,
+  ResultObject,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+} from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseQuerystring, parseMode } from "./util";
+import { parseQuerystring, parseMode, parseUrl, validateName } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
-  protected type = StorageType.LOCAL;
+  protected _type = StorageType.LOCAL;
+  protected _config: ConfigLocal;
+  private mode: number = 0o777;
+  private configError: string | null = null;
 
   constructor(config: ConfigLocal) {
     super();
     this._config = this.parseConfig(config);
-    // console.log(config);
-    // console.log(this.config);
-    const mode = (this._config as ConfigLocal).mode;
-    if (typeof mode === "undefined") {
-      (this._config as ConfigLocal).mode = 0o777;
-    }
-    const directory = (this._config as ConfigLocal).directory;
+    const directory = this._config.directory;
   }
 
-  private parseConfig(config: string | ConfigLocal): ConfigLocal {
+  private parseConfig(config: string | ConfigLocal): ConfigLocal | null {
     let cfg: ConfigLocal;
     if (typeof config === "string") {
-      const qm = config.indexOf("?");
-      const sep = config.indexOf("://");
-      const type = config.substring(0, sep);
-      // const { mode } = parseQuerystring(config);
-      const querystring = parseQuerystring(config);
-      const end = qm !== -1 ? qm : config.length;
-      const lastSlash = config.lastIndexOf("/");
-      // console.log(end, lastSlash);
-      let directory = config.substring(sep + 3, end);
-      let bucketName: string;
-      if (lastSlash !== -1) {
-        if (lastSlash > sep + 3) {
-          directory = config.substring(sep + 3, lastSlash);
-        }
-        bucketName = config.substring(lastSlash + 1, end);
+      const { value, error } = parseUrl(config);
+      if (error) {
+        this.configError = error;
+        return null;
       }
-      // console.log("DIR", sep, directory, end, lastSlash, qm);
-      // console.log("DIR", config, directory, bucketName, lastSlash);
+
+      const { type, part1: directory, bucketName, queryString: options } = value;
+
+      if (typeof options.mode !== "undefined") {
+        const { value, error } = parseMode(options.mode);
+        if (error !== null) {
+          this.configError = error;
+          return null;
+        } else {
+          this.mode = value;
+        }
+      }
+
       cfg = {
         type,
         directory,
         bucketName,
-        ...querystring,
-        // mode: mode as string,
+        mode: this.mode,
+        ...options,
       };
     } else {
       cfg = { ...config };
 
       if (!cfg.directory) {
-        throw new Error("You must specify a value for 'directory' for storage type 'local'");
+        this.configError = "You must specify a value for 'directory' for storage type 'local'";
+        return null;
       }
-
-      // retrieve bucketName from directory
-      // if (!cfg.bucketName) {
-      //   const lastSlash = cfg.directory.lastIndexOf("/");
-      //   if (lastSlash === -1) {
-      //     cfg.bucketName = cfg.directory;
-      //     cfg.directory = "";
-      //   } else {
-      //     const dir = cfg.directory;
-      //     cfg.directory = dir.substring(0, lastSlash);
-      //     cfg.bucketName = dir.substring(lastSlash + 1);
-      //   }
-      // }
-
-      // if (cfg.directory === "") {
-      //   cfg.directory = process.cwd();
-      // }
     }
     if (cfg.skipCheck === true) {
       return cfg;
@@ -81,152 +72,27 @@ export class AdapterLocal extends AbstractAdapter {
     return cfg;
   }
 
-  async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
-    }
-
-    if (typeof this._config.bucketName !== "undefined" && this._config.bucketName !== "") {
-      const { error } = await this.validateName(this._config.bucketName);
-      if (error !== null) {
-        Promise.resolve({ error, value: null });
-        return;
-      }
-    }
-
-    if (typeof this.bucketName !== "undefined") {
-      await this.createDirectory(path.join(this.directory, this.bucketName));
-    }
-    this.initialized = true;
-    return Promise.resolve(true);
-  }
-
   /**
    * @param path
    * creates a directory if it doesn't exist
    */
-  private async createDirectory(path: string): Promise<boolean> {
+  private async createDirectory(path: string): Promise<ResultObjectBoolean> {
     try {
-      await fs.promises.access(path);
-      return true;
+      await fs.promises.access(path, this.mode);
+      return { value: true, error: null }; // directory exists already
     } catch (e) {
-      await fs.promises
-        .mkdir(path, {
+      try {
+        await fs.promises.mkdir(path, {
           recursive: true,
-          mode: parseMode(this.mode),
-        })
-        .catch((e) => {
-          throw e;
-          // console.error(`\x1b[31m${e.message}`);
-          // return false;
+          mode: this._config.mode,
         });
-      // const m = (await fs.promises.stat(path)).mode;
-      // console.log(m, this.options.mode);
-      return true;
+        // const m = (await fs.promises.stat(path)).mode;
+        // console.log(m, this.options.mode);
+        return { value: true, error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
     }
-  }
-
-  protected async store(buffer: Buffer, targetPath: string): Promise<string>;
-  protected async store(stream: Readable, targetPath: string): Promise<string>;
-  protected async store(filePath: string, targetPath: string): Promise<string>;
-  protected async store(arg: string | Buffer | Readable, targetPath: string): Promise<string> {
-    const dest = path.join(this.directory, this.bucketName, targetPath);
-    await this.createDirectory(path.dirname(dest));
-    if (typeof arg === "string") {
-      await fs.promises.copyFile(arg, dest);
-      return dest;
-    }
-    const writeStream = fs.createWriteStream(dest);
-    let readStream: Readable = null;
-    if (arg instanceof Buffer) {
-      readStream = new Readable();
-      readStream._read = (): void => {}; // _read is required but you can noop it
-      readStream.push(arg);
-      readStream.push(null); // close stream
-    } else if (arg instanceof Readable) {
-      readStream = arg;
-    }
-    return new Promise((resolve, reject) => {
-      readStream
-        .pipe(writeStream)
-        .on("error", reject)
-        .on("finish", () => {
-          resolve(dest);
-        });
-      writeStream.on("error", reject);
-    });
-  }
-
-  async createBucket(name: string): Promise<string> {
-    const msg = this.validateName(name);
-    if (msg !== null) {
-      return Promise.reject(msg);
-    }
-    // console.log(bn, name);
-    const created = await this.createDirectory(path.join(this.directory, name));
-    if (created) {
-      this.buckets.push(name);
-      return "ok";
-    }
-  }
-
-  async clearBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-    if (!n) {
-      return;
-    }
-    // remove all files and folders inside bucket directory, but not the directory itself
-    const p = path.join(this.directory, n, "*");
-    return rimraf(p)
-      .then(() => {
-        return "";
-      })
-      .catch((e: Error) => {
-        throw e;
-      });
-  }
-
-  async deleteBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-    if (!n) {
-      return Promise.resolve("");
-    }
-    const p = path.join(this.directory, n);
-    return rimraf(p)
-      .then(() => {
-        if (n === this.bucketName) {
-          this.bucketName = "";
-        }
-        return "";
-      })
-      .catch((e: Error) => {
-        if (n === this.bucketName) {
-          this.bucketName = "";
-        }
-        if (e !== null) {
-          return Promise.reject(e);
-        }
-      });
-  }
-
-  async selectBucket(name?: string | null): Promise<string> {
-    if (!name) {
-      this.bucketName = "";
-      return `bucket '${name}' deselected`;
-    }
-    await this.createBucket(name);
-    this.bucketName = name;
-    return `bucket '${name}' selected`;
-  }
-
-  async listBuckets(): Promise<string[]> {
-    // console.log(this.directory);
-    const files = await fs.promises.readdir(this.directory);
-    const stats = await Promise.all(
-      files.map((f) => fs.promises.stat(path.join(this.directory, f)))
-    );
-    this.buckets = files.filter((_, i) => stats[i].isDirectory());
-    return this.buckets;
   }
 
   private async globFiles(folder: string): Promise<string[]> {
@@ -239,10 +105,129 @@ export class AdapterLocal extends AbstractAdapter {
       });
   }
 
-  async listFiles(): Promise<[string, number][]> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  // Public API
+
+  public async addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
+
+    let { options } = params;
+    if (typeof options !== "object") {
+      options = {};
+    }
+
+    const dest = path.join(this._config.directory, params.bucketName, params.targetPath);
+
+    const { error } = await this.createDirectory(path.dirname(dest));
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    try {
+      let readStream: Readable;
+      if (typeof (params as FilePathParams).origPath === "string") {
+        await fs.promises.copyFile((params as FilePathParams).origPath, dest);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        readStream = new Readable();
+        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream.push((params as FileBufferParams).buffer);
+        readStream.push(null);
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        readStream = (params as FileStreamParams).stream;
+      }
+
+      const writeStream = fs.createWriteStream(dest);
+      return new Promise((resolve, reject) => {
+        readStream
+          .pipe(writeStream)
+          .on("error", (e) => {
+            return { value: null, error: e.message };
+          })
+          .on("finish", () => {
+            return { value: dest, error: null };
+          });
+        writeStream.on("error", reject);
+      });
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async createBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const msg = validateName(name);
+    if (msg !== null) {
+      return { value: null, error: msg };
+    }
+    try {
+      const p = path.join(this._config.directory, name);
+      const created = await this.createDirectory(p);
+      if (created) {
+        return { value: "ok", error: null };
+      } else {
+        return { value: null, error: `Could not create bucket ${p}` };
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async clearBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      // remove all files and folders inside bucket directory, but not the directory itself
+      const p = path.join(this._config.directory, name, "*");
+      await rimraf(p);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async deleteBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const p = path.join(this._config.directory, name);
+      await rimraf(p);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const files = await fs.promises.readdir(this._config.directory);
+      // const stats = await Promise.all(
+      //   files.map((f) => fs.promises.stat(path.join(this._config.directory, f)))
+      // );
+      return { value: files, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async listFiles(): Promise<ResultObjectFiles> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
     const storagePath = path.join(this.directory, this.bucketName);
     const files = await this.globFiles(storagePath);
     const result: [string, number][] = [];

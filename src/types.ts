@@ -223,7 +223,9 @@ export interface IAdapterConfig {
   type: string;
   skipCheck?: boolean;
   bucketName?: string;
-  // [id: string]: GenericKey;
+  options?: {
+    [id: string]: GenericKey;
+  };
 }
 
 export interface ConfigAmazonS3 extends IAdapterConfig {
@@ -246,13 +248,11 @@ export interface ConfigBackblazeB2 extends IAdapterConfig {
 export interface ConfigGoogleCloud extends IAdapterConfig {
   keyFilename?: string;
   projectId?: string;
-  // [id: string]: GenericKey;
 }
 
 export interface ConfigLocal extends IAdapterConfig {
   directory: string;
   mode?: number | string;
-  // [id: string]: GenericKey;
 }
 
 export interface ConfigTemplate extends IAdapterConfig {

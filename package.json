@@ -49,6 +49,7 @@
     "test": "ts-node ./tests/test.ts",
     "test-mode": "ts-node ./tests/test-mode.ts",
     "testB2": "ts-node ./tests/testB2.ts",
+    "testLocal": "ts-node ./tests/testLocal.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
     "copy-readme": "cp ./README.md ./publish",

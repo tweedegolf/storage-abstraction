@@ -300,16 +300,14 @@ Config object:
 ```typescript
 type ConfigAmazonS3 = {
   type: StorageType;
-  accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
   bucketName?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  region?: string;
   endpoint?: string;
-  useDualstack?: boolean;
-  maxRetries?: number;
-  maxRedirects?: number;
-  sslEnabled?: boolean;
-  [id: string]: boolean | string | number; // configuration is extensible
+  options: {
+    [id: string]: boolean | number | string;
+  };
 };
 ```
 

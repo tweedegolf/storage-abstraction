@@ -28,6 +28,7 @@ require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
+  protected _config: ConfigBackblazeB2;
   private storage: B2;
   private authorized: boolean = false;
   private configError: string | null = null;
