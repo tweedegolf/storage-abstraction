@@ -13,6 +13,8 @@ import {
   ResultObject,
   ResultObjectBuckets,
   ResultObjectFiles,
+  ResultObjectStream,
+  ResultObjectNumber,
 } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { parseQuerystring, parseMode, parseUrl, validateName } from "./util";
@@ -140,16 +142,18 @@ export class AdapterLocal extends AbstractAdapter {
       }
 
       const writeStream = fs.createWriteStream(dest);
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         readStream
           .pipe(writeStream)
           .on("error", (e) => {
-            return { value: null, error: e.message };
+            resolve({ value: null, error: e.message });
           })
           .on("finish", () => {
-            return { value: dest, error: null };
+            resolve({ value: dest, error: null });
           });
-        writeStream.on("error", reject);
+        writeStream.on("error", (e) => {
+          resolve({ value: null, error: e.message });
+        });
       });
     } catch (e) {
       return { value: null, error: e.message };
@@ -223,64 +227,115 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async listFiles(): Promise<ResultObjectFiles> {
+  async listFiles(bucketName: string): Promise<ResultObjectFiles> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+    try {
+      const storagePath = path.join(this._config.directory, bucketName);
+      const files = await this.globFiles(storagePath);
+      const result: [string, number][] = [];
+      for (let i = 0; i < files.length; i += 1) {
+        const f = files[i];
+        const stat = await fs.promises.stat(f);
+        // result.push([path.basename(f), stat.size])
+        result.push([f.replace(`${storagePath}/`, ""), stat.size]);
+      }
+      return { value: result, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  async getFileAsStream(
+    bucketName: string,
+    fileName: string,
+    options: { start?: number; end?: number } = { start: 0 }
+  ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
 
-    const storagePath = path.join(this.directory, this.bucketName);
-    const files = await this.globFiles(storagePath);
-    const result: [string, number][] = [];
-    for (let i = 0; i < files.length; i += 1) {
-      const f = files[i];
-      const stat = await fs.promises.stat(f);
-      // result.push([path.basename(f), stat.size])
-      result.push([f.replace(`${storagePath}/`, ""), stat.size]);
+    try {
+      const p = path.join(this._config.directory, bucketName, fileName);
+      // const { size } = await fs.promises.stat(p);
+      // console.log(p, size, options);
+      return { value: fs.createReadStream(p, options), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    return result;
   }
 
-  async getFileAsStream(
-    name: string,
-    options: { start?: number; end?: number } = { start: 0 }
-  ): Promise<Readable> {
-    const p = path.join(this.directory, this.bucketName, name);
-    const s = (await fs.promises.stat(p)).size;
-    // console.log(p, s, options);
-    return fs.createReadStream(p, options);
+  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const p = path.join(this._config.directory, bucketName, fileName);
+      await fs.promises.access(p);
+      return { value: p, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  async removeFile(fileName: string): Promise<string> {
-    const p = path.join(this.directory, this.bucketName, fileName);
-    return fs.promises
+  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const p = path.join(this._config.directory, bucketName, fileName);
+    await fs.promises
       .unlink(p)
       .then(() => {
-        return "";
+        return { value: "ok", error: null };
       })
       .catch((err) => {
-        // don't throw an error if the file has already been removed (or didn't exist at all)
-        if (err.message.indexOf("no such file or directory") !== -1) {
-          return "";
-        }
-        throw new Error(err.message);
+        // if (err.message.indexOf("no such file or directory") !== -1) {
+        //   return { value: "file doesn't exist", error: null };
+        // }
+        return { value: null, error: err.message };
       });
   }
 
-  async sizeOf(name: string): Promise<number> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
-    const p = path.join(this.directory, this.bucketName, name);
-    const stat = await fs.promises.stat(p);
-    return stat.size;
+
+    try {
+      const p = path.join(this._config.directory, bucketName, fileName);
+      const { size } = await fs.promises.stat(p);
+      return { value: size, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  async fileExists(name: string): Promise<boolean> {
+  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
     try {
-      await fs.promises.access(path.join(this.directory, this.bucketName, name));
-      return true;
+      await fs.promises.access(path.join(this._config.directory, bucketName));
+      return { value: true, error: null };
     } catch (e) {
-      return false;
+      return { value: false, error: null };
+    }
+  }
+
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      await fs.promises.access(path.join(this._config.directory, bucketName, fileName));
+      return { value: true, error: null };
+    } catch (e) {
+      return { value: false, error: null };
     }
   }
 }
