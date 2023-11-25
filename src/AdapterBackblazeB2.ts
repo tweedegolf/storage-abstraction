@@ -60,17 +60,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         part1: applicationKeyId,
         part2: applicationKey,
         bucketName,
-        queryString,
+        queryString: options,
       } = value;
       cfg = {
         type,
         applicationKeyId,
         applicationKey,
         bucketName,
-        ...queryString,
+        ...options,
       };
     } else {
-      cfg = { ...config };
+      if (typeof config.options !== "undefined") {
+        cfg = { ...config, ...config.options };
+        delete cfg.options;
+      } else {
+        cfg = { ...config };
+      }
     }
 
     if (cfg.skipCheck === true) {

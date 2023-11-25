@@ -65,7 +65,7 @@ When instantiating a new `Storage` the argument `config` is used to create an ad
 1. using a configuration object (js: `typeof === "object"` ts: `AdapterConfig`)
 2. using a configuration URL (`typeof === "string"`)
 
-Internally configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
+Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
 
 The configuration must specify a type; the type is used to create the appropriate adapter. The value of the type is one of the enum members of `StorageType`:
 
@@ -88,14 +88,35 @@ interface IAdapterConfig {
   type: string;
   skipCheck?: boolean;
   bucketName?: string;
+  options?: {
+    [id: string]: number | string | boolean | number[] | string[] | boolean[];
+  };
 }
 ```
 
-Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `sslEnabled` for Amazon S3.
+Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `systemClockOffset` for Amazon S3.
 
-When your create a storage instance a check is performed if the storage-specific mandatory keys are set in the configuration object. You can skip this check by setting `skipCheck` to `true`.
+When your create a storage instance a check is performed if the mandatory keys are set in the configuration object. You can skip this check by setting `skipCheck` to `true`.
 
-Another optional key is `bucketName`; for most cloud storage services it is required to select a bucket after a connection to the service has been made. If you don't want or can't provide a bucket name on initialization you can use `selectBucket` to do so afterwards.
+Another optional key is `bucketName`.
+
+Note that the `options` object and the query string will be flattened in the config object of the instantiated storage:
+
+```typescript
+const conf = {
+  accessKeyId: "yourKeyId";
+  secretAccessKey: "yourAccessKey";
+  region: "yourRegion";
+  options: {
+    systemClockOffset: 40000,
+    useArnRegion: true,
+  }
+}
+
+const storage = new Storage(conf);
+console.log(storage.conf.
+
+```
 
 ### <a name='configuration-url'></a>Configuration URL
 

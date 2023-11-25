@@ -48,6 +48,20 @@
 - `removeFile` has an additional optional boolean argument `allVersions`; if set to true all version of the specified file will be removed. Default: false
 - `addFile` is added; you can use this method whenever you use `addFileFromPath`, `addFileFromBuffer` or `addFileFromReadable`
 - `getConfig()` and `getType()` are implemented as getter as well, resp.: `storage.config` and `storage.type`
+- The configuration object are no longer extensible; if you want to provide extra parameters you can use the `options` object, for instance:
+
+```typescript
+ const conf: ConfigAmazonS3 = {
+    accessKeyId: "yourKeyId";
+    secretAccessKey?: "yourAccessKey";
+    region: "us-east-2";
+    endpoint: "yourEndpoint";
+    options: {
+      systemClockOffset: 40000,
+      useArnRegion: true,
+    }
+ }
+```
 
 ### Old API (1.5.x) compared to new API (2.x)
 

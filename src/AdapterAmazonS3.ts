@@ -84,7 +84,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         part2: secretAccessKey,
         part3: region,
         bucketName,
-        queryString,
+        queryString: options,
       } = value;
       cfg = {
         type,
@@ -92,10 +92,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         secretAccessKey,
         region,
         bucketName,
-        ...queryString,
+        ...options,
       };
     } else {
-      cfg = { ...config };
+      if (typeof config.options !== "undefined") {
+        cfg = { ...config, ...config.options };
+        delete cfg.options;
+      } else {
+        cfg = { ...config };
+      }
     }
 
     if (cfg.skipCheck === true) {

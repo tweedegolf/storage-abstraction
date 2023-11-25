@@ -60,7 +60,12 @@ export class AdapterLocal extends AbstractAdapter {
         ...options,
       };
     } else {
-      cfg = { ...config };
+      if (typeof config.options !== "undefined") {
+        cfg = { ...config, ...config.options };
+        delete cfg.options;
+      } else {
+        cfg = { ...config };
+      }
 
       if (!cfg.directory) {
         this.configError = "You must specify a value for 'directory' for storage type 'local'";

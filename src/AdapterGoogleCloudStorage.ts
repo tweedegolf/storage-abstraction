@@ -54,16 +54,27 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         return null;
       }
 
-      const { type, part1: keyFilename, part2: projectId, bucketName, queryString } = value;
+      const {
+        type,
+        part1: keyFilename,
+        part2: projectId,
+        bucketName,
+        queryString: options,
+      } = value;
       cfg = {
         type,
         keyFilename,
         projectId,
         bucketName,
-        ...queryString,
+        ...options,
       };
     } else {
-      cfg = { ...config };
+      if (typeof config.options !== "undefined") {
+        cfg = { ...config, ...config.options };
+        delete cfg.options;
+      } else {
+        cfg = { ...config };
+      }
     }
 
     if (cfg.skipCheck === true) {

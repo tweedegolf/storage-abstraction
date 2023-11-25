@@ -29,8 +29,7 @@ export interface IStorage {
    * Use this only for debugging and with great care as it may expose sensitive information.
    *
    * The object contains the key `bucketName` which is the initial value that you've set during
-   * initialization; if you have selected another bucket after initialization it will still show
-   * the original value. Use `getSelectedBucket()` to retrieve the current value.
+   * initialization.
    *
    * The object also contains the key `options` which are only the options passed in during
    * initialization; if you want all options, including the default options use `getOptions()`
@@ -216,7 +215,7 @@ export type JSON = {
 //   [key: string]: string | number | boolean;
 // }
 
-export type GenericKey = undefined | number | string | boolean | number[] | string[] | boolean[];
+export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
 
 export interface IAdapterConfig {
   // type: StorageType;
