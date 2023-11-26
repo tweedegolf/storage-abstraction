@@ -40,7 +40,8 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     );
     this.storage = new BlobServiceClient(
       `https://${(this._config as ConfigAzureStorageBlob).storageAccount}.blob.core.windows.net`,
-      this.sharedKeyCredential
+      this.sharedKeyCredential,
+      this._config.options
     );
   }
 
@@ -65,15 +66,10 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         storageAccount,
         accessKey,
         bucketName,
-        ...options,
+        options,
       };
     } else {
-      if (typeof config.options !== "undefined") {
-        cfg = { ...config, ...config.options };
-        delete cfg.options;
-      } else {
-        cfg = { ...config };
-      }
+      cfg = { ...config };
     }
 
     if (cfg.skipCheck === true) {

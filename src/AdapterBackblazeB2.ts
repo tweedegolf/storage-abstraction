@@ -3,7 +3,6 @@ import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
   StorageType,
-  ConfigBackblazeB2,
   BackblazeB2File,
   ResultObjectBoolean,
   ResultObject,
@@ -21,6 +20,7 @@ import {
   ResultObjectNumber,
   BackblazeAxiosResponse,
   BackblazeBucketOptions,
+  AdapterConfig,
 } from "./types";
 import { parseUrl, validateName } from "./util";
 
@@ -28,17 +28,20 @@ require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
-  protected _config: ConfigBackblazeB2;
+  protected _config: AdapterConfig;
   private storage: B2;
   private authorized: boolean = false;
   private configError: string | null = null;
 
-  constructor(config: string | ConfigBackblazeB2) {
+  constructor(config?: string | AdapterConfig) {
     super();
     this._config = this.parseConfig(config);
     if (this._config !== null) {
       try {
-        this.storage = new B2(this._config);
+        const c = { ...this._config, ...(this._config.options as object) };
+        delete c.options;
+        this.storage = new B2(c);
+        console.log(this.storage.config);
       } catch (e) {
         this.configError = e.message;
       }
@@ -47,8 +50,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // util members
 
-  private parseConfig(config: string | ConfigBackblazeB2): ConfigBackblazeB2 | null {
-    let cfg: ConfigBackblazeB2;
+  private parseConfig(config: string | AdapterConfig): AdapterConfig | null {
+    let cfg: AdapterConfig;
     if (typeof config === "string") {
       const { error, value } = parseUrl(config);
       if (error !== null) {
@@ -70,12 +73,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         ...options,
       };
     } else {
-      if (typeof config.options !== "undefined") {
-        cfg = { ...config, ...config.options };
-        delete cfg.options;
-      } else {
-        cfg = { ...config };
-      }
+      cfg = { ...config };
     }
 
     if (cfg.skipCheck === true) {

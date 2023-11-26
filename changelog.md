@@ -49,6 +49,7 @@
 - `addFile` is added; you can use this method whenever you use `addFileFromPath`, `addFileFromBuffer` or `addFileFromReadable`
 - `getConfig()` and `getType()` are implemented as getter as well, resp.: `storage.config` and `storage.type`
 - The configuration object are no longer extensible; if you want to provide extra parameters you can use the `options` object, for instance:
+- removed adapter config types
 
 ```typescript
  const conf: ConfigAmazonS3 = {

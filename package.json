@@ -49,6 +49,8 @@
     "test": "ts-node ./tests/test.ts",
     "test-mode": "ts-node ./tests/test-mode.ts",
     "testB2": "ts-node ./tests/testB2.ts",
+    "testS3": "ts-node ./tests/testS3.ts",
+    "testGCS": "ts-node ./tests/testGCS.ts",
     "testLocal": "ts-node ./tests/testLocal.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",

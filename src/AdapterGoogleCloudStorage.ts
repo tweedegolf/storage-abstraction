@@ -8,7 +8,6 @@ import {
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
   StorageType,
-  ConfigGoogleCloud,
   ResultObject,
   ResultObjectStream,
   FileBufferParams,
@@ -20,17 +19,24 @@ import {
   ResultObjectBoolean,
 } from "./types";
 import { parseUrl } from "./util";
+import { AdapterConfig } from "@tweedegolf/storage-abstraction";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected _type = StorageType.GCS;
-  protected _config: ConfigGoogleCloud;
+  protected _config: AdapterConfig;
   private configError: string | null = null;
   private storage: GoogleCloudStorage;
 
-  constructor(config: string | ConfigGoogleCloud) {
+  constructor(config?: string | AdapterConfig) {
     super();
-    this._config = this.parseConfig(config);
-    this.storage = new GoogleCloudStorage(this._config as ConfigGoogleCloud);
+    // this._config = this.parseConfig(config);
+    // const c = {
+    //   ...this._config,
+    //   ...this._config.options,
+    // };
+    // delete c.options;
+    // this.storage = new GoogleCloudStorage(c);
+    this.storage = new GoogleCloudStorage(config as object);
   }
 
   /**
@@ -45,8 +51,8 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     return json.project_id;
   }
 
-  private parseConfig(config: string | ConfigGoogleCloud): ConfigGoogleCloud {
-    let cfg: ConfigGoogleCloud;
+  private parseConfig(config: string | AdapterConfig): AdapterConfig {
+    let cfg: AdapterConfig;
     if (typeof config === "string") {
       const { value, error } = parseUrl(config);
       if (error) {
@@ -66,15 +72,10 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         keyFilename,
         projectId,
         bucketName,
-        ...options,
+        options,
       };
     } else {
-      if (typeof config.options !== "undefined") {
-        cfg = { ...config, ...config.options };
-        delete cfg.options;
-      } else {
-        cfg = { ...config };
-      }
+      cfg = { ...config };
     }
 
     if (cfg.skipCheck === true) {

@@ -19,10 +19,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
-  ConfigAmazonS3,
   AdapterConfig,
   StorageType,
-  S3Compatible,
   ResultObjectStream,
   ResultObject,
   ResultObjectBuckets,
@@ -37,98 +35,54 @@ import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
-  protected _config: ConfigAmazonS3;
+  protected _config: AdapterConfig;
   private configError: string | null = null;
   private storage: S3Client;
-  private s3Compatible: S3Compatible = S3Compatible.Amazon;
 
-  constructor(config: string | AdapterConfig) {
+  constructor(config?: string | AdapterConfig) {
     super();
-    this._config = this.parseConfig(config as ConfigAmazonS3);
-
-    // handle small differences in supported S3 compatible storages
-    if (typeof (this._config as ConfigAmazonS3).region === "undefined") {
-      if (this.s3Compatible === S3Compatible.R2) {
-        this._config.region = "auto";
-      } else if (this.s3Compatible === S3Compatible.Backblaze) {
-        let ep = this._config.endpoint;
-        ep = ep.substring(ep.indexOf("s3.") + 3);
-        this._config.region = ep.substring(0, ep.indexOf("."));
-      }
-    }
-    if (typeof this._config.endpoint === "undefined") {
-      this.storage = new S3Client({ region: this._config.region });
-    } else {
-      this.storage = new S3Client({
-        region: this._config.region,
-        endpoint: this._config.endpoint,
-        credentials: {
-          accessKeyId: this._config.accessKeyId,
-          secretAccessKey: this._config.secretAccessKey,
-        },
-      });
-    }
-  }
-
-  private parseConfig(config: string | ConfigAmazonS3): ConfigAmazonS3 | null {
-    let cfg: ConfigAmazonS3;
     if (typeof config === "string") {
-      const { value, error } = parseUrl(config);
-      if (error) {
-        this.configError = error;
-        return null;
-      }
-      const {
-        type,
-        part1: accessKeyId,
-        part2: secretAccessKey,
-        part3: region,
-        bucketName,
-        queryString: options,
-      } = value;
-      cfg = {
-        type,
-        accessKeyId,
-        secretAccessKey,
-        region,
-        bucketName,
-        ...options,
-      };
+      this._config = this.parseConfig(config);
     } else {
-      if (typeof config.options !== "undefined") {
-        cfg = { ...config, ...config.options };
-        delete cfg.options;
-      } else {
-        cfg = { ...config };
-      }
+      this._config = config;
     }
 
-    if (cfg.skipCheck === true) {
-      return cfg;
+    if (this._config === null) {
+      return;
     }
 
-    if (!cfg.accessKeyId || !cfg.secretAccessKey) {
-      this.configError =
-        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 's3'";
-      return null;
-    }
-
-    if (typeof cfg.endpoint !== "undefined") {
-      if (cfg.endpoint.indexOf("r2.cloudflarestorage.com") !== -1) {
-        this.s3Compatible = S3Compatible.R2;
-      } else if (cfg.endpoint.indexOf("backblazeb2.com") !== -1) {
-        this.s3Compatible = S3Compatible.Backblaze;
-      }
-    }
-    if (!cfg.region && this.s3Compatible === S3Compatible.Amazon) {
-      this.configError = "You must specify a default region for storage type 's3'";
-      return null;
-    }
-
-    return cfg;
+    this.storage = new S3Client(this.config);
+    console.log(this.storage.config);
   }
 
-  async getFileAsStream(
+  private parseConfig(config: string): AdapterConfig | null {
+    const { value, error } = parseUrl(config);
+    if (error) {
+      this.configError = error;
+      return null;
+    }
+    const {
+      type,
+      part1: accessKeyId,
+      part2: secretAccessKey,
+      part3: region,
+      bucketName,
+      queryString: options,
+    } = value;
+
+    return {
+      type,
+      accessKeyId,
+      secretAccessKey,
+      region,
+      bucketName,
+      ...options,
+    };
+  }
+
+  // Public API
+
+  public async getFileAsStream(
     bucketName: string,
     fileName: string,
     options: { start?: number; end?: number } = { start: 0 }
@@ -152,7 +106,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -170,7 +124,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+  public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -195,7 +149,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      if (typeof this._config.region !== "undefined" && this._config.region !== "us-east-1") {
+      if (typeof this._config.region === "string" && this._config.region !== "us-east-1") {
         input.CreateBucketConfiguration = {
           LocationConstraint: BucketLocationConstraint[this._config.region.replace("-", "_")],
         };
@@ -217,7 +171,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async clearBucket(name: string): Promise<ResultObject> {
+  public async clearBucket(name: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -256,7 +210,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
+  public async deleteBucket(name: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -277,7 +231,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async listBuckets(): Promise<ResultObjectBuckets> {
+  public async listBuckets(): Promise<ResultObjectBuckets> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -335,7 +289,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     return getSignedUrl(
       this.storage,
       new GetObjectCommand({
@@ -352,7 +306,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       });
   }
 
-  async listFiles(bucketName: string, maxFiles: number = 1000): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string, maxFiles: number = 1000): Promise<ResultObjectFiles> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -373,7 +327,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -391,7 +345,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  public async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -410,7 +364,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       });
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }

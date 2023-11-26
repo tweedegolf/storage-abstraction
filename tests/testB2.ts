@@ -77,7 +77,7 @@ async function testB2() {
   //   targetPath: "test/image1.jpg",
   // });
   // console.timeEnd("addFileFromPath");
-
+  /*
   console.time("addFileFromStream");
   const data4 = await storage.addFileFromStream({
     bucketName: "the-buck",
@@ -90,7 +90,7 @@ async function testB2() {
   const response = await storage.clearBucket("the-buck");
   console.log(response);
   console.timeEnd("clearBucket");
-
+*/
   // console.time("listFiles");
   // const data2 = await storage.listFiles("the-buck");
   // console.log(data2);

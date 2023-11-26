@@ -57,15 +57,10 @@ export class AdapterLocal extends AbstractAdapter {
         directory,
         bucketName,
         mode: this.mode,
-        ...options,
+        options,
       };
     } else {
-      if (typeof config.options !== "undefined") {
-        cfg = { ...config, ...config.options };
-        delete cfg.options;
-      } else {
-        cfg = { ...config };
-      }
+      cfg = { ...config };
 
       if (!cfg.directory) {
         this.configError = "You must specify a value for 'directory' for storage type 'local'";

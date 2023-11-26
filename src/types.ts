@@ -20,7 +20,7 @@ export interface IStorage {
 
   /**
    * Same as `getType` but implemented as getter
-   * @returns adapter tyoe
+   * @returns adapter type, e.g. 'gcs', 'b2', 'local' etc.
    */
   type: string;
 
@@ -217,55 +217,12 @@ export type JSON = {
 
 export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
 
-export interface IAdapterConfig {
+export interface AdapterConfig {
   // type: StorageType;
   type: string;
-  skipCheck?: boolean;
-  bucketName?: string;
-  options?: {
-    [id: string]: GenericKey;
-  };
-}
-
-export interface ConfigAmazonS3 extends IAdapterConfig {
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  region?: string;
-  endpoint?: string;
-}
-
-export interface ConfigAzureStorageBlob extends IAdapterConfig {
-  storageAccount?: string;
-  accessKey?: string;
-}
-
-export interface ConfigBackblazeB2 extends IAdapterConfig {
-  applicationKeyId?: string;
-  applicationKey?: string;
-}
-
-export interface ConfigGoogleCloud extends IAdapterConfig {
-  keyFilename?: string;
-  projectId?: string;
-}
-
-export interface ConfigLocal extends IAdapterConfig {
-  directory: string;
-  mode?: number | string;
-}
-
-export interface ConfigTemplate extends IAdapterConfig {
-  someKey: string;
-  someOtherKey: string;
   // [id: string]: GenericKey;
+  [id: string]: number | string | boolean | number[] | string[] | boolean[];
 }
-
-export type AdapterConfig =
-  | ConfigLocal
-  | ConfigAmazonS3
-  | ConfigGoogleCloud
-  | ConfigBackblazeB2
-  | ConfigTemplate;
 
 export type BackblazeAxiosResponse = {
   response: {
