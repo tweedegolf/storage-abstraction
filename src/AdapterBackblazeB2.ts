@@ -22,71 +22,29 @@ import {
   BackblazeBucketOptions,
   AdapterConfig,
 } from "./types";
-import { parseUrl, validateName } from "./util";
+import { validateName } from "./util";
 
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
   protected _config: AdapterConfig;
-  private storage: B2;
+  protected _configError: string | null = null;
+  protected _storage: B2 = null;
   private authorized: boolean = false;
-  private configError: string | null = null;
 
   constructor(config?: string | AdapterConfig) {
-    super();
-    this._config = this.parseConfig(config);
-    if (this._config !== null) {
+    super(config);
+    if (this._configError === null) {
       try {
-        const c = { ...this._config, ...(this._config.options as object) };
-        delete c.options;
-        this.storage = new B2(c);
-        console.log(this.storage.config);
+        this._storage = new B2(this._config);
       } catch (e) {
-        this.configError = e.message;
+        this._configError = e.message;
       }
     }
   }
 
   // util members
-
-  private parseConfig(config: string | AdapterConfig): AdapterConfig | null {
-    let cfg: AdapterConfig;
-    if (typeof config === "string") {
-      const { error, value } = parseUrl(config);
-      if (error !== null) {
-        this.configError = error;
-        return null;
-      }
-      const {
-        type,
-        part1: applicationKeyId,
-        part2: applicationKey,
-        bucketName,
-        queryString: options,
-      } = value;
-      cfg = {
-        type,
-        applicationKeyId,
-        applicationKey,
-        bucketName,
-        ...options,
-      };
-    } else {
-      cfg = { ...config };
-    }
-
-    if (cfg.skipCheck === true) {
-      return cfg;
-    }
-
-    if (!cfg.applicationKey || !cfg.applicationKeyId) {
-      this.configError =
-        "You must specify a value for both 'applicationKeyId' and 'applicationKey' for storage type 'b2'";
-      return null;
-    }
-    return cfg;
-  }
 
   private async authorize(): Promise<ResultObject> {
     if (this.configError !== null) {

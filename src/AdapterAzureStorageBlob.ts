@@ -7,8 +7,8 @@ import {
   BlobServiceClient,
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
+import { DefaultAzureCredential } from "@azure/identity";
 import {
-  ConfigAzureStorageBlob,
   StorageType,
   ResultObjectStream,
   ResultObject,
@@ -19,74 +19,56 @@ import {
   FileBufferParams,
   FilePathParams,
   FileStreamParams,
+  AdapterConfigAzure,
 } from "./types";
-import { parseUrl } from "./util";
 import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
-  protected _config: ConfigAzureStorageBlob;
+  protected _config: AdapterConfigAzure;
+  protected _configError: string | null = null;
   private sharedKeyCredential: StorageSharedKeyCredential;
-  private configError: string | null = null;
-  private storage: BlobServiceClient;
+  private _storage: BlobServiceClient;
 
-  constructor(config: string | ConfigAzureStorageBlob) {
-    super();
-    this._config = this.parseConfig(config as ConfigAzureStorageBlob);
-
-    this.sharedKeyCredential = new StorageSharedKeyCredential(
-      (this._config as ConfigAzureStorageBlob).storageAccount,
-      (this._config as ConfigAzureStorageBlob).accessKey
-    );
-    this.storage = new BlobServiceClient(
-      `https://${(this._config as ConfigAzureStorageBlob).storageAccount}.blob.core.windows.net`,
-      this.sharedKeyCredential,
-      this._config.options
-    );
-  }
-
-  private parseConfig(config: string | ConfigAzureStorageBlob): ConfigAzureStorageBlob {
-    let cfg: ConfigAzureStorageBlob;
-    if (typeof config === "string") {
-      const { value, error } = parseUrl(config);
-      if (error) {
-        this.configError = error;
-        return null;
+  constructor(config?: string | AdapterConfigAzure) {
+    super(config);
+    if (this._configError === null) {
+      if (typeof this.config.accountName === "undefined") {
+        this._configError = '[configError] Please provide a value for "storageAccount"';
+        return;
       }
-
-      const {
-        type,
-        part1: storageAccount,
-        part2: accessKey,
-        bucketName,
-        queryString: options,
-      } = value;
-      cfg = {
-        type,
-        storageAccount,
-        accessKey,
-        bucketName,
-        options,
-      };
-    } else {
-      cfg = { ...config };
+      // option 1: accountKey
+      console.log("option 1: accountKey");
+      if (typeof this.config.accountKey !== "undefined") {
+        try {
+          this.sharedKeyCredential = new StorageSharedKeyCredential(
+            this.config.accountName as string,
+            this.config.accountKey as string
+          );
+        } catch (e) {
+          this._configError = `[configError] ${JSON.parse(e.message).code}`;
+        }
+        this._storage = new BlobServiceClient(
+          `https://${this.config.accountName as string}.blob.core.windows.net`,
+          this.sharedKeyCredential,
+          this.config.options as object
+        );
+        // option 2: sasToken
+      } else if (typeof this.config.sasToken !== "undefined") {
+        this._storage = new BlobServiceClient(
+          `https://${this.config.accountName}.blob.core.windows.net?${this.config.sasToken}`,
+          null,
+          this.config.options as object
+        );
+        // option 3: passwordless
+      } else {
+        this._storage = new BlobServiceClient(
+          `https://${this.config.accountName as string}.blob.core.windows.net`,
+          new DefaultAzureCredential(),
+          this.config.options as object
+        );
+      }
     }
-
-    if (cfg.skipCheck === true) {
-      return cfg;
-    }
-
-    if (!cfg.storageAccount) {
-      this.configError =
-        "You must specify a value for 'storageAccount' for storage type 'azurestorageblob'";
-      return null;
-    }
-    if (!cfg.accessKey) {
-      this.configError =
-        "You must specify a value for 'accessKey' for storage type 'azurestorageblob'";
-      return null;
-    }
-    return cfg;
   }
 
   async getFileAsStream(
@@ -217,7 +199,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       }
       return { value: bucketNames, error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: `[listBuckets] ${e}` };
     }
   }
 

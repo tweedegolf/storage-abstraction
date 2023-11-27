@@ -121,7 +121,6 @@ async function testB2_2() {
   await storage.authorize();
   console.timeEnd("authorize");
 
-  /*
   const bucketName = configBackblaze.bucketName;
   const targetPath = "input.txt";
   const s = `${storage.downloadUrl}/file/${bucketName}/${targetPath}`;
@@ -151,7 +150,6 @@ async function testB2_2() {
   const r2 = await storage.listFileNames({ bucketId: id });
   console.timeEnd("listFileNames");
   // console.log("listFileNames", r2.data.files);
-*/
 }
 
 (async function run() {

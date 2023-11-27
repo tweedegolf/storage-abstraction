@@ -36,48 +36,15 @@ import { parseUrl } from "./util";
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
   protected _config: AdapterConfig;
-  private configError: string | null = null;
-  private storage: S3Client;
+  protected _configError: string | null = null;
+  protected _storage: S3Client;
 
   constructor(config?: string | AdapterConfig) {
-    super();
-    if (typeof config === "string") {
-      this._config = this.parseConfig(config);
-    } else {
-      this._config = config;
+    super(config);
+    if (this._configError === null) {
+      this._storage = new S3Client(this.config);
+      console.log(this.storage.config);
     }
-
-    if (this._config === null) {
-      return;
-    }
-
-    this.storage = new S3Client(this.config);
-    console.log(this.storage.config);
-  }
-
-  private parseConfig(config: string): AdapterConfig | null {
-    const { value, error } = parseUrl(config);
-    if (error) {
-      this.configError = error;
-      return null;
-    }
-    const {
-      type,
-      part1: accessKeyId,
-      part2: secretAccessKey,
-      part3: region,
-      bucketName,
-      queryString: options,
-    } = value;
-
-    return {
-      type,
-      accessKeyId,
-      secretAccessKey,
-      region,
-      bucketName,
-      ...options,
-    };
   }
 
   // Public API

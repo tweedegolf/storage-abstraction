@@ -11,10 +11,25 @@ import {
   ResultObjectNumber,
   ResultObjectStream,
 } from "./types";
+import { parseUrl } from "./util";
 
 export abstract class AbstractAdapter implements IStorage {
   protected _type = "abstract-adapter";
-  protected _config: AdapterConfig;
+  protected _config: AdapterConfig | null;
+  protected _configError: string | null = null;
+  protected _storage: any = null; // eslint-disable-line
+
+  constructor(config?: string | AdapterConfig) {
+    if (typeof config === "string") {
+      const { value, error } = parseUrl(config);
+      if (error) {
+        this._configError = error;
+      }
+      this._config = value;
+    } else {
+      this._config = { ...config };
+    }
+  }
 
   get type(): string {
     return this._type;
@@ -24,12 +39,30 @@ export abstract class AbstractAdapter implements IStorage {
     return this._config;
   }
 
+  get configError(): string {
+    return this._configError;
+  }
+
+  // eslint-disable-next-line
+  get storage(): any {
+    return this._storage;
+  }
+
   getType(): string {
     return this.type;
   }
 
+  getConfigError(): string {
+    return this.configError;
+  }
+
   getConfiguration(): AdapterConfig {
     return this.config;
+  }
+
+  // eslint-disable-next-line
+  getStorage(): any {
+    return this.storage;
   }
 
   async addFileFromPath(params: FilePathParams): Promise<ResultObject> {

@@ -9,6 +9,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.445.0",
     "@aws-sdk/s3-request-presigner": "^3.445.0",
+    "@azure/identity": "^4.0.0",
     "@azure/storage-blob": "^12.17.0",
     "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
     "@google-cloud/storage": "^7.6.0",
@@ -51,6 +52,7 @@
     "testB2": "ts-node ./tests/testB2.ts",
     "testS3": "ts-node ./tests/testS3.ts",
     "testGCS": "ts-node ./tests/testGCS.ts",
+    "testAzure": "ts-node ./tests/testAzure.ts",
     "testLocal": "ts-node ./tests/testLocal.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",

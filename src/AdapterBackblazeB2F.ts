@@ -5,7 +5,6 @@ require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 import {
   StorageType,
   IStorage,
-  ConfigBackblazeB2,
   ResultObject,
   ResultObjectBuckets,
   FileBufferParams,
@@ -15,10 +14,10 @@ import {
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectBoolean,
+  AdapterConfig,
 } from "./types";
-// import { parseUrl } from "./util";
 
-const getConfiguration = (): ConfigBackblazeB2 => {
+const getConfiguration = (): AdapterConfig => {
   return {
     type: StorageType.B2,
     applicationKeyId: "",
@@ -27,6 +26,8 @@ const getConfiguration = (): ConfigBackblazeB2 => {
 };
 
 const getType = (): string => "string";
+
+const getConfigError = (): string => "string";
 
 const createBucket = async (name: string): Promise<ResultObject> => {
   return { value: "ok", error: null };
@@ -104,7 +105,11 @@ const adapter: IStorage = {
   get config() {
     return getConfiguration();
   },
+  get configError() {
+    return getConfigError();
+  },
   getType,
+  getConfigError,
   getConfiguration,
   createBucket,
   clearBucket,
@@ -123,7 +128,7 @@ const adapter: IStorage = {
   fileExists,
 };
 
-const createAdapter = (config: ConfigBackblazeB2): IStorage => {
+const createAdapter = (config: AdapterConfig): IStorage => {
   console.log("create functional adapter");
   const state = {
     applicationKeyId: config.applicationKeyId,

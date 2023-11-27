@@ -12,8 +12,6 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
 } from "./types";
-import { AdapterGoogleCloudStorage } from "./AdapterGoogleCloudStorage";
-import { AdapterLocal } from "./AdapterLocal";
 
 //  add new storage adapters here
 const adapterClasses = {
@@ -49,19 +47,27 @@ export class Storage implements IStorage {
   }
 
   get type(): string {
-    return this.adapter.getType();
+    return this.adapter.type;
   }
 
   public getType(): string {
-    return this.adapter.getType();
+    return this.adapter.type;
   }
 
   get config(): AdapterConfig {
-    return this.adapter.getConfiguration();
+    return this.adapter.config;
   }
 
   public getConfiguration(): AdapterConfig {
-    return this.adapter.getConfiguration();
+    return this.adapter.config;
+  }
+
+  get configError(): string {
+    return this.adapter.configError;
+  }
+
+  public getConfigError(): string {
+    return this.adapter.configError;
   }
 
   public switchAdapter(args: string | AdapterConfig): void {

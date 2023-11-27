@@ -13,6 +13,10 @@ import { Readable } from "stream";
 // };
 
 export interface IStorage {
+  getStorage(): IStorage;
+
+  _storage: IStorage;
+
   /**
    * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
    */
@@ -43,6 +47,10 @@ export interface IStorage {
    * @returns adapter configuration as object
    */
   config: AdapterConfig;
+
+  getConfigError(): string;
+
+  configError: string;
 
   /**
    * Returns an object that contains both the options passed with the configuration and the
@@ -200,28 +208,16 @@ export enum StorageType {
   MINIO = "minio",
 }
 
-export type JSON = {
-  [id: string]:
-    | string
-    | number
-    | boolean
-    | string[]
-    | number[]
-    | boolean[]
-    | { [id: string]: JSON };
-};
-
-// export interface Options {
-//   [key: string]: string | number | boolean;
-// }
-
-export type GenericKey = number | string | boolean | number[] | string[] | boolean[];
-
 export interface AdapterConfig {
-  // type: StorageType;
   type: string;
-  // [id: string]: GenericKey;
-  [id: string]: number | string | boolean | number[] | string[] | boolean[];
+  [id: string]: any; // eslint-disable-line
+  // [id: string]: number | string | boolean | number[] | string[] | boolean[] | object;
+}
+
+export interface AdapterConfigAzure extends AdapterConfig {
+  accountName: string;
+  accountKey?: string;
+  sasToken?: string;
 }
 
 export type BackblazeAxiosResponse = {
@@ -287,14 +283,7 @@ export enum S3Compatible {
 
 export type ParseUrlResult = {
   error: string | null;
-  value: {
-    type: string;
-    part1: string;
-    part2: string;
-    part3: string;
-    bucketName: string;
-    queryString: { [key: string]: string };
-  };
+  value: AdapterConfig;
 };
 
 export interface ResultObject {
