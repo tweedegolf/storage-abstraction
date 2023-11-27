@@ -1,10 +1,6 @@
 import fs from "fs";
 import { Readable } from "stream";
-import {
-  Storage as GoogleCloudStorage,
-  File,
-  CreateReadStreamOptions,
-} from "@google-cloud/storage";
+import { Storage as GoogleCloudStorage, CreateReadStreamOptions } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
   StorageType,
@@ -18,75 +14,19 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
 } from "./types";
-import { parseUrl } from "./util";
 import { AdapterConfig } from "@tweedegolf/storage-abstraction";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected _type = StorageType.GCS;
   protected _config: AdapterConfig;
-  private configError: string | null = null;
+  protected _configError: string | null = null;
   private storage: GoogleCloudStorage;
 
   constructor(config?: string | AdapterConfig) {
-    super();
-    // this._config = this.parseConfig(config);
-    // const c = {
-    //   ...this._config,
-    //   ...this._config.options,
-    // };
-    // delete c.options;
-    // this.storage = new GoogleCloudStorage(c);
-    this.storage = new GoogleCloudStorage(config as object);
-  }
-
-  /**
-   * @param {string} keyFile - path to the keyFile
-   *
-   * Read in the keyFile and retrieve the projectId, this is function
-   * is called when the user did not provide a projectId
-   */
-  private getGCSProjectId(keyFile: string): string {
-    const data = fs.readFileSync(keyFile).toString("utf-8");
-    const json = JSON.parse(data);
-    return json.project_id;
-  }
-
-  private parseConfig(config: string | AdapterConfig): AdapterConfig {
-    let cfg: AdapterConfig;
-    if (typeof config === "string") {
-      const { value, error } = parseUrl(config);
-      if (error) {
-        this.configError = error;
-        return null;
-      }
-
-      const {
-        type,
-        part1: keyFilename,
-        part2: projectId,
-        bucketName,
-        queryString: options,
-      } = value;
-      cfg = {
-        type,
-        keyFilename,
-        projectId,
-        bucketName,
-        options,
-      };
-    } else {
-      cfg = { ...config };
+    super(config);
+    if (this._configError === null) {
+      this.storage = new GoogleCloudStorage(this._config as object);
     }
-
-    if (cfg.skipCheck === true) {
-      return cfg;
-    }
-
-    if (cfg.projectId === "" && cfg.keyFilename !== "") {
-      cfg.projectId = this.getGCSProjectId(cfg.keyFilename);
-    }
-
-    return cfg;
   }
 
   async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {

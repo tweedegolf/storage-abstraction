@@ -22,8 +22,8 @@ import { parseQuerystring, parseMode, parseUrl, validateName } from "./util";
 export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
   protected _config: ConfigLocal;
+  protected _configError: string | null = null;
   private mode: number = 0o777;
-  private configError: string | null = null;
 
   constructor(config: ConfigLocal) {
     super();
@@ -36,7 +36,7 @@ export class AdapterLocal extends AbstractAdapter {
     if (typeof config === "string") {
       const { value, error } = parseUrl(config);
       if (error) {
-        this.configError = error;
+        this._configError = error;
         return null;
       }
 

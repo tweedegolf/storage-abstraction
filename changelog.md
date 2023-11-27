@@ -50,6 +50,7 @@
 - `getConfig()` and `getType()` are implemented as getter as well, resp.: `storage.config` and `storage.type`
 - The configuration object are no longer extensible; if you want to provide extra parameters you can use the `options` object, for instance:
 - removed adapter config types
+- added a member `configError` in storage that can be queried with a getter e.g. `storage.configError`
 
 ```typescript
  const conf: ConfigAmazonS3 = {

@@ -8,7 +8,6 @@ import {
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
 import {
-  ConfigAzureStorageBlob,
   StorageType,
   ResultObjectStream,
   ResultObject,
@@ -19,74 +18,33 @@ import {
   FileBufferParams,
   FilePathParams,
   FileStreamParams,
+  AdapterConfig,
 } from "./types";
-import { parseUrl } from "./util";
 import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
-  protected _config: ConfigAzureStorageBlob;
+  protected _config: AdapterConfig;
+  protected _configError: string | null = null;
   private sharedKeyCredential: StorageSharedKeyCredential;
-  private configError: string | null = null;
   private storage: BlobServiceClient;
 
-  constructor(config: string | ConfigAzureStorageBlob) {
-    super();
-    this._config = this.parseConfig(config as ConfigAzureStorageBlob);
-
-    this.sharedKeyCredential = new StorageSharedKeyCredential(
-      (this._config as ConfigAzureStorageBlob).storageAccount,
-      (this._config as ConfigAzureStorageBlob).accessKey
-    );
-    this.storage = new BlobServiceClient(
-      `https://${(this._config as ConfigAzureStorageBlob).storageAccount}.blob.core.windows.net`,
-      this.sharedKeyCredential,
-      this._config.options
-    );
-  }
-
-  private parseConfig(config: string | ConfigAzureStorageBlob): ConfigAzureStorageBlob {
-    let cfg: ConfigAzureStorageBlob;
-    if (typeof config === "string") {
-      const { value, error } = parseUrl(config);
-      if (error) {
-        this.configError = error;
-        return null;
-      }
-
-      const {
-        type,
-        part1: storageAccount,
-        part2: accessKey,
-        bucketName,
-        queryString: options,
-      } = value;
-      cfg = {
-        type,
-        storageAccount,
-        accessKey,
-        bucketName,
-        options,
-      };
-    } else {
-      cfg = { ...config };
+  constructor(config?: string | AdapterConfig) {
+    super(config);
+    if (this._configError === null) {
+      this.sharedKeyCredential = new StorageSharedKeyCredential(
+        this._config.storageAccount as string,
+        this._config.accessKey as string
+      );
+      //   this.storage = new BlobServiceClient(
+      //     `https://${this._config.storageAccount as string}.blob.core.windows.net`,
+      //     this.sharedKeyCredential,
+      //     this._config.options as object
+      //   );
+      this.storage = new BlobServiceClient(
+        `https://${this._config.storageAccount as string}.blob.core.windows.net`
+      );
     }
-
-    if (cfg.skipCheck === true) {
-      return cfg;
-    }
-
-    if (!cfg.storageAccount) {
-      this.configError =
-        "You must specify a value for 'storageAccount' for storage type 'azurestorageblob'";
-      return null;
-    }
-    if (!cfg.accessKey) {
-      this.configError =
-        "You must specify a value for 'accessKey' for storage type 'azurestorageblob'";
-      return null;
-    }
-    return cfg;
   }
 
   async getFileAsStream(
