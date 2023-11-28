@@ -7,6 +7,7 @@ import {
   BlobServiceClient,
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
+import { DefaultAzureCredential } from "@azure/identity";
 import {
   StorageType,
   ResultObjectStream,
@@ -18,32 +19,54 @@ import {
   FileBufferParams,
   FilePathParams,
   FileStreamParams,
-  AdapterConfig,
+  AdapterConfigAzure,
 } from "./types";
 import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
-  protected _config: AdapterConfig;
+  protected _config: AdapterConfigAzure;
   protected _configError: string | null = null;
   private sharedKeyCredential: StorageSharedKeyCredential;
   private storage: BlobServiceClient;
 
-  constructor(config?: string | AdapterConfig) {
+  constructor(config?: string | AdapterConfigAzure) {
     super(config);
     if (this._configError === null) {
-      this.sharedKeyCredential = new StorageSharedKeyCredential(
-        this._config.storageAccount as string,
-        this._config.accessKey as string
-      );
-      //   this.storage = new BlobServiceClient(
-      //     `https://${this._config.storageAccount as string}.blob.core.windows.net`,
-      //     this.sharedKeyCredential,
-      //     this._config.options as object
-      //   );
-      this.storage = new BlobServiceClient(
-        `https://${this._config.storageAccount as string}.blob.core.windows.net`
-      );
+      if (typeof this.config.accountName === "undefined") {
+        this._configError = 'Please provide a value for "storageAccount"';
+        return;
+      }
+      // option 1: accountKey
+      if (typeof this.config.accountKey !== "undefined") {
+        try {
+          this.sharedKeyCredential = new StorageSharedKeyCredential(
+            this.config.accountName as string,
+            this.config.accountKey as string
+          );
+        } catch (e) {
+          this._configError = e.message; //JSON.parse(e.message).code;
+        }
+        this.storage = new BlobServiceClient(
+          `https://${this.config.storageAccount as string}.blob.core.windows.net`,
+          this.sharedKeyCredential,
+          this.config.options as object
+        );
+        // option 2: sasToken
+      } else if (typeof this.config.sasToken !== "undefined") {
+        this.storage = new BlobServiceClient(
+          `https://${this.config.accountName}.blob.core.windows.net?${this.config.sasToken}`,
+          null,
+          this.config.options as object
+        );
+        // option 3: passwordless
+      } else {
+        this.storage = new BlobServiceClient(
+          `https://${this.config.accountName as string}.blob.core.windows.net`,
+          new DefaultAzureCredential(),
+          this.config.options as object
+        );
+      }
     }
   }
 
@@ -175,7 +198,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       }
       return { value: bucketNames, error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e };
     }
   }
 

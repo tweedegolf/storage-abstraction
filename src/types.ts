@@ -206,7 +206,14 @@ export enum StorageType {
 
 export interface AdapterConfig {
   type: string;
-  [id: string]: number | string | boolean | number[] | string[] | boolean[] | object;
+  [id: string]: any; // eslint-disable-line
+  // [id: string]: number | string | boolean | number[] | string[] | boolean[] | object;
+}
+
+export interface AdapterConfigAzure extends AdapterConfig {
+  accountName: string;
+  accountKey?: string;
+  sasToken?: string;
 }
 
 export type BackblazeAxiosResponse = {
