@@ -1,11 +1,16 @@
 import dotenv from "dotenv";
-import { AdapterAzureStorageBlob } from "../src/AdapterAzureStorageBlob";
+import { Storage } from "../src/Storage";
 
 dotenv.config();
 
 async function test() {
-  const a = new AdapterAzureStorageBlob({ type: "azure", accountName: "tweedegolf" });
-  const b = await a.listBuckets();
+  const s = new Storage({
+    type: "azure",
+    accountName: "tweedegolf",
+    accountKey:
+      "WHtrTUfF3PLc9Dxnua4Dp7hquH6UTGhE93DhVCwBwVeUNnHceLpuV66myHEO89z54yQhKIlYnMhe+AStdvl51A==",
+  });
+  const b = await s.listBuckets();
   console.log(b);
   // console.log(a.configError);
 }

@@ -34,10 +34,11 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     super(config);
     if (this._configError === null) {
       if (typeof this.config.accountName === "undefined") {
-        this._configError = 'Please provide a value for "storageAccount"';
+        this._configError = '[configError] Please provide a value for "storageAccount"';
         return;
       }
       // option 1: accountKey
+      console.log("option 1: accountKey");
       if (typeof this.config.accountKey !== "undefined") {
         try {
           this.sharedKeyCredential = new StorageSharedKeyCredential(
@@ -45,10 +46,10 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
             this.config.accountKey as string
           );
         } catch (e) {
-          this._configError = e.message; //JSON.parse(e.message).code;
+          this._configError = `[configError] ${JSON.parse(e.message).code}`;
         }
         this.storage = new BlobServiceClient(
-          `https://${this.config.storageAccount as string}.blob.core.windows.net`,
+          `https://${this.config.accountName as string}.blob.core.windows.net`,
           this.sharedKeyCredential,
           this.config.options as object
         );
@@ -198,7 +199,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       }
       return { value: bucketNames, error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: `[listBuckets] ${e}` };
     }
   }
 
