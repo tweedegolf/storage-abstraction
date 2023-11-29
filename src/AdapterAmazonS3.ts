@@ -31,7 +31,6 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
 } from "./types";
-import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;

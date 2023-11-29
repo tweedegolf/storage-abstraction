@@ -29,6 +29,8 @@ const getType = (): string => "string";
 
 const getConfigError = (): string => "string";
 
+const getStorage = (): any => {}; // eslint-disable-line
+
 const createBucket = async (name: string): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };
@@ -108,9 +110,13 @@ const adapter: IStorage = {
   get configError() {
     return getConfigError();
   },
+  get storage() {
+    return getStorage();
+  },
   getType,
   getConfigError,
   getConfiguration,
+  getStorage,
   createBucket,
   clearBucket,
   deleteBucket,

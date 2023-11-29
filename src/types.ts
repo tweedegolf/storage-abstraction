@@ -13,9 +13,9 @@ import { Readable } from "stream";
 // };
 
 export interface IStorage {
-  getStorage(): IStorage;
+  getStorage(): any; // eslint-disable-line
 
-  _storage: IStorage;
+  storage: any; // eslint-disable-line
 
   /**
    * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.

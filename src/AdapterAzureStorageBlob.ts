@@ -27,8 +27,8 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
   protected _config: AdapterConfigAzure;
   protected _configError: string | null = null;
+  protected _storage: BlobServiceClient;
   private sharedKeyCredential: StorageSharedKeyCredential;
-  private _storage: BlobServiceClient;
 
   constructor(config?: string | AdapterConfigAzure) {
     super(config);
