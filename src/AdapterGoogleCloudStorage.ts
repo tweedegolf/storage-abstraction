@@ -13,20 +13,24 @@ import {
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectBoolean,
+  AdapterConfigGoogle,
 } from "./types";
-import { AdapterConfig } from "@tweedegolf/storage-abstraction";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected _type = StorageType.GCS;
-  protected _config: AdapterConfig;
+  protected _config: AdapterConfigGoogle;
   protected _configError: string | null = null;
   protected _storage: GoogleCloudStorage;
 
-  constructor(config?: string | AdapterConfig) {
+  constructor(config?: string | AdapterConfigGoogle) {
     super(config);
     if (this._configError === null) {
       this._storage = new GoogleCloudStorage(this._config as object);
     }
+  }
+
+  get config(): AdapterConfigGoogle {
+    return this._config as AdapterConfigGoogle;
   }
 
   async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {

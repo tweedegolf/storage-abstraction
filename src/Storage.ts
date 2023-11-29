@@ -11,6 +11,7 @@ import {
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectBoolean,
+  AdapterConfigGoogle,
 } from "./types";
 
 //  add new storage adapters here

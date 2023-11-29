@@ -215,6 +215,11 @@ export interface AdapterConfig {
   // [id: string]: number | string | boolean | number[] | string[] | boolean[] | object;
 }
 
+export interface AdapterConfigGoogle extends AdapterConfig {
+  projectId?: string;
+  keyFilename?: string;
+}
+
 export interface AdapterConfigAzure extends AdapterConfig {
   accountName: string;
   accountKey?: string;

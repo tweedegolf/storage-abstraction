@@ -5,7 +5,7 @@ import { rimraf } from "rimraf";
 import dotenv from "dotenv";
 import uniquid from "uniquid";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, ConfigLocal, StorageType } from "../src/types";
+import { AdapterConfig, StorageType } from "../src/types";
 import { copyFile } from "./util";
 import { Readable } from "stream";
 
@@ -133,13 +133,6 @@ describe(`[testing ${type} storage]`, async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   });
 
-  // afterEach((done) => {
-  //   // Esperar 1 minuto (60,000 milisegundos) entre cada prueba.
-  //   setTimeout(() => {
-  //     done();
-  //   }, 60000);
-  // });
-
   afterAll(async () => {
     // await fs.promises.rm(path.join(process.cwd(), "tests", "tmp"), { force: true });
     let p = path.normalize(path.join(process.cwd(), "tests", "tmp"));
@@ -159,22 +152,6 @@ describe(`[testing ${type} storage]`, async () => {
       preserveRoot: false,
     });
   });
-  // afterAll(async () => {
-  //   // await storage.clearBucket(bucketName);
-  //   if (storage.getType() === StorageType.LOCAL) {
-  //     // cleaning up test data
-  //     const p = path.normalize(path.join(process.cwd(), (config as ConfigLocal).directory));
-  //     await rimraf(p, {
-  //       preserveRoot: false,
-  //     })
-  //       .then((success: boolean) => {
-  //         console.log("\nall cleaned up!", success);
-  //       })
-  //       .catch((e: Error) => {
-  //         console.log(e);
-  //       });
-  //   }
-  // });
 
   it("create bucket", async () => {
     const bucketName = storage.getSelectedBucket();
