@@ -69,6 +69,14 @@ export class Storage implements IStorage {
   public getConfigError(): string {
     return this.adapter.configError;
   }
+  //eslint-disable-next-line
+  get storage(): any {
+    return this.adapter.storage;
+  }
+  //eslint-disable-next-line
+  public getStorage(): any {
+    return this.adapter.storage;
+  }
 
   public switchAdapter(args: string | AdapterConfig): void {
     // console.log(args);

@@ -210,6 +210,7 @@ export enum StorageType {
 
 export interface AdapterConfig {
   type: string;
+  bucketName?: string;
   [id: string]: any; // eslint-disable-line
   // [id: string]: number | string | boolean | number[] | string[] | boolean[] | object;
 }
@@ -218,6 +219,10 @@ export interface AdapterConfigAzure extends AdapterConfig {
   accountName: string;
   accountKey?: string;
   sasToken?: string;
+}
+
+export interface AdapterConfigLocal extends AdapterConfig {
+  directory: string;
 }
 
 export type BackblazeAxiosResponse = {
@@ -307,6 +312,11 @@ export type ResultObjectFiles = {
 };
 
 export type ResultObjectBuckets = {
+  error: string | null;
+  value: Array<string> | null;
+};
+
+export type ResultObjectStringArray = {
   error: string | null;
   value: Array<string> | null;
 };

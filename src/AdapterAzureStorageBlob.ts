@@ -38,7 +38,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         return;
       }
       // option 1: accountKey
-      console.log("option 1: accountKey");
+      // console.log("option 1: accountKey");
       if (typeof this.config.accountKey !== "undefined") {
         try {
           this.sharedKeyCredential = new StorageSharedKeyCredential(
@@ -86,7 +86,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       if (!exists) {
         return {
           value: null,
-          error: `File ${fileName} could not be retrieved from bucket ${bucketName}`,
+          error: `File ${fileName} could not be found in bucket ${bucketName}`,
         };
       }
       if (options.end !== undefined) {
@@ -97,10 +97,10 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         const stream = await file.download(options.start, options.end);
         return { value: stream.readableStreamBody as Readable, error: null };
       } catch (e) {
-        return { value: null, error: JSON.stringify(e) };
+        return { value: null, error: e.message };
       }
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -116,7 +116,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       if (!exists) {
         return {
           value: null,
-          error: `File ${fileName} could not be retrieved from bucket ${bucketName}`,
+          error: `File ${fileName} could not be found in bucket ${bucketName}`,
         };
       }
 
@@ -128,10 +128,10 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         const url = await file.generateSasUrl(options);
         return { value: url, error: null };
       } catch (e) {
-        return { value: null, error: JSON.stringify(e) };
+        return { value: null, error: e.message };
       }
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -144,7 +144,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       const res = await this.storage.createContainer(name, options);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -171,7 +171,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       }
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -182,7 +182,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       //console.log('deleting container: ', del);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -199,7 +199,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       }
       return { value: bucketNames, error: null };
     } catch (e) {
-      return { value: null, error: `[listBuckets] ${e}` };
+      return { value: null, error: e.message };
     }
   }
 
@@ -218,7 +218,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       }
       return { value: files, error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -232,7 +232,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       const file = await container.getBlobClient(fileName).deleteIfExists();
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -246,7 +246,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       const length = (await blob.getProperties()).contentLength;
       return { value: length, error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -258,11 +258,9 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     try {
       const cont = this.storage.getContainerClient(name);
       const exists = await cont.exists();
-      if (exists) {
-        return { value: null, error: "container already exists" };
-      }
+      return { value: exists, error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -272,13 +270,13 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const data = await this.storage
+      const exists = await this.storage
         .getContainerClient(bucketName)
         .getBlobClient(fileName)
         .exists();
-      return { value: data, error: null };
+      return { value: exists, error: null };
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 
@@ -321,7 +319,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         return this.getFileAsURL(params.bucketName, params.targetPath);
       }
     } catch (e) {
-      return { value: null, error: JSON.stringify(e) };
+      return { value: null, error: e.message };
     }
   }
 }

@@ -20,6 +20,8 @@ dotenv.config();
 // };
 
 async function test() {
+  const config = "s3://key:secret/can/contain/slashes@eu-west-2/the-buck";
+
   // const s = new AdapterAmazonS3({ region: "eu-west-1" });
   const s = new Storage({ type: StorageType.S3, region: "eu-west-1" });
   console.log(s.config);

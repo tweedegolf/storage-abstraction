@@ -1,35 +1,28 @@
 import dotenv from "dotenv";
 import { StorageType } from "../src/types";
-import { ConfigBackblazeB2 } from "@tweedegolf/storage-abstraction";
-import { parseMode, parseUrl } from "../src/util";
+import { Storage } from "../src/Storage";
 
 dotenv.config();
 
-const applicationKeyId = process.env.B2_APPLICATION_KEY_ID;
-const applicationKey = process.env.B2_APPLICATION_KEY;
-const configBackblaze: ConfigBackblazeB2 = {
-  type: StorageType.B2,
-  applicationKeyId,
-  applicationKey,
-  bucketName: process.env.BUCKET_NAME,
-  versioning: true,
-};
+async function test() {
+  const config = "local://directory=./tests/tmp&bucketName=the-buck-2024";
+  const s = new Storage(config);
+  // console.log(s.config);
 
-function test() {
-  // const config = "local://tests/tmp/@the-buck?param=value";
-  const config = "s3://key:secret/can/contain/slashes@eu-west-2/the-buck";
-  const { value, error } = parseUrl(config);
-  if (error) {
-    this.configError = error;
-    return null;
-  }
+  // const b = await s.createBucket(s.config.bucketName as string);
+  // console.log(b);
 
-  console.log(value);
+  const b = await s.addFile({
+    bucketName: s.config.bucketName as string,
+    origPath: "/home/abudaan/Pictures/351136564_1430365671153234_1297313861719590737_n.jpg",
+    targetPath: "image4.jpg",
+  });
+  console.log(b);
 
-  console.log(parseMode("0o777"));
-  console.log(parseMode("511"));
-  console.log(parseMode(0o777));
-  console.log(parseMode(511));
+  // console.log(parseMode("0o777"));
+  // console.log(parseMode("511"));
+  // console.log(parseMode(0o777));
+  // console.log(parseMode(511));
 }
 
 test();

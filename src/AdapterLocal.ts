@@ -5,7 +5,7 @@ import { rimraf } from "rimraf";
 import { Readable } from "stream";
 import {
   StorageType,
-  ConfigLocal,
+  AdapterConfigLocal,
   ResultObjectBoolean,
   FileBufferParams,
   FilePathParams,
@@ -15,63 +15,31 @@ import {
   ResultObjectFiles,
   ResultObjectStream,
   ResultObjectNumber,
+  ResultObjectStringArray,
 } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseQuerystring, parseMode, parseUrl, validateName } from "./util";
+import { parseMode, validateName } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
-  protected _config: ConfigLocal;
+  protected _config: AdapterConfigLocal;
   protected _configError: string | null = null;
   private mode: number = 0o777;
 
-  constructor(config: ConfigLocal) {
-    super();
-    this._config = this.parseConfig(config);
-    const directory = this._config.directory;
-  }
-
-  private parseConfig(config: string | ConfigLocal): ConfigLocal | null {
-    let cfg: ConfigLocal;
-    if (typeof config === "string") {
-      const { value, error } = parseUrl(config);
-      if (error) {
-        this._configError = error;
-        return null;
-      }
-
-      const { type, part1: directory, bucketName, queryString: options } = value;
-
-      if (typeof options.mode !== "undefined") {
-        const { value, error } = parseMode(options.mode);
-        if (error !== null) {
-          this.configError = error;
-          return null;
-        } else {
-          this.mode = value;
-        }
-      }
-
-      cfg = {
-        type,
-        directory,
-        bucketName,
-        mode: this.mode,
-        options,
-      };
-    } else {
-      cfg = { ...config };
-
-      if (!cfg.directory) {
-        this.configError = "You must specify a value for 'directory' for storage type 'local'";
-        return null;
+  constructor(config: AdapterConfigLocal) {
+    super(config);
+    if (typeof this._config.mode !== "undefined") {
+      const { value, error } = parseMode(this._config.mode);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        this.mode = value;
       }
     }
-    if (cfg.skipCheck === true) {
-      return cfg;
+    if (typeof this._config.directory !== "string") {
+      this._configError =
+        "[configError] You must specify a value for 'directory' for storage type 'local'";
     }
-
-    return cfg;
   }
 
   /**
@@ -81,7 +49,8 @@ export class AdapterLocal extends AbstractAdapter {
   private async createDirectory(path: string): Promise<ResultObjectBoolean> {
     try {
       await fs.promises.access(path, this.mode);
-      return { value: true, error: null }; // directory exists already
+      // return { value: false, error: `directory ${path} already exists` };
+      return { value: true, error: null };
     } catch (e) {
       try {
         await fs.promises.mkdir(path, {
@@ -97,13 +66,16 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  private async globFiles(folder: string): Promise<string[]> {
-    return glob(`${folder}/**/*.*`, {})
+  private async globFiles(
+    folder: string,
+    pattern: string = "**/*.*"
+  ): Promise<ResultObjectStringArray> {
+    return glob(`${folder}/${pattern}`, {})
       .then((files) => {
-        return Promise.resolve(files);
+        return { value: files, error: null };
       })
-      .catch((err) => {
-        return Promise.reject(err);
+      .catch((e) => {
+        return { value: null, error: e.message };
       });
   }
 
@@ -132,6 +104,7 @@ export class AdapterLocal extends AbstractAdapter {
       let readStream: Readable;
       if (typeof (params as FilePathParams).origPath === "string") {
         await fs.promises.copyFile((params as FilePathParams).origPath, dest);
+        return { value: dest, error: null };
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
         readStream._read = (): void => {}; // _read is required but you can noop it
@@ -140,21 +113,20 @@ export class AdapterLocal extends AbstractAdapter {
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         readStream = (params as FileStreamParams).stream;
       }
-
+      console.time();
       const writeStream = fs.createWriteStream(dest);
-      return new Promise((resolve) => {
-        readStream
-          .pipe(writeStream)
-          .on("error", (e) => {
-            resolve({ value: null, error: e.message });
-          })
-          .on("finish", () => {
-            resolve({ value: dest, error: null });
-          });
-        writeStream.on("error", (e) => {
-          resolve({ value: null, error: e.message });
+      readStream
+        .pipe(writeStream)
+        .on("error", (e) => {
+          return { value: null, error: `[readStream error] ${e.message}` };
+        })
+        .on("finish", () => {
+          return { value: dest, error: null };
         });
+      writeStream.on("error", (e) => {
+        return { value: null, error: `[writeStream error] ${e.message}` };
       });
+      console.timeEnd();
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -169,6 +141,7 @@ export class AdapterLocal extends AbstractAdapter {
     if (msg !== null) {
       return { value: null, error: msg };
     }
+
     try {
       const p = path.join(this._config.directory, name);
       const created = await this.createDirectory(p);
@@ -233,7 +206,10 @@ export class AdapterLocal extends AbstractAdapter {
     }
     try {
       const storagePath = path.join(this._config.directory, bucketName);
-      const files = await this.globFiles(storagePath);
+      const { value: files, error } = await this.globFiles(storagePath);
+      if (error !== null) {
+        return { value: null, error };
+      }
       const result: [string, number][] = [];
       for (let i = 0; i < files.length; i += 1) {
         const f = files[i];
