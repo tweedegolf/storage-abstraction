@@ -1,6 +1,4 @@
-import { BucketLocationConstraint } from "@aws-sdk/client-s3";
-import { ParseUrlResult, ResultObjectNumber } from "./types";
-import { AdapterConfig } from "@tweedegolf/storage-abstraction";
+import { AdapterConfig, ParseUrlResult, ResultObjectNumber } from "./types";
 
 /**
  * @param: url

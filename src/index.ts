@@ -1,14 +1,11 @@
 import { Storage } from "./Storage";
-// import { AbstractAdapter } from "./AbstractAdapter";
-// import { parseUrl } from "./util";
 import {
   StorageType,
   IStorage,
   AdapterConfig,
-  ConfigAmazonS3,
-  ConfigBackblazeB2,
-  ConfigGoogleCloud,
-  ConfigLocal,
+  AdapterConfigAzure,
+  AdapterConfigGoogle,
+  AdapterConfigLocal,
 } from "./types";
 
 export {
@@ -16,8 +13,7 @@ export {
   IStorage,
   StorageType,
   AdapterConfig,
-  ConfigAmazonS3,
-  ConfigBackblazeB2,
-  ConfigGoogleCloud,
-  ConfigLocal,
+  AdapterConfigAzure,
+  AdapterConfigGoogle,
+  AdapterConfigLocal,
 };

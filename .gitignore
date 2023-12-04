@@ -2,7 +2,7 @@
 node_modules
 publish/dist
 publish/README.md
-tests/tmp/*.jpg
+tests/test_directory
 tests_local
 gcs.json
 yarn-error.log
