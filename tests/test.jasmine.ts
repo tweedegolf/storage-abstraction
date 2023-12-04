@@ -53,9 +53,8 @@ if (type === StorageType.LOCAL) {
   config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;
 }
 
-const newBucketName = `bucket-${uniquid()}}`;
+const newBucketName1 = `bucket-${uniquid()}}`;
 const newBucketName2 = `bucket-${uniquid()}}`;
-const newBucketName3 = `bucket-${uniquid()}}`;
 
 let storage: Storage;
 let bucketName: string;
@@ -80,13 +79,17 @@ function streamToString(stream: Readable) {
 describe(`[testing ${type} storage]`, async () => {
   beforeAll(async () => {
     // create a temporary working directory
-    await fs.promises.stat(path.join(process.cwd(), "tests", "tmp")).catch(async (e) => {
-      await fs.promises.mkdir(path.join(process.cwd(), "tests", "tmp"));
-      console.log(e);
-    });
+    if (type !== StorageType.LOCAL) {
+      await fs.promises
+        .stat(path.join(process.cwd(), "tests", "test_directory"))
+        .catch(async (e) => {
+          await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
+          console.log(e);
+        });
+    }
     try {
       storage = new Storage(config);
-      bucketName = storage.config.bucketName || newBucketName;
+      bucketName = storage.config.bucketName || newBucketName1;
       console.log("beforeAll");
       console.log(storage.config);
     } catch (e) {
@@ -100,36 +103,35 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   afterAll(async () => {
-    // await fs.promises.rm(path.join(process.cwd(), "tests", "tmp"), { force: true });
-    let p = path.normalize(path.join(process.cwd(), "tests", "tmp"));
-    await rimraf(p, {
-      preserveRoot: false,
-    });
-    p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
-    await rimraf(p, {
-      preserveRoot: false,
-    });
-    p = path.normalize(path.join(process.cwd(), "the-buck"));
-    await rimraf(p, {
-      preserveRoot: false,
-    });
-    p = path.normalize(path.join(process.cwd(), "new-bucket"));
+    const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
     await rimraf(p, {
       preserveRoot: false,
     });
   });
 
-  it("create bucket", async () => {
-    await expectAsync(storage.createBucket(bucketName, {})).toBeResolved();
+  it("check if bucket exists", async () => {
+    const { value, error } = await storage.bucketExists(bucketName);
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (value === false) {
+      it("create bucket", async () => {
+        const { value, error } = await storage.createBucket(bucketName, {});
+        expect(value).not.toBeNull();
+        expect(error).toBeNull();
+      });
+    } else {
+      it("clear bucket", async () => {
+        const { value, error } = await storage.clearBucket(bucketName);
+        expect(value).not.toBeNull();
+        expect(error).toBeNull();
+      });
+    }
   });
 
   // it("wait it bit", async () => {
   //   await expectAsync(waitABit(2000)).toBeResolved();
   // });
-
-  it("clear bucket", async () => {
-    await expectAsync(storage.clearBucket(bucketName)).toBeResolved();
-  });
 
   it("check if bucket is empty", async () => {
     await expectAsync(storage.listFiles(bucketName)).toBeResolvedTo({ value: [], error: null });
@@ -175,7 +177,7 @@ describe(`[testing ${type} storage]`, async () => {
         origPath: "./tests/data/image1.jpg",
         targetPath: "subdir/renamed.jpg",
       })
-    ).toBeResolved();
+    ).toBeResolvedTo({ value: "ok", error: null });
   });
 
   it("list files 1", async () => {
@@ -190,7 +192,9 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("remove file success", async () => {
-    await expectAsync(storage.removeFile(bucketName, "subdir/renamed.jpg")).toBeResolved();
+    const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
   it("remove file again", async () => {
@@ -208,7 +212,9 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("get readable stream", async () => {
-    await expectAsync(storage.getFileAsStream(bucketName, "image1.jpg")).toBeResolved();
+    const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg");
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
   it("get readable stream error", async () => {
@@ -220,7 +226,12 @@ describe(`[testing ${type} storage]`, async () => {
   it("get readable stream and save file", async () => {
     // try {
     const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg");
-    const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}.jpg`);
+    const filePath = path.join(
+      process.cwd(),
+      "tests",
+      "test_directory",
+      `test-${storage.getType()}.jpg`
+    );
     const writeStream = fs.createWriteStream(filePath);
 
     expect(value).not.toBeNull();
@@ -236,44 +247,77 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("get readable stream partially and save file", async () => {
-    const filePath = path.join(process.cwd(), "tests", "tmp", `test-${storage.getType()}-part.jpg`);
-    // try {
-    const readStream = await storage.getFileAsReadable("image1.jpg", { end: 2999 });
-    const writeStream = fs.createWriteStream(filePath);
-    await copyFile(readStream, writeStream);
-    // } catch (e) {
-    //   throw e;
-    // }
-    const size = (await fs.promises.stat(filePath)).size;
-    // console.log(size);
-    expect(size).toBe(3000);
+    const filePath = path.join(
+      process.cwd(),
+      "tests",
+      "test_directory",
+      `test-${storage.getType()}-part.jpg`
+    );
+    const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg", { end: 2999 });
+
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (value !== null) {
+      const readStream = value;
+      const writeStream = fs.createWriteStream(filePath);
+      await copyFile(readStream, writeStream);
+      const size = (await fs.promises.stat(filePath)).size;
+      expect(size).toBe(3000);
+    }
   });
 
   it("add file from stream", async () => {
     const stream = fs.createReadStream("./tests/data/image2.jpg");
-    await expectAsync(storage.addFileFromReadable(stream, "image2.jpg")).toBeResolved();
+    await expectAsync(
+      storage.addFileFromStream({ bucketName, stream, targetPath: "image2.jpg" })
+    ).toBeResolvedTo({
+      value: "ok",
+      error: null,
+    });
   });
 
   it("add file from buffer", async () => {
     const buffer = await fs.promises.readFile("./tests/data/image2.jpg");
-    await expectAsync(storage.addFileFromBuffer(buffer, "image3.jpg")).toBeResolved();
+    await expectAsync(
+      storage.addFileFromBuffer({ bucketName, buffer, targetPath: "image3.jpg" })
+    ).toBeResolvedTo({
+      value: "ok",
+      error: null,
+    });
   });
 
   it("list files 3", async () => {
-    const files = await storage.listFiles();
-    expect(files.findIndex(([a, b]) => a === "image1.jpg" && b === 32201) !== -1).toBeTrue();
-    expect(files.findIndex(([a, b]) => a === "image2.jpg" && b === 42908) !== -1).toBeTrue();
-    expect(files.findIndex(([a, b]) => a === "image3.jpg" && b === 42908) !== -1).toBeTrue();
+    const { value: files, error } = await storage.listFiles(bucketName);
+
+    expect(files).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (files !== null) {
+      expect(files.findIndex(([a, b]) => a === "image1.jpg" && b === 32201) !== -1).toBeTrue();
+      expect(files.findIndex(([a, b]) => a === "image2.jpg" && b === 42908) !== -1).toBeTrue();
+      expect(files.findIndex(([a, b]) => a === "image3.jpg" && b === 42908) !== -1).toBeTrue();
+    }
   });
 
   it("add & read file from storage", async () => {
     const buffer = await fs.promises.readFile("./tests/data/input.txt");
-    await expectAsync(storage.addFileFromBuffer(buffer, "input.txt")).toBeResolved();
+    await expectAsync(
+      storage.addFileFromBuffer({ bucketName, buffer, targetPath: "input.txt" })
+    ).toBeResolvedTo({
+      value: "ok",
+      error: null,
+    });
 
-    const fileReadable = await storage.getFileAsReadable("input.txt");
-    const data = await streamToString(fileReadable);
+    const { value, error } = await storage.getFileAsStream(bucketName, "input.txt");
 
-    expect(data).toEqual("hello world");
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (value !== null) {
+      const data = await streamToString(value);
+      expect(data).toEqual("hello world");
+    }
   });
 
   it("sizeOf", async () => {
@@ -316,80 +360,60 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   it("create bucket", async () => {
-    try {
-      await storage.createBucket(newBucketName);
-    } catch (e) {
-      console.error("\x1b[31m", e, "\n");
-    }
+    const { value, error } = await storage.createBucket(newBucketName2);
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
   it("check created bucket", async () => {
-    const buckets = await storage.listBuckets();
-    const index = buckets.indexOf(newBucketName);
-    expect(index).toBeGreaterThan(-1);
-  });
+    const { value, error } = await storage.listBuckets();
 
-  it("select bucket", async () => {
-    await storage.selectBucket(newBucketName);
-    expect(storage.getSelectedBucket()).toBe(newBucketName);
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (value !== null) {
+      const buckets = value;
+      const index = buckets.indexOf(newBucketName2);
+      expect(index).toBeGreaterThan(-1);
+    }
   });
 
   it("add file to new bucket", async () => {
     await expectAsync(
-      storage.addFileFromPath("./tests/data/image1.jpg", "image1.jpg")
-    ).toBeResolved();
+      storage.addFileFromPath({
+        bucketName,
+        origPath: "./tests/data/image1.jpg",
+        targetPath: "image1.jpg",
+      })
+    ).toBeResolvedTo({ value: "ok", error: null });
   });
 
   it("list files in new bucket", async () => {
     const expectedResult: [string, number][] = [["image1.jpg", 32201]];
-    await expectAsync(storage.listFiles()).toBeResolvedTo(expectedResult);
+    await expectAsync(storage.listFiles(newBucketName2)).toBeResolvedTo({
+      value: expectedResult,
+      error: null,
+    });
   });
 
-  it("delete bucket currently selected non-empty bucket", async () => {
+  it("delete non-empty bucket", async () => {
     // S3 doesn't allow you to delete a non-empty bucket
-    if (storage.getType() !== StorageType.S3) {
-      const msg = await storage.deleteBucket();
-      expect(storage.getSelectedBucket()).toBe("");
-      const buckets = await storage.listBuckets();
-      const index = buckets.indexOf(newBucketName);
+    // if (storage.getType() !== StorageType.S3) {
+    // }
+    const { value, error } = await storage.deleteBucket(newBucketName2);
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+  });
+
+  it("check is bucket has been deleted", async () => {
+    const { value, error } = await storage.listBuckets();
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (value !== null) {
+      const buckets = value;
+      const index = buckets.indexOf(newBucketName2);
       expect(index).toBe(-1);
     }
-  });
-
-  it("create bucket", async () => {
-    // expectAsync(storage.createBucket(newBucketName)).toBeResolved();
-    try {
-      const msg = await storage.createBucket(newBucketName2);
-      //console.log('create bucket msg: ',msg);
-    } catch (e) {
-      console.error("\x1b[31m", e, "\n");
-    }
-  });
-
-  it("check created bucket", async () => {
-    const buckets = await storage.listBuckets();
-    //console.log(buckets);
-
-    const index = buckets.indexOf(newBucketName2);
-    expect(index).not.toBe(-1);
-  });
-
-  it("clear bucket by providing a bucket name", async () => {
-    await expectAsync(storage.clearBucket(newBucketName2)).toBeResolved();
-  });
-
-  it("bucket should contain no files", async () => {
-    const buckets = await storage.listBuckets();
-    // await expectAsync(storage.selectBucket(newBucketName)).toBeResolvedTo("bucket selected");
-    const b = await storage.selectBucket(newBucketName2);
-    await expectAsync(storage.listFiles()).toBeResolvedTo([]);
-  });
-
-  it("delete bucket by providing a bucket name", async () => {
-    const msg = await storage.deleteBucket(newBucketName2);
-    //console.log(msg);
-    const buckets = await storage.listBuckets();
-    const index = buckets.indexOf(newBucketName2);
-    expect(index).toBe(-1);
   });
 });
