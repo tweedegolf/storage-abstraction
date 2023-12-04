@@ -113,20 +113,22 @@ export class AdapterLocal extends AbstractAdapter {
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         readStream = (params as FileStreamParams).stream;
       }
-      console.time();
+      // console.time();
       const writeStream = fs.createWriteStream(dest);
-      readStream
-        .pipe(writeStream)
-        .on("error", (e) => {
-          return { value: null, error: `[readStream error] ${e.message}` };
-        })
-        .on("finish", () => {
-          return { value: dest, error: null };
+      return new Promise((resolve) => {
+        readStream
+          .pipe(writeStream)
+          .on("error", (e) => {
+            resolve({ value: null, error: `[readStream error] ${e.message}` });
+          })
+          .on("finish", () => {
+            resolve({ value: dest, error: null });
+          });
+        writeStream.on("error", (e) => {
+          resolve({ value: null, error: `[writeStream error] ${e.message}` });
         });
-      writeStream.on("error", (e) => {
-        return { value: null, error: `[writeStream error] ${e.message}` };
       });
-      console.timeEnd();
+      // console.timeEnd();
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -162,8 +164,8 @@ export class AdapterLocal extends AbstractAdapter {
 
     try {
       // remove all files and folders inside bucket directory, but not the directory itself
-      const p = path.join(this._config.directory, name, "*");
-      await rimraf(p);
+      const p = path.join(this._config.directory, name);
+      await rimraf(p, { preserveRoot: false });
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -234,11 +236,17 @@ export class AdapterLocal extends AbstractAdapter {
 
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
-      // const { size } = await fs.promises.stat(p);
-      // console.log(p, size, options);
-      return { value: fs.createReadStream(p, options), error: null };
+      return fs.promises
+        .access(p)
+        .then(() => {
+          const stream = fs.createReadStream(p, options);
+          return { value: stream, error: null };
+        })
+        .catch((e) => {
+          return { value: null, error: e };
+        });
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: e };
     }
   }
 
@@ -262,7 +270,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
 
     const p = path.join(this._config.directory, bucketName, fileName);
-    await fs.promises
+    return fs.promises
       .unlink(p)
       .then(() => {
         return { value: "ok", error: null };

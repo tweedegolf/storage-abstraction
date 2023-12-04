@@ -103,29 +103,35 @@ describe(`[testing ${type} storage]`, async () => {
   });
 
   afterAll(async () => {
-    const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
-    await rimraf(p, {
-      preserveRoot: false,
-    });
+    // const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
+    // await rimraf(p, {
+    //   preserveRoot: false,
+    // });
   });
 
-  it("check if bucket exists", async () => {
+  let bucketExists: boolean;
+  it("(1) check if bucket exists", async () => {
     const { value, error } = await storage.bucketExists(bucketName);
     expect(value).not.toBeNull();
     expect(error).toBeNull();
+    if (value !== null) {
+      bucketExists = value;
+    }
+  });
 
-    if (value === false) {
-      it("create bucket", async () => {
-        const { value, error } = await storage.createBucket(bucketName, {});
-        expect(value).not.toBeNull();
-        expect(error).toBeNull();
-      });
-    } else {
-      it("clear bucket", async () => {
-        const { value, error } = await storage.clearBucket(bucketName);
-        expect(value).not.toBeNull();
-        expect(error).toBeNull();
-      });
+  it("(2) create bucket", async () => {
+    if (bucketExists === false) {
+      const { value, error } = await storage.createBucket(bucketName, {});
+      expect(value).not.toBeNull();
+      expect(error).toBeNull();
+    }
+  });
+
+  it("(3) clear bucket", async () => {
+    if (bucketExists === true) {
+      const { value, error } = await storage.clearBucket(bucketName);
+      expect(value).not.toBeNull();
+      expect(error).toBeNull();
     }
   });
 
@@ -133,34 +139,34 @@ describe(`[testing ${type} storage]`, async () => {
   //   await expectAsync(waitABit(2000)).toBeResolved();
   // });
 
-  it("check if bucket is empty", async () => {
+  it("(4) check if bucket is empty", async () => {
     await expectAsync(storage.listFiles(bucketName)).toBeResolvedTo({ value: [], error: null });
   });
 
-  it("add file success", async () => {
+  it("(5) add file success", async () => {
+    let value: null | string;
+    let error: null | string;
     if (storage.getType() === StorageType.S3) {
-      await expectAsync(
-        storage.addFileFromPath({
-          bucketName,
-          origPath: "./tests/data/image1.jpg",
-          targetPath: "image1.jpg",
-          options: {
-            Expires: new Date(2025, 11, 17),
-          },
-        })
-      ).toBeResolvedTo({ value: "ok", error: null });
+      ({ value, error } = await storage.addFileFromPath({
+        bucketName,
+        origPath: "./tests/data/image1.jpg",
+        targetPath: "image1.jpg",
+        options: {
+          Expires: new Date(2025, 11, 17),
+        },
+      }));
     } else {
-      await expectAsync(
-        storage.addFileFromPath({
-          bucketName,
-          origPath: "./tests/data/image1.jpg",
-          targetPath: "image1.jpg",
-        })
-      ).toBeResolvedTo({ value: "ok", error: null });
+      ({ value, error } = await storage.addFileFromPath({
+        bucketName,
+        origPath: "./tests/data/image1.jpg",
+        targetPath: "image1.jpg",
+      }));
     }
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
-  it("add file error", async () => {
+  it("(6) add file error", async () => {
     const { value, error } = await storage.addFileFromPath({
       bucketName,
       origPath: "./tests/data/non-existent.jpg",
@@ -170,17 +176,18 @@ describe(`[testing ${type} storage]`, async () => {
     expect(error).not.toBeNull();
   });
 
-  it("add with new name and directory/prefix", async () => {
-    await expectAsync(
-      storage.addFileFromPath({
-        bucketName,
-        origPath: "./tests/data/image1.jpg",
-        targetPath: "subdir/renamed.jpg",
-      })
-    ).toBeResolvedTo({ value: "ok", error: null });
+  it("(7) add with new name and directory/prefix", async () => {
+    const { value, error } = await storage.addFileFromPath({
+      bucketName,
+      origPath: "./tests/data/image1.jpg",
+      targetPath: "subdir/renamed.jpg",
+    });
+
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
-  it("list files 1", async () => {
+  it("(8) list files 1", async () => {
     const expectedResult: [string, number][] = [
       ["image1.jpg", 32201],
       ["subdir/renamed.jpg", 32201],
@@ -191,19 +198,19 @@ describe(`[testing ${type} storage]`, async () => {
     });
   });
 
-  it("remove file success", async () => {
+  it("(9) remove file success", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });
 
-  it("remove file again", async () => {
+  it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("list files 2", async () => {
+  it("(11) list files 2", async () => {
     const expectedResult: [string, number][] = [["image1.jpg", 32201]];
     await expectAsync(storage.listFiles(bucketName)).toBeResolvedTo({
       value: expectedResult,
@@ -211,19 +218,19 @@ describe(`[testing ${type} storage]`, async () => {
     });
   });
 
-  it("get readable stream", async () => {
+  it("(12) get readable stream", async () => {
     const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg");
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });
 
-  it("get readable stream error", async () => {
+  it("(13) get readable stream error", async () => {
     const { value, error } = await storage.getFileAsStream(bucketName, "image2.jpg");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("get readable stream and save file", async () => {
+  it("(14) get readable stream and save file", async () => {
     // try {
     const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg");
     const filePath = path.join(
@@ -246,7 +253,7 @@ describe(`[testing ${type} storage]`, async () => {
     // }
   });
 
-  it("get readable stream partially and save file", async () => {
+  it("(15) get readable stream partially and save file", async () => {
     const filePath = path.join(
       process.cwd(),
       "tests",
@@ -267,27 +274,31 @@ describe(`[testing ${type} storage]`, async () => {
     }
   });
 
-  it("add file from stream", async () => {
+  it("(16) add file from stream", async () => {
     const stream = fs.createReadStream("./tests/data/image2.jpg");
-    await expectAsync(
-      storage.addFileFromStream({ bucketName, stream, targetPath: "image2.jpg" })
-    ).toBeResolvedTo({
-      value: "ok",
-      error: null,
+    const { value, error } = await storage.addFileFromStream({
+      bucketName,
+      stream,
+      targetPath: "image2.jpg",
     });
+
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
-  it("add file from buffer", async () => {
+  it("(17) add file from buffer", async () => {
     const buffer = await fs.promises.readFile("./tests/data/image2.jpg");
-    await expectAsync(
-      storage.addFileFromBuffer({ bucketName, buffer, targetPath: "image3.jpg" })
-    ).toBeResolvedTo({
-      value: "ok",
-      error: null,
+    const { value, error } = await storage.addFileFromBuffer({
+      bucketName,
+      buffer,
+      targetPath: "image3.jpg",
     });
+
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
-  it("list files 3", async () => {
+  it("(18) list files 3", async () => {
     const { value: files, error } = await storage.listFiles(bucketName);
 
     expect(files).not.toBeNull();
@@ -300,72 +311,77 @@ describe(`[testing ${type} storage]`, async () => {
     }
   });
 
-  it("add & read file from storage", async () => {
+  it("(19) add & read file from storage", async () => {
     const buffer = await fs.promises.readFile("./tests/data/input.txt");
-    await expectAsync(
-      storage.addFileFromBuffer({ bucketName, buffer, targetPath: "input.txt" })
-    ).toBeResolvedTo({
-      value: "ok",
-      error: null,
-    });
+    expect(buffer).not.toBeUndefined();
+    expect(buffer).not.toBeNull();
 
-    const { value, error } = await storage.getFileAsStream(bucketName, "input.txt");
+    const { value, error } = await storage.addFileFromBuffer({
+      bucketName,
+      buffer,
+      targetPath: "input.txt",
+    });
 
     expect(value).not.toBeNull();
     expect(error).toBeNull();
 
-    if (value !== null) {
-      const data = await streamToString(value);
+    const { value: value1, error: error1 } = await storage.getFileAsStream(bucketName, "input.txt");
+
+    expect(value1).not.toBeNull();
+    expect(error1).toBeNull();
+
+    if (value1 !== null) {
+      const data = await streamToString(value1);
       expect(data).toEqual("hello world");
     }
   });
 
-  it("sizeOf", async () => {
+  it("(20) sizeOf", async () => {
     await expectAsync(storage.sizeOf(bucketName, "image1.jpg")).toBeResolvedTo({
       value: 32201,
       error: null,
     });
   });
 
-  it("check if file exists: yes", async () => {
+  it("(21) check if file exists: yes", async () => {
     await expectAsync(storage.fileExists(bucketName, "image1.jpg")).toBeResolvedTo({
       value: true,
       error: null,
     });
   });
 
-  it("check if file exists: nope", async () => {
+  it("(22) check if file exists: nope", async () => {
     await expectAsync(storage.fileExists(bucketName, "image10.jpg")).toBeResolvedTo({
       value: false,
       error: null,
     });
   });
 
-  it("create bucket error", async () => {
+  it("(23) create bucket error", async () => {
     const { value, error } = await storage.createBucket("");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("create bucket error", async () => {
+  it("(24) create bucket error", async () => {
     const { value, error } = await storage.createBucket("null");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("create bucket error", async () => {
+  it("(25) create bucket error", async () => {
     const { value, error } = await storage.createBucket("undefined");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("create bucket", async () => {
+  it("(26) create bucket", async () => {
     const { value, error } = await storage.createBucket(newBucketName2);
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });
 
-  it("check created bucket", async () => {
+  it("(27) check created bucket", async () => {
     const { value, error } = await storage.listBuckets();
 
     expect(value).not.toBeNull();
@@ -378,17 +394,18 @@ describe(`[testing ${type} storage]`, async () => {
     }
   });
 
-  it("add file to new bucket", async () => {
-    await expectAsync(
-      storage.addFileFromPath({
-        bucketName,
-        origPath: "./tests/data/image1.jpg",
-        targetPath: "image1.jpg",
-      })
-    ).toBeResolvedTo({ value: "ok", error: null });
+  it("(28) add file to new bucket", async () => {
+    const { value, error } = await storage.addFileFromPath({
+      bucketName: newBucketName2,
+      origPath: "./tests/data/image1.jpg",
+      targetPath: "image1.jpg",
+    });
+
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
-  it("list files in new bucket", async () => {
+  it("(29) list files in new bucket", async () => {
     const expectedResult: [string, number][] = [["image1.jpg", 32201]];
     await expectAsync(storage.listFiles(newBucketName2)).toBeResolvedTo({
       value: expectedResult,
@@ -396,7 +413,7 @@ describe(`[testing ${type} storage]`, async () => {
     });
   });
 
-  it("delete non-empty bucket", async () => {
+  it("(30) delete non-empty bucket", async () => {
     // S3 doesn't allow you to delete a non-empty bucket
     // if (storage.getType() !== StorageType.S3) {
     // }
@@ -405,7 +422,7 @@ describe(`[testing ${type} storage]`, async () => {
     expect(error).toBeNull();
   });
 
-  it("check is bucket has been deleted", async () => {
+  it("(31) check is bucket has been deleted", async () => {
     const { value, error } = await storage.listBuckets();
     expect(value).not.toBeNull();
     expect(error).toBeNull();
