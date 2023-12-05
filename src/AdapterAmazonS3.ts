@@ -17,6 +17,7 @@ import {
   ListObjectsCommand,
   PutObjectCommand,
   S3Client,
+  S3ClientConfig,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { ConfigAmazonS3, AdapterConfig, StorageType, S3Compatible } from "./types";
@@ -55,20 +56,20 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     } else {
       this.region = (this.config as ConfigAmazonS3).region;
     }
-    
-    const config = {
-        region: this.region,
-        credentials: {
-          accessKeyId: this.config.accessKeyId,
-          secretAccessKey: this.config.secretAccessKey,
-        },
-      }
+
+    const s3Config: S3ClientConfig = {
+      region: this.region,
+      credentials: {
+        accessKeyId: this.config.accessKeyId,
+        secretAccessKey: this.config.secretAccessKey,
+      },
+    };
 
     if (typeof this.config.endpoint !== "undefined") {
-      config.endpoint = this.config.endpoint;
+      s3Config.endpoint = this.config.endpoint;
     }
-    
-    this.storage = new S3Client(config);
+
+    this.storage = new S3Client(s3Config);
   }
 
   async init(): Promise<boolean> {
