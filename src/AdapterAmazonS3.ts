@@ -60,15 +60,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { error: this.configError, value: null };
     }
 
-    let range = "";
-
-    if (typeof options.end !== "undefined") {
-      range = `bytes=${options.start}-${options.end}`;
-    }
     const params = {
       Bucket: bucketName,
       Key: fileName,
-      Range: range,
+      Range: `bytes=${options.start}-${options.end} || ""`,
     };
 
     const command = new GetObjectCommand(params);

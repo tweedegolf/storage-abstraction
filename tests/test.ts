@@ -6,6 +6,7 @@ import uniquid from "uniquid";
 import { Storage } from "../src/Storage";
 import { StorageType } from "../src/types";
 import { getConfig } from "./config";
+import { copyFile } from "./util";
 
 const newBucketName1 = `bucket-${uniquid()}`;
 const newBucketName2 = `bucket-${uniquid()}`;
@@ -18,9 +19,10 @@ function colorLog(s: string): string {
 }
 
 async function init() {
-  const config = getConfig();
+  const config = getConfig(StorageType.B2);
   storage = new Storage(config);
   bucketName = storage.config.bucketName || newBucketName1;
+  console.log(colorLog("init"), storage.config);
 
   await fs.promises.stat(path.join(process.cwd(), "tests", "test_directory")).catch(async (e) => {
     await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
@@ -52,6 +54,11 @@ async function createBucket() {
 async function clearBucket() {
   const r = await storage.clearBucket(newBucketName2);
   console.log(colorLog("clearBucket"), r);
+}
+
+async function deleteBucket() {
+  const r = await storage.deleteBucket(newBucketName2);
+  console.log(colorLog("deleteBucket"), r);
 }
 
 async function listFiles() {
@@ -89,8 +96,26 @@ async function addFileFromStream() {
 }
 
 async function getFileAsStream() {
-  const r = await storage.getFileAsStream(bucketName, "image1.jpg");
-  console.log(colorLog("getFileAsStream"), r);
+  const r = await storage.getFileAsStream(newBucketName2, "image1-path.jpg");
+  console.log(colorLog("getFileAsStream"), r.error);
+}
+
+async function getFileAsStreamPartial() {
+  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg", {
+    start: 0,
+    end: 2000,
+  });
+  console.log(colorLog("getFileAsStream"), error);
+  if (value !== null) {
+    const filePath = path.join(
+      process.cwd(),
+      "tests",
+      "test_directory",
+      `test-${storage.getType()}-partial.jpg`
+    );
+    const writeStream = fs.createWriteStream(filePath);
+    await copyFile(value, writeStream);
+  }
 }
 
 async function run() {
@@ -104,8 +129,11 @@ async function run() {
   await addFileFromStream();
   await listFiles();
   await getFileAsStream();
-  // await clearBucket();
-  // await listFiles();
+  await getFileAsStreamPartial();
+  await clearBucket();
+  await listFiles();
+  await deleteBucket();
+  await listBuckets();
 
   // await cleanup();
 }

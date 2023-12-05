@@ -2,10 +2,10 @@ import "jasmine";
 import dotenv from "dotenv";
 import { AdapterConfig, StorageType } from "../src/types";
 
-export function getConfig(): string | AdapterConfig {
+export function getConfig(st: StorageType = StorageType.LOCAL): string | AdapterConfig {
   dotenv.config();
 
-  const type = process.env.TYPE || StorageType.LOCAL;
+  const type = process.env.TYPE || st;
 
   let config: AdapterConfig | string = "";
   if (type === StorageType.LOCAL) {
@@ -40,8 +40,8 @@ export function getConfig(): string | AdapterConfig {
     config = {
       type,
       bucketName: process.env.BUCKET_NAME,
-      storageAccount: process.env.AZURE_STORAGE_ACCOUNT_NAME,
-      accessKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
+      accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+      accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
     };
   } else {
     config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;

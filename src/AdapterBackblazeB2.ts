@@ -185,7 +185,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         data: fileData,
       })
       .then((file: BackblazeB2File) => {
-        console.log(file);
+        // console.log(file);
         return {
           error: null,
           value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
@@ -212,10 +212,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     const { value: file } = data;
 
-    let range = "";
-    if (typeof options.end !== "undefined") {
-      range = `bytes=${options.start}-${options.end}`;
-    }
+    delete options.start;
+    delete options.end;
+
     return this.storage
       .downloadFileById({
         fileId: file.id,
@@ -223,8 +222,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         axios: {
           headers: {
             "Content-Type": file.contentType,
-            Range: range,
+            Range: `bytes=${options.start}-${options.end} || ""`,
           },
+          ...options,
         },
       })
       .then((r: { data: Readable }) => {
@@ -342,7 +342,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       )
     )
       .then((what) => {
-        console.log(what);
+        // console.log("[clearBucket]", what);
         return { error: null, value: "ok" };
       })
       .catch((r: BackblazeAxiosResponse) => {

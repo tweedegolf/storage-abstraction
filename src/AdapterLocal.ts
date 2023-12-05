@@ -250,7 +250,6 @@ export class AdapterLocal extends AbstractAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       return fs.promises
