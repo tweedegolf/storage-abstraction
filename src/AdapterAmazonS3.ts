@@ -55,18 +55,20 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     } else {
       this.region = (this.config as ConfigAmazonS3).region;
     }
-    if (typeof this.config.endpoint === "undefined") {
-      this.storage = new S3Client({ region: this.region });
-    } else {
-      this.storage = new S3Client({
+    
+    const config = {
         region: this.region,
-        endpoint: this.config.endpoint,
         credentials: {
           accessKeyId: this.config.accessKeyId,
           secretAccessKey: this.config.secretAccessKey,
         },
-      });
+      }
+
+    if (typeof this.config.endpoint !== "undefined") {
+      config.endpoint = this.config.endpoint;
     }
+    
+    this.storage = new S3Client(config);
   }
 
   async init(): Promise<boolean> {
