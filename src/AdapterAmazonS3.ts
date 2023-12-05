@@ -30,6 +30,7 @@ import {
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectBoolean,
+  Options,
 } from "./types";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
@@ -46,21 +47,28 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  // Public API
+  get storage(): S3Client {
+    return this._storage as S3Client;
+  }
 
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: { start?: number; end?: number } = { start: 0 }
+    options: Options = { start: 0 }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { error: this.configError, value: null };
     }
 
+    let range = "";
+
+    if (typeof options.end !== "undefined") {
+      range = `bytes=${options.start}-${options.end}`;
+    }
     const params = {
       Bucket: bucketName,
       Key: fileName,
-      Range: `bytes=${options.start}-${options.end || ""}`,
+      Range: range,
     };
 
     const command = new GetObjectCommand(params);

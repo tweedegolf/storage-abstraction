@@ -20,6 +20,7 @@ import {
   FilePathParams,
   FileStreamParams,
   AdapterConfigAzure,
+  Options,
 } from "./types";
 import { CreateReadStreamOptions } from "@google-cloud/storage";
 
@@ -71,10 +72,18 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
+  get config(): AdapterConfigAzure {
+    return this._config as AdapterConfigAzure;
+  }
+
+  get storage(): BlobServiceClient {
+    return this._storage as BlobServiceClient;
+  }
+
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: CreateReadStreamOptions = { start: 0 }
+    options: Options = { start: 0 }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
@@ -89,12 +98,16 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
           error: `File ${fileName} could not be found in bucket ${bucketName}`,
         };
       }
-      if (options.end !== undefined) {
-        options.end = options.end + 1;
+      const offset = options.start;
+      let count = options.end;
+      if (typeof count !== "undefined") {
+        count = count - offset;
       }
+      delete options.start;
+      delete options.end;
 
       try {
-        const stream = await file.download(options.start, options.end);
+        const stream = await file.download(offset, count, options);
         return { value: stream.readableStreamBody as Readable, error: null };
       } catch (e) {
         return { value: null, error: e.message };

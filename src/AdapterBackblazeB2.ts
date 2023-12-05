@@ -21,6 +21,7 @@ import {
   BackblazeAxiosResponse,
   BackblazeBucketOptions,
   AdapterConfig,
+  Options,
 } from "./types";
 import { validateName } from "./util";
 
@@ -143,6 +144,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // public API
 
+  get storage(): B2 {
+    return this._storage as B2;
+  }
+
   public async addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -180,7 +185,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         data: fileData,
       })
       .then((file: BackblazeB2File) => {
-        // console.log(file);
+        console.log(file);
         return {
           error: null,
           value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
@@ -194,7 +199,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: { start?: number; end?: number } = { start: 0 }
+    options: Options = { start: 0 }
   ): Promise<ResultObjectStream> {
     const { error } = await this.authorize();
     if (error !== null) {
@@ -206,6 +211,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error: data.error, value: null };
     }
     const { value: file } = data;
+
+    let range = "";
+    if (typeof options.end !== "undefined") {
+      range = `bytes=${options.start}-${options.end}`;
+    }
     return this.storage
       .downloadFileById({
         fileId: file.id,
@@ -213,7 +223,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         axios: {
           headers: {
             "Content-Type": file.contentType,
-            Range: `bytes=${options.start}-${options.end || ""}`,
+            Range: range,
           },
         },
       })

@@ -1,6 +1,6 @@
 import fs from "fs";
 import { Readable } from "stream";
-import { Storage as GoogleCloudStorage, CreateReadStreamOptions } from "@google-cloud/storage";
+import { Storage as GoogleCloudStorage } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
   StorageType,
@@ -14,6 +14,7 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
   AdapterConfigGoogle,
+  Options,
 } from "./types";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
@@ -33,6 +34,10 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     return this._config as AdapterConfigGoogle;
   }
 
+  get storage(): GoogleCloudStorage {
+    return this._storage as GoogleCloudStorage;
+  }
+
   async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
@@ -49,7 +54,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: CreateReadStreamOptions = { start: 0 }
+    options: Options = { start: 0 }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };

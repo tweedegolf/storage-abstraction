@@ -78,6 +78,21 @@ async function addFileFromBuffer() {
   console.log(colorLog("addFileFromPath"), r);
 }
 
+async function addFileFromStream() {
+  const stream = fs.createReadStream("./tests/data/image1.jpg");
+  const r = await storage.addFileFromStream({
+    bucketName: newBucketName2,
+    stream,
+    targetPath: "image1-stream.jpg",
+  });
+  console.log(colorLog("addFileFromPath"), r);
+}
+
+async function getFileAsStream() {
+  const r = await storage.getFileAsStream(bucketName, "image1.jpg");
+  console.log(colorLog("getFileAsStream"), r);
+}
+
 async function run() {
   await init();
   await listBuckets();
@@ -86,9 +101,11 @@ async function run() {
   await listBuckets();
   await addFileFromPath();
   await addFileFromBuffer();
+  await addFileFromStream();
   await listFiles();
-  await clearBucket();
-  await listFiles();
+  await getFileAsStream();
+  // await clearBucket();
+  // await listFiles();
 
   // await cleanup();
 }
