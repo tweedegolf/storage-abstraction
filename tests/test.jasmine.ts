@@ -286,7 +286,20 @@ describe(`[testing ${type} storage]`, async () => {
     expect(error).toBeNull();
   });
 
-  it("(17) add file from buffer", async () => {
+  it("(17) add file from stream partial", async () => {
+    const stream = fs.createReadStream("./tests/data/image2.jpg");
+    const { value, error } = await storage.addFileFromStream({
+      bucketName,
+      stream,
+      targetPath: "image2p.jpg",
+      options: { start: 0, end: 3000 },
+    });
+
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+  });
+
+  it("(18) add file from buffer", async () => {
     const buffer = await fs.promises.readFile("./tests/data/image2.jpg");
     const { value, error } = await storage.addFileFromBuffer({
       bucketName,
@@ -298,7 +311,7 @@ describe(`[testing ${type} storage]`, async () => {
     expect(error).toBeNull();
   });
 
-  it("(18) list files 3", async () => {
+  it("(19) list files 3", async () => {
     const { value: files, error } = await storage.listFiles(bucketName);
 
     expect(files).not.toBeNull();
@@ -311,7 +324,7 @@ describe(`[testing ${type} storage]`, async () => {
     }
   });
 
-  it("(19) add & read file from storage", async () => {
+  it("(20) add & read file from storage", async () => {
     const buffer = await fs.promises.readFile("./tests/data/input.txt");
     expect(buffer).not.toBeUndefined();
     expect(buffer).not.toBeNull();
@@ -336,52 +349,52 @@ describe(`[testing ${type} storage]`, async () => {
     }
   });
 
-  it("(20) sizeOf", async () => {
+  it("(21) sizeOf", async () => {
     await expectAsync(storage.sizeOf(bucketName, "image1.jpg")).toBeResolvedTo({
       value: 32201,
       error: null,
     });
   });
 
-  it("(21) check if file exists: yes", async () => {
+  it("(22) check if file exists: yes", async () => {
     await expectAsync(storage.fileExists(bucketName, "image1.jpg")).toBeResolvedTo({
       value: true,
       error: null,
     });
   });
 
-  it("(22) check if file exists: nope", async () => {
+  it("(23) check if file exists: nope", async () => {
     await expectAsync(storage.fileExists(bucketName, "image10.jpg")).toBeResolvedTo({
       value: false,
       error: null,
     });
   });
 
-  it("(23) create bucket error", async () => {
+  it("(24) create bucket error", async () => {
     const { value, error } = await storage.createBucket("");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("(24) create bucket error", async () => {
+  it("(25) create bucket error", async () => {
     const { value, error } = await storage.createBucket("null");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("(25) create bucket error", async () => {
+  it("(26) create bucket error", async () => {
     const { value, error } = await storage.createBucket("undefined");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
   });
 
-  it("(26) create bucket", async () => {
+  it("(27) create bucket", async () => {
     const { value, error } = await storage.createBucket(newBucketName2);
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });
 
-  it("(27) check created bucket", async () => {
+  it("(28) check created bucket", async () => {
     const { value, error } = await storage.listBuckets();
 
     expect(value).not.toBeNull();
@@ -394,7 +407,7 @@ describe(`[testing ${type} storage]`, async () => {
     }
   });
 
-  it("(28) add file to new bucket", async () => {
+  it("(29) add file to new bucket", async () => {
     const { value, error } = await storage.addFileFromPath({
       bucketName: newBucketName2,
       origPath: "./tests/data/image1.jpg",
@@ -405,7 +418,7 @@ describe(`[testing ${type} storage]`, async () => {
     expect(error).toBeNull();
   });
 
-  it("(29) list files in new bucket", async () => {
+  it("(30) list files in new bucket", async () => {
     const expectedResult: [string, number][] = [["image1.jpg", 32201]];
     await expectAsync(storage.listFiles(newBucketName2)).toBeResolvedTo({
       value: expectedResult,
@@ -413,7 +426,7 @@ describe(`[testing ${type} storage]`, async () => {
     });
   });
 
-  it("(30) delete non-empty bucket", async () => {
+  it("(31) delete non-empty bucket", async () => {
     // S3 doesn't allow you to delete a non-empty bucket
     // if (storage.getType() !== StorageType.S3) {
     // }
@@ -422,7 +435,7 @@ describe(`[testing ${type} storage]`, async () => {
     expect(error).toBeNull();
   });
 
-  it("(31) check is bucket has been deleted", async () => {
+  it("(32) check is bucket has been deleted", async () => {
     const { value, error } = await storage.listBuckets();
     expect(value).not.toBeNull();
     expect(error).toBeNull();

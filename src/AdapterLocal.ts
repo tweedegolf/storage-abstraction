@@ -16,6 +16,7 @@ import {
   ResultObjectStream,
   ResultObjectNumber,
   ResultObjectStringArray,
+  Options,
 } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { parseMode, validateName } from "./util";
@@ -91,7 +92,23 @@ export class AdapterLocal extends AbstractAdapter {
     let { options } = params;
     if (typeof options !== "object") {
       options = {};
+    } else {
+      const { start, end } = options;
+      if (typeof start !== "undefined" && typeof end !== "undefined") {
+        options = {
+          ...options,
+          length: end - start,
+        };
+        delete options.end;
+      } else if (typeof end !== "undefined") {
+        options = {
+          ...options,
+          length: end,
+        };
+        delete options.end;
+      }
     }
+    // console.log(options);
 
     const dest = path.join(this._config.directory, params.bucketName, params.targetPath);
 
@@ -114,7 +131,7 @@ export class AdapterLocal extends AbstractAdapter {
         readStream = (params as FileStreamParams).stream;
       }
       // console.time();
-      const writeStream = fs.createWriteStream(dest);
+      const writeStream = fs.createWriteStream(dest, options);
       return new Promise((resolve) => {
         readStream
           .pipe(writeStream)
@@ -228,7 +245,7 @@ export class AdapterLocal extends AbstractAdapter {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: { start?: number; end?: number } = { start: 0 }
+    options: Options = { start: 0 }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };

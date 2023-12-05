@@ -32,3 +32,21 @@ export const copyFile = (
         resolve();
       });
   });
+
+export async function waitABit(ms = 100): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // console.log(`just wait a bit (${millis}ms)`);
+      resolve();
+    }, ms);
+  });
+}
+
+export function streamToString(stream: Readable) {
+  const chunks: Array<Uint8Array> = [];
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    stream.on("error", (err) => reject(err));
+    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+  });
+}

@@ -151,10 +151,7 @@ export interface IStorage {
   getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: {
-      start?: number;
-      end?: number;
-    }
+    options?: Options
   ): Promise<ResultObjectStream>;
 
   /**
@@ -229,6 +226,10 @@ export interface AdapterConfigAzure extends AdapterConfig {
 export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;
 }
+
+export type Options = {
+  [id: string]: any; // eslint-disable-line
+};
 
 export type BackblazeAxiosResponse = {
   response: {
@@ -361,7 +362,7 @@ export type FilePathParams = {
   bucketName: string;
   origPath: string;
   targetPath: string;
-  options?: object;
+  options?: Options; // eslint-disable-line
 };
 
 /**
@@ -374,7 +375,7 @@ export type FileBufferParams = {
   bucketName: string;
   buffer: Buffer;
   targetPath: string;
-  options?: object;
+  options?: Options; // eslint-disable-line
 };
 
 /**
@@ -387,7 +388,7 @@ export type FileStreamParams = {
   bucketName: string;
   stream: Readable;
   targetPath: string;
-  options?: object;
+  options?: Options; // eslint-disable-line
 };
 
 /**
@@ -413,7 +414,7 @@ export type FileStreamParams = {
  * @property {string} bucketName
  * @property {string} origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
  * @property {string} argetPath - path on the storage, you can add a path or only provide name of the file
- * @property {Object} options
+ * @property {object} options
  */
 
 /**
@@ -428,5 +429,5 @@ export type FileStreamParams = {
  * @property {string} bucketName
  * @property {string} origPath - path to the file that you want to add, e.g. /home/user/Pictures/image1.jpg
  * @property {string} argetPath - path on the storage, you can add a path or only provide name of the file
- * @property {Object} options
+ * @property {object} options
  */

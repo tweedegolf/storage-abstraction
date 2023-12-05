@@ -12,6 +12,7 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
   AdapterConfigGoogle,
+  Options,
 } from "./types";
 
 //  add new storage adapters here
@@ -142,7 +143,7 @@ export class Storage implements IStorage {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: { start?: number; end?: number } = {}
+    options: Options = {}
   ): Promise<ResultObjectStream> {
     const { start = 0, end } = options;
     // console.log(start, end, options);

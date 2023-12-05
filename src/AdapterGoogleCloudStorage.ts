@@ -113,16 +113,18 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
 
       const file = this.storage.bucket(params.bucketName).file(params.targetPath, options);
       const writeStream = file.createWriteStream(options);
-      readStream
-        .pipe(writeStream)
-        .on("error", (e) => {
-          return { value: null, error: e.message };
-        })
-        .on("finish", () => {
-          return { value: file.publicUrl(), error: null };
+      return new Promise((resolve) => {
+        readStream
+          .pipe(writeStream)
+          .on("error", (e: Error) => {
+            resolve({ value: null, error: e.message });
+          })
+          .on("finish", () => {
+            resolve({ value: file.publicUrl(), error: null });
+          });
+        writeStream.on("error", (e: Error) => {
+          resolve({ value: null, error: e.message });
         });
-      writeStream.on("error", (e) => {
-        return { value: null, error: e.message };
       });
     } catch (e) {
       return { value: null, error: e.message };
