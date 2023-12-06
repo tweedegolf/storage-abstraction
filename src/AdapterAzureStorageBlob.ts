@@ -206,6 +206,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     // let i = 0;
     try {
       const bucketNames = [];
+      // let i = 0;
       for await (const container of this.storage.listContainers()) {
         // console.log(`${i++} ${container.name}`);
         bucketNames.push(container.name);

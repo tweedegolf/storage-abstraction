@@ -50,3 +50,11 @@ export function streamToString(stream: Readable) {
     stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
   });
 }
+
+export async function timeout(millis: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      return resolve();
+    }, millis);
+  });
+}

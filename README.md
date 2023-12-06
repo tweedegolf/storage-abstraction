@@ -23,22 +23,20 @@ Because the API only provides basic storage operations (see [below](#api-methods
   - [Backblaze B2](#backblaze-b2)
   - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  - [init](#init)
-  - [test](#test)
   - [createBucket](#createbucket)
-  - [selectBucket](#selectbucket)
   - [clearBucket](#clearbucket)
   - [deleteBucket](#deletebucket)
-  - [listBuckets](#listbuckets)
-  - [getSelectedBucket](#getselectedbucket)
   - [addFileFromPath](#addfilefrompath)
   - [addFileFromBuffer](#addfilefrombuffer)
   - [addFileFromReadable](#addfilefromreadable)
-  - [getFileAsReadable](#getfileasreadable)
+  - [addFile](#addfile)
   - [removeFile](#removefile)
+  - [getFileAsStream](#getFileAsStream)
   - [sizeOf](#sizeof)
   - [fileExists](#fileexists)
+  - [bucketExists](#bucketexists)
   - [listFiles](#listfiles)
+  - [listBuckets](#listbuckets)
   - [getType](#gettype)
   - [getConfiguration](#getconfiguration)
   - [switchAdapter](#switchadapter)
@@ -556,10 +554,10 @@ addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<R
 
 Generic method for adding a file to the storage; this method is actually called if you use one of the three aforementioned methods.
 
-### <a name='getfileasreadable'></a>getFileAsReadable
+### <a name='getfileasstream'></a>getFileAsStream
 
 ```typescript
-getFileAsReadable(bucketName: string, fileName: string, options?: {start?: number, end?: number}): Promise<ResultObjectReadable>;
+getFileAsStream(bucketName: string, fileName: string, options?: {start?: number, end?: number}): Promise<ResultObjectStream>;
 ```
 
 Returns a file in the storage as a readable stream. You can specify a byte range by using the extra range argument, see these examples:

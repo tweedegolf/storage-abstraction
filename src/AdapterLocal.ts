@@ -209,7 +209,10 @@ export class AdapterLocal extends AbstractAdapter {
     }
 
     try {
-      const files = await fs.promises.readdir(this._config.directory);
+      const dirents = await fs.promises.readdir(this._config.directory, { withFileTypes: true });
+      const files = dirents
+        .filter((dirent) => dirent.isFile() === false)
+        .map((dirent) => dirent.name);
       // const stats = await Promise.all(
       //   files.map((f) => fs.promises.stat(path.join(this._config.directory, f)))
       // );

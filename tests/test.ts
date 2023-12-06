@@ -4,9 +4,9 @@ import path from "path";
 import { rimraf } from "rimraf";
 import uniquid from "uniquid";
 import { Storage } from "../src/Storage";
-import { StorageType } from "../src/types";
+import { IStorage, StorageType } from "../src/types";
 import { getConfig } from "./config";
-import { copyFile } from "./util";
+import { copyFile, timeout } from "./util";
 
 const newBucketName1 = `bucket-${uniquid()}`;
 const newBucketName2 = `bucket-${uniquid()}`;
@@ -36,9 +36,10 @@ async function cleanup() {
   });
 }
 
-async function listBuckets() {
+async function listBuckets(): Promise<Array<string> | null> {
   const r = await storage.listBuckets();
   console.log(colorLog("listBuckets"), r);
+  return r.value;
 }
 
 async function bucketExists() {
@@ -118,9 +119,47 @@ async function getFileAsStreamPartial() {
   }
 }
 
+async function fileExists() {
+  const r = await storage.fileExists(newBucketName2, "image1-path.jpg");
+  console.log(colorLog("fileExists"), r);
+}
+
+async function sizeOf() {
+  const r = await storage.sizeOf(newBucketName2, "image1-path.jpg");
+  console.log(colorLog("sizeOf"), r);
+}
+
+async function removeFile() {
+  const r = await storage.removeFile(newBucketName2, "image1-path.jpg");
+  console.log(colorLog("removeFile"), r);
+}
+
+async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: number = 500) {
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    console.log("remove", b);
+    try {
+      await storage.clearBucket(b);
+      if (delay) {
+        await timeout(delay);
+      }
+      // const files = await storage.listFiles();
+      // console.log(`\tfiles: ${files}`);
+      await storage.deleteBucket(b);
+    } catch (e) {
+      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e);
+    }
+  }
+}
+
 async function run() {
   await init();
-  await listBuckets();
+
+  const buckets = await listBuckets();
+  if (buckets !== null && buckets.length > 0) {
+    await deleteAllBuckets(buckets, storage);
+  }
+
   await bucketExists();
   await createBucket();
   await listBuckets();
@@ -130,12 +169,18 @@ async function run() {
   await listFiles();
   await getFileAsStream();
   await getFileAsStreamPartial();
+  await fileExists();
+  await sizeOf();
+  await removeFile();
+  await fileExists();
   await clearBucket();
   await listFiles();
   await deleteBucket();
   await listBuckets();
 
-  // await cleanup();
+  await cleanup();
+
+  process.exit();
 }
 
 run();
