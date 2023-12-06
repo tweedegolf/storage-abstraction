@@ -19,7 +19,9 @@ function colorLog(s: string): string {
 }
 
 async function init() {
-  const config = getConfig(StorageType.B2);
+  // const config = getConfig(StorageType.LOCAL);
+  const config = getConfig("R2");
+  // const config = getConfig("B2-S3");
   storage = new Storage(config);
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
@@ -137,7 +139,7 @@ async function removeFile() {
 async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: number = 500) {
   for (let i = 0; i < list.length; i++) {
     const b = list[i];
-    console.log("remove", b);
+    console.log(colorLog("[remove bucket]"), b);
     try {
       await storage.clearBucket(b);
       if (delay) {
