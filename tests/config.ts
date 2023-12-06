@@ -32,8 +32,16 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,
       endpoint: process.env.R2_ENDPOINT,
-      accessKey: process.env.R2_ACCESS_KEY_ID,
+      accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_ACCESS_KEY_ID,
+    };
+  } else if (t === "B2-S3") {
+    config = {
+      type: StorageType.S3,
+      bucketName: process.env.BUCKET_NAME,
+      endpoint: process.env.B2_S3_ENDPOINT,
+      accessKeyId: process.env.B2_S3_APPLICATION_KEY,
+      secretAccessKey: process.env.B2_S3_APPLICATION_KEY_ID,
     };
   } else if (t === StorageType.B2) {
     config = {
@@ -55,3 +63,33 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
 
   return config;
 }
+/*
+function tmp() {
+  if (typeof (this.config as ConfigAmazonS3).region === "undefined") {
+    if (this.s3Compatible === S3Compatible.R2) {
+      this.config.region = "auto";
+      this.region = this.config.region;
+    } else if (this.s3Compatible === S3Compatible.Backblaze) {
+      let ep = this.config.endpoint;
+      ep = ep.substring(ep.indexOf("s3.") + 3);
+      this.config.region = ep.substring(0, ep.indexOf("."));
+      // console.log(this.config.region);
+      this.region = this.config.region;
+    }
+  } else {
+    this.region = (this.config as ConfigAmazonS3).region;
+  }
+  if (typeof this.config.endpoint === "undefined") {
+    this.storage = new S3Client({ region: this.region });
+  } else {
+    this.storage = new S3Client({
+      region: this.region,
+      endpoint: this.config.endpoint,
+      credentials: {
+        accessKeyId: this.config.accessKeyId,
+        secretAccessKey: this.config.secretAccessKey,
+      },
+    });
+  }
+}
+*/

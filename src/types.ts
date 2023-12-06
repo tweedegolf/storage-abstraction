@@ -222,6 +222,16 @@ export interface AdapterConfigAzure extends AdapterConfig {
   accountKey?: string;
   sasToken?: string;
 }
+export interface AdapterConfigS3 extends AdapterConfig {
+  region?: string;
+  endpoint?: string;
+  credentials: {
+    accessKeyId?: string;
+    secretAccessKey?: string;
+  };
+  accessKeyId?: string;
+  secretAccessKey?: string;
+}
 
 export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;

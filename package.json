@@ -46,6 +46,8 @@
     "test-mode": "ts-node ./tests_local/test-mode.ts",
     "testB2": "ts-node ./tests_local/testB2.ts",
     "testS3": "ts-node ./tests_local/testS3.ts",
+    "testR2": "ts-node ./tests_local/testR2.ts",
+    "testB2S3": "ts-node ./tests_local/testB2S3.ts",
     "testGCS": "ts-node ./tests_local/testGCS.ts",
     "testAzure": "ts-node ./tests_local/testAzure.ts",
     "testLocal": "ts-node ./tests_local/testLocal.ts",

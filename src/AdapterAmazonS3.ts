@@ -31,20 +31,42 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
   Options,
+  AdapterConfigS3,
 } from "./types";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
-  protected _config: AdapterConfig;
+  protected _config: AdapterConfigS3;
   protected _configError: string | null = null;
   protected _storage: S3Client;
 
   constructor(config?: string | AdapterConfig) {
     super(config);
     if (this._configError === null) {
-      this._storage = new S3Client(this.config);
-      console.log(this.storage.config);
+      if (this.config.accessKeyId && this.config.secretAccessKey) {
+        const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
+        delete o.credentials;
+        delete o.accessKeyId;
+        delete o.secretAccessKey;
+        this._storage = new S3Client({
+          credentials: {
+            accessKeyId: this.config.accessKeyId,
+            secretAccessKey: this.config.secretAccessKey,
+          },
+          ...o,
+        });
+      } else {
+        const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
+        delete o.accessKeyId;
+        delete o.secretAccessKey;
+        this._storage = new S3Client(o);
+      }
+      // console.log(this.storage.config);
     }
+  }
+
+  get config(): AdapterConfigS3 {
+    return this._config as AdapterConfigS3;
   }
 
   get storage(): S3Client {
@@ -118,6 +140,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
+      console.log("region", this._config.region);
       if (typeof this._config.region === "string" && this._config.region !== "us-east-1") {
         input.CreateBucketConfiguration = {
           LocationConstraint: BucketLocationConstraint[this._config.region.replace("-", "_")],
@@ -135,8 +158,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           value: null,
         };
       }
-    } catch (error) {
-      return { error, value: null };
+    } catch (e) {
+      return { error: e.message, value: null };
     }
   }
 
@@ -214,7 +237,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return { value: bucketNames, error: null };
       })
       .catch((e) => {
-        return { value: null, error: e.code };
+        return { value: null, error: e };
       });
   }
 
