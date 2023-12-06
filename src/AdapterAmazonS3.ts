@@ -139,14 +139,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Bucket: name,
         ...options,
       };
-      // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      console.log("region", this._config.region);
-      if (typeof this._config.region === "string" && this._config.region !== "us-east-1") {
-        input.CreateBucketConfiguration = {
-          LocationConstraint: BucketLocationConstraint[this._config.region.replace("-", "_")],
-        };
-      }
-
       const command = new CreateBucketCommand(input);
       const response = await this.storage.send(command);
       // console.log("response", response);
