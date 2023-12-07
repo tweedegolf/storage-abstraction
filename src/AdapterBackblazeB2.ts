@@ -1,4 +1,5 @@
 import B2 from "backblaze-b2";
+import fs from "fs";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
@@ -22,10 +23,9 @@ import {
   BackblazeBucketOptions,
   AdapterConfig,
   Options,
+  ResultObjectKeyValue,
 } from "./types";
 import { validateName } from "./util";
-
-require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
@@ -99,6 +99,23 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return { value: null, error: `Could not find bucket "${name}"` };
   }
 
+  private async getBucketId(name: string): Promise<ResultObject> {
+    const { data } = await this.storage.getBucket({ bucketName: name });
+    if (data.buckets.length === 0) {
+      return { value: null, error: `Could not find bucket "${name}"` };
+    }
+    return { value: data.buckets[0].bucketId, error: null };
+  }
+
+  private async getUploadUrl(bucketId: string): Promise<ResultObjectKeyValue> {
+    const { data } = await this.storage.getUploadUrl(bucketId);
+    if (typeof data.uploadUrl === "undefined") {
+      return { value: null, error: data.message };
+    }
+    const { uploadUrl, authorizationToken: uploadAuthToken } = data;
+    return { value: { uploadUrl, uploadAuthToken }, error: null };
+  }
+
   private async getFiles(bucketName: string): Promise<ResultObjectFilesB2> {
     const { value: bucket, error } = await this.getBucket(bucketName);
     if (error !== null) {
@@ -157,42 +174,56 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const { bucketName, targetPath } = params;
-    const data = await this.getBucket(bucketName);
-    if (data.error !== null) {
-      return { error: data.error, value: null };
+    const data1 = await this.getBucketId(bucketName);
+    if (data1.error !== null) {
+      return { error: data1.error, value: null };
     }
-    const { value: bucket } = data;
+    const { value: bucketId } = data1;
+
+    const data2 = await this.getUploadUrl(bucketId);
+    if (data2.error !== null) {
+      return { error: data2.error, value: null };
+    }
+    const {
+      value: { uploadUrl, uploadAuthToken },
+    } = data2;
 
     let { options } = params;
     if (typeof options === "undefined") {
       options = {};
     }
 
-    let fileData: string | Buffer | Readable;
+    let buffer: Buffer;
     if (typeof (params as FilePathParams).origPath !== "undefined") {
-      fileData = (params as FilePathParams).origPath;
+      buffer = await fs.promises.readFile((params as FilePathParams).origPath);
     } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
-      fileData = (params as FileBufferParams).buffer;
+      buffer = (params as FileBufferParams).buffer;
     } else if (typeof (params as FileStreamParams).stream !== "undefined") {
-      fileData = (params as FileStreamParams).stream;
+      const buffers: Array<any> = []; // eslint-disable-line
+      for await (const data of (params as FileStreamParams).stream) {
+        buffers.push(data);
+      }
+      buffer = Buffer.concat(buffers);
     }
 
     return this.storage
-      .uploadAny({
-        ...options,
-        bucketId: bucket.id,
+      .uploadFile({
+        uploadUrl,
+        uploadAuthToken,
         fileName: targetPath,
-        data: fileData,
+        data: buffer,
       })
-      .then((file: BackblazeB2File) => {
-        // console.log(file);
+      .then((r: { data: BackblazeB2File }) => {
+        // const { data } = r;
+        // console.log(data);
         return {
           error: null,
           value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
         };
       })
       .catch((r: BackblazeAxiosResponse) => {
-        return { error: r.response.data.message, value: null };
+        // console.log(r.response.data.code);
+        return { error: r.response.data.code, value: null };
       });
   }
 

@@ -19,9 +19,9 @@ function colorLog(s: string): string {
 }
 
 async function init() {
-  // const config = getConfig(StorageType.LOCAL);
+  const config = getConfig(StorageType.B2);
   // const config = getConfig("R2");
-  const config = getConfig("B2-S3");
+  // const config = getConfig("B2-S3");
   storage = new Storage(config);
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);

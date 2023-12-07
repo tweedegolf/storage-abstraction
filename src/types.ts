@@ -337,6 +337,11 @@ export type ResultObjectStringArray = {
   value: Array<string> | null;
 };
 
+export type ResultObjectKeyValue = {
+  error: string | null;
+  value: { [key: string]: any } | null; // eslint-disable-line
+};
+
 export type ResultObjectBucketsB2 = {
   error: string | null;
   value: Array<BucketB2> | null;

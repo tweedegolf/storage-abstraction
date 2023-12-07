@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "1.5.2",
+  "version": "2.0.0",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,12 +11,10 @@
     "@aws-sdk/s3-request-presigner": "^3.445.0",
     "@azure/identity": "^4.0.0",
     "@azure/storage-blob": "^12.17.0",
-    "@gideo-llc/backblaze-b2-upload-any": "^0.1.4",
     "@google-cloud/storage": "^7.6.0",
     "backblaze-b2": "^1.7.0",
     "glob": "^10.3.10",
-    "rimraf": "^5.0.5",
-    "uniquid": "^1.1.4"
+    "rimraf": "^5.0.5"
   },
   "devDependencies": {
     "@types/jasmine": "^5.1.2",
@@ -29,11 +27,11 @@
     "eslint-plugin-prettier": "^5.0.1",
     "jasmine": "^5.1.0",
     "markdown-toc": "^1.2.0",
-    "nock": "^13.3.8",
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
     "tsc-watch": "^6.0.4",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "uniquid": "^1.1.4"
   },
   "scripts": {
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
