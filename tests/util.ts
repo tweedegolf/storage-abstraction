@@ -1,4 +1,4 @@
-import { Readable, Writable } from "stream";
+import { Readable, Stream, Writable } from "stream";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
@@ -56,5 +56,16 @@ export async function timeout(millis: number): Promise<void> {
     setTimeout(() => {
       return resolve();
     }, millis);
+  });
+}
+
+// credits: https://stackoverflow.com/questions/14269233/node-js-how-to-read-a-stream-into-a-buffer
+export async function stream2buffer(stream: Stream): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const _buf = Array<any>(); // eslint-disable-line
+
+    stream.on("data", (chunk) => _buf.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(_buf)));
+    stream.on("error", (err) => reject(`error converting stream - ${err}`));
   });
 }
