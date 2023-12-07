@@ -1,3 +1,7 @@
+# 1.5.3
+
+- fix for issue #48 &rarr; all credits: [Pezmc](https://github.com/Pezmc)
+
 # 1.4.7 - 1.5.2
 
 - Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)
