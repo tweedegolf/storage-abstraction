@@ -98,7 +98,7 @@ export class AdapterMinio extends AbstractAdapter {
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${options.start}-${options.end || ""}`,
+      Range: `bytes=${options.start}-${options.end}`,
     };
 
     return (await this.storage.getObject(this.bucketName, fileName)) as Readable;

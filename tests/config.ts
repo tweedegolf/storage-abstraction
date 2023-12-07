@@ -45,7 +45,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
     };
   } else if (t === StorageType.B2) {
     config = {
-      type: StorageType.S3,
+      type: StorageType.B2,
       bucketName: process.env.BUCKET_NAME,
       applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
       applicationKey: process.env.B2_APPLICATION_KEY,

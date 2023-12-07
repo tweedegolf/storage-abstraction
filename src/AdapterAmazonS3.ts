@@ -85,7 +85,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const params = {
       Bucket: bucketName,
       Key: fileName,
-      Range: `bytes=${options.start}-${options.end} || ""`,
+      Range: `bytes=${options.start}-${options.end}`,
     };
 
     const command = new GetObjectCommand(params);

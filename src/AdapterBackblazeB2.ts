@@ -242,6 +242,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error: data.error, value: null };
     }
     const { value: file } = data;
+    const { start, end } = options;
 
     delete options.start;
     delete options.end;
@@ -253,7 +254,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         axios: {
           headers: {
             "Content-Type": file.contentType,
-            Range: `bytes=${options.start}-${options.end} || ""`,
+            Range: `bytes=${start}-${end}`,
           },
           ...options,
         },

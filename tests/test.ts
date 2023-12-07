@@ -99,8 +99,18 @@ async function addFileFromStream() {
 }
 
 async function getFileAsStream() {
-  const r = await storage.getFileAsStream(newBucketName2, "image1-path.jpg");
-  console.log(colorLog("getFileAsStream"), r.error);
+  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg");
+  console.log(colorLog("getFileAsStream"), error);
+  if (value !== null) {
+    const filePath = path.join(
+      process.cwd(),
+      "tests",
+      "test_directory",
+      `test-${storage.getType()}-full.jpg`
+    );
+    const writeStream = fs.createWriteStream(filePath);
+    await copyFile(value, writeStream);
+  }
 }
 
 async function getFileAsStreamPartial() {
@@ -139,7 +149,7 @@ async function removeFile() {
 async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: number = 500) {
   for (let i = 0; i < list.length; i++) {
     const b = list[i];
-    console.log(colorLog("[remove bucket]"), b);
+    console.log(colorLog("remove bucket"), b);
     try {
       await storage.clearBucket(b);
       if (delay) {
@@ -171,6 +181,9 @@ async function run() {
   await listFiles();
   await getFileAsStream();
   await getFileAsStreamPartial();
+
+  process.exit();
+
   await fileExists();
   await sizeOf();
   await removeFile();
@@ -181,8 +194,6 @@ async function run() {
   await listBuckets();
 
   await cleanup();
-
-  process.exit();
 }
 
 run();
