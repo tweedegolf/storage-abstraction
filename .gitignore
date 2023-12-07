@@ -3,6 +3,7 @@ node_modules
 publish/dist
 publish/README.md
 tests/tmp/*.jpg
+tests_local/
 gcs.json
 yarn-error.log
 .env
