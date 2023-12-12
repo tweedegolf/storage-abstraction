@@ -21,26 +21,34 @@ import {
   ResultObjectNumber,
   BackblazeAxiosResponse,
   BackblazeBucketOptions,
-  AdapterConfig,
   Options,
   ResultObjectKeyValue,
+  AdapterConfigB2,
 } from "./types";
 import { validateName } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
-  protected _config: AdapterConfig;
+  protected _config: AdapterConfigB2;
   protected _configError: string | null = null;
   protected _storage: B2 = null;
   private authorized: boolean = false;
 
-  constructor(config?: string | AdapterConfig) {
+  constructor(config?: string | AdapterConfigB2) {
     super(config);
     if (this._configError === null) {
-      try {
-        this._storage = new B2(this._config);
-      } catch (e) {
-        this._configError = e.message;
+      if (
+        typeof this._config.applicationKey === "undefined" ||
+        typeof this._config.applicationKeyId === "undefined"
+      ) {
+        this._configError =
+          'Please provide both a value for "applicationKey" and "applicationKeyId"';
+      } else {
+        try {
+          this._storage = new B2(this._config);
+        } catch (e) {
+          this._configError = e.message;
+        }
       }
     }
   }
@@ -68,43 +76,31 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   private async getBuckets(): Promise<ResultObjectBucketsB2> {
-    return this.storage
-      .listBuckets()
-      .then(({ data: { buckets } }) => {
-        const value = buckets.map(({ bucketId, bucketName }) => {
-          return {
-            id: bucketId,
-            name: bucketName,
-          };
-        });
-        return { value, error: null };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { value: null, error: r.response.data.message };
+    try {
+      const { data } = await this.storage.listBuckets();
+      const value = data.buckets.map(({ bucketId, bucketName }) => {
+        return {
+          id: bucketId,
+          name: bucketName,
+        };
       });
+      return { value, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   private async getBucket(name: string): Promise<ResultObjectBucketB2> {
-    const { value: buckets, error } = await this.getBuckets();
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    for (let i = 0; i < buckets.length; i++) {
-      const bucket = buckets[i];
-      if (bucket.name === name) {
-        return { value: bucket, error: null };
+    try {
+      const { data } = await this.storage.getBucket({ bucketName: name });
+      if (data.buckets.length > 0) {
+        const { bucketId, bucketName } = data.buckets[0];
+        return { value: { id: bucketId, name: bucketName }, error: null };
       }
-    }
-    return { value: null, error: `Could not find bucket "${name}"` };
-  }
-
-  private async getBucketId(name: string): Promise<ResultObject> {
-    const { data } = await this.storage.getBucket({ bucketName: name });
-    if (data.buckets.length === 0) {
       return { value: null, error: `Could not find bucket "${name}"` };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    return { value: data.buckets[0].bucketId, error: null };
   }
 
   private async getUploadUrl(bucketId: string): Promise<ResultObjectKeyValue> {
@@ -161,6 +157,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // public API
 
+  get config(): AdapterConfigB2 {
+    return this._config as AdapterConfigB2;
+  }
+
   get storage(): B2 {
     return this._storage as B2;
   }
@@ -174,11 +174,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const { bucketName, targetPath } = params;
-    const data1 = await this.getBucketId(bucketName);
+    const data1 = await this.getBucket(bucketName);
     if (data1.error !== null) {
       return { error: data1.error, value: null };
     }
-    const { value: bucketId } = data1;
+    const {
+      value: { id: bucketId },
+    } = data1;
 
     const data2 = await this.getUploadUrl(bucketId);
     if (data2.error !== null) {
@@ -206,25 +208,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       buffer = Buffer.concat(buffers);
     }
 
-    return this.storage
-      .uploadFile({
+    try {
+      const { data: _data } = await this.storage.uploadFile({
         uploadUrl,
         uploadAuthToken,
         fileName: targetPath,
         data: buffer,
-      })
-      .then((r: { data: BackblazeB2File }) => {
-        // const { data } = r;
-        // console.log(data);
-        return {
-          error: null,
-          value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
-        };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        // console.log(r.response.data.code);
-        return { error: r.response.data.code, value: null };
       });
+      // console.log(_data);
+      return {
+        error: null,
+        value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
+      };
+    } catch (e) {
+      // console.log(e.toJSON());
+      return { value: null, error: e.message };
+    }
   }
 
   public async getFileAsStream(

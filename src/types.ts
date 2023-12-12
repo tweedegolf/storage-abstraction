@@ -232,6 +232,10 @@ export interface AdapterConfigS3 extends AdapterConfig {
   accessKeyId?: string;
   secretAccessKey?: string;
 }
+export interface AdapterConfigB2 extends AdapterConfig {
+  applicationKey: string;
+  applicationKeyId: string;
+}
 
 export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;
@@ -250,6 +254,7 @@ export type BackblazeAxiosResponse = {
       allowed?: {
         capabilities: Array<string>;
       };
+      buckets?: Array<any>; // eslint-disable-line
     };
   };
 };
