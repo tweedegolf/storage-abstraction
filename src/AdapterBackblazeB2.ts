@@ -1,10 +1,8 @@
 import B2 from "backblaze-b2";
 import fs from "fs";
-import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
   StorageType,
-  BackblazeB2File,
   ResultObjectBoolean,
   ResultObject,
   ResultObjectStream,
@@ -19,7 +17,6 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
-  BackblazeAxiosResponse,
   BackblazeBucketOptions,
   Options,
   ResultObjectKeyValue,
@@ -33,6 +30,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _configError: string | null = null;
   protected _storage: B2 = null;
   private authorized: boolean = false;
+  private versioning: boolean = true;
 
   constructor(config?: string | AdapterConfigB2) {
     super(config);
@@ -63,16 +61,14 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: "ok", error: null };
     }
 
-    return this.storage
-      .authorize()
-      .then((r: BackblazeAxiosResponse) => {
-        // console.log(r.data.allowed.capabilities);
-        this.authorized = true;
-        return { value: "ok", error: null };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { value: null, error: r.response.data.message };
-      });
+    try {
+      const { data: _data } = await this.storage.authorize();
+      // console.log(_data.allowed.capabilities);
+      this.authorized = true;
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   private async getBuckets(): Promise<ResultObjectBucketsB2> {
@@ -104,44 +100,60 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   private async getUploadUrl(bucketId: string): Promise<ResultObjectKeyValue> {
-    const { data } = await this.storage.getUploadUrl(bucketId);
-    if (typeof data.uploadUrl === "undefined") {
-      return { value: null, error: data.message };
+    try {
+      const { data } = await this.storage.getUploadUrl(bucketId);
+      if (typeof data.uploadUrl === "undefined") {
+        return { value: null, error: data.message };
+      }
+      const { uploadUrl, authorizationToken: uploadAuthToken } = data;
+      return { value: { uploadUrl, uploadAuthToken }, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    const { uploadUrl, authorizationToken: uploadAuthToken } = data;
-    return { value: { uploadUrl, uploadAuthToken }, error: null };
   }
 
-  private async getFiles(bucketName: string): Promise<ResultObjectFilesB2> {
+  private async getFiles(
+    bucketName: string,
+    versioning: boolean,
+    numFiles = 1000
+  ): Promise<ResultObjectFilesB2> {
     const { value: bucket, error } = await this.getBucket(bucketName);
     if (error !== null) {
       return { error, value: null };
     }
 
-    return this.storage
-      .listFileVersions({
+    try {
+      let data: any; //eslint-disable-line
+      const options = {
         bucketId: bucket.id,
-        maxFileCount: 1000,
-      })
-      .then(({ data: { files } }) => {
-        // console.log(files);
-        const value = files.map(({ fileId, fileName, contentType, contentLength }) => {
+        maxFileCount: numFiles,
+      };
+      if (versioning) {
+        ({ data } = await this.storage.listFileVersions(options));
+      } else {
+        ({ data } = await this.storage.listFileNames(options));
+      }
+      return {
+        value: data.files.map(({ fileId, fileName, contentType, contentLength }) => {
           return {
             id: fileId,
             name: fileName,
             contentType,
             contentLength,
           };
-        });
-        return { value, error: null };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { value: null, error: r.response.data.message };
-      });
+        }),
+        error: null,
+      };
+    } catch (e) {
+      return {
+        value: null,
+        error: e.message,
+      };
+    }
   }
 
   private async getFile(bucketName: string, name: string): Promise<ResultObjectFileB2> {
-    const { value: files, error } = await this.getFiles(bucketName);
+    const { value: files, error } = await this.getFiles(bucketName, false);
     if (error !== null) {
       return { error, value: null };
     }
@@ -246,8 +258,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     delete options.start;
     delete options.end;
 
-    return this.storage
-      .downloadFileById({
+    try {
+      const { data } = await this.storage.downloadFileById({
         fileId: file.id,
         responseType: "stream",
         axios: {
@@ -257,10 +269,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           },
           ...options,
         },
-      })
-      .then((r: { data: Readable }) => {
-        return { error: null, value: r.data };
       });
+      return { value: data, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
@@ -276,49 +289,51 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
-    const data = await this.getFiles(bucketName);
+    const data = await this.getFiles(bucketName, !this.versioning);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const { value: files } = data;
     const index = files.findIndex(({ name }) => name === fileName);
     if (index === -1) {
-      return { error: `Could not find file "${fileName}"`, value: null };
+      return { value: null, error: `Could not find file "${fileName}"` };
     }
-    const file = files[index];
 
-    return Promise.all(
-      files
-        .filter((f: FileB2) => f.name === fileName)
-        .map(({ id: fileId, name: fileName }) =>
-          this.storage.deleteFileVersion({
-            fileId,
-            fileName,
-          })
-        )
-    )
-      .then(() => {
-        return { error: null, value: "ok" };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { error: r.response.data.message, value: null };
-      });
-
-    return this.storage
-      .deleteFileVersion({
-        fileId: file.id,
-        fileName: file.name,
-      })
-      .then(() => {
-        return { error: null, value: "ok" };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { error: r.response.data.message, value: null };
-      });
+    if (this.versioning) {
+      // delete the file, if the file has more versions, delete the most recent version
+      const file = files[index];
+      try {
+        await this.storage.deleteFileVersion({
+          fileId: file.id,
+          fileName: file.name,
+        });
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    } else {
+      // delete all versions of the file
+      try {
+        await Promise.all(
+          files
+            .filter((f: FileB2) => f.name === fileName)
+            .map(({ id: fileId, name: fileName }) => {
+              console.log(fileName, fileId);
+              return this.storage.deleteFileVersion({
+                fileId,
+                fileName,
+              });
+            })
+        );
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    }
   }
 
   public async createBucket(
@@ -327,58 +342,53 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const msg = validateName(name);
     if (msg !== null) {
-      return { error: msg, value: null };
+      return { value: null, error: msg };
     }
 
-    return this.storage
-      .createBucket({
+    try {
+      const { data } = await this.storage.createBucket({
         ...options,
         bucketName: name,
-        bucketType: options.bucketType,
-      })
-      .then((response: { data: { bucketType: string } }) => {
-        const {
-          data: { bucketType },
-        } = response;
-        return { error: null, value: "ok" };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { error: r.response.data.message, value: null };
       });
+      const { bucketType: _type } = data;
+      // console.log(_type);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.response.data.message };
+    }
   }
 
   public async clearBucket(name: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
-    const data = await this.getFiles(name);
+    const data = await this.getFiles(name, true);
     if (data.error !== null) {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
-
     const { value: files } = data;
-    return Promise.all(
-      files.map((file: FileB2) =>
-        this.storage.deleteFileVersion({
-          fileId: file.id,
-          fileName: file.name,
-        })
-      )
-    )
-      .then((what) => {
-        // console.log("[clearBucket]", what);
-        return { error: null, value: "ok" };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { error: r.response.data.message, value: null };
-      });
+
+    try {
+      const _data = await Promise.all(
+        files.map((file: FileB2) =>
+          this.storage.deleteFileVersion({
+            fileId: file.id,
+            fileName: file.name,
+          })
+        )
+      );
+      // console.log("[clearBucket]", _data);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   public async deleteBucket(name: string): Promise<ResultObject> {
@@ -392,14 +402,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { error: error, value: null };
     }
 
-    return this.storage
-      .deleteBucket({ bucketId: bucket.id })
-      .then(() => {
-        return { error: null, value: "ok" };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return { error: r.response.data.message, value: null };
-      });
+    try {
+      await this.storage.deleteBucket({ bucketId: bucket.id });
+      return { error: null, value: "ok" };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   public async listBuckets(): Promise<ResultObjectBuckets> {
@@ -418,17 +426,17 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         }),
       };
     } else {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
   }
 
   public async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
-    const data = await this.getFiles(bucketName);
+    const data = await this.getFiles(bucketName, this.versioning, numFiles);
     if (data.error === null) {
       const { value: files } = data;
       return {
@@ -438,7 +446,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         }),
       };
     } else {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
   }
 
@@ -478,38 +486,5 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } else {
       return { error: null, value: false };
     }
-  }
-
-  // probably not necessary; may be a little bit more lightweight compared to listFileVersions
-  // if you don't have file versions
-  public async listFileNames(bucketName: string): Promise<ResultObjectBuckets> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { error, value: null };
-    }
-
-    const data = await this.getBucket(bucketName);
-    if (data.error !== null) {
-      return { error: data.error, value: null };
-    }
-
-    const { value: bucket } = data;
-    return this.storage
-      .listFileNames({ bucketId: bucket.id })
-      .then(({ data: { files } }) => {
-        // console.log(files);
-        return {
-          error: null,
-          value: files.map(({ fileName }) => {
-            return fileName;
-          }),
-        };
-      })
-      .catch((r: BackblazeAxiosResponse) => {
-        return {
-          error: r.response.data.message,
-          value: null,
-        };
-      });
   }
 }
