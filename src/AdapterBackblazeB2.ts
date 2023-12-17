@@ -207,20 +207,20 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       options = {};
     }
 
-    let buffer: Buffer;
-    if (typeof (params as FilePathParams).origPath !== "undefined") {
-      buffer = await fs.promises.readFile((params as FilePathParams).origPath);
-    } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
-      buffer = (params as FileBufferParams).buffer;
-    } else if (typeof (params as FileStreamParams).stream !== "undefined") {
-      const buffers: Array<any> = []; // eslint-disable-line
-      for await (const data of (params as FileStreamParams).stream) {
-        buffers.push(data);
-      }
-      buffer = Buffer.concat(buffers);
-    }
-
     try {
+      let buffer: Buffer;
+      if (typeof (params as FilePathParams).origPath !== "undefined") {
+        buffer = await fs.promises.readFile((params as FilePathParams).origPath);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        buffer = (params as FileBufferParams).buffer;
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        const buffers: Array<any> = []; // eslint-disable-line
+        for await (const data of (params as FileStreamParams).stream) {
+          buffers.push(data);
+        }
+        buffer = Buffer.concat(buffers);
+      }
+
       const { data: _data } = await this.storage.uploadFile({
         uploadUrl,
         uploadAuthToken,
@@ -350,6 +350,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: null, error: msg };
     }
 
+    if (typeof options.bucketType === "undefined") {
+      options.bucketType = "allPrivate";
+    }
+
     try {
       const { data } = await this.storage.createBucket({
         ...options,
@@ -473,9 +477,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     const data = await this.getBucket(bucketName);
     if (data.error === null) {
-      return { error: null, value: true };
+      return { value: true, error: null };
+    } else if (data.error.startsWith("Could not find bucket")) {
+      return { value: false, error: null };
     } else {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
   }
 

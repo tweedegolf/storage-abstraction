@@ -11,41 +11,41 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-    + [S3 Compatible Storage](#s3-compatible-storage)
-    + [Cloudflare R2](#cloudflare-r2)
-    + [Backblaze S3](#backblaze-s3)
-  * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+    - [S3 Compatible Storage](#s3-compatible-storage)
+    - [Cloudflare R2](#cloudflare-r2)
+    - [Backblaze S3](#backblaze-s3)
+  - [Backblaze B2](#backblaze-b2)
+  - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  * [createBucket](#createbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromReadable](#addfilefromreadable)
-  * [addFile](#addfile)
-  * [getFileAsStream](#getfileasstream)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [bucketExists](#bucketexists)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [switchAdapter](#switchadapter)
+  - [createBucket](#createbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromReadable](#addfilefromreadable)
+  - [addFile](#addfile)
+  - [getFileAsStream](#getfileasstream)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [bucketExists](#bucketexists)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -413,15 +413,13 @@ Backblaze also has a native API, see below.
 
 ### <a name='backblaze-b2'></a>Backblaze B2
 
-> peer dependencies: <br/> > `npm i backblaze-b2 @gideo-llc/backblaze-b2-upload-any`
-
 Config object:
 
 ```typescript
 type ConfigBackBlazeB2 = {
   type: StorageType;
-  applicationKeyId: string;
   applicationKey: string;
+  applicationKeyId: string;
   bucketName?: string;
   [id: string]: boolean | string | number; // configuration is extensible
 };
@@ -430,7 +428,7 @@ type ConfigBackBlazeB2 = {
 Configuration url:
 
 ```typescript
-const url = "b2://applicationKeyId:applicationKey@bucketName&option1=value1&option2=value2&...";
+const url = "b2://applicationKeyId=keyId&applicationKey=key&bucketName=the-buck";
 ```
 
 Example:
@@ -438,15 +436,17 @@ Example:
 ```typescript
 const s = new Storage({
   type: StorageType.B2,
-  applicationKeyId: "keyId",
   applicationKey: "key",
+  applicationKeyId: "keyId",
   bucketName: "bucket",
 });
 
 const s = new Storage("b2://keyId:key@bucket");
 ```
 
-### <a name='backblaze-b2'></a>Azure Blob Storage
+createBucket => options can not be an empty object
+
+### <a name='azure-blob'></a>Azure Blob Storage
 
 > peer dependencies: <br/> > `npm i @azure/storage-blob`
 

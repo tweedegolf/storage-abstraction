@@ -255,7 +255,7 @@ Also the new version tries to keep as little local state as possible so `selectB
 Because of all aforementioned changes the `init` is no longer required! You can start calling API methods right after instantiating a storage:
 
 ```typescript
-const b2 = new Storage("b2://applicationKeyId:applicationKey");
+const b2 = new Storage("b2://applicationKeyId=your-key-id&applicationKey=your-key");
 await b2.listBuckets();
 ```
 

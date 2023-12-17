@@ -53,8 +53,8 @@ if (type === StorageType.LOCAL) {
   config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;
 }
 
-const newBucketName1 = `bucket-${uniquid()}}`;
-const newBucketName2 = `bucket-${uniquid()}}`;
+const newBucketName1 = `bucket-${uniquid()}`;
+const newBucketName2 = `bucket-${uniquid()}`;
 
 let storage: Storage;
 let bucketName: string;
@@ -92,6 +92,7 @@ describe(`[testing ${type} storage]`, async () => {
       bucketName = storage.config.bucketName || newBucketName1;
       console.log("beforeAll");
       console.log(storage.config);
+      console.log("bucketName", bucketName);
     } catch (e) {
       console.error(e);
     }
