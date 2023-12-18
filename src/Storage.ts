@@ -93,7 +93,11 @@ export class Storage implements IStorage {
     // console.log(args);
     let type: string;
     if (typeof args === "string") {
-      type = args.substring(0, args.indexOf("://"));
+      if (args.indexOf("://") !== -1) {
+        type = args.substring(0, args.indexOf("://"));
+      } else {
+        type = args;
+      }
     } else {
       type = args.type;
     }

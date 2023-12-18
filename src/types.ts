@@ -213,7 +213,6 @@ export interface AdapterConfig {
 }
 
 export interface AdapterConfigGoogle extends AdapterConfig {
-  projectId?: string;
   keyFilename?: string;
 }
 
@@ -225,7 +224,7 @@ export interface AdapterConfigAzure extends AdapterConfig {
 export interface AdapterConfigS3 extends AdapterConfig {
   region?: string;
   endpoint?: string;
-  credentials: {
+  credentials?: {
     accessKeyId?: string;
     secretAccessKey?: string;
   };

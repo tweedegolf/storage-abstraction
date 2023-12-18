@@ -50,6 +50,7 @@
     "testB2S3": "ts-node ./tests_local/testB2S3.ts",
     "testGCS": "ts-node ./tests_local/testGCS.ts",
     "testAzure": "ts-node ./tests_local/testAzure.ts",
+    "testCubbit": "ts-node ./tests_local/testCubbit.ts",
     "testLocal": "ts-node ./tests_local/testLocal.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",

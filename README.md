@@ -2,7 +2,19 @@
 
 [![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
-Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Currently local disk storage, Backblaze B2, Google Cloud and Amazon S3 and compliant cloud services are supported.
+Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Supported cloud storage services are:
+
+- MinIO
+- Azure Blob
+- Backblaze B2
+- Google Cloud
+- Amazon S3
+
+Also S3 compliant cloud services are supported. Tested S3 compatible services are:
+
+- Backblaze S3
+- CloudFlare
+- Cubbit
 
 Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
 
@@ -13,6 +25,10 @@ Because the API only provides basic storage operations (see [below](#api-methods
 - [Instantiate a storage](#instantiate-a-storage)
   - [Configuration object](#configuration-object)
   - [Configuration URL](#configuration-url)
+  - [Mandatory and optional keys per service](#mandatory-and-optional-keys-per-service)
+    - [Local Storage](#local-storage)
+    - [Amazon S3 and compatible](#amazon-s3-and-compatible)
+    - [Google Cloud Storage](#google-cloud-storage)
 - [Adapters](#adapters)
   - [Local storage](#local-storage)
   - [Google Cloud](#google-cloud)
@@ -74,75 +90,132 @@ enum StorageType {
   S3 = "s3",
   B2 = "b2",
   AZURE = "azure",
+  MINIO = "minio",
 }
 ```
 
 ### <a name='configuration-object'></a>Configuration object
 
-A configuration object extends `IAdapterConfig`:
+A configuration object type that extends `AdapterConfig`:
 
 ```typescript
-interface IAdapterConfig {
+interface AdapterConfig {
   type: string;
-  skipCheck?: boolean;
   bucketName?: string;
-  options?: {
-    [id: string]: number | string | boolean | number[] | string[] | boolean[];
-  };
+  [id: string]: any; // other service specific keys
 }
 ```
 
-Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `systemClockOffset` for Amazon S3.
-
-When your create a storage instance a check is performed if the mandatory keys are set in the configuration object. You can skip this check by setting `skipCheck` to `true`.
-
-Another optional key is `bucketName`.
-
-Note that the `options` object and the query string will be flattened in the config object of the instantiated storage:
-
-```typescript
-const conf = {
-  accessKeyId: "yourKeyId";
-  secretAccessKey: "yourAccessKey";
-  region: "yourRegion";
-  options: {
-    systemClockOffset: 40000,
-    useArnRegion: true,
-  }
-}
-
-const storage = new Storage(conf);
-console.log(storage.conf.
-
-```
+Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
 
 ### <a name='configuration-url'></a>Configuration URL
 
 Configuration urls always start with a protocol that defines the type of storage:
 
 - `local://` &rarr; local storage
-- `gcs://` &rarr; Google Cloud
-- `s3://` &rarr; Amazon S3
+- `minio://` &rarr; MinIO
 - `b2://` &rarr; Backblaze B2
+- `s3://` &rarr; Amazon S3
+- `gcs://` &rarr; Google Cloud
 - `azure://` &rarr; Azure Blob Storage
 
-These values match the values in the enum `StorageType` shown above. What follows after the protocol is the part that contains the configuration of the storage. The format of the URL differs per storage type, see the documentation per adapter [below](#adapters) for details.
+These values match the values in the enum `StorageType` shown above. What follows after the `://` is a query string without the initial `?` that contains mandatory and optional parameters for the configuration.
 
 ```typescript
-// local storage
-const url = "local://path/to/bucket";
+// example with extra Azure option "maxTries"
+const c = "azure://accountName=your-account&bucketName=your-bucket&foo&maxTries=10";
+```
 
-// Amazon S3
-const url =
-  "s3://accessKeyId:secretAccessKey@region/bucketName?extraOption1=value1&extraOption2=value2...";
+### Mandatory and optional keys per service
 
-// Google Cloud Storage
-const url =
-  "gcs://path/to/keyFile.json:projectId@bucketName?extraOption1=value1&extraOption2=value2...";
+#### Local Storage
 
-// Backblaze B2
+```typescript
+export interface AdapterConfigLocal extends AdapterConfig {
+  directory: string;
+}
+// the directory is where the buckets are created
+const url = "local://directory=path/to/directory";
+```
+
+#### Amazon S3 and compatible
+
+```TypeScript
+export interface AdapterConfigS3 extends AdapterConfig {
+  region?: string;
+  endpoint?: string;
+  credentials?: {
+    accessKeyId?: string;
+    secretAccessKey?: string;
+  };
+  accessKeyId?: string;
+  secretAccessKey?: string;
+}
+
+// Cubbit S3 compatible
 const url =
-  "b2://applicationKeyId:applicationKey@bucketName?extraOption1=value1&extraOption2=value2...";
+  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.eu-central-003.backblazeb2.com&region=auto";
+```
+
+In AWS's SDK, it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the AWS SDK will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
+
+```typescript
+const s = new Storage({ type: StorageType.S3 });
+// with a config url:
+const s = new Storage("s3://");
+// and even:
+const s = new Storage("s3");
+```
+
+Environment variables that are automatically read:
+
+```shell
+AWS_ACCESS_KEY_ID="your access key"
+AWS_SECRET_ACCESS_KEY="your secret"
+AWS_REGION="eu-west-1"
+
+```
+
+Note that this does not work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables. So for S3 compatible services setting a value for `endpoint` in the config is mandatory.
+
+Also `region` is mandatory but you don't have to pass this in the config as long as you have set the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
+
+#### Google Cloud Storage
+
+```typescript
+export interface AdapterConfigGoogle extends AdapterConfig {
+  keyFilename?: string;
+}
+
+const url = "gcs://keyFilename=path/to/keyFile.json";
+```
+
+Google cloud service can read default credentials from environment variables.
+
+```typescript
+const s = new Storage({ type: StorageType.GCS });
+// using a config url:
+const s = new Storage("gcs://");
+// and even:
+const s = new Storage("gcs");
+```
+
+Environment variable that is automatically read:
+
+```shell
+GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
+```
+
+#### Backblaze B2
+
+```typescript
+export interface AdapterConfigB2 extends AdapterConfig {
+  applicationKey: string;
+  applicationKeyId: string;
+}
+
+const url =
+  "b2://applicationKeyId=your-key-id&applicationKey=your-key&bucketName?extraOption1=value1&extraOption2=value2...";
 
 // Azure Blob Storage
 const url = "azure://accountName:accountKey@containerName";

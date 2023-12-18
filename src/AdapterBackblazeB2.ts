@@ -119,7 +119,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   ): Promise<ResultObjectFilesB2> {
     const { value: bucket, error } = await this.getBucket(bucketName);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     try {
@@ -155,7 +155,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   private async getFile(bucketName: string, name: string): Promise<ResultObjectFileB2> {
     const { value: files, error } = await this.getFiles(bucketName, false);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     for (let i = 0; i < files.length; i++) {
@@ -182,13 +182,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const { bucketName, targetPath } = params;
     const data1 = await this.getBucket(bucketName);
     if (data1.error !== null) {
-      return { error: data1.error, value: null };
+      return { value: null, error: data1.error };
     }
     const {
       value: { id: bucketId },
@@ -196,7 +196,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     const data2 = await this.getUploadUrl(bucketId);
     if (data2.error !== null) {
-      return { error: data2.error, value: null };
+      return { value: null, error: data2.error };
     }
     const {
       value: { uploadUrl, uploadAuthToken },
@@ -226,11 +226,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         uploadAuthToken,
         fileName: targetPath,
         data: buffer,
+        ...options,
       });
       // console.log(_data);
       return {
-        error: null,
         value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
+        error: null,
       };
     } catch (e) {
       // console.log(e.toJSON());
@@ -245,12 +246,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   ): Promise<ResultObjectStream> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const data = await this.getFile(bucketName, fileName);
     if (data.error !== null) {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
     const { value: file } = data;
     const { start, end } = options;
@@ -279,7 +280,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const url = `${this.storage.downloadUrl}/file/${bucketName}/${fileName}`;
@@ -398,17 +399,17 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async deleteBucket(name: string): Promise<ResultObject> {
     const data = await this.clearBucket(name);
     if (data.error !== null) {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
 
     const { error, value: bucket } = await this.getBucket(name);
     if (error !== null) {
-      return { error: error, value: null };
+      return { value: null, error: error };
     }
 
     try {
       await this.storage.deleteBucket({ bucketId: bucket.id });
-      return { error: null, value: "ok" };
+      return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -417,17 +418,17 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async listBuckets(): Promise<ResultObjectBuckets> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const data = await this.getBuckets();
     if (data.error === null) {
       const { value: buckets } = data;
       return {
-        error: null,
         value: buckets.map((b) => {
           return b.name;
         }),
+        error: null,
       };
     } else {
       return { value: null, error: data.error };
@@ -444,10 +445,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (data.error === null) {
       const { value: files } = data;
       return {
-        error: null,
         value: files.map((f) => {
           return [f.name, f.contentLength];
         }),
+        error: null,
       };
     } else {
       return { value: null, error: data.error };
@@ -457,22 +458,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const data = await this.getFile(bucketName, fileName);
     if (data.error === null) {
       const { value: file } = data;
-      return { error: null, value: file.contentLength };
+      return { value: file.contentLength, error: null };
     } else {
-      return { error: data.error, value: null };
+      return { value: null, error: data.error };
     }
   }
 
   async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     const { error } = await this.authorize();
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
 
     const data = await this.getBucket(bucketName);
@@ -488,9 +489,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     const { error, value } = await this.sizeOf(bucketName, fileName);
     if (error === null) {
-      return { error: null, value: true };
+      return { value: true, error: null };
     } else {
-      return { error: null, value: false };
+      return { value: false, error: null };
     }
   }
 }

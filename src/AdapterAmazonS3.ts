@@ -146,12 +146,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return { value: "ok", error: null };
       } else {
         return {
-          error: `Error http status code ${response.$metadata.httpStatusCode}`,
           value: null,
+          error: `Error http status code ${response.$metadata.httpStatusCode}`,
         };
       }
     } catch (e) {
-      return { error: e.message, value: null };
+      return { value: null, error: e.message };
     }
   }
 
@@ -211,7 +211,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (e.code === "NoSuchBucket") {
         return { value: "bucket not found", error: null };
       }
-      return { value: "bucket not found", error: e.code };
+      return { value: null, error: e.message };
     }
   }
 

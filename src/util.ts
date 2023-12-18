@@ -1,4 +1,4 @@
-import { AdapterConfig, ParseUrlResult, ResultObjectNumber } from "./types";
+import { AdapterConfig, ParseUrlResult, ResultObjectNumber, StorageType } from "./types";
 
 /**
  * @param: url
@@ -27,14 +27,17 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
  * Parses a url into a key-value object.
  */
 export const parseUrl = (url: string): ParseUrlResult => {
+  let type: string;
   if (url.indexOf("://") === -1) {
-    return { value: null, error: "Please provide a valid configuration url" };
+    type = url;
+    if (Object.values(StorageType).includes(type as StorageType) === false) {
+      return { value: null, error: `"${type}" is not a valid storage type` };
+    }
+    return { value: { type }, error: null };
+    // return { value: null, error: "Please provide a valid configuration url" };
   }
-  const type = url.substring(0, url.indexOf("://"));
-  // if (Object.values(StorageType).includes(type as StorageType) === false) {
-  //   return { value: null, error: `"${type}" is not a valid storage type` };
-  // }
 
+  type = url.substring(0, url.indexOf("://"));
   const config: AdapterConfig = url
     .substring(url.indexOf("://") + 3)
     .split("&")
