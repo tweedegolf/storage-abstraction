@@ -2,7 +2,6 @@ import fs from "fs";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
-  BucketLocationConstraint,
   CreateBucketCommand,
   CreateBucketCommandInput,
   DeleteBucketCommand,
@@ -82,14 +81,13 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { error: this.configError, value: null };
     }
 
-    const params = {
-      Bucket: bucketName,
-      Key: fileName,
-      Range: `bytes=${options.start}-${options.end}`,
-    };
-
-    const command = new GetObjectCommand(params);
     try {
+      const params = {
+        Bucket: bucketName,
+        Key: fileName,
+        Range: `bytes=${options.start}-${options.end}`,
+      };
+      const command = new GetObjectCommand(params);
       const response = await this.storage.send(command);
       return { value: response.Body as Readable, error: null };
     } catch (e) {
@@ -102,12 +100,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    const input = {
-      Bucket: bucketName,
-      Key: fileName,
-    };
-    const command = new DeleteObjectCommand(input);
     try {
+      const input = {
+        Bucket: bucketName,
+        Key: fileName,
+      };
+      const command = new DeleteObjectCommand(input);
       const response = await this.storage.send(command);
       return { value: "ok", error: null };
     } catch (e) {
@@ -169,7 +167,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const { Versions } = await this.storage.send(command);
       // console.log("Versions", Versions);
       if (typeof Versions === "undefined") {
-        return { value: "bucket is empty", error: null };
+        return { value: "ok", error: null };
       }
 
       try {
@@ -220,17 +218,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    const input = {};
-    const command = new ListBucketsCommand(input);
-    return this.storage
-      .send(command)
-      .then((response) => {
-        const bucketNames = response.Buckets?.map((d) => d?.Name);
-        return { value: bucketNames, error: null };
-      })
-      .catch((e) => {
-        return { value: null, error: e };
-      });
+    try {
+      const input = {};
+      const command = new ListBucketsCommand(input);
+      const response = await this.storage.send(command);
+      const bucketNames = response.Buckets?.map((b) => b?.Name);
+      return { value: bucketNames, error: null };
+    } catch (e) {
+      return { value: null, error: e };
+    }
   }
 
   public async addFile(
@@ -245,20 +241,20 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       options = {};
     }
 
-    let fileData: Readable | Buffer;
-    if (typeof (params as FilePathParams).origPath !== "undefined") {
-      const f = (params as FilePathParams).origPath;
-      if (!fs.existsSync(f)) {
-        return { value: null, error: `File with given path: ${f}, was not found` };
-      }
-      fileData = fs.createReadStream(f);
-    } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
-      fileData = (params as FileBufferParams).buffer;
-    } else if (typeof (params as FileStreamParams).stream !== "undefined") {
-      fileData = (params as FileStreamParams).stream;
-    }
-
     try {
+      let fileData: Readable | Buffer;
+      if (typeof (params as FilePathParams).origPath !== "undefined") {
+        const f = (params as FilePathParams).origPath;
+        if (!fs.existsSync(f)) {
+          return { value: null, error: `File with given path: ${f}, was not found` };
+        }
+        fileData = fs.createReadStream(f);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        fileData = (params as FileBufferParams).buffer;
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        fileData = (params as FileStreamParams).stream;
+      }
+
       const input = {
         Bucket: params.bucketName,
         Key: params.targetPath,
@@ -274,26 +270,26 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
-    return getSignedUrl(
-      this.storage,
-      new GetObjectCommand({
-        Bucket: bucketName,
-        Key: fileName,
-      })
-      // { expiresIn: 3600 }
-    )
-      .then((url: string) => {
-        return { value: url, error: null };
-      })
-      .catch((e) => {
-        return { value: null, error: e.code };
-      });
+    try {
+      const url = await getSignedUrl(
+        this.storage,
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+        })
+        // { expiresIn: 3600 }
+      );
+      return { value: url, error: null };
+    } catch (e) {
+      return { value: null, error: e.code };
+    }
   }
 
   public async listFiles(bucketName: string, maxFiles: number = 1000): Promise<ResultObjectFiles> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
+
     try {
       const input = {
         Bucket: bucketName,
@@ -334,18 +330,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    const input = {
-      Bucket: bucketName,
-    };
-    const command = new HeadBucketCommand(input);
-    return this.storage
-      .send(command)
-      .then(() => {
-        return { value: true, error: null };
-      })
-      .catch(() => {
-        return { value: false, error: null };
-      });
+    try {
+      const input = {
+        Bucket: bucketName,
+      };
+      const command = new HeadBucketCommand(input);
+      await this.storage.send(command);
+      return { value: true, error: null };
+    } catch (e) {
+      return { value: false, error: null };
+    }
   }
 
   public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
@@ -353,18 +347,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    const input = {
-      Bucket: bucketName,
-      Key: fileName,
-    };
-    const command = new HeadObjectCommand(input);
-    return this.storage
-      .send(command)
-      .then(() => {
-        return { value: true, error: null };
-      })
-      .catch(() => {
-        return { value: false, error: null };
-      });
+    try {
+      const input = {
+        Bucket: bucketName,
+        Key: fileName,
+      };
+      const command = new HeadObjectCommand(input);
+      await this.storage.send(command);
+      return { value: true, error: null };
+    } catch (e) {
+      return { value: false, error: null };
+    }
   }
 }

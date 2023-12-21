@@ -25,6 +25,8 @@
     "amazon s3",
     "backblaze b2",
     "cloudflare r2",
+    "cubbit",
+    "minio",
     "azure"
   ],
   "author": "daniel@tweedegolf.nl",
