@@ -226,6 +226,7 @@ export class AdapterLocal extends AbstractAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
+
     try {
       const storagePath = path.join(this._config.directory, bucketName);
       const { value: files, error } = await this.globFiles(storagePath);
@@ -253,17 +254,12 @@ export class AdapterLocal extends AbstractAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
+
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
-      return fs.promises
-        .access(p)
-        .then(() => {
-          const stream = fs.createReadStream(p, options);
-          return { value: stream, error: null };
-        })
-        .catch((e) => {
-          return { value: null, error: e };
-        });
+      await fs.promises.access(p);
+      const stream = fs.createReadStream(p, options);
+      return { value: stream, error: null };
     } catch (e) {
       return { value: null, error: e };
     }
@@ -288,18 +284,13 @@ export class AdapterLocal extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    const p = path.join(this._config.directory, bucketName, fileName);
-    return fs.promises
-      .unlink(p)
-      .then(() => {
-        return { value: "ok", error: null };
-      })
-      .catch((err) => {
-        // if (err.message.indexOf("no such file or directory") !== -1) {
-        //   return { value: "file doesn't exist", error: null };
-        // }
-        return { value: null, error: err.message };
-      });
+    try {
+      const p = path.join(this._config.directory, bucketName, fileName);
+      await fs.promises.unlink(p);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {

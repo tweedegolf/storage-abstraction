@@ -22,7 +22,6 @@ import {
   AdapterConfigAzure,
   Options,
 } from "./types";
-import { CreateReadStreamOptions } from "@google-cloud/storage";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
@@ -80,7 +79,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     return this._storage as BlobServiceClient;
   }
 
-  async getFileAsStream(
+  public async getFileAsStream(
     bucketName: string,
     fileName: string,
     options: Options = { start: 0 }
@@ -117,7 +116,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -148,7 +147,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async createBucket(name: string, options?: object): Promise<ResultObject> {
+  public async createBucket(name: string, options?: object): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -161,7 +160,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async clearBucket(name: string): Promise<ResultObject> {
+  public async clearBucket(name: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -188,7 +187,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
+  public async deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this.clearBucket(name);
       const del = await this.storage.deleteContainer(name);
@@ -199,7 +198,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async listBuckets(): Promise<ResultObjectBuckets> {
+  public async listBuckets(): Promise<ResultObjectBuckets> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -217,7 +216,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async listFiles(bucketName: string): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string): Promise<ResultObjectFiles> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -236,7 +235,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -250,7 +249,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -264,7 +263,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async bucketExists(name: string): Promise<ResultObjectBoolean> {
+  public async bucketExists(name: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -278,7 +277,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }

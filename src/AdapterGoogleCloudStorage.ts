@@ -30,6 +30,21 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
+  // util method used by listFiles
+  private async getFileSize(bucketName: string, fileNames: string[]): Promise<ResultObjectFiles> {
+    const result: Array<[string, number]> = [];
+    for (let i = 0; i < fileNames.length; i += 1) {
+      const file = this.storage.bucket(bucketName).file(fileNames[i]);
+      try {
+        const [metadata] = await file.getMetadata();
+        result.push([file.name, parseInt(metadata.size as string, 10)]);
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    }
+    return { value: result, error: null };
+  }
+
   get config(): AdapterConfigGoogle {
     return this._config as AdapterConfigGoogle;
   }
@@ -38,7 +53,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     return this._storage as GoogleCloudStorage;
   }
 
-  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -51,7 +66,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async getFileAsStream(
+  public async getFileAsStream(
     bucketName: string,
     fileName: string,
     options: Options = { start: 0 }
@@ -74,7 +89,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -136,7 +151,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+  public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -160,7 +175,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async clearBucket(name: string): Promise<ResultObject> {
+  public async clearBucket(name: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -173,7 +188,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
+  public async deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this.clearBucket(name);
     } catch (e) {
@@ -187,7 +202,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async listBuckets(): Promise<ResultObjectBuckets> {
+  public async listBuckets(): Promise<ResultObjectBuckets> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -200,21 +215,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  private async getFileSize(bucketName: string, fileNames: string[]): Promise<ResultObjectFiles> {
-    const result: Array<[string, number]> = [];
-    for (let i = 0; i < fileNames.length; i += 1) {
-      const file = this.storage.bucket(bucketName).file(fileNames[i]);
-      try {
-        const [metadata] = await file.getMetadata();
-        result.push([file.name, parseInt(metadata.size as string, 10)]);
-      } catch (e) {
-        return { value: null, error: e.message };
-      }
-    }
-    return { value: result, error: null };
-  }
-
-  async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -228,7 +229,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -242,7 +243,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async bucketExists(name: string): Promise<ResultObjectBoolean> {
+  public async bucketExists(name: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -256,7 +257,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
