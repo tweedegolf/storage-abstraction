@@ -217,10 +217,12 @@ export interface AdapterConfigGoogle extends AdapterConfig {
 }
 
 export interface AdapterConfigAzure extends AdapterConfig {
-  accountName: string;
+  accountName?: string;
+  connectionString?: string;
   accountKey?: string;
   sasToken?: string;
 }
+
 export interface AdapterConfigS3 extends AdapterConfig {
   region?: string;
   endpoint?: string;

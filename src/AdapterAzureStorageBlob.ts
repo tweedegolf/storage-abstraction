@@ -2,6 +2,7 @@ import fs from "fs";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
+  AnonymousCredential,
   BlobGenerateSasUrlOptions,
   BlobSASPermissions,
   BlobServiceClient,
@@ -33,12 +34,15 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   constructor(config?: string | AdapterConfigAzure) {
     super(config);
     if (this._configError === null) {
-      if (typeof this.config.accountName === "undefined") {
-        this._configError = '[configError] Please provide a value for "storageAccount"';
+      if (
+        typeof this.config.accountName === "undefined" &&
+        typeof this.config.connectionString === "undefined"
+      ) {
+        this._configError =
+          'Please provide at least a value for "accountName" or for "connectionString';
         return;
       }
       // option 1: accountKey
-      // console.log("option 1: accountKey");
       if (typeof this.config.accountKey !== "undefined") {
         try {
           this.sharedKeyCredential = new StorageSharedKeyCredential(
@@ -57,11 +61,15 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       } else if (typeof this.config.sasToken !== "undefined") {
         this._storage = new BlobServiceClient(
           `https://${this.config.accountName}.blob.core.windows.net?${this.config.sasToken}`,
-          null,
+          new AnonymousCredential(),
           this.config.options as object
         );
-        // option 3: passwordless
+        // option 3: connection string
+      } else if (typeof this.config.connectionString !== "undefined") {
+        this._storage = BlobServiceClient.fromConnectionString(this.config.connectionString);
+        // option 4: password less
       } else {
+        console.log("default");
         this._storage = new BlobServiceClient(
           `https://${this.config.accountName as string}.blob.core.windows.net`,
           new DefaultAzureCredential(),

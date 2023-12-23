@@ -178,7 +178,7 @@ AWS_REGION="eu-west-1"
 
 Note that this does not work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables. So for S3 compatible services setting a value for `endpoint` in the config is mandatory.
 
-Also `region` is mandatory but you don't have to pass this in the config as long as you have set the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
+For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config as long as you have set the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
 
 #### Google Cloud Storage
 
@@ -190,7 +190,7 @@ export interface AdapterConfigGoogle extends AdapterConfig {
 const url = "gcs://keyFilename=path/to/keyFile.json";
 ```
 
-Google cloud service can read default credentials from environment variables.
+Google cloud service can read default credentials from an environment variable.
 
 ```typescript
 const s = new Storage({ type: StorageType.GCS });
@@ -214,12 +214,44 @@ export interface AdapterConfigB2 extends AdapterConfig {
   applicationKeyId: string;
 }
 
-const url =
-  "b2://applicationKeyId=your-key-id&applicationKey=your-key&bucketName?extraOption1=value1&extraOption2=value2...";
-
-// Azure Blob Storage
-const url = "azure://accountName:accountKey@containerName";
+const url = "b2://applicationKeyId=your-key-id&applicationKey=your-key";
 ```
+
+#### Azure Blob Storage
+
+```typescript
+export interface AdapterConfigAzure extends AdapterConfig {
+  accountName?: string;
+  connectionString?: string;
+  accountKey?: string;
+  sasToken?: string;
+}
+
+const url = "azure://accountName=your-account";
+```
+
+There are multiple ways to login to Azure Blob Storage. Microsoft recommends to use passwordless authorization, for this you need to provide a value for `accountName` which is the name of your storage account. Then you can either login using the Azure CLI command `az login` or by setting the following environment variables:
+
+```shell
+AZURE_TENANT_ID
+AZURE_CLIENT_ID
+AZURE_CLIENT_SECRET
+
+```
+
+You can find these values in the Azure Portal
+
+Alternately you can login by:
+
+- providing a value for `connectionString`
+- providing a value for both `accountName` and `accountKey`
+- providing a value for both `accountName` and `sasToken`
+
+Note that if you don't use the `accountKey` and you add files to a bucket you will get this error message:
+
+`'Can only generate the SAS when the client is initialized with a shared key credential'`
+
+This does not mean that the file hasn't been uploaded, it simply means that no public url has been generated for this file.
 
 ## <a name='adapters'></a>Adapters
 
