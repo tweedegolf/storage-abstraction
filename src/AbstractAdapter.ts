@@ -24,7 +24,7 @@ export abstract class AbstractAdapter implements IStorage {
     if (typeof config === "string") {
       const { value, error } = parseUrl(config);
       if (error) {
-        this._configError = error;
+        this._configError = `[configError] ${error}`;
       }
       this._config = value;
     } else {

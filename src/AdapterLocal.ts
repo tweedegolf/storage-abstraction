@@ -25,7 +25,6 @@ export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
   protected _config: AdapterConfigLocal;
   protected _configError: string | null = null;
-  private mode: number = 0o777;
 
   constructor(config: AdapterConfigLocal) {
     super(config);
@@ -34,8 +33,10 @@ export class AdapterLocal extends AbstractAdapter {
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
-        this.mode = value;
+        this._config.mode = value;
       }
+    } else {
+      this._config.mode = 0o777;
     }
     if (typeof this._config.directory !== "string") {
       this._configError =
@@ -49,7 +50,7 @@ export class AdapterLocal extends AbstractAdapter {
    */
   private async createDirectory(path: string): Promise<ResultObjectBoolean> {
     try {
-      await fs.promises.access(path, this.mode);
+      await fs.promises.access(path, this._config.mode);
       // return { value: false, error: `directory ${path} already exists` };
       return { value: true, error: null };
     } catch (e) {
@@ -71,13 +72,12 @@ export class AdapterLocal extends AbstractAdapter {
     folder: string,
     pattern: string = "**/*.*"
   ): Promise<ResultObjectStringArray> {
-    return glob(`${folder}/${pattern}`, {})
-      .then((files) => {
-        return { value: files, error: null };
-      })
-      .catch((e) => {
-        return { value: null, error: e.message };
-      });
+    try {
+      const files = await glob(`${folder}/${pattern}`, {});
+      return { value: files, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   // Public API
@@ -92,23 +92,7 @@ export class AdapterLocal extends AbstractAdapter {
     let { options } = params;
     if (typeof options !== "object") {
       options = {};
-    } else {
-      const { start, end } = options;
-      if (typeof start !== "undefined" && typeof end !== "undefined") {
-        options = {
-          ...options,
-          length: end - start,
-        };
-        delete options.end;
-      } else if (typeof end !== "undefined") {
-        options = {
-          ...options,
-          length: end,
-        };
-        delete options.end;
-      }
     }
-    // console.log(options);
 
     const dest = path.join(this._config.directory, params.bucketName, params.targetPath);
 

@@ -39,7 +39,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         typeof this.config.connectionString === "undefined"
       ) {
         this._configError =
-          'Please provide at least a value for "accountName" or for "connectionString';
+          '[configError] Please provide at least a value for "accountName" or for "connectionString';
         return;
       }
       // option 1: accountKey
