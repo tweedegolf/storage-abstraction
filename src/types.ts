@@ -1,8 +1,4 @@
 import { Readable } from "stream";
-// import { ConfigLocal } from "../adapters/local/types";
-// import { ConfigBackblazeB2 } from "../adapters/backblaze/types";
-// import { ConfigAmazonS3 } from "../adapters/amazon/types";
-// import { ConfigGoogleCloud } from "../adapters/google/types";
 
 // export type UploadOptions = {
 //   gzip?: boolean;
@@ -240,6 +236,7 @@ export interface AdapterConfigB2 extends AdapterConfig {
 
 export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;
+  mode?: number;
 }
 
 export type Options = {

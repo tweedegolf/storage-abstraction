@@ -85,7 +85,7 @@ export const parseMode = (mode: number | string): ResultObjectNumber => {
 
   // mode is a string
 
-  // e.g "0x755" (octal)
+  // e.g "0o755" (octal string)
   if (mode.startsWith("0o")) {
     return { value: parseInt(mode.substring(2), 8), error: null };
   }

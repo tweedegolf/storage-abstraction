@@ -81,7 +81,7 @@ When instantiating a new `Storage` the argument `config` is used to create an ad
 
 Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
 
-The configuration must specify a type; the type is used to create the appropriate adapter. The value of the type is one of the enum members of `StorageType`:
+The configuration must at least specify a type; the type is used to create the appropriate adapter. The value of the type is one of the enum members of `StorageType`:
 
 ```typescript
 enum StorageType {
@@ -102,7 +102,7 @@ A configuration object type that extends `AdapterConfig`:
 interface AdapterConfig {
   type: string;
   bucketName?: string;
-  [id: string]: any; // other service specific keys
+  [id: string]: any; // other service specific mandatory or optional keys
 }
 ```
 
@@ -123,62 +123,17 @@ These values match the values in the enum `StorageType` shown above. What follow
 
 ```typescript
 // example with extra Azure option "maxTries"
-const c = "azure://accountName=your-account&bucketName=your-bucket&foo&maxTries=10";
+const c = "azure://accountName=your-account&bucketName=your-bucket&maxTries=10";
+
+// internally the config url is converted to a config object:
+
+const c1 = {
+  type: StorageType.AZURE,
+  accountName: "your-account",
+  bucketName: "your-bucket",
+  maxTries: 10,
+};
 ```
-
-### Mandatory and optional keys per service
-
-#### Local Storage
-
-```typescript
-export interface AdapterConfigLocal extends AdapterConfig {
-  directory: string;
-}
-// the directory is where the buckets are created
-const url = "local://directory=path/to/directory";
-```
-
-#### Amazon S3 and compatible
-
-```TypeScript
-export interface AdapterConfigS3 extends AdapterConfig {
-  region?: string;
-  endpoint?: string;
-  credentials?: {
-    accessKeyId?: string;
-    secretAccessKey?: string;
-  };
-  accessKeyId?: string;
-  secretAccessKey?: string;
-}
-
-// Cubbit S3 compatible
-const url =
-  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.eu-central-003.backblazeb2.com&region=auto";
-```
-
-In AWS's SDK, it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the AWS SDK will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
-
-```typescript
-const s = new Storage({ type: StorageType.S3 });
-// with a config url:
-const s = new Storage("s3://");
-// and even:
-const s = new Storage("s3");
-```
-
-Environment variables that are automatically read:
-
-```shell
-AWS_ACCESS_KEY_ID="your access key"
-AWS_SECRET_ACCESS_KEY="your secret"
-AWS_REGION="eu-west-1"
-
-```
-
-Note that this does not work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables. So for S3 compatible services setting a value for `endpoint` in the config is mandatory.
-
-For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config as long as you have set the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
 
 #### Google Cloud Storage
 
@@ -270,25 +225,21 @@ You can also add more adapters yourself very easily, see [below](#adding-more-ad
 Configuration object:
 
 ```typescript
-type ConfigLocal = {
-  type: StorageType;
+export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;
-  mode?: string | number;
-  [id: string]: boolean | string | number; // configuration is extensible
-};
+  mode?: number;
+}
 ```
 
 Configuration url:
 
 ```typescript
-const url = "local://path/to/your/bucket?mode=750";
+const url = "local://directory=path/to/directory&mode=750";
 ```
 
-With key `mode` you can set the access rights when you create new buckets. The default value is `0o777`. You can pass this value both in decimal and in octal format. E.g. `rwxrwxrwx` is `0o777` in octal format or `511` in decimal format.
+With the optional key `mode` you can set the access rights when you create new local buckets. The default value is `0o777`, note that the actual value is dependent on the umask settings on your system (Linux and MacOS only). You can pass this value both in decimal and in octal format. E.g. `rwxrwxrwx` is `0o777` in octal format or `511` in decimal format.
 
-When you use a configuration object you can also pass `mode` as a decimal or octal number. If you use a configuration URL you can only pass values as strings.
-
-String values without radix prefix will be interpreted as decimal numbers, so "777" is _not_ the same as "0o777" and yields `41411`. This is probably not what you want. The configuration parser handles this by returning the default value in case you pass a value over decimal `511`.
+When you use a configuration URL you can only pass values as strings. String values without radix prefix will be interpreted as decimal numbers, so "777" is _not_ the same as "0o777" and yields `41411`. This is probably not what you want. The configuration parser handles this by returning the default value in case you pass a value over decimal `511`.
 
 Example:
 
@@ -418,6 +369,46 @@ const s = new Storage("gcs://path/to/keyFile.json@bucket");
 ### <a name='amazon-s3'></a>Amazon S3
 
 > peer dependencies: <br/> > `npm i aws-sdk`
+
+```TypeScript
+export interface AdapterConfigS3 extends AdapterConfig {
+  region?: string;
+  endpoint?: string;
+  credentials?: {
+    accessKeyId?: string;
+    secretAccessKey?: string;
+  };
+  accessKeyId?: string;
+  secretAccessKey?: string;
+}
+
+// Cubbit S3 compatible
+const url =
+  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.eu-central-003.backblazeb2.com&region=auto";
+```
+
+In AWS's SDK, it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the AWS SDK will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
+
+```typescript
+const s = new Storage({ type: StorageType.S3 });
+// with a config url:
+const s = new Storage("s3://");
+// and even:
+const s = new Storage("s3");
+```
+
+Environment variables that are automatically read:
+
+```shell
+AWS_ACCESS_KEY_ID="your access key"
+AWS_SECRET_ACCESS_KEY="your secret"
+AWS_REGION="eu-west-1"
+
+```
+
+Note that this does not work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables. So for S3 compatible services setting a value for `endpoint` in the config is mandatory.
+
+For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config as long as you have set the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
 
 Config object:
 
