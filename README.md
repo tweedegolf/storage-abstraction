@@ -152,7 +152,6 @@ These values match the values in the enum `StorageType` shown above. What follow
 const c = "azure://accountName=your-account&bucketName=your-bucket&maxTries=10";
 
 // internally the config url is converted to a config object:
-
 const c1 = {
   type: StorageType.AZURE,
   accountName: "your-account",
@@ -160,42 +159,6 @@ const c1 = {
   maxTries: 10,
 };
 ```
-
-#### Azure Blob Storage
-
-```typescript
-export interface AdapterConfigAzure extends AdapterConfig {
-  accountName?: string;
-  connectionString?: string;
-  accountKey?: string;
-  sasToken?: string;
-}
-
-const url = "azure://accountName=your-account";
-```
-
-There are multiple ways to login to Azure Blob Storage. Microsoft recommends to use passwordless authorization, for this you need to provide a value for `accountName` which is the name of your storage account. Then you can either login using the Azure CLI command `az login` or by setting the following environment variables:
-
-```shell
-AZURE_TENANT_ID
-AZURE_CLIENT_ID
-AZURE_CLIENT_SECRET
-
-```
-
-You can find these values in the Azure Portal
-
-Alternately you can login by:
-
-- providing a value for `connectionString`
-- providing a value for both `accountName` and `accountKey`
-- providing a value for both `accountName` and `sasToken`
-
-Note that if you don't use the `accountKey` and you add files to a bucket you will get this error message:
-
-`'Can only generate the SAS when the client is initialized with a shared key credential'`
-
-This does not mean that the file hasn't been uploaded, it simply means that no public url has been generated for this file.
 
 ## <a name='adapters'></a>Adapters
 
@@ -431,6 +394,8 @@ Backblaze also has a native API, see below.
 
 ### <a name='backblaze-b2'></a>Backblaze B2
 
+> peer dependencies: <br/> > `npm i backblaze-b2`
+
 Adapter config:
 
 ```typescript
@@ -440,110 +405,210 @@ export interface AdapterConfigB2 extends AdapterConfig {
 }
 ```
 
-Configuration url:
-
-```typescript
-const url = "b2://applicationKeyId=your-key-id&applicationKey=your-key";
-```
-
-Example:
+Example with configuration object:
 
 ```typescript
 const s = new Storage({
   type: StorageType.B2,
   applicationKey: "key",
   applicationKeyId: "keyId",
-  bucketName: "bucket",
 });
-
-const s = new Storage("b2://keyId:key@bucket");
 ```
 
-createBucket => options can not be an empty object
+Example with configuration url:
+
+```typescript
+const s = new Storage("b2://applicationKeyId=keyId&applicationKey=key");
+```
 
 ### <a name='azure-blob'></a>Azure Blob Storage
 
 > peer dependencies: <br/> > `npm i @azure/storage-blob`
 
-Config object:
+Adapter config
 
 ```typescript
-type ConfigAzureStorageBlob = {
-  type: StorageType;
-  storageAccount: string;
-  accessKey: string;
-  bucketName?: string;
-};
+export interface AdapterConfigAzure extends AdapterConfig {
+  accountName?: string;
+  connectionString?: string;
+  accountKey?: string;
+  sasToken?: string;
+}
 ```
 
-Configuration url:
-
-```typescript
-const url = "azure://account:accessKey@containerName";
-```
-
-Example:
+Example with configuration object:
 
 ```typescript
 const s = new Storage({
-  type: StorageType.AZURESTORAGEBLOB,
-  storageAccount: "storage1",
-  accessKey: "accessKey1",
-  bucketName?: "container1",
+  type: StorageType.AZURE,
+  accountName: "yourAccount",
+  accountKey: "yourKey",
 });
-
-const s = new Storage("azure://storage1:accessKey1@container1");
 ```
 
+Example with configuration url:
+
+```typescript
+const s = new Storage("azure://accountName=yourAccount");
+```
+
+There are multiple ways to login to Azure Blob Storage. Microsoft recommends to use passwordless authorization, for this you need to provide a value for `accountName` which is the name of your storage account. Then you can either login using the Azure CLI command `az login` or by setting the following environment variables:
+
+```shell
+AZURE_TENANT_ID
+AZURE_CLIENT_ID
+AZURE_CLIENT_SECRET
+
+```
+
+You can find these values in the Azure Portal
+
+Alternately you can login by:
+
+- providing a value for `connectionString`
+- providing a value for both `accountName` and `accountKey`
+- providing a value for both `accountName` and `sasToken`
+
+Note that if you don't use the `accountKey` for authorization and you add files to a bucket you will get this error message:
+
+`'Can only generate the SAS when the client is initialized with a shared key credential'`
+
+This does not mean that the file hasn't been uploaded, it simply means that no public url can been generated for this file.
+
 ## <a name='api-methods'></a>API methods
+
+All methods that access the underlying cloud storage service return a promise that always resolves in a `ResponseObject` type or a variant thereof:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"` or for instance an array of bucket names
+
+In case the call yields an error, the `value` key will be `null` and the `error` key will hold the error message. Usually this is the error message as sent by the cloud storage service so if necessary you can lookup the error message in the documentation of that service to learn more about the error.
 
 ### <a name='createbucket'></a>createBucket
 
 ```typescript
-createBucket(name: string, options?: object): Promise<ResponseObject>;
+createBucket(name: string, options?: object): Promise<ResultObject>;
 ```
 
-Creates a new bucket. If the bucket was created successfully it resolves to "ok". If the bucket exists or the creating the bucket fails for another reason it resolves to an error message. You can provide extra storage-specific settings such as access rights using the `options` object.
+Creates a new bucket.
+
+You can provide extra storage-specific settings such as access rights using the `options` object.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+
+return type:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the bucket was created successfully the `value` key will hold the string "ok".
+
+If the bucket exists or the creating the bucket fails for another reason the `error` key will hold the error message.
 
 ### <a name='clearbucket'></a>clearBucket
 
 ```typescript
-clearBucket(name: string): Promise<ResponseObject>;
+clearBucket(name: string): Promise<ResultObject>;
 ```
 
 Removes all files in the bucket.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
+return type:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the call succeeds the `value` key will hold the string "ok".
+
 ### <a name='deletebucket'></a>deleteBucket
 
 ```typescript
-deleteBucket(name: string): Promise<ResponseObject>;
+deleteBucket(name: string): Promise<ResultObject>;
 ```
 
 Deletes the bucket and all files in it.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
+return type:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the call succeeds the `value` key will hold the string "ok".
+
 ### <a name='listbuckets'></a>listBuckets
 
 ```typescript
-listBuckets(): Promise<ResponseObjectBuckets>
+listBuckets(): Promise<ResultObjectBuckets>
 ```
 
 Returns an array with the names of all buckets in the storage.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
+return type:
+
+```typescript
+export type ResultObjectBuckets = {
+  error: string | null;
+  value: Array<string> | null;
+};
+```
+
 ### <a name='addfilefrompath'></a>addFileFromPath
 
 ```typescript
-addFileFromPath({filePath: string, targetPath: string, options?: object}: FilePathParams): Promise<ResultObject>;
+addFileFromPath(params: FilePathParams): Promise<ResultObject>;
+
+/**
+ * @param bucketName name of the bucket you want to use
+ * @param origPath path of the file to be copied
+ * @param targetPath path to copy the file to, folders will be created automatically
+ * @param options additional options such as access rights
+ **/
+export type FilePathParams = {
+  bucketName: string;
+  origPath: string;
+  targetPath: string;
+  options?: {
+    [id: string]: any;
+  };
+};
 ```
 
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. Returns the public url to the file (if the bucket is publicly accessible).
+Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+return type:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient access rights).
 
 ### <a name='addfilefrombuffer'></a>addFileFromBuffer
 
