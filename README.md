@@ -108,6 +108,32 @@ interface AdapterConfig {
 
 Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
 
+In earlier versions of this library the value you provided in the config for `bucketName` was stored locally. This made it for instance possible to add a file to a bucket without specifying the bucket:
+
+```typescript
+storage.addFile("path/to/your/file"); // the file was automatically added to the selected bucket
+```
+
+Since version 2.0 you always have to specify the bucket for every bucket action:
+
+```typescript
+storage.addFile({
+  bucketName: "your-bucket",
+  origPath: "path/to/your/file",
+  targetPath: "folder/file",
+});
+```
+
+It can still be useful to provide a bucket name with the config, for instance:
+
+```typescript
+storage.addFile({
+  bucketName: storage.config.bucketName,
+  origPath: "path/to/your/file",
+  targetPath: "folder/file",
+});
+```
+
 ### <a name='configuration-url'></a>Configuration URL
 
 Configuration urls always start with a protocol that defines the type of storage:
@@ -133,43 +159,6 @@ const c1 = {
   bucketName: "your-bucket",
   maxTries: 10,
 };
-```
-
-#### Google Cloud Storage
-
-```typescript
-export interface AdapterConfigGoogle extends AdapterConfig {
-  keyFilename?: string;
-}
-
-const url = "gcs://keyFilename=path/to/keyFile.json";
-```
-
-Google cloud service can read default credentials from an environment variable.
-
-```typescript
-const s = new Storage({ type: StorageType.GCS });
-// using a config url:
-const s = new Storage("gcs://");
-// and even:
-const s = new Storage("gcs");
-```
-
-Environment variable that is automatically read:
-
-```shell
-GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
-```
-
-#### Backblaze B2
-
-```typescript
-export interface AdapterConfigB2 extends AdapterConfig {
-  applicationKey: string;
-  applicationKeyId: string;
-}
-
-const url = "b2://applicationKeyId=your-key-id&applicationKey=your-key";
 ```
 
 #### Azure Blob Storage
@@ -222,7 +211,7 @@ You can also add more adapters yourself very easily, see [below](#adding-more-ad
 
 > peer dependencies: <br/> > `npm i glob rimraf`
 
-Configuration object:
+Adapter config:
 
 ```typescript
 export interface AdapterConfigLocal extends AdapterConfig {
@@ -231,17 +220,27 @@ export interface AdapterConfigLocal extends AdapterConfig {
 }
 ```
 
-Configuration url:
+Example with configuration object:
 
 ```typescript
-const url = "local://directory=path/to/directory&mode=750";
+const s = new Storage({
+  type: StorageType.LOCAL,
+  directory: "path/to/directory",
+  mode: 750,
+});
+```
+
+Example with configuration url:
+
+```typescript
+const s = new Storage("local://directory=path/to/directory&mode=750");
 ```
 
 With the optional key `mode` you can set the access rights when you create new local buckets. The default value is `0o777`, note that the actual value is dependent on the umask settings on your system (Linux and MacOS only). You can pass this value both in decimal and in octal format. E.g. `rwxrwxrwx` is `0o777` in octal format or `511` in decimal format.
 
 When you use a configuration URL you can only pass values as strings. String values without radix prefix will be interpreted as decimal numbers, so "777" is _not_ the same as "0o777" and yields `41411`. This is probably not what you want. The configuration parser handles this by returning the default value in case you pass a value over decimal `511`.
 
-Example:
+Examples:
 
 ```typescript
 const config = {
@@ -273,77 +272,52 @@ Buckets will be created inside the directory `path/to/folder`, parent folders wi
 
 ### <a name='google-cloud'></a>Google Cloud
 
-> peer dependencies: <br/> > `npm i @google-cloud/storage ramda`
+> peer dependencies: <br/> > `npm i @google-cloud/storage`
 
-Configuration object:
-
-```typescript
-type ConfigGoogleCloud = {
-  type: StorageType;
-  keyFilename?: string; // path to keyFile.json
-  projectId?: string;
-  bucketName?: string;
-  [id: string]: boolean | string | number; // configuration is extensible
-};
-```
-
-Configuration url:
+Adapter config:
 
 ```typescript
-const url = "gcs://path/to/keyFile.json:projectId@bucketName";
+export interface AdapterConfigGoogle extends AdapterConfig {
+  keyFilename?: string;
+}
 ```
 
-The key filename is optional; if you omit the value for key filename, application default credentials with be loaded:
-
-```typescript
-const s = new Storage({
-  type: StorageType.GCS,
-});
-
-const s = new Storage("gcs://bucketName");
-```
-
-The project id is optional; if you omit the value for project id, the id will be read from the key file or by the application default credentials:
+Example with configuration object:
 
 ```typescript
 const s = new Storage({
   type: StorageType.GCS,
   keyFilename: "path/to/keyFile.json",
 });
-
-const s = new Storage("gcs://path/to/keyFile.json");
 ```
 
-The project id is required if the key file is type `.pem` or `.p12`:
+Example with configuration url:
 
 ```typescript
-const s = new Storage({
-  type: StorageType.GCS,
-  keyFilename: "path/to/keyFile.pem",
-  projectId: "projectId",
-});
-
-const s = new Storage("gcs://path/to/keyFile.pem:projectId");
+const s = new Storage("gcs://keyFilename=path/to/keyFile.json");
 ```
 
-Another example:
+Google cloud service can read default credentials from an environment variable.
 
 ```typescript
-// example #1
-const s = new Storage({
-  type: StorageType.GCS,
-  keyFilename: "path/to/keyFile.json",
-  bucketName: "bucket",
-});
+const s = new Storage({ type: StorageType.GCS });
+// using a config url:
+const s = new Storage("gcs://");
+// and even:
+const s = new Storage("gcs");
+```
 
-const s = new Storage("gcs://path/to/keyFile.json@bucket");
+Environment variable that is automatically read:
+
+```shell
+GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
 ```
 
 ### <a name='amazon-s3'></a>Amazon S3
 
 > peer dependencies: <br/> > `npm i aws-sdk`
 
-Configuration object:
+Adapter config:
 
 ```typescript
 export interface AdapterConfigS3 extends AdapterConfig {
@@ -358,17 +332,32 @@ export interface AdapterConfigS3 extends AdapterConfig {
 }
 ```
 
-Configuration url:
+Example with configuration object:
 
 ```typescript
 // Cubbit S3 compatible
-const url =
-  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.cubbit.eu/&region=auto";
+const s = new Storage({
+  type: StorageType.S3,
+  accessKeyId: 'your-key-id'
+  secretAccessKey: 'your-secret'
+  endpoint: "https://s3.cubbit.eu/",
+  region: "auto",
+});
 ```
 
-In AWS's SDK, it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the AWS SDK will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
+Example with configuration url:
 
 ```typescript
+// Cubbit S3 compatible
+const s = new Storage(
+  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.cubbit.eu/&region=auto"
+);
+```
+
+If you use Amazon S3 it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the aws sdk will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
+
+```typescript
+// only for Amazon S3
 const s = new Storage({ type: StorageType.S3 });
 // with a config url:
 const s = new Storage("s3://");
@@ -385,35 +374,35 @@ AWS_REGION="eu-west-1"
 
 ```
 
-Note that this does _not_ work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables.
+Note that this does _not_ work for S3 compatible services because the aws sdk doesn't read the endpoint from environment variables.
 
-Also, if you pass a value for `endpoint` in the config, for some reason AWS SDK does read the environment variable `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+Also, if you pass a value for `endpoint` in the config, for some reason aws sdk does read the environment variable `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
 So for S3 compatible services setting a value for `endpoint`, `accessKeyId` and `secretAccessKey` in the config is mandatory.
 
-For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config because AWS SDK does always read the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
+For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config because aws sdk always reads the `AWS_REGION` environment variable if no value is provided in the config. Note that the names of the regions may differ from service to service, see below.
 
 #### <a name='s3-compatible-storage'></a>S3 Compatible Storage
 
-Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use the `AdapterAmazonS3` but you have to add a value for `endpoint` in the config
+Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use the `AdapterAmazonS3` but you have to add a value for `endpoint` in the config.
 
 #### Cloudflare R2
 
 ```typescript
-const configR2 = {
+const s = new Storage({
   type: StorageType.S3,
   region: 'auto'
   endpoint: process.env.R2_ENDPOINT,
   accessKeyId: process.env.R2_ACCESS_KEY,
   secretAccessKey: process.env.R2_SECRET_KEY,
-};
+});
 ```
 
 The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`.
 
 Jurisdiction is optional, e.g. `eu`.
 
-It is mandatory to set a value for `region`, use one of these:
+It is mandatory to set a value for `region`, use one of these values:
 
 - `auto`
 - `wnam`
@@ -427,36 +416,34 @@ You can also set the region using the `AWS_REGION` environment variable.
 #### Backblaze S3
 
 ```typescript
-const configBackblazeS3 = {
+const s = new Storage({
   type: StorageType.S3,
+  region: "eu-central-003",
   endpoint: process.env.B2_ENDPOINT,
   accessKeyId: process.env.B2_APPLICATION_KEY_ID,
   secretAccessKey: process.env.B2_APPLICATION_KEY,
-};
+});
 ```
 
-The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint AWS SDK still expects you to set a value for `region` in the configuration. As just stated, you can simply retrieve your region from the endpoint.
+The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint aws sdk still expects you to set a value for `region` in the configuration. As just stated, you can simply retrieve your region from the endpoint.
 
 Backblaze also has a native API, see below.
 
 ### <a name='backblaze-b2'></a>Backblaze B2
 
-Config object:
+Adapter config:
 
 ```typescript
-type ConfigBackBlazeB2 = {
-  type: StorageType;
+export interface AdapterConfigB2 extends AdapterConfig {
   applicationKey: string;
   applicationKeyId: string;
-  bucketName?: string;
-  [id: string]: boolean | string | number; // configuration is extensible
-};
+}
 ```
 
 Configuration url:
 
 ```typescript
-const url = "b2://applicationKeyId=keyId&applicationKey=key&bucketName=the-buck";
+const url = "b2://applicationKeyId=your-key-id&applicationKey=your-key";
 ```
 
 Example:
@@ -822,3 +809,7 @@ A simple application that shows how you can use the storage abstraction package 
 ## <a name='questions-and-requests'></a>Questions and requests
 
 Please let us know if you have any questions and/or request by creating an [issue](https://github.com/tweedegolf/storage-abstraction/issues).
+
+```
+
+```
