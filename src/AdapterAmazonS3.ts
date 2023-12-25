@@ -91,7 +91,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this.storage.send(command);
       return { value: response.Body as Readable, error: null };
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 
@@ -109,7 +109,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this.storage.send(command);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 
@@ -185,19 +185,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         await this.storage.send(command2);
         return { value: "ok", error: null };
       } catch (e) {
-        return { value: null, error: e.code };
+        return { value: null, error: e.message };
       }
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 
   public async deleteBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
     try {
+      await this.clearBucket(name);
       const input = {
         Bucket: name,
       };
@@ -206,7 +203,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       // console.log(response);
       return { value: "ok", error: null };
     } catch (e) {
-      if (e.code === "NoSuchBucket") {
+      if (e.message === "NoSuchBucket") {
         return { value: "bucket not found", error: null };
       }
       return { value: null, error: e.message };
@@ -225,7 +222,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const bucketNames = response.Buckets?.map((b) => b?.Name);
       return { value: bucketNames, error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: e.message };
     }
   }
 
@@ -265,7 +262,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this.storage.send(command);
       return this.getFileAsURL(params.bucketName, params.targetPath);
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 
@@ -281,7 +278,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       );
       return { value: url, error: null };
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 
@@ -303,7 +300,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       }
       return { value: Contents.map((o) => [o.Key, o.Size]), error: null };
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 
@@ -321,7 +318,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this.storage.send(command);
       return { value: response.ContentLength, error: null };
     } catch (e) {
-      return { value: null, error: e.code };
+      return { value: null, error: e.message };
     }
   }
 

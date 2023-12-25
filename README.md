@@ -246,57 +246,30 @@ Example:
 ```typescript
 const config = {
   type: StorageType.LOCAL,
-  directory: "path/to/folder/bucket",
+  directory: "path/to/folder",
   mode: 488, // decimal literal
 };
 const s = new Storage(config);
 
 // or
-const url = "local://path/to/folder/bucket?mode=488";
+const url = "local://directory=path/to/folder&mode=488";
 const s = new Storage(url);
 
 // and the same with octal values:
 
 const config = {
   type: StorageType.LOCAL,
-  directory: "path/to/folder/bucket",
+  directory: "path/to/folder",
   mode: 0o750, // octal literal
 };
 const s = new Storage(config);
 
 // or
-const url = "local://path/to/folder/bucket?mode=0o750";
+const url = "local://directory=path/to/folder&mode=0o750";
 const s = new Storage(url);
 ```
 
-Files will be stored in `path/to/folder/bucket`, folders will be created if necessary. As you can see the last folder of the directory will be used as bucket; if you call `getSelectedBucket()` the name of this folder will be returned. If the path does not contain at least one slash `bucketName` will be undefined.
-
-Note the use of double and triple slashes:
-
-```typescript
-// example #2
-const s = new Storage {
-  type: StorageType.LOCAL,
-  directory: "files",
-};
-
-const s = new Storage("local://files") // note: 2 slashes
-
-s.getConfiguration().directory;  // ./files
-s.getConfiguration().bucketName; // undefined
-
-// example #3
-const s = new Storage {
-  type: StorageType.LOCAL,
-  directory: "/files",
-};
-
-const s = new Storage("local:///files") // note: 3 slashes
-
-s.getConfiguration().directory;  // '/files' in root folder (may require extra permissions)
-s.getConfiguration().bucketName; // undefined
-
-```
+Buckets will be created inside the directory `path/to/folder`, parent folders will be created if necessary.
 
 ### <a name='google-cloud'></a>Google Cloud
 
@@ -370,7 +343,9 @@ const s = new Storage("gcs://path/to/keyFile.json@bucket");
 
 > peer dependencies: <br/> > `npm i aws-sdk`
 
-```TypeScript
+Configuration object:
+
+```typescript
 export interface AdapterConfigS3 extends AdapterConfig {
   region?: string;
   endpoint?: string;
@@ -381,10 +356,14 @@ export interface AdapterConfigS3 extends AdapterConfig {
   accessKeyId?: string;
   secretAccessKey?: string;
 }
+```
 
+Configuration url:
+
+```typescript
 // Cubbit S3 compatible
 const url =
-  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.eu-central-003.backblazeb2.com&region=auto";
+  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.cubbit.eu/&region=auto";
 ```
 
 In AWS's SDK, it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the AWS SDK will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
@@ -406,75 +385,27 @@ AWS_REGION="eu-west-1"
 
 ```
 
-Note that this does not work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables. So for S3 compatible services setting a value for `endpoint` in the config is mandatory.
+Note that this does _not_ work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables.
 
-For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config as long as you have set the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
+Also, if you pass a value for `endpoint` in the config, for some reason AWS SDK does read the environment variable `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
-Config object:
+So for S3 compatible services setting a value for `endpoint`, `accessKeyId` and `secretAccessKey` in the config is mandatory.
 
-```typescript
-type ConfigAmazonS3 = {
-  type: StorageType;
-  bucketName?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  region?: string;
-  endpoint?: string;
-  options: {
-    [id: string]: boolean | number | string;
-  };
-};
-```
-
-Configuration url:
-
-```typescript
-const url =
-  "s3://accessKeyId:secretAccessKey@region/bucketName?useDualstack=value&sslEnabled=value...";
-```
-
-Example:
-
-```typescript
-const s = new Storage({
-  type: StorageType.S3,
-  accessKeyId: "key",
-  secretAccessKey: "secret",
-  region: "eu-west-2"
-  bucketName: "bucket",
-  useDualStack: true,
-  sslEnabled: true,
-});
-
-const s = new Storage("s3://key:secret@eu-west-2/bucket?useDualStack=true&sslEnabled=true");
-```
-
-You can omit a value for `region` but because `secretAccessKey` can contain slashes you must include the @ in your URL:
-
-```typescript
-const s = new Storage("s3://key:secret@bucket?useDualStack=true&sslEnabled=true");
-```
-
-If you want to specify a bucket name but not a region, put a slash behind the region, and right before the question mark in case your URL has a query string:
-
-```typescript
-const s = new Storage("s3://key:secret@eu-west-2/");
-
-const s = new Storage("s3://key:secret@eu-west-2/?useDualStack=true&sslEnabled=true");
-```
+For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config because AWS SDK does always read the `AWS_REGION` environment variable. Note that the names of the regions may differ from service to service.
 
 #### <a name='s3-compatible-storage'></a>S3 Compatible Storage
 
-Cloudflare R2 and Backblaze B2 are S3 compatible. You can use the `AdapterAmazonS3` but you have to add a value for `endpoint` in the config
+Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use the `AdapterAmazonS3` but you have to add a value for `endpoint` in the config
 
 #### Cloudflare R2
 
 ```typescript
 const configR2 = {
   type: StorageType.S3,
+  region: 'auto'
+  endpoint: process.env.R2_ENDPOINT,
   accessKeyId: process.env.R2_ACCESS_KEY,
   secretAccessKey: process.env.R2_SECRET_KEY,
-  endpoint: process.env.R2_ENDPOINT,
 };
 ```
 
@@ -482,7 +413,7 @@ The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`.
 
 Jurisdiction is optional, e.g. `eu`.
 
-It is not mandatory to set a value for `region` but if you do, use one of these:
+It is mandatory to set a value for `region`, use one of these:
 
 - `auto`
 - `wnam`
@@ -491,19 +422,20 @@ It is not mandatory to set a value for `region` but if you do, use one of these:
 - `eeur`
 - `apac`
 
+You can also set the region using the `AWS_REGION` environment variable.
+
 #### Backblaze S3
 
 ```typescript
 const configBackblazeS3 = {
   type: StorageType.S3,
+  endpoint: process.env.B2_ENDPOINT,
   accessKeyId: process.env.B2_APPLICATION_KEY_ID,
   secretAccessKey: process.env.B2_APPLICATION_KEY,
-  bucketName: process.env.BUCKET_NAME,
-  endpoint: process.env.B2_ENDPOINT,
 };
 ```
 
-The endpoint is `https://s3.<REGION>.backblazeb2.com`. Since the region is part of the endpoint you don't have to set a value for `region` in the configuration.
+The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint AWS SDK still expects you to set a value for `region` in the configuration. As just stated, you can simply retrieve your region from the endpoint.
 
 Backblaze also has a native API, see below.
 
