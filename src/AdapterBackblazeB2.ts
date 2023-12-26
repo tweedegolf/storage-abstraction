@@ -28,7 +28,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
   protected _config: AdapterConfigB2;
   protected _configError: string | null = null;
-  protected _storage: B2 = null;
+  protected _client: B2 = null;
   private authorized: boolean = false;
   private versioning: boolean = true;
 
@@ -43,7 +43,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           'Please provide both a value for "applicationKey" and "applicationKeyId"';
       } else {
         try {
-          this._storage = new B2(this._config);
+          this._client = new B2(this._config);
         } catch (e) {
           this._configError = e.message;
         }
@@ -174,7 +174,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   get storage(): B2 {
-    return this._storage as B2;
+    return this._client as B2;
   }
 
   public async addFile(

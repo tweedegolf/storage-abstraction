@@ -28,7 +28,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
   protected _config: AdapterConfigAzure;
   protected _configError: string | null = null;
-  protected _storage: BlobServiceClient;
+  protected _client: BlobServiceClient;
   private sharedKeyCredential: StorageSharedKeyCredential;
 
   constructor(config?: string | AdapterConfigAzure) {
@@ -52,25 +52,25 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         } catch (e) {
           this._configError = `[configError] ${JSON.parse(e.message).code}`;
         }
-        this._storage = new BlobServiceClient(
+        this._client = new BlobServiceClient(
           `https://${this.config.accountName as string}.blob.core.windows.net`,
           this.sharedKeyCredential,
           this.config.options as object
         );
         // option 2: sasToken
       } else if (typeof this.config.sasToken !== "undefined") {
-        this._storage = new BlobServiceClient(
+        this._client = new BlobServiceClient(
           `https://${this.config.accountName}.blob.core.windows.net?${this.config.sasToken}`,
           new AnonymousCredential(),
           this.config.options as object
         );
         // option 3: connection string
       } else if (typeof this.config.connectionString !== "undefined") {
-        this._storage = BlobServiceClient.fromConnectionString(this.config.connectionString);
+        this._client = BlobServiceClient.fromConnectionString(this.config.connectionString);
         // option 4: password less
       } else {
         console.log("default");
-        this._storage = new BlobServiceClient(
+        this._client = new BlobServiceClient(
           `https://${this.config.accountName as string}.blob.core.windows.net`,
           new DefaultAzureCredential(),
           this.config.options as object
@@ -84,7 +84,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   }
 
   get storage(): BlobServiceClient {
-    return this._storage as BlobServiceClient;
+    return this._client as BlobServiceClient;
   }
 
   public async getFileAsStream(

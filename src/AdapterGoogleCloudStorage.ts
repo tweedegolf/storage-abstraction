@@ -21,12 +21,12 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected _type = StorageType.GCS;
   protected _config: AdapterConfigGoogle;
   protected _configError: string | null = null;
-  protected _storage: GoogleCloudStorage;
+  protected _client: GoogleCloudStorage;
 
   constructor(config?: string | AdapterConfigGoogle) {
     super(config);
     if (this._configError === null) {
-      this._storage = new GoogleCloudStorage(this._config as object);
+      this._client = new GoogleCloudStorage(this._config as object);
     }
   }
 
@@ -50,7 +50,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   }
 
   get storage(): GoogleCloudStorage {
-    return this._storage as GoogleCloudStorage;
+    return this._client as GoogleCloudStorage;
   }
 
   public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {

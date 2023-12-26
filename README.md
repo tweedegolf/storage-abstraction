@@ -733,6 +733,17 @@ sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
 Returns the size of a file.
 
+return type:
+
+```typescript
+export type ResultObjectNumber = {
+  error: string | null;
+  value: number | null;
+};
+```
+
+If the call succeeds the `value` key will hold the size of the file.
+
 ### <a name='bucketexists'></a>bucketExists
 
 ```typescript
@@ -740,6 +751,17 @@ bucketExists(name: string): Promise<ResultObjectBoolean>;
 ```
 
 Returns whether a bucket exists or not.
+
+return type:
+
+```typescript
+export type ResultObjectBoolean = {
+  error: string | null;
+  value: boolean | null;
+};
+```
+
+If the call succeeds the `value` key will hold a boolean value.
 
 ### <a name='fileexists'></a>fileExists
 
@@ -749,13 +771,35 @@ fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
 
 Returns whether a file exists or not.
 
+return type:
+
+```typescript
+export type ResultObjectBoolean = {
+  error: string | null;
+  value: boolean | null;
+};
+```
+
+If the call succeeds the `value` key will hold a boolean value.
+
 ### <a name='listfiles'></a>listFiles
 
 ```typescript
 listFiles(bucketName: string): Promise<ResultObjectFiles>;
 ```
 
-Returns a list of all files in the bucket; for each file a tuple is returned containing the path and the size of the file.
+Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file.
+
+return type:
+
+```typescript
+export type ResultObjectFiles = {
+  error: string | null;
+  value: Array<[string, number]> | null;
+};
+```
+
+If the call succeeds the `value` key will hold an array of tuples.
 
 ### <a name='gettype'></a>getType
 
@@ -765,18 +809,65 @@ getType(): string;
 
 Returns the type of storage, value is one of the enum `StorageType`.
 
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.type);
+```
+
 ### <a name='getconfiguration'></a>getConfiguration
 
 ```typescript
 getConfiguration(): AdapterConfig
-
-// also implemented as getter:
-
-const storage = new Storage(config);
-console.log(storage.conf)
 ```
 
-Retrieves the configuration as provided during instantiation. If you have provided the configuration in url form, the function will return it as an configuration object.
+Returns the typed configuration object as provided when the storage was instantiated. If you have provided the configuration in url form, the function will return it as an configuration object.
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.config);
+```
+
+### getConfigurationError
+
+```typescript
+getConfigurationError(): string | null
+```
+
+Returns an error message if something has gone wrong with initialization or authorization. Returns `null` otherwise.
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.configError);
+```
+
+### getServiceClient
+
+```typescript
+getServiceClient(): any
+```
+
+Returns the instance of the service client of the cloud storage. Under the hood each adapter creates an instance of a service client that actually make connection with the cloud storage.
+
+For instance in the adapter for Amazon S3 an instance of the S3Client of the aws sdk v3 is instantiated; this instance will be returned if you call `getServiceClient` on a storage instance with an S3 adapter.
+
+This method is particularly handy if you need to make API calls that are not implemented in this library.
+
+```typescript
+this._client = new S3Client();
+```
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.serviceClient);
+```
 
 ### <a name='switchadapter'></a>switchAdapter
 

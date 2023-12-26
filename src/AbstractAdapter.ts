@@ -18,7 +18,7 @@ export abstract class AbstractAdapter implements IStorage {
   protected _type = "abstract-adapter";
   protected _config: AdapterConfig | null;
   protected _configError: string | null = null;
-  protected _storage: any = null; // eslint-disable-line
+  protected _client: any = null; // eslint-disable-line
 
   constructor(config?: string | AdapterConfig) {
     if (typeof config === "string") {
@@ -45,8 +45,8 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   // eslint-disable-next-line
-  get storage(): any {
-    return this._storage;
+  get serviceClient(): any {
+    return this._client;
   }
 
   getType(): string {
@@ -62,8 +62,8 @@ export abstract class AbstractAdapter implements IStorage {
   }
 
   // eslint-disable-next-line
-  getStorage(): any {
-    return this.storage;
+  getServiceClient(): any {
+    return this._client;
   }
 
   async addFileFromPath(params: FilePathParams): Promise<ResultObject> {

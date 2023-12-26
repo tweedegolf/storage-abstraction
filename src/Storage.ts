@@ -72,12 +72,12 @@ export class Storage implements IStorage {
     return this.adapter.configError;
   }
   //eslint-disable-next-line
-  get storage(): any {
-    return this.adapter.storage;
+  get serviceClient(): any {
+    return this.adapter.serviceClient;
   }
   //eslint-disable-next-line
-  public getStorage(): any {
-    return this.adapter.storage;
+  public getServiceClient(): any {
+    return this.adapter.serviceClient;
   }
 
   //eslint-disable-next-line

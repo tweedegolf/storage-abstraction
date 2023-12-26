@@ -37,7 +37,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
   protected _config: AdapterConfigS3;
   protected _configError: string | null = null;
-  protected _storage: S3Client;
+  protected _client: S3Client;
 
   constructor(config?: string | AdapterConfig) {
     super(config);
@@ -47,7 +47,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         delete o.credentials;
         delete o.accessKeyId;
         delete o.secretAccessKey;
-        this._storage = new S3Client({
+        this._client = new S3Client({
           credentials: {
             accessKeyId: this.config.accessKeyId,
             secretAccessKey: this.config.secretAccessKey,
@@ -58,7 +58,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
         delete o.accessKeyId;
         delete o.secretAccessKey;
-        this._storage = new S3Client(o);
+        this._client = new S3Client(o);
       }
       // console.log(this.storage.config);
     }
@@ -69,7 +69,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   get storage(): S3Client {
-    return this._storage as S3Client;
+    return this._client as S3Client;
   }
 
   public async getFileAsStream(
