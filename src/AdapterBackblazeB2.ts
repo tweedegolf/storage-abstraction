@@ -242,7 +242,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0 }
+    options: Options = { start: 0, end: "" }
   ): Promise<ResultObjectStream> {
     const { error } = await this.authorize();
     if (error !== null) {
@@ -254,7 +254,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: null, error: data.error };
     }
     const { value: file } = data;
-    const { start, end } = options;
+    let { start, end } = options;
+    if (typeof start === "undefined") {
+      start = 0;
+    }
+    if (typeof end === "undefined") {
+      end = "";
+    }
 
     delete options.start;
     delete options.end;
@@ -301,7 +307,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     const { value: files } = data;
     const index = files.findIndex(({ name }) => name === fileName);
     if (index === -1) {
-      return { value: null, error: `Could not find file "${fileName}"` };
+      // return { value: null, error: `Could not find file "${fileName}"` };
+      return { value: "ok", error: null };
     }
 
     if (this.versioning) {

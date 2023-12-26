@@ -380,7 +380,7 @@ export type FilePathParams = {
   bucketName: string;
   origPath: string;
   targetPath: string;
-  options?: Options; // eslint-disable-line
+  options?: Options;
 };
 
 /**
@@ -393,7 +393,7 @@ export type FileBufferParams = {
   bucketName: string;
   buffer: Buffer;
   targetPath: string;
-  options?: Options; // eslint-disable-line
+  options?: Options;
 };
 
 /**
@@ -406,7 +406,7 @@ export type FileStreamParams = {
   bucketName: string;
   stream: Readable;
   targetPath: string;
-  options?: Options; // eslint-disable-line
+  options?: Options;
 };
 
 /**

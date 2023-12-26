@@ -3,12 +3,14 @@ import { Readable, Stream, Writable } from "stream";
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
  */
-export const copyFile = (
+export const saveFile = (
   readStream: Readable,
   writeStream: Writable,
-  log: boolean = false
-): Promise<void> =>
-  new Promise((resolve, reject) => {
+  log: boolean = true
+): Promise<void> => {
+  console.log(writeStream, readStream);
+
+  return new Promise((resolve, reject) => {
     readStream
       .pipe(writeStream)
       .on("error", (e) => {
@@ -32,6 +34,7 @@ export const copyFile = (
         resolve();
       });
   });
+};
 
 export async function waitABit(ms = 100): Promise<void> {
   return new Promise((resolve) => {

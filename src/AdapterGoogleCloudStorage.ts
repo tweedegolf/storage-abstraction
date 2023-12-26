@@ -69,7 +69,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0 }
+    options: Options = { start: 0, end: "" }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };

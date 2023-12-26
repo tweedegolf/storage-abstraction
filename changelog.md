@@ -186,7 +186,7 @@ addFileFromReadable(stream: Readable, targetPath: string, options: object = {}):
 ```
 
 ```typescript
-addFileFromReadable({
+addFileFromStream({
   bucketName: string,
   stream: Readable,
   targetPath: string,

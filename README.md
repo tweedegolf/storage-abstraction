@@ -317,7 +317,7 @@ const s = new Storage(
 );
 ```
 
-If you use Amazon S3 it is possible to skip the passing in of the `accessKeyId` and `secretAccessKey`; the aws sdk will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
+If you use Amazon S3 it is possible to skip the passing in of the `accessKeyId`, `secretAccessKey` and `region`; the aws sdk will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
 
 ```typescript
 // only for Amazon S3
@@ -328,7 +328,7 @@ const s = new Storage("s3://");
 const s = new Storage("s3");
 ```
 
-Environment variables that are automatically read:
+The environment variables that you need to set for this are:
 
 ```shell
 AWS_ACCESS_KEY_ID="your access key"
@@ -576,17 +576,21 @@ export type ResultObjectBuckets = {
 };
 ```
 
+### addFile
+
+```typescript
+addFile(params: FilePathParams | FileStreamParams | FileBufferParams): Promise<ResultObject>;
+```
+
+A generic method that is called under the hood when you call `addFileFromPath`, `addFileFromStream` or `addFileFromBuffer`. It adds a file to a bucket and accepts the file in 3 different ways; as a path, a stream or a buffer, dependent on the type of `params`.
+
+There is no difference between using this method or one of the 3 specific methods. For details about the `params` object and the return value see the documentation below.
+
 ### <a name='addfilefrompath'></a>addFileFromPath
 
 ```typescript
 addFileFromPath(params: FilePathParams): Promise<ResultObject>;
 
-/**
- * @param bucketName name of the bucket you want to use
- * @param origPath path of the file to be copied
- * @param targetPath path to copy the file to, folders will be created automatically
- * @param options additional options such as access rights
- **/
 export type FilePathParams = {
   bucketName: string;
   origPath: string;
@@ -597,7 +601,7 @@ export type FilePathParams = {
 };
 ```
 
-Copies a file from a local path to the provided path in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+Copies a file from a local path `origPath` to the provided path `targetPath` in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
 
 return type:
 
@@ -608,31 +612,68 @@ export interface ResultObject {
 }
 ```
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient access rights).
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
 ### <a name='addfilefrombuffer'></a>addFileFromBuffer
 
 ```typescript
-addFileFromBuffer({buffer: Buffer, targetPath: string, options?: object}: FileBufferParams): Promise<ResultObject>;
+addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;
+
+export type FileBufferParams = {
+  bucketName: string;
+  buffer: Buffer;
+  targetPath: string;
+  options?: {
+    [id: string]: any;
+  };
+};
+
 ```
 
-Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. This method is particularly handy when you want to move uploaded files to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage). Returns the public url to the file.
+Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
 
-### <a name='addfilefromreadable'></a>addFileFromReadable
+This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
+
+return type:
 
 ```typescript
-addFileFromReadable({stream: Readable, targetPath: string, options?: object}: FileStreamParams): Promise<ResultObject>;
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
 ```
 
-Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object. This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage. Returns the public url to the file.
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
-### <a name='addfile'></a>addFile
+### addFileFromStream
 
 ```typescript
-addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+addFileFromStream(params: FileStreamParams): Promise<ResultObject>;
+
+export type FileStreamParams = {
+  bucketName: string;
+  stream: Readable;
+  targetPath: string;
+  options?: {
+    [id: string]: any;
+  };
+};
 ```
 
-Generic method for adding a file to the storage; this method is actually called if you use one of the three aforementioned methods.
+Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
+
+return type:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
 ### <a name='getfileasstream'></a>getFileAsStream
 
@@ -640,7 +681,7 @@ Generic method for adding a file to the storage; this method is actually called 
 getFileAsStream(bucketName: string, fileName: string, options?: {start?: number, end?: number}): Promise<ResultObjectStream>;
 ```
 
-Returns a file in the storage as a readable stream. You can specify a byte range by using the extra range argument, see these examples:
+Returns a file in the storage as a readable stream. You can pass in extra options. If you use the keys `start` and/or `end` only the bytes between `start` and `end` of the file will be returned. Some examples:
 
 ```typescript
 getFileAsReadable("bucket-name", "image.png"); // &rarr; reads whole file
@@ -656,6 +697,15 @@ getFileAsReadable("bucket-name", "image.png", { end: 1999 }); // &rarr; reads fi
 getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads file from byte 2000
 ```
 
+return type:
+
+```typescript
+export type ResultObjectStream = {
+  error: string | null;
+  value: Readable | null;
+};
+```
+
 ### <a name='removefile'></a>removeFile
 
 ```typescript
@@ -664,7 +714,16 @@ removeFile(bucketName: string, fileName: string, allVersions: boolean = false): 
 
 Removes a file from the bucket. Does not fail if the file doesn't exist.
 
-Returns "ok" or "file not found".
+return type:
+
+```typescript
+export interface ResultObject {
+  error: string | null;
+  value: string | null;
+}
+```
+
+If the call succeeds the `value` key will hold the string "ok".
 
 ### <a name='sizeof'></a>sizeOf
 

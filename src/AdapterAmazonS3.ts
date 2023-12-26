@@ -75,17 +75,25 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0 }
+    options: Options = { start: 0, end: "" }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { error: this.configError, value: null };
+    }
+
+    let { start, end } = options;
+    if (typeof start === "undefined") {
+      start = 0;
+    }
+    if (typeof end === "undefined") {
+      end = "";
     }
 
     try {
       const params = {
         Bucket: bucketName,
         Key: fileName,
-        Range: `bytes=${options.start}-${options.end}`,
+        Range: `bytes=${start}-${end}`,
       };
       const command = new GetObjectCommand(params);
       const response = await this.storage.send(command);
