@@ -2,20 +2,24 @@ import fs from "fs";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 // Use ConfigTemplate as starting point for your own configuration object
-import { StorageType, ConfigTemplate } from "./types";
-import { parseUrl } from "./util";
+import {
+  StorageType,
+  ConfigTemplate,
+  ResultObject,
+  FilePathParams,
+  FileBufferParams,
+  FileStreamParams,
+  ResultObjectBoolean,
+} from "./types";
+import { parseUrl, validateName } from "./util";
 
 export class AdapterTemplate extends AbstractAdapter {
   // Your storage type, add this type to the enum StorageType in ./types.ts
-  protected type: string;
+  protected _type: string;
 
-  // You could use this to store the names of existing buckets to save calls
-  // to the cloud storage for checking if a bucket exists.
-  private bucketNames: string[];
-
-  // The instance of the storage if you use another library as a wrapper
+  // The instance of the service client if you use another library as a wrapper
   // around the API of your storage service, e.g. aws-sdk for Amazon S3.
-  private storage: any;
+  private _client: any; // eslint-disable-line
 
   // The constructor can take both a string and an object. You should define an interface
   // for the object that extends IConfig, see the file ./types.ts. You can use any name
@@ -23,16 +27,15 @@ export class AdapterTemplate extends AbstractAdapter {
   // the name of your storage service in camelcase, e.g. ConfigMyStorageType.
   constructor(config: string | ConfigTemplate) {
     super();
-    this.config = this.parseConfig(config);
-    if (typeof this.config.bucketName !== "undefined") {
-      const msg = this.validateName(this.config.bucketName);
+    this._config = this.parseConfig(config);
+    if (typeof this._config?.bucketName !== "undefined") {
+      const msg = validateName(this._config.bucketName);
       if (msg !== null) {
         throw new Error(msg);
       }
-      this.bucketName = this.config.bucketName;
     }
     // If you are using a wrapper library, create an instance here
-    // this.storage = new WrapperLibrary(cfg);
+    // this._client = new WrapperLibrary(this._config);
   }
 
   // This method parses the configuration URL to a configuration object, you can
@@ -46,11 +49,11 @@ export class AdapterTemplate extends AbstractAdapter {
   //    someOtherKey: 'bar'
   //  }
   //
-  // URL: yourtype://foo:bar
+  // URL: yourtype://someKey=foo&someOtherKey=bar
   //
   // StorageType {
-  //  ...
   //  YOUR_TYPE: 'yourtype'
+  //  ...
   // }
   //
   private parseConfig(config: string | ConfigTemplate): ConfigTemplate {
@@ -87,22 +90,6 @@ export class AdapterTemplate extends AbstractAdapter {
     return cfg;
   }
 
-  public async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
-    }
-    // perform some extra initialization steps if required, such as logging in.
-    this.initialized = true;
-    return true;
-  }
-
-  // Implement your own testing code to overrule the `test()` method of the super
-  // class AbstractAdapter, or remove this method if you want to use the test method
-  // of the super class
-  public async test(): Promise<string> {
-    return "ok";
-  }
-
   async getFileAsReadable(
     fileName: string,
     options: { start?: number; end?: number } = { start: 0 }
@@ -112,14 +99,8 @@ export class AdapterTemplate extends AbstractAdapter {
     return r;
   }
 
-  async removeFile(fileName: string): Promise<string> {
-    return "file removed";
-  }
-
-  // Returns the name of the bucket, so it should actually be named
-  // getSelectedBucketName.
-  public getSelectedBucket(): string {
-    return this.bucketName;
+  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+    return { value: "ok", error: null };
   }
 
   // In the super class AbstractStorage there are 3 API methods connected to `store()`:
@@ -128,29 +109,14 @@ export class AdapterTemplate extends AbstractAdapter {
   // 1. addFileFromPath
   // 2. addFileFromBuffer
   // 3. addFileFromReadable
-  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<void>;
-  protected async store(stream: Readable, targetPath: string, options: object): Promise<void>;
-  protected async store(origPath: string, targetPath: string, options: object): Promise<void>;
+  protected async store(params: FilePathParams): Promise<void>;
+  protected async store(params: FileBufferParams): Promise<void>;
+  protected async store(params: FileStreamParams): Promise<void>;
   protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string,
-    options: object
-  ): Promise<void> {
-    // Always check if a bucket has been selected before bucket actions.
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-  }
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<void> {}
 
-  // Not a mandatory method, it is used in `createBucket` to check if the
-  // bucket already exists. To avoid making too much calls to the cloud
-  // storage you could save the names of the buckets that you've already
-  // checked so you don't need to check their existence again.
-  private checkBucket(name: string): boolean {
-    return this.bucketNames.findIndex((n) => n === name) !== -1;
-  }
-
-  async createBucket(name: string): Promise<string> {
+  async createBucket(name: string): Promise<ResultObject> {
     // You can use the validateName method of AbstractStorage to check for
     // invalid entries or write your own code to do it.
     // The function validateName is defined in ./util.js
@@ -229,7 +195,7 @@ export class AdapterTemplate extends AbstractAdapter {
     return 42;
   }
 
-  async fileExists(name: string): Promise<boolean> {
-    return true;
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    return { value: true, error: null };
   }
 }

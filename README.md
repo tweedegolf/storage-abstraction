@@ -892,11 +892,21 @@ The class `Storage` implements the interface `IStorage` and this interface decla
 
 The adapter subsequently takes care of translating the generic API to storage specific functions. Therefor, dependent on what definitions you use, this library could be seen as a wrapper or a shim.
 
+Inside the adapter an instance of the cloud storage specific service client is created; this instance handles the actual communication with the cloud service. For instance:
+
+```typescript
+// Amazon S3 adapter
+private const _client = new S3Client();
+
+// Azure Blob Storage adapter
+private const _client = new BlobServiceClient();
+```
+
 The method `switchAdapter` is not declared in `IStorage` but in the `Storage` class itself; this is because the adapter have to implement `IStorage` and an adapter cannot (and should not) switch itself into another adapter
 
 `switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
 
-More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/).
+More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/) or [Cubbit](https://www.cubbit.io/).
 
 ## <a name='adding-more-adapters'></a>Adding more adapters
 
@@ -912,11 +922,13 @@ And for library developers you can add your dependencies to the dependencies in 
 
 ### <a name='define-your-configuration'></a>Define your configuration
 
-Your configuration object should at least contain a key `type` and its value should be one of the values of the enum `StorageType`. You could accomplish this by extending the interface `IConfig`:
+Your configuration object should at least contain a key `type` and its value should be one of the values of the enum `StorageType`. You could accomplish this by extending the interface `AdapterConfig`:
 
 ```typescript
-interface IConfig {
-  type: StorageType;
+export interface AdapterConfig {
+  type: string;
+  bucketName?: string;
+  [id: string]: any; // eslint-disable-line
 }
 ```
 
@@ -930,30 +942,32 @@ enum StorageType {
   S3 = "s3", // Amazon S3
   B2 = "b2", // BackBlaze B2
   AZURE = "azure", // Microsoft Azure Blob
-  MINIO = 'minio",
+  MINIO = "minio",
   YOUR_TYPE = "yourtype",
 }
 // your configuration URL
-const u = "yourtype://and/the:rest@anything/goes?option1=value1&option2=value2...";
+const u = "yourtype://key1=value1&key2=value2...";
 
 // your configuration object
 const o = {
   type: "yourtype", // mandatory
+  key1?: string, // other mandatory or optional key that your adapter need for instantiation
+  key2?: string,
   ...
 }
 ```
 
-You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url fit in the template `type://part1:part2@part3/bucketName?option1=value1&option2=value2...` you can use the `parseURL` function in `./util.ts`.
+You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url is just a query string you can use the `parseURL` function in `./util.ts`; this function is implemented in `AbstractAdapter` and currently not overridden by any of the adapters.
 
 ### <a name='adapter-class'></a>Adapter class
 
-You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it performs some sanity checking of parameters of a few API functions; this way you don't have to implement these checks in all derived classes.
+You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it parses the configuration.
 
-One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the non-API function `store`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
+One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
 
 For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
 
-You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IStorage` interface. Most handy utility functions that are used in `AbstractAdapter` are defined in the file `./src/util.ts` so you can easily import them in your own class as well.
+You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IStorage` interface. The `parse` function in `AbstractAdapter` is among other util functions defined in the file `./src/util.ts` so you can easily import these in your own class if necessary.
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 
