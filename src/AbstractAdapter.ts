@@ -98,7 +98,11 @@ export abstract class AbstractAdapter implements IStorage {
     options?: Options
   ): Promise<ResultObjectStream>;
 
-  abstract getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
+  abstract getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options
+  ): Promise<ResultObject>;
 
   abstract removeFile(
     bucketName: string,
@@ -106,7 +110,7 @@ export abstract class AbstractAdapter implements IStorage {
     allVersions?: boolean
   ): Promise<ResultObject>;
 
-  abstract listFiles(bucketName: string): Promise<ResultObjectFiles>;
+  abstract listFiles(bucketName: string, maxFiles: number): Promise<ResultObjectFiles>;
 
   abstract sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
