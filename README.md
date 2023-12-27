@@ -23,44 +23,44 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  - [Configuration object](#configuration-object)
-  - [Configuration URL](#configuration-url)
+  * [Configuration object](#configuration-object)
+  * [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  - [Local storage](#local-storage)
-  - [Google Cloud](#google-cloud)
-  - [Amazon S3](#amazon-s3)
-    - [S3 Compatible Storage](#s3-compatible-storage)
-    - [Cloudflare R2](#cloudflare-r2)
-    - [Backblaze S3](#backblaze-s3)
-  - [Backblaze B2](#backblaze-b2)
-  - [Azure Blob Storage](#azure-blob-storage)
+  * [Local storage](#local-storage)
+  * [Google Cloud](#google-cloud)
+  * [Amazon S3](#amazon-s3)
+    + [S3 Compatible Storage](#s3-compatible-storage)
+    + [Cloudflare R2](#cloudflare-r2)
+    + [Backblaze S3](#backblaze-s3)
+  * [Backblaze B2](#backblaze-b2)
+  * [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  - [createBucket](#createbucket)
-  - [clearBucket](#clearbucket)
-  - [deleteBucket](#deletebucket)
-  - [listBuckets](#listbuckets)
-  - [addFile](#addfile)
-  - [addFileFromPath](#addfilefrompath)
-  - [addFileFromBuffer](#addfilefrombuffer)
-  - [addFileFromStream](#addfilefromstream)
-  - [getFileAsURL](#getfileasurl)
-  - [getFileAsStream](#getfileasstream)
-  - [removeFile](#removefile)
-  - [sizeOf](#sizeof)
-  - [bucketExists](#bucketexists)
-  - [fileExists](#fileexists)
-  - [listFiles](#listfiles)
-  - [getType](#gettype)
-  - [getConfiguration](#getconfiguration)
-  - [getConfigurationError](#getconfigurationerror)
-  - [getServiceClient](#getserviceclient)
-  - [switchAdapter](#switchadapter)
+  * [createBucket](#createbucket)
+  * [clearBucket](#clearbucket)
+  * [deleteBucket](#deletebucket)
+  * [listBuckets](#listbuckets)
+  * [addFile](#addfile)
+  * [addFileFromPath](#addfilefrompath)
+  * [addFileFromBuffer](#addfilefrombuffer)
+  * [addFileFromStream](#addfilefromstream)
+  * [getFileAsURL](#getfileasurl)
+  * [getFileAsStream](#getfileasstream)
+  * [removeFile](#removefile)
+  * [sizeOf](#sizeof)
+  * [bucketExists](#bucketexists)
+  * [fileExists](#fileexists)
+  * [listFiles](#listfiles)
+  * [getType](#gettype)
+  * [getConfiguration](#getconfiguration)
+  * [getConfigurationError](#getconfigurationerror)
+  * [getServiceClient](#getserviceclient)
+  * [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  - [Define your configuration](#define-your-configuration)
-  - [Adapter class](#adapter-class)
-  - [Adapter function](#adapter-function)
-  - [Register your adapter](#register-your-adapter)
+  * [Define your configuration](#define-your-configuration)
+  * [Adapter class](#adapter-class)
+  * [Adapter function](#adapter-function)
+  * [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -159,7 +159,7 @@ const c1 = {
 };
 ```
 
-## <a name='adapters'></a>Adapters
+## Adapters
 
 The adapters are the key part of this library; where the `Storage` is merely a thin wrapper (see [How it works](#how-it-works)), adapters perform the actual actions on the storage by translating generic API methods calls to storage specific calls.
 
@@ -169,7 +169,7 @@ If you want to use one or more of the adapters in your project make sure you ins
 
 You can also add more adapters yourself very easily, see [below](#adding-more-adapters)
 
-### <a name='local-storage'></a>Local storage
+### Local storage
 
 > peer dependencies: <br/> > `npm i glob rimraf`
 
@@ -232,7 +232,7 @@ const s = new Storage(url);
 
 Buckets will be created inside the directory `path/to/folder`, parent folders will be created if necessary.
 
-### <a name='google-cloud'></a>Google Cloud
+### Google Cloud
 
 > peer dependencies: <br/> > `npm i @google-cloud/storage`
 
@@ -275,7 +275,7 @@ Environment variable that is automatically read:
 GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
 ```
 
-### <a name='amazon-s3'></a>Amazon S3
+### Amazon S3
 
 > peer dependencies: <br/> > `npm i aws-sdk`
 
@@ -391,7 +391,7 @@ The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is pa
 
 Backblaze also has a native API, see below.
 
-### <a name='backblaze-b2'></a>Backblaze B2
+### Backblaze B2
 
 > peer dependencies: <br/> > `npm i backblaze-b2`
 
@@ -420,7 +420,7 @@ Example with configuration url:
 const s = new Storage("b2://applicationKeyId=keyId&applicationKey=key");
 ```
 
-### <a name='azure-blob'></a>Azure Blob Storage
+### Azure Blob Storage
 
 > peer dependencies: <br/> > `npm i @azure/storage-blob`
 
@@ -474,7 +474,7 @@ Note that if you don't use the `accountKey` for authorization and you add files 
 
 This does not mean that the file hasn't been uploaded, it simply means that no public url can been generated for this file.
 
-## <a name='api-methods'></a>API methods
+## API methods
 
 All methods that access the underlying cloud storage service return a promise that always resolves in a `ResponseObject` type or a variant thereof:
 
@@ -910,7 +910,7 @@ switchAdapter(config: string | AdapterConfig): void;
 
 Switch to another adapter in an existing `Storage` instance at runtime. The config parameter is the same type of object or URL that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
 
-## <a name='how-it-works'></a>How it works
+## How it works
 
 A `Storage` instance is actually a thin wrapper around one of the available adapters; it creates an instance of an adapter based on the configuration object or URL that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
 
@@ -941,7 +941,7 @@ The method `switchAdapter` is not declared in `IStorage` but in the `Storage` cl
 
 More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/) or [Cubbit](https://www.cubbit.io/).
 
-## <a name='adding-more-adapters'></a>Adding more adapters
+## Adding more adapters
 
 If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
 
@@ -953,7 +953,7 @@ Please add an npm command to your documentation that users can copy paste to the
 
 And for library developers you can add your dependencies to the dependencies in the package.json file in the root directory as well because only the files in the publish folder are published to npm.
 
-### <a name='define-your-configuration'></a>Define your configuration
+### Define your configuration
 
 Your configuration object should at least contain a key `type` and its value should be one of the values of the enum `StorageType`. You could accomplish this by extending the interface `AdapterConfig`:
 
@@ -992,7 +992,7 @@ const o = {
 
 You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url is just a query string you can use the `parseURL` function in `./util.ts`; this function is implemented in `AbstractAdapter` and currently not overridden by any of the adapters.
 
-### <a name='adapter-class'></a>Adapter class
+### Adapter class
 
 You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it parses the configuration.
 
@@ -1004,13 +1004,13 @@ You don't necessarily have to extend `AbstractAdapter` but if you choose not to 
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 
-### <a name='adapter-function'></a>Adapter function
+### Adapter function
 
 The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape of the interface `IStorage`.
 
 If you like, you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
 
-### <a name='register-your-adapter'></a>Register your adapter
+### Register your adapter
 
 After you've finished your adapter module you need to register it, this requires 3 simple steps:
 
@@ -1020,7 +1020,7 @@ After you've finished your adapter module you need to register it, this requires
 
 3] Also in the file `./src/types.ts` add your configuration type that extends `IAdapterConfig` and add it to the union type `AdapterConfig` as well.
 
-## <a name='tests'></a>Tests
+## Tests
 
 If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that these tests require that the credentials allow to create, delete and list buckets.
 
@@ -1064,11 +1064,11 @@ You can find some additional non-Jasmine tests in the file `tests/test.ts`. You 
 
 `npm test`
 
-## <a name='example-application'></a>Example application
+## Example application
 
 A simple application that shows how you can use the storage abstraction package can be found in [this repository](https://github.com/tweedegolf/storage-abstraction-example). It uses and Ts.ED and TypeORM and it consists of both a backend and a frontend.
 
-## <a name='questions-and-requests'></a>Questions and requests
+## Questions and requests
 
 Please let us know if you have any questions and/or request by creating an [issue](https://github.com/tweedegolf/storage-abstraction/issues).
 
