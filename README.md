@@ -23,44 +23,44 @@ Because the API only provides basic storage operations (see [below](#api-methods
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-    + [S3 Compatible Storage](#s3-compatible-storage)
-    + [Cloudflare R2](#cloudflare-r2)
-    + [Backblaze S3](#backblaze-s3)
-  * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+    - [S3 Compatible Storage](#s3-compatible-storage)
+    - [Cloudflare R2](#cloudflare-r2)
+    - [Backblaze S3](#backblaze-s3)
+  - [Backblaze B2](#backblaze-b2)
+  - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  * [createBucket](#createbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [addFile](#addfile)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromStream](#addfilefromstream)
-  * [getFileAsURL](#getfileasurl)
-  * [getFileAsStream](#getfileasstream)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [bucketExists](#bucketexists)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [getConfigurationError](#getconfigurationerror)
-  * [getServiceClient](#getserviceclient)
-  * [switchAdapter](#switchadapter)
+  - [createBucket](#createbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [addFile](#addfile)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromStream](#addfilefromstream)
+  - [getFileAsURL](#getfileasurl)
+  - [getFileAsStream](#getfileasstream)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [bucketExists](#bucketexists)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [getConfigurationError](#getconfigurationerror)
+  - [getServiceClient](#getserviceclient)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -912,18 +912,18 @@ Switch to another adapter in an existing `Storage` instance at runtime. The conf
 
 ## How it works
 
-A `Storage` instance is actually a thin wrapper around one of the available adapters; it creates an instance of an adapter based on the configuration object or URL that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
+A `Storage` instance is actually a thin wrapper around one of the available adapters; it creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
 
 ```typescript
 // member function of class Storage
-async createBucket(name: string): Promise<ResultObject> {
+async createBucket(name: string): Promise<ResultObject> => {
   return this.adapter.createBucket(name);
 };
 ```
 
 The class `Storage` implements the interface `IStorage` and this interface declares the complete API. Because all adapters have to implement this interface as well, either by extending `AbstractAdapter` or otherwise, all API calls on `Storage` can be directly forwarded to the adapters.
 
-The adapter subsequently takes care of translating the generic API to storage specific functions. Therefor, dependent on what definitions you use, this library could be seen as a wrapper or a shim.
+The adapter subsequently takes care of translating the generic API calls to storage specific functions. Therefor, dependent on what definitions you use, this library could be seen as a wrapper or a shim.
 
 Inside the adapter an instance of the cloud storage specific service client is created; this instance handles the actual communication with the cloud service. For instance:
 
@@ -939,13 +939,13 @@ The method `switchAdapter` is not declared in `IStorage` but in the `Storage` cl
 
 `switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
 
-More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/) or [Cubbit](https://www.cubbit.io/).
+More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/) and [Cubbit](https://www.cubbit.io/).
 
 ## Adding more adapters
 
 If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
 
-Your adapter might use a wrapper library for the storage type that you create the adapter for, like for instance aws-sdk is used in the Amazon S3 adapter. Add these dependencies to the peer dependencies in the package.json file in the `./publish` folder
+Your adapter might have additional dependencies such as a service client library like for instance aws-sdk as is used in the Amazon S3 adapter. Add these dependencies to the peer dependencies in the package.json file in the `./publish` folder
 
 This way your extra dependencies will not be installed automatically but have to be installed manually if the user actually uses your adapter in their code.
 
@@ -955,17 +955,7 @@ And for library developers you can add your dependencies to the dependencies in 
 
 ### Define your configuration
 
-Your configuration object should at least contain a key `type` and its value should be one of the values of the enum `StorageType`. You could accomplish this by extending the interface `AdapterConfig`:
-
-```typescript
-export interface AdapterConfig {
-  type: string;
-  bucketName?: string;
-  [id: string]: any; // eslint-disable-line
-}
-```
-
-Your configuration URL should also at least contain the type; the name of the type is used for the protocol part of the URL. This name should be added to the enum `StorageType`.
+You should add the name of the your type to the enum `StorageType`.
 
 ```typescript
 // add your type to the enum
@@ -978,9 +968,26 @@ enum StorageType {
   MINIO = "minio",
   YOUR_TYPE = "yourtype",
 }
-// your configuration URL
-const u = "yourtype://key1=value1&key2=value2...";
+```
 
+Your configuration object type should at least contain a key `type`, you could accomplish this by extending the interface `AdapterConfig`:
+
+```typescript
+export interface AdapterConfig {
+  type: string;
+  bucketName?: string;
+  [id: string]: any; // eslint-disable-line
+}
+
+export interface YourAdapterConfig extend AdapterConfig {
+  additionalKey: string,
+  ...
+}
+```
+
+example:
+
+```typescript
 // your configuration object
 const o = {
   type: "yourtype", // mandatory
@@ -988,6 +995,16 @@ const o = {
   key2?: string,
   ...
 }
+
+```
+
+Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL
+
+example:
+
+```typescript
+// your configuration URL
+const u = "yourtype://key1=value1&key2=value2...";
 ```
 
 You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url is just a query string you can use the `parseURL` function in `./util.ts`; this function is implemented in `AbstractAdapter` and currently not overridden by any of the adapters.
@@ -1006,7 +1023,7 @@ You can use this [template](https://github.com/tweedegolf/storage-abstraction/bl
 
 ### Adapter function
 
-The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape of the interface `IStorage`.
+The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape or type of the interface `IStorage`.
 
 If you like, you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
 
@@ -1018,7 +1035,7 @@ After you've finished your adapter module you need to register it, this requires
 
 2] Add your type to the enum `StorageTypes` in `./src/types.ts`.
 
-3] Also in the file `./src/types.ts` add your configuration type that extends `IAdapterConfig` and add it to the union type `AdapterConfig` as well.
+3] Also in the file `./src/types.ts` add your configuration type that ideally extends `AdapterConfig`.
 
 ## Tests
 
@@ -1041,7 +1058,7 @@ To run a generic Jasmine test that uses local storage and does not require any c
 
 `npm run test-jasmine`
 
-There are also Jamine tests that test a set of configuration objects and URLs per storage type:
+There are also Jasmine tests that test a set of configuration objects and URLs per storage type:
 
 ```bash
 # test config local disk
