@@ -15,6 +15,8 @@ import {
   ResultObjectNumber,
   ResultObjectBoolean,
   AdapterConfig,
+  Options,
+  StreamOptions,
 } from "./types";
 
 const getConfiguration = (): AdapterConfig => {
@@ -55,7 +57,7 @@ const addFileFromBuffer = async (params: FileBufferParams): Promise<ResultObject
   return { value: "public url", error: null };
 };
 
-const addFileFromReadable = async (params: FileStreamParams): Promise<ResultObject> => {
+const addFileFromStream = async (params: FileStreamParams): Promise<ResultObject> => {
   return { value: "public url", error: null };
 };
 
@@ -65,18 +67,19 @@ const addFile = async (
   return { value: "public url", error: null };
 };
 
-const getFileAsReadable = async (
+const getFileAsStream = async (
   bucketName: string,
   fileName: string,
-  options?: {
-    start?: number;
-    end?: number;
-  }
+  options?: StreamOptions
 ): Promise<ResultObjectStream> => {
   return { value: fs.createReadStream(""), error: null };
 };
 
-const getFileAsURL = async (bucketName: string, fileName: string): Promise<ResultObject> => {
+const getFileAsURL = async (
+  bucketName: string,
+  fileName: string,
+  options?: Options
+): Promise<ResultObject> => {
   return { value: "url", error: null };
 };
 
@@ -124,8 +127,8 @@ const adapter: IStorage = {
   addFile,
   addFileFromPath,
   addFileFromBuffer,
-  addFileFromStream: addFileFromReadable,
-  getFileAsStream: getFileAsReadable,
+  addFileFromStream,
+  getFileAsStream,
   getFileAsURL,
   removeFile,
   listFiles,

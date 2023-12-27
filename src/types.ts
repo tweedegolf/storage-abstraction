@@ -44,9 +44,9 @@ export interface IStorage {
    */
   config: AdapterConfig;
 
-  getConfigError(): string;
+  getConfigError(): null | string;
 
-  configError: string;
+  configError: null | string;
 
   /**
    * Returns an object that contains both the options passed with the configuration and the
@@ -147,7 +147,7 @@ export interface IStorage {
   getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: Options
+    options?: StreamOptions
   ): Promise<ResultObjectStream>;
 
   /**
@@ -239,9 +239,14 @@ export interface AdapterConfigLocal extends AdapterConfig {
   mode?: number;
 }
 
-export type Options = {
+export interface Options {
   [id: string]: any; // eslint-disable-line
-};
+}
+
+export interface StreamOptions extends Options {
+  start?: number;
+  end?: number;
+}
 
 export type BackblazeAxiosResponse = {
   response: {

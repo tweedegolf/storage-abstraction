@@ -17,6 +17,7 @@ import {
   ResultObjectNumber,
   ResultObjectStringArray,
   Options,
+  StreamOptions,
 } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { parseMode, validateName } from "./util";
@@ -233,7 +234,7 @@ export class AdapterLocal extends AbstractAdapter {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0 }
+    options?: StreamOptions
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };

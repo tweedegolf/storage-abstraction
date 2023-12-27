@@ -5,6 +5,7 @@ import {
   FileStreamParams,
   IStorage,
   Options,
+  StreamOptions,
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
@@ -95,7 +96,7 @@ export abstract class AbstractAdapter implements IStorage {
   abstract getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: Options
+    options?: StreamOptions
   ): Promise<ResultObjectStream>;
 
   abstract getFileAsURL(

@@ -15,6 +15,7 @@ import {
   ResultObjectBoolean,
   AdapterConfigGoogle,
   Options,
+  StreamOptions,
 } from "./types";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
@@ -69,7 +70,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0, end: "" }
+    options?: StreamOptions
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
@@ -79,7 +80,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       const file = this.storage.bucket(bucketName).file(fileName);
       const [exists] = await file.exists();
       if (exists) {
-        return { value: file.createReadStream(options), error: null };
+        return { value: file.createReadStream(options as object), error: null };
       }
     } catch (e) {
       return {

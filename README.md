@@ -481,8 +481,8 @@ All methods that access the underlying cloud storage service return a promise th
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
@@ -506,8 +506,8 @@ return type:
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
@@ -529,8 +529,8 @@ return type:
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
@@ -550,8 +550,8 @@ return type:
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
@@ -571,8 +571,8 @@ return type:
 
 ```typescript
 export type ResultObjectBuckets = {
-  error: string | null;
   value: Array<string> | null;
+  error: string | null;
 };
 ```
 
@@ -607,8 +607,8 @@ return type:
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
@@ -638,8 +638,8 @@ return type:
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
@@ -668,17 +668,51 @@ return type:
 
 ```typescript
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 ```
 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
+### </a>getFileAsURL
+
+```typescript
+getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObjectStream>;
+```
+
+param type:
+
+```typescript
+export Options {
+  [id: string]: any; // eslint-disable-line
+}
+```
+
+Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+
+return type:
+
+```typescript
+export type ResultObject = {
+  value: string | null;
+  error: string | null;
+};
+```
+
 ### <a name='getfileasstream'></a>getFileAsStream
 
 ```typescript
-getFileAsStream(bucketName: string, fileName: string, options?: {start?: number, end?: number}): Promise<ResultObjectStream>;
+getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+```
+
+param type:
+
+```typescript
+export interface StreamOptions extends Options {
+  start?: number;
+  end?: number;
+}
 ```
 
 Returns a file in the storage as a readable stream. You can pass in extra options. If you use the keys `start` and/or `end` only the bytes between `start` and `end` of the file will be returned. Some examples:
@@ -701,8 +735,8 @@ return type:
 
 ```typescript
 export type ResultObjectStream = {
-  error: string | null;
   value: Readable | null;
+  error: string | null;
 };
 ```
 

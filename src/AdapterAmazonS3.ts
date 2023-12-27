@@ -31,6 +31,7 @@ import {
   ResultObjectBoolean,
   Options,
   AdapterConfigS3,
+  StreamOptions,
 } from "./types";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
@@ -75,25 +76,28 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0, end: "" }
+    options?: StreamOptions
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { error: this.configError, value: null };
     }
 
-    let { start, end } = options;
+    let { start } = options;
+    const { end } = options;
+    let range = "bytes";
     if (typeof start === "undefined") {
       start = 0;
+      range = `${range}=0-${end}`;
     }
     if (typeof end === "undefined") {
-      end = "";
+      range = `${range}=${start}-${end}`;
     }
 
     try {
       const params = {
         Bucket: bucketName,
         Key: fileName,
-        Range: `bytes=${start}-${end}`,
+        Range: range,
       };
       const command = new GetObjectCommand(params);
       const response = await this.storage.send(command);
@@ -274,15 +278,19 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject> {
     try {
       const url = await getSignedUrl(
         this.storage,
         new GetObjectCommand({
           Bucket: bucketName,
           Key: fileName,
-        })
-        // { expiresIn: 3600 }
+        }),
+        options
       );
       return { value: url, error: null };
     } catch (e) {

@@ -22,6 +22,7 @@ import {
   FileStreamParams,
   AdapterConfigAzure,
   Options,
+  StreamOptions,
 } from "./types";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
@@ -90,7 +91,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0 }
+    options: StreamOptions = { start: 0 }
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
@@ -106,7 +107,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         };
       }
       const offset = options.start;
-      let count = options.end;
+      let count: number = options.end;
       if (typeof count !== "undefined") {
         count = count - offset;
       }
@@ -114,7 +115,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       delete options.end;
 
       try {
-        const stream = await file.download(offset, count, options);
+        const stream = await file.download(offset, count, options as object);
         return { value: stream.readableStreamBody as Readable, error: null };
       } catch (e) {
         return { value: null, error: e.message };

@@ -3,6 +3,7 @@ import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 // Use ConfigTemplate as starting point for your own configuration object
 import {
+  AdapterConfig,
   ResultObject,
   FilePathParams,
   FileBufferParams,
@@ -13,9 +14,13 @@ import {
   ResultObjectNumber,
   Options,
   ResultObjectStream,
+  StreamOptions,
 } from "./types";
 import { parseUrl, validateName } from "./util";
-import { AdapterConfig } from "@tweedegolf/storage-abstraction";
+
+// stub of a 3rd-party service client library to silence ts-lint
+// see the last line of the constructor below
+export const WrapperLibrary = function (config: string | AdapterConfig) {};
 
 export class AdapterTemplate extends AbstractAdapter {
   // Your storage type, add this type to the enum StorageType in ./types.ts
@@ -56,7 +61,7 @@ export class AdapterTemplate extends AbstractAdapter {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options
+    options?: StreamOptions
   ): Promise<ResultObjectStream> {
     // Return a stream that you've created somehow in your adapter or that you pipe
     // directly from your cloud storage.
@@ -67,7 +72,7 @@ export class AdapterTemplate extends AbstractAdapter {
   async getFileAsURL(
     bucketName: string,
     fileName: string,
-    options: Options
+    options?: Options
   ): Promise<ResultObject> {
     // Return a public url to the file. Note that you might need extra right to
     // be able to create a public url. In the options object you can pass extra
@@ -158,6 +163,3 @@ export class AdapterTemplate extends AbstractAdapter {
     return { value: true, error: null };
   }
 }
-
-// stub of a 3rd-party service client library to silence ts-lint
-export const WrapperLibrary = function (config: string | AdapterConfig) {};

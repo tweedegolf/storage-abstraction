@@ -18,9 +18,9 @@ import {
   ResultObjectFiles,
   ResultObjectNumber,
   BackblazeBucketOptions,
-  Options,
   ResultObjectKeyValue,
   AdapterConfigB2,
+  StreamOptions,
 } from "./types";
 import { validateName } from "./util";
 
@@ -242,7 +242,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: Options = { start: 0, end: "" }
+    options: StreamOptions = { start: 0 }
   ): Promise<ResultObjectStream> {
     const { error } = await this.authorize();
     if (error !== null) {
@@ -254,12 +254,16 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: null, error: data.error };
     }
     const { value: file } = data;
-    let { start, end } = options;
+
+    let { start } = options;
+    const { end } = options;
+    let range = "bytes";
     if (typeof start === "undefined") {
       start = 0;
+      range = `${range}=0-${end}`;
     }
     if (typeof end === "undefined") {
-      end = "";
+      range = `${range}=${start}-${end}`;
     }
 
     delete options.start;
@@ -272,7 +276,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         axios: {
           headers: {
             "Content-Type": file.contentType,
-            Range: `bytes=${start}-${end}`,
+            Range: range,
           },
           ...options,
         },
@@ -283,7 +287,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async getFileAsURL(
+    bucketName: string,
+    fileName: string
+    // options?: Options
+  ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
