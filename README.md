@@ -18,17 +18,13 @@ Also S3 compliant cloud services are supported. Tested S3 compatible services ar
 
 Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
 
-## <a name='table-of-contents'></a>Table of contents
+## Table of contents
 
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
   - [Configuration object](#configuration-object)
   - [Configuration URL](#configuration-url)
-  - [Mandatory and optional keys per service](#mandatory-and-optional-keys-per-service)
-    - [Local Storage](#local-storage)
-    - [Amazon S3 and compatible](#amazon-s3-and-compatible)
-    - [Google Cloud Storage](#google-cloud-storage)
 - [Adapters](#adapters)
   - [Local storage](#local-storage)
   - [Google Cloud](#google-cloud)
@@ -43,10 +39,11 @@ Because the API only provides basic storage operations (see [below](#api-methods
   - [clearBucket](#clearbucket)
   - [deleteBucket](#deletebucket)
   - [listBuckets](#listbuckets)
+  - [addFile](#addfile)
   - [addFileFromPath](#addfilefrompath)
   - [addFileFromBuffer](#addfilefrombuffer)
-  - [addFileFromReadable](#addfilefromreadable)
-  - [addFile](#addfile)
+  - [addFileFromStream](#addfilefromstream)
+  - [getFileAsURL](#getfileasurl)
   - [getFileAsStream](#getfileasstream)
   - [removeFile](#removefile)
   - [sizeOf](#sizeof)
@@ -55,6 +52,8 @@ Because the API only provides basic storage operations (see [below](#api-methods
   - [listFiles](#listfiles)
   - [getType](#gettype)
   - [getConfiguration](#getconfiguration)
+  - [getConfigurationError](#getconfigurationerror)
+  - [getServiceClient](#getserviceclient)
   - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
@@ -68,7 +67,7 @@ Because the API only provides basic storage operations (see [below](#api-methods
 
 <!-- tocstop -->
 
-## <a name='instantiate-a-storage'></a>Instantiate a storage
+## Instantiate a storage
 
 ```javascript
 const s = new Storage(config);
@@ -94,7 +93,7 @@ enum StorageType {
 }
 ```
 
-### <a name='configuration-object'></a>Configuration object
+### Configuration object
 
 A configuration object type that extends `AdapterConfig`:
 
@@ -134,7 +133,7 @@ storage.addFile({
 });
 ```
 
-### <a name='configuration-url'></a>Configuration URL
+### Configuration URL
 
 Configuration urls always start with a protocol that defines the type of storage:
 
@@ -586,7 +585,7 @@ A generic method that is called under the hood when you call `addFileFromPath`, 
 
 There is no difference between using this method or one of the 3 specific methods. For details about the `params` object and the return value see the documentation below.
 
-### <a name='addfilefrompath'></a>addFileFromPath
+### addFileFromPath
 
 ```typescript
 addFileFromPath(params: FilePathParams): Promise<ResultObject>;
@@ -614,7 +613,7 @@ export interface ResultObject {
 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
-### <a name='addfilefrombuffer'></a>addFileFromBuffer
+### addFileFromBuffer
 
 ```typescript
 addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;
@@ -675,7 +674,7 @@ export interface ResultObject {
 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
-### </a>getFileAsURL
+### getFileAsURL
 
 ```typescript
 getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObjectStream>;
@@ -700,7 +699,7 @@ export type ResultObject = {
 };
 ```
 
-### <a name='getfileasstream'></a>getFileAsStream
+### getFileAsStream
 
 ```typescript
 getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
@@ -740,7 +739,7 @@ export type ResultObjectStream = {
 };
 ```
 
-### <a name='removefile'></a>removeFile
+### removeFile
 
 ```typescript
 removeFile(bucketName: string, fileName: string, allVersions: boolean = false): Promise<ResultObject>;
@@ -759,7 +758,7 @@ export interface ResultObject {
 
 If the call succeeds the `value` key will hold the string "ok".
 
-### <a name='sizeof'></a>sizeOf
+### sizeOf
 
 ```typescript
 sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
@@ -778,7 +777,7 @@ export type ResultObjectNumber = {
 
 If the call succeeds the `value` key will hold the size of the file.
 
-### <a name='bucketexists'></a>bucketExists
+### bucketExists
 
 ```typescript
 bucketExists(name: string): Promise<ResultObjectBoolean>;
@@ -797,7 +796,7 @@ export type ResultObjectBoolean = {
 
 If the call succeeds the `value` key will hold a boolean value.
 
-### <a name='fileexists'></a>fileExists
+### fileExists
 
 ```typescript
 fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
@@ -816,7 +815,7 @@ export type ResultObjectBoolean = {
 
 If the call succeeds the `value` key will hold a boolean value.
 
-### <a name='listfiles'></a>listFiles
+### listFiles
 
 ```typescript
 listFiles(bucketName: string): Promise<ResultObjectFiles>;
@@ -835,7 +834,7 @@ export type ResultObjectFiles = {
 
 If the call succeeds the `value` key will hold an array of tuples.
 
-### <a name='gettype'></a>getType
+### getType
 
 ```typescript
 getType(): string;
