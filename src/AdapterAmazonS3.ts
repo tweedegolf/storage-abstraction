@@ -61,7 +61,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         delete o.secretAccessKey;
         this._client = new S3Client(o);
       }
-      // console.log(this.storage.config);
     }
   }
 
@@ -164,20 +163,54 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async clearBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  private async removeFiles(name: string): Promise<ResultObject> {
     try {
       const input1 = {
         Bucket: name,
-        MaxKeys: 1000,
+        MaxKeys: 10000,
+      };
+      const command = new ListObjectsCommand(input1);
+      const { Contents } = await this.storage.send(command);
+      console.log("Contents", Contents);
+      if (typeof Contents === "undefined") {
+        return { value: null, error: "no contents" };
+      }
+      if (Contents.length === 0) {
+        return { value: "ok", error: null };
+      }
+
+      try {
+        const input2 = {
+          Bucket: name,
+          Delete: {
+            Objects: Contents.map((value) => ({ Key: value.Key })),
+            Quiet: false,
+          },
+        };
+        const command2 = new DeleteObjectsCommand(input2);
+        await this.storage.send(command2);
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  private async removeFileVersions(name: string): Promise<ResultObject> {
+    try {
+      const input1 = {
+        Bucket: name,
+        MaxKeys: 10000,
       };
       const command = new ListObjectVersionsCommand(input1);
       const { Versions } = await this.storage.send(command);
-      // console.log("Versions", Versions);
+      console.log("Versions", Versions);
       if (typeof Versions === "undefined") {
+        return { value: null, error: "no versions" };
+      }
+      if (Versions.length === 0) {
         return { value: "ok", error: null };
       }
 
@@ -200,6 +233,30 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       }
     } catch (e) {
       return { value: null, error: e.message };
+    }
+  }
+
+  public async clearBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    // first try to remove the versioned files
+    const { value, error } = await this.removeFileVersions(name);
+    if (error === "no versions" || error === "ListObjectVersions not implemented") {
+      // if that fails remove non-versioned files
+      const { value, error } = await this.removeFiles(name);
+      if (error === "no contents") {
+        return { value: null, error: "Could not remove files" };
+      } else if (error !== null) {
+        return { value: null, error };
+      } else {
+        return { value, error: null };
+      }
+    } else if (error !== null) {
+      return { value: null, error };
+    } else {
+      return { value, error: null };
     }
   }
 
@@ -297,7 +354,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async listFiles(bucketName: string, maxFiles: number = 1000): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string, maxFiles: number = 10000): Promise<ResultObjectFiles> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }

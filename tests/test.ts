@@ -1,14 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
-import uniquid from "uniquid";
 import { Storage } from "../src/Storage";
 import { IStorage, StorageType } from "../src/types";
 import { getConfig } from "./config";
 import { saveFile, timeout } from "./util";
 
-const newBucketName1 = `bucket-${uniquid()}`;
-const newBucketName2 = `bucket-${uniquid()}`;
+const newBucketName1 = "bucket-test-sab-1";
+const newBucketName2 = "bucket-test-sab-2";
 
 let storage: Storage;
 let bucketName: string;
@@ -31,7 +30,7 @@ const types = [
 
 async function init() {
   // select the type of storage you want to test
-  storage = new Storage(getConfig(types[1]));
+  storage = new Storage(getConfig(types[7]));
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
 
@@ -209,6 +208,9 @@ async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: n
 async function run() {
   await init();
 
+  // const r = await storage.serviceClient.config.region();
+  // console.log(r);
+
   // const buckets = await listBuckets();
   // if (buckets !== null && buckets.length > 0) {
   //   await deleteAllBuckets(buckets, storage);
@@ -217,14 +219,19 @@ async function run() {
   // await bucketExists();
   await createBucket();
   // await listBuckets();
+
   await addFileFromPath();
-  // await addFileFromBuffer();
-  // await addFileFromStream();
-  // await listFiles();
-  await getFileAsStream();
-  await getFileAsStreamPartial();
-  await getFileAsStreamPartial2();
-  await getFileAsStreamPartial3();
+  await addFileFromBuffer();
+  await addFileFromStream();
+  await addFileFromPath();
+  await addFileFromBuffer();
+  await addFileFromStream();
+  await listFiles();
+
+  // await getFileAsStream();
+  // await getFileAsStreamPartial();
+  // await getFileAsStreamPartial2();
+  // await getFileAsStreamPartial3();
 
   // process.exit();
 
@@ -232,9 +239,9 @@ async function run() {
   // await sizeOf();
   // await removeFile();
   // await fileExists();
-  // await clearBucket();
+  await clearBucket();
   // await listFiles();
-  // await deleteBucket();
+  await deleteBucket();
   // await listBuckets();
 
   // await cleanup();

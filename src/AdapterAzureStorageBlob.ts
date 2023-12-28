@@ -114,7 +114,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         offset = 0;
       }
       if (typeof end !== "undefined") {
-        count = end - offset;
+        count = end - offset + 1;
       }
       delete options.start;
       delete options.end;

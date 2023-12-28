@@ -32,8 +32,7 @@
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
     "tsc-watch": "^6.0.4",
-    "typescript": "^5.0.4",
-    "uniquid": "^1.1.4"
+    "typescript": "^5.0.4"
   },
   "scripts": {
     "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2 && npm run test-azure",

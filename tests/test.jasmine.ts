@@ -3,10 +3,9 @@ import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
 import dotenv from "dotenv";
-import uniquid from "uniquid";
 import { Storage } from "../src/Storage";
 import { AdapterConfig, StorageType } from "../src/types";
-import { copyFile } from "./util";
+import { saveFile } from "./util";
 import { Readable } from "stream";
 
 dotenv.config();
@@ -53,8 +52,8 @@ if (type === StorageType.LOCAL) {
   config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;
 }
 
-const newBucketName1 = `bucket-${uniquid()}`;
-const newBucketName2 = `bucket-${uniquid()}`;
+const newBucketName1 = "bucket-test-sab-1";
+const newBucketName2 = "bucket-test-sab-2";
 
 let storage: Storage;
 let bucketName: string;
@@ -247,7 +246,7 @@ describe(`[testing ${type} storage]`, async () => {
 
     if (value !== null) {
       // value is a readstream
-      await copyFile(value, writeStream);
+      await saveFile(value, writeStream);
     }
     // } catch (e) {
     //   throw e;
@@ -269,7 +268,7 @@ describe(`[testing ${type} storage]`, async () => {
     if (value !== null) {
       const readStream = value;
       const writeStream = fs.createWriteStream(filePath);
-      await copyFile(readStream, writeStream);
+      await saveFile(readStream, writeStream);
       const size = (await fs.promises.stat(filePath)).size;
       expect(size).toBe(3000);
     }
