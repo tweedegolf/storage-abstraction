@@ -70,7 +70,6 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
         this._client = BlobServiceClient.fromConnectionString(this.config.connectionString);
         // option 4: password less
       } else {
-        console.log("default");
         this._client = new BlobServiceClient(
           `https://${this.config.accountName as string}.blob.core.windows.net`,
           new DefaultAzureCredential(),

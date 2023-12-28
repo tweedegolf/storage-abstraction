@@ -36,6 +36,7 @@
     "uniquid": "^1.1.4"
   },
   "scripts": {
+    "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2 && npm run test-azure",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-local": "TYPE='local' BUCKET_NAME='the-buck' LOCAL_DIRECTORY='tests/test_directory' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-gcs": "TYPE='gcs' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",

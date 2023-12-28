@@ -6,7 +6,7 @@ import uniquid from "uniquid";
 import { Storage } from "../src/Storage";
 import { IStorage, StorageType } from "../src/types";
 import { getConfig } from "./config";
-import { copyFile, timeout } from "./util";
+import { saveFile, timeout } from "./util";
 
 const newBucketName1 = `bucket-${uniquid()}`;
 const newBucketName2 = `bucket-${uniquid()}`;
@@ -109,7 +109,7 @@ async function getFileAsStream() {
       `test-${storage.getType()}-full.jpg`
     );
     const writeStream = fs.createWriteStream(filePath);
-    await copyFile(value, writeStream);
+    await saveFile(value, writeStream);
   }
 }
 
@@ -127,7 +127,7 @@ async function getFileAsStreamPartial() {
       `test-${storage.getType()}-partial.jpg`
     );
     const writeStream = fs.createWriteStream(filePath);
-    await copyFile(value, writeStream);
+    await saveFile(value, writeStream);
   }
 }
 
@@ -182,7 +182,7 @@ async function run() {
   await getFileAsStream();
   await getFileAsStreamPartial();
 
-  process.exit();
+  // process.exit();
 
   await fileExists();
   await sizeOf();

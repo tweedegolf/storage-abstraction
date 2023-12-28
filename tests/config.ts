@@ -16,7 +16,6 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
     config = {
       type: StorageType.GCS,
       bucketName: process.env.BUCKET_NAME,
-      projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
       keyFilename: process.env.GOOGLE_CLOUD_KEY_FILENAME,
     };
   } else if (t === StorageType.S3) {

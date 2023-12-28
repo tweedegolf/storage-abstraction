@@ -1058,19 +1058,6 @@ To run a generic Jasmine test that uses local storage and does not require any c
 
 `npm run test-jasmine`
 
-There are also Jasmine tests that test a set of configuration objects and URLs per storage type:
-
-```bash
-# test config local disk
-npm run test-config-local
-# test config Google Cloud Storage
-npm run test-config-gcs
-# test config Amazon S3
-npm run test-config-s3
-# test config Backblaze B2
-npm run test-config-b2
-```
-
 To run all tests:
 
 ```bash
