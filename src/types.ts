@@ -154,7 +154,7 @@ export interface IStorage {
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
    */
-  getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
+  getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
 
   /**
    * @param {string} bucketName name of the bucket where the file is stored

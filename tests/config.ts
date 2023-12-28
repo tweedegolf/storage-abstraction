@@ -1,4 +1,5 @@
 import "jasmine";
+import path from "path";
 import dotenv from "dotenv";
 import { AdapterConfig, StorageType } from "../src/types";
 
@@ -26,7 +27,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION,
     };
-  } else if (t === "R2") {
+  } else if (t === "S3-R2") {
     config = {
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,
@@ -34,13 +35,21 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_ACCESS_KEY_ID,
     };
-  } else if (t === "B2-S3") {
+  } else if (t === "S3-B2") {
     config = {
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,
       endpoint: process.env.B2_S3_ENDPOINT,
       accessKeyId: process.env.B2_S3_APPLICATION_KEY,
       secretAccessKey: process.env.B2_S3_APPLICATION_KEY_ID,
+    };
+  } else if (t === "S3-Cubbit") {
+    config = {
+      type: StorageType.S3,
+      bucketName: process.env.BUCKET_NAME,
+      endpoint: process.env.CUBBIT_ENDPOINT,
+      accessKeyId: process.env.CUBBIT_ACCESS_KEY_ID,
+      secretAccessKey: process.env.CUBBIT_SECRET_ACCESS_KEY,
     };
   } else if (t === StorageType.B2) {
     config = {
@@ -57,7 +66,9 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
     };
   } else {
-    config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;
+    // const p = path.join(process.cwd(), "tests", "test_directory");
+    const p = path.join("tests", "test_directory");
+    config = process.env.CONFIG_URL || `local://directory=${p}`;
   }
 
   return config;

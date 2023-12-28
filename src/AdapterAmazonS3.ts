@@ -81,17 +81,17 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (this.configError !== null) {
       return { error: this.configError, value: null };
     }
-
-    let { start } = options;
-    const { end } = options;
+    // console.log("OPTIONS", options);
+    const { start, end } = options;
     let range = `bytes=${start}-${end}`;
-    if (typeof start === "undefined") {
-      start = 0;
-      range = `${range}=0-${end}`;
+    if (typeof start === "undefined" && typeof end === "undefined") {
+      range = undefined;
+    } else if (typeof start === "undefined") {
+      range = `bytes=0-${end}`;
+    } else if (typeof end === "undefined") {
+      range = `bytes=${start}-`;
     }
-    if (typeof end === "undefined") {
-      range = `${range}=${start}-${end}`;
-    }
+    // console.log(start, end, range);
 
     try {
       const params = {

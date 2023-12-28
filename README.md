@@ -1039,7 +1039,7 @@ After you've finished your adapter module you need to register it, this requires
 
 ## Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that these tests require that the credentials allow to create, delete and list buckets.
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
 
 You can run the Jasmine tests per storage type using one of the following commands:
 
@@ -1068,7 +1068,7 @@ You can find some additional non-Jasmine tests in the file `tests/test.ts`. Firs
 
 ## Example application
 
-> NOTE: not yet update to API 2.0!
+> NOTE: not yet updated to API 2.0!
 
 A simple application that shows how you can use the storage abstraction package can be found in [this repository](https://github.com/tweedegolf/storage-abstraction-example). It uses and Ts.ED and TypeORM and it consists of both a backend and a frontend.
 

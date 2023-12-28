@@ -18,9 +18,11 @@ function colorLog(s: string): string {
 }
 
 async function init() {
-  const config = getConfig(StorageType.B2); // select the type of storage you want to test
-  // const config = getConfig("R2");
-  // const config = getConfig("B2-S3"); // Backblaze B2 S3-compatible
+  // const config = getConfig(StorageType.LOCAL); // select the type of storage you want to test
+  // const config = getConfig(StorageType.S3); // select the type of storage you want to test
+  const config = getConfig("S3-Cubbit"); // Cubbit
+  // const config = getConfig("S3-R2"); // CloudFlare R2
+  // const config = getConfig("S3-B2"); // Backblaze B2 S3-compatible
   storage = new Storage(config);
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
@@ -171,26 +173,26 @@ async function run() {
   //   await deleteAllBuckets(buckets, storage);
   // }
 
-  await bucketExists();
+  // await bucketExists();
   await createBucket();
-  await listBuckets();
+  // await listBuckets();
   await addFileFromPath();
-  await addFileFromBuffer();
-  await addFileFromStream();
-  await listFiles();
+  // await addFileFromBuffer();
+  // await addFileFromStream();
+  // await listFiles();
   await getFileAsStream();
   await getFileAsStreamPartial();
 
-  // // process.exit();
+  process.exit();
 
-  // await fileExists();
-  // await sizeOf();
-  // await removeFile();
-  // await fileExists();
-  // await clearBucket();
-  // await listFiles();
-  // await deleteBucket();
-  // await listBuckets();
+  await fileExists();
+  await sizeOf();
+  await removeFile();
+  await fileExists();
+  await clearBucket();
+  await listFiles();
+  await deleteBucket();
+  await listBuckets();
 
   // await cleanup();
 }

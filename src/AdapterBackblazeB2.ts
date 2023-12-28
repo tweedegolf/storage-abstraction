@@ -255,15 +255,14 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     const { value: file } = data;
 
-    let { start } = options;
-    const { end } = options;
-    let range = `bytes=${start}-${end}`;
-    if (typeof start === "undefined") {
-      start = 0;
-      range = `${range}=0-${end}`;
-    }
-    if (typeof end === "undefined") {
-      range = `${range}=${start}-${end}`;
+    const { start, end } = options;
+    let range: string;
+    if (typeof start !== "undefined" && typeof end !== "undefined") {
+      range = `bytes=${start}-${end}`;
+    } else if (typeof start === "undefined") {
+      range = `bytes=0-${end}`;
+    } else if (typeof end === "undefined") {
+      range = `bytes=${start}-`;
     }
 
     delete options.start;
