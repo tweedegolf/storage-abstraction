@@ -6,10 +6,8 @@ import { Readable, Stream, Writable } from "stream";
 export const saveFile = (
   readStream: Readable,
   writeStream: Writable,
-  log: boolean = true
+  log: boolean = false
 ): Promise<void> => {
-  console.log(writeStream, readStream);
-
   return new Promise((resolve, reject) => {
     readStream
       .pipe(writeStream)

@@ -1,4 +1,3 @@
-import "jasmine";
 import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
@@ -19,9 +18,9 @@ function colorLog(s: string): string {
 }
 
 async function init() {
-  const config = getConfig(StorageType.B2);
+  const config = getConfig(StorageType.B2); // select the type of storage you want to test
   // const config = getConfig("R2");
-  // const config = getConfig("B2-S3");
+  // const config = getConfig("B2-S3"); // Backblaze B2 S3-compatible
   storage = new Storage(config);
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
@@ -159,7 +158,7 @@ async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: n
       // console.log(`\tfiles: ${files}`);
       await storage.deleteBucket(b);
     } catch (e) {
-      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e);
+      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e.message);
     }
   }
 }
@@ -167,10 +166,10 @@ async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: n
 async function run() {
   await init();
 
-  const buckets = await listBuckets();
-  if (buckets !== null && buckets.length > 0) {
-    await deleteAllBuckets(buckets, storage);
-  }
+  // const buckets = await listBuckets();
+  // if (buckets !== null && buckets.length > 0) {
+  //   await deleteAllBuckets(buckets, storage);
+  // }
 
   await bucketExists();
   await createBucket();
@@ -182,18 +181,18 @@ async function run() {
   await getFileAsStream();
   await getFileAsStreamPartial();
 
-  // process.exit();
+  // // process.exit();
 
-  await fileExists();
-  await sizeOf();
-  await removeFile();
-  await fileExists();
-  await clearBucket();
-  await listFiles();
-  await deleteBucket();
-  await listBuckets();
+  // await fileExists();
+  // await sizeOf();
+  // await removeFile();
+  // await fileExists();
+  // await clearBucket();
+  // await listFiles();
+  // await deleteBucket();
+  // await listBuckets();
 
-  await cleanup();
+  // await cleanup();
 }
 
 run();

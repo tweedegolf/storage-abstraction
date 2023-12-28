@@ -257,7 +257,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     let { start } = options;
     const { end } = options;
-    let range = "bytes";
+    let range = `bytes=${start}-${end}`;
     if (typeof start === "undefined") {
       start = 0;
       range = `${range}=0-${end}`;

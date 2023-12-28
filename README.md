@@ -1041,7 +1041,7 @@ After you've finished your adapter module you need to register it, this requires
 
 If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that these tests require that the credentials allow to create, delete and list buckets.
 
-You can run tests per storage type using one of these commands, see also the file `package.json`:
+You can run the Jasmine tests per storage type using one of the following commands:
 
 ```bash
 # test local disk
@@ -1054,21 +1054,21 @@ npm run test-s3
 npm run test-b2
 ```
 
-To run a generic Jasmine test that uses local storage and does not require any credentials use this command:
+As you can see in the file `package.json`, the command sets the `type` environment variable which is read by Jasmine.
 
-`npm run test-jasmine`
-
-To run all tests:
+To run all Jasmine tests consecutively:
 
 ```bash
 npm run test-all
 ```
 
-You can find some additional non-Jasmine tests in the file `tests/test.ts`. You can test a single type of storage or run all tests, just open the file and uncomment you want to run and:
+You can find some additional non-Jasmine tests in the file `tests/test.ts`. First select which type of storage you want to test, then uncomment the API calls you want to test, and finally run:
 
 `npm test`
 
 ## Example application
+
+> NOTE: not yet update to API 2.0!
 
 A simple application that shows how you can use the storage abstraction package can be found in [this repository](https://github.com/tweedegolf/storage-abstraction-example). It uses and Ts.ED and TypeORM and it consists of both a backend and a frontend.
 
