@@ -17,13 +17,21 @@ function colorLog(s: string): string {
   return `\x1b[96m [${s}]\x1b[0m`;
 }
 
+const types = [
+  StorageType.LOCAL, // 0
+  StorageType.S3, // 1
+  StorageType.B2, // 2
+  StorageType.GCS, // 3
+  StorageType.AZURE, // 4
+  StorageType.MINIO, // 5
+  "S3-Cubbit", // 6
+  "S3-Cloudflare-R2", // 7
+  "S3-Backblaze-B2", // 8
+];
+
 async function init() {
-  // const config = getConfig(StorageType.LOCAL); // select the type of storage you want to test
-  // const config = getConfig(StorageType.S3); // select the type of storage you want to test
-  const config = getConfig("S3-Cubbit"); // Cubbit
-  // const config = getConfig("S3-R2"); // CloudFlare R2
-  // const config = getConfig("S3-B2"); // Backblaze B2 S3-compatible
-  storage = new Storage(config);
+  // select the type of storage you want to test
+  storage = new Storage(getConfig(types[1]));
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
 
@@ -132,6 +140,39 @@ async function getFileAsStreamPartial() {
   }
 }
 
+async function getFileAsStreamPartial2() {
+  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg", {
+    end: 2000,
+  });
+  console.log(colorLog("getFileAsStream"), error);
+  if (value !== null) {
+    const filePath = path.join(
+      process.cwd(),
+      "tests",
+      "test_directory",
+      `test-${storage.getType()}-partial2.jpg`
+    );
+    const writeStream = fs.createWriteStream(filePath);
+    await saveFile(value, writeStream);
+  }
+}
+async function getFileAsStreamPartial3() {
+  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg", {
+    start: 2000,
+  });
+  console.log(colorLog("getFileAsStream"), error);
+  if (value !== null) {
+    const filePath = path.join(
+      process.cwd(),
+      "tests",
+      "test_directory",
+      `test-${storage.getType()}-partial3.jpg`
+    );
+    const writeStream = fs.createWriteStream(filePath);
+    await saveFile(value, writeStream);
+  }
+}
+
 async function fileExists() {
   const r = await storage.fileExists(newBucketName2, "image1-path.jpg");
   console.log(colorLog("fileExists"), r);
@@ -182,17 +223,19 @@ async function run() {
   // await listFiles();
   await getFileAsStream();
   await getFileAsStreamPartial();
+  await getFileAsStreamPartial2();
+  await getFileAsStreamPartial3();
 
-  process.exit();
+  // process.exit();
 
-  await fileExists();
-  await sizeOf();
-  await removeFile();
-  await fileExists();
-  await clearBucket();
-  await listFiles();
-  await deleteBucket();
-  await listBuckets();
+  // await fileExists();
+  // await sizeOf();
+  // await removeFile();
+  // await fileExists();
+  // await clearBucket();
+  // await listFiles();
+  // await deleteBucket();
+  // await listBuckets();
 
   // await cleanup();
 }

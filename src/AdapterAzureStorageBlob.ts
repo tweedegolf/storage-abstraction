@@ -90,7 +90,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: StreamOptions = { start: 0 }
+    options?: StreamOptions
   ): Promise<ResultObjectStream> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
@@ -105,13 +105,20 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
           error: `File ${fileName} could not be found in bucket ${bucketName}`,
         };
       }
-      const offset = options.start;
-      let count: number = options.end;
-      if (typeof count !== "undefined") {
-        count = count - offset;
+      const { start, end } = options;
+      let offset: number;
+      let count: number;
+      if (typeof start !== "undefined") {
+        offset = start;
+      } else {
+        offset = 0;
+      }
+      if (typeof end !== "undefined") {
+        count = end - offset;
       }
       delete options.start;
       delete options.end;
+      // console.log(offset, count, options);
 
       try {
         const stream = await file.download(offset, count, options as object);

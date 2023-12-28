@@ -27,7 +27,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION,
     };
-  } else if (t === "S3-R2") {
+  } else if (t === "S3-Cloudflare-R2") {
     config = {
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,
@@ -35,7 +35,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_ACCESS_KEY_ID,
     };
-  } else if (t === "S3-B2") {
+  } else if (t === "S3-Backblaze-B2") {
     config = {
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,
