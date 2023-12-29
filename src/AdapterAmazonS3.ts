@@ -13,8 +13,10 @@ import {
   ListBucketsCommand,
   ListObjectVersionsCommand,
   ListObjectsCommand,
+  ObjectVersion,
   PutObjectCommand,
   S3Client,
+  _Object,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
@@ -61,6 +63,42 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         delete o.secretAccessKey;
         this._client = new S3Client(o);
       }
+    }
+  }
+
+  private async getFiles(
+    name: string,
+    maxFiles: number = 10000
+  ): Promise<{ value: Array<_Object> | null; error: string | null }> {
+    try {
+      const input = {
+        Bucket: name,
+        MaxKeys: maxFiles,
+      };
+      const command = new ListObjectsCommand(input);
+      const { Contents } = await this.storage.send(command);
+      // console.log("Contents", Contents);
+      return { value: Contents, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  private async getFileVersions(
+    name: string,
+    maxFiles: number = 10000
+  ): Promise<{ value: Array<ObjectVersion> | null; error: string | null }> {
+    try {
+      const input = {
+        Bucket: name,
+        MaxKeys: maxFiles,
+      };
+      const command = new ListObjectVersionsCommand(input);
+      const { Versions } = await this.storage.send(command);
+      // console.log("Versions", Versions);
+      return { value: Versions, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
   }
 
@@ -163,101 +201,49 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  private async removeFiles(name: string): Promise<ResultObject> {
-    try {
-      const input1 = {
-        Bucket: name,
-        MaxKeys: 10000,
-      };
-      const command = new ListObjectsCommand(input1);
-      const { Contents } = await this.storage.send(command);
-      console.log("Contents", Contents);
-      if (typeof Contents === "undefined") {
-        return { value: null, error: "no contents" };
-      }
-      if (Contents.length === 0) {
-        return { value: "ok", error: null };
-      }
-
-      try {
-        const input2 = {
-          Bucket: name,
-          Delete: {
-            Objects: Contents.map((value) => ({ Key: value.Key })),
-            Quiet: false,
-          },
-        };
-        const command2 = new DeleteObjectsCommand(input2);
-        await this.storage.send(command2);
-        return { value: "ok", error: null };
-      } catch (e) {
-        return { value: null, error: e.message };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  private async removeFileVersions(name: string): Promise<ResultObject> {
-    try {
-      const input1 = {
-        Bucket: name,
-        MaxKeys: 10000,
-      };
-      const command = new ListObjectVersionsCommand(input1);
-      const { Versions } = await this.storage.send(command);
-      console.log("Versions", Versions);
-      if (typeof Versions === "undefined") {
-        return { value: null, error: "no versions" };
-      }
-      if (Versions.length === 0) {
-        return { value: "ok", error: null };
-      }
-
-      try {
-        const input2 = {
-          Bucket: name,
-          Delete: {
-            Objects: Versions.map((value) => ({
-              Key: value.Key,
-              VersionId: value.VersionId,
-            })),
-            Quiet: false,
-          },
-        };
-        const command2 = new DeleteObjectsCommand(input2);
-        await this.storage.send(command2);
-        return { value: "ok", error: null };
-      } catch (e) {
-        return { value: null, error: e.message };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
   public async clearBucket(name: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
 
+    let objects: Array<{ Key: string; VersionId?: string }>;
+
     // first try to remove the versioned files
-    const { value, error } = await this.removeFileVersions(name);
+    const { value, error } = await this.getFileVersions(name);
     if (error === "no versions" || error === "ListObjectVersions not implemented") {
       // if that fails remove non-versioned files
-      const { value, error } = await this.removeFiles(name);
+      const { value, error } = await this.getFiles(name);
       if (error === "no contents") {
         return { value: null, error: "Could not remove files" };
       } else if (error !== null) {
         return { value: null, error };
-      } else {
-        return { value, error: null };
+      } else if (typeof value !== "undefined") {
+        objects = value.map((value) => ({ Key: value.Key }));
       }
     } else if (error !== null) {
       return { value: null, error };
-    } else {
-      return { value, error: null };
+    } else if (typeof value !== "undefined") {
+      objects = value.map((value) => ({ Key: value.Key, VersionId: value.VersionId }));
     }
+
+    if (typeof objects !== "undefined") {
+      try {
+        const input = {
+          Bucket: name,
+          Delete: {
+            Objects: objects,
+            Quiet: false,
+          },
+        };
+        const command = new DeleteObjectsCommand(input);
+        await this.storage.send(command);
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    }
+
+    return { value: "ok", error: null };
   }
 
   public async deleteBucket(name: string): Promise<ResultObject> {
@@ -360,17 +346,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     try {
-      const input = {
-        Bucket: bucketName,
-        MaxKeys: maxFiles,
-      };
-      const command = new ListObjectsCommand(input);
-      const response = await this.storage.send(command);
-      const { Contents } = response;
-      if (!Contents) {
+      const { value, error } = await this.getFiles(bucketName, maxFiles);
+      if (error !== null) {
+        return { value: null, error };
+      }
+      if (typeof value === "undefined") {
         return { value: [], error: null };
       }
-      return { value: Contents.map((o) => [o.Key, o.Size]), error: null };
+      return { value: value.map((o) => [o.Key, o.Size]), error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }

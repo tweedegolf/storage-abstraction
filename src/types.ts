@@ -332,7 +332,7 @@ export type ResultObjectBoolean = {
 
 export type ResultObjectFiles = {
   error: string | null;
-  value: Array<[string, number]> | null;
+  value: Array<[string, number]> | null; // file name, file size
 };
 
 export type ResultObjectBuckets = {

@@ -30,7 +30,7 @@ const types = [
 
 async function init() {
   // select the type of storage you want to test
-  storage = new Storage(getConfig(types[7]));
+  storage = new Storage(getConfig(types[8]));
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
 
@@ -211,10 +211,10 @@ async function run() {
   // const r = await storage.serviceClient.config.region();
   // console.log(r);
 
-  // const buckets = await listBuckets();
-  // if (buckets !== null && buckets.length > 0) {
-  //   await deleteAllBuckets(buckets, storage);
-  // }
+  const buckets = await listBuckets();
+  if (buckets !== null && buckets.length > 0) {
+    await deleteAllBuckets(buckets, storage);
+  }
 
   // await bucketExists();
   await createBucket();
