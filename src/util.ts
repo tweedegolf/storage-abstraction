@@ -126,7 +126,7 @@ export const validateName = (name: string): string => {
     return 'Please do not use the string "null" as bucket name';
   }
   if (typeof name === "undefined") {
-    return "Bucket name can no be `undefined`";
+    return "Bucket name can not be `undefined`";
   }
   if (name === "undefined") {
     return 'Please do not use the string "undefined" as bucket name';

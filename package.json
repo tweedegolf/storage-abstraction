@@ -52,6 +52,7 @@
     "testAzure": "ts-node ./tests_local/testAzure.ts",
     "testCubbit": "ts-node ./tests_local/testCubbit.ts",
     "testLocal": "ts-node ./tests_local/testLocal.ts",
+    "testBucketName": "ts-node ./tests_local/testBucketName.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
     "copy-readme": "cp ./README.md ./publish",
