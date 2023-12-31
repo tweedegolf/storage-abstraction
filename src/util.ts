@@ -116,26 +116,26 @@ export const isBlankString = (str: string): boolean => {
 /**
  * @param {string} name
  *
- * Checks if the value of the name is not null or undefined
+ * Checks if the value of the name is not null, undefined or an empty string
  */
-// export const validateName = (name: string): string => {
-//   if (name === null) {
-//     return "Can not use `null` as bucket name";
-//   }
-//   if (name === "null") {
-//     return 'Can not use "null" as bucket name';
-//   }
-//   if (name === "undefined") {
-//     return 'Can not use "undefined" as bucket name';
-//   }
-//   if (name === "" || typeof name === "undefined") {
-//     return "Please provide a bucket name";
-//   }
-//   if (name.indexOf(" ") !== -1) {
-//     return "Please provide a valid bucket name";
-//   }
-//   return null;
-// };
+export const validateName = (name: string): string => {
+  if (name === null) {
+    return "Bucket name can not be `null`";
+  }
+  if (name === "null") {
+    return 'Please do not use the string "null" as bucket name';
+  }
+  if (typeof name === "undefined") {
+    return "Bucket name can no be `undefined`";
+  }
+  if (name === "undefined") {
+    return 'Please do not use the string "undefined" as bucket name';
+  }
+  if (isBlankString(name)) {
+    return "Bucket name can not be an empty string";
+  }
+  return null;
+};
 
 /*
 // not in use, keep for reference

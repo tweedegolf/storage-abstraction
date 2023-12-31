@@ -20,7 +20,7 @@ import {
   StreamOptions,
 } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { isBlankString, parseMode } from "./util";
+import { parseMode, validateName } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
@@ -141,8 +141,9 @@ export class AdapterLocal extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    if (isBlankString(name)) {
-      return { value: null, error: "bucket name can not be an empty string" };
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {

@@ -14,6 +14,7 @@ import {
   ResultObjectStream,
   StreamOptions,
 } from "./types";
+import { validateName } from "./util";
 
 /**
  * You can use this template as a starting point for your own functional adapter. You are
@@ -30,6 +31,13 @@ const getConfigError = (): string | null => null;
 const getServiceClient = (): any => "instance of your 3-rd party service client"; // eslint-disable-line
 
 const createBucket = async (name: string): Promise<ResultObject> => {
+  // Usually your cloud service will check if a valid bucket name has been provided.
+  // However, in general `null`, `undefined` and empty strings are not allowed (nor desirable)
+  // so you may want to perform this check locally using the validateName function in ./src/util.ts
+  const error = validateName(name);
+  if (error !== null) {
+    return { value: null, error };
+  }
   return { value: "ok", error: null };
 };
 

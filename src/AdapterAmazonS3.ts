@@ -35,6 +35,7 @@ import {
   AdapterConfigS3,
   StreamOptions,
 } from "./types";
+import { validateName } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
@@ -164,6 +165,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {

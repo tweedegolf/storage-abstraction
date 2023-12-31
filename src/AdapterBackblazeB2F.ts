@@ -18,6 +18,7 @@ import {
   Options,
   StreamOptions,
 } from "./types";
+import { validateName } from "./util";
 
 const getConfiguration = (): AdapterConfig => {
   return {
@@ -34,6 +35,10 @@ const getConfigError = (): string => "string";
 const getServiceClient = (): any => {}; // eslint-disable-line
 
 const createBucket = async (name: string): Promise<ResultObject> => {
+  const error = validateName(name);
+  if (error !== null) {
+    return { value: null, error };
+  }
   return { value: "ok", error: null };
 };
 

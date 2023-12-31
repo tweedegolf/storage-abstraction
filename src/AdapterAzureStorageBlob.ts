@@ -24,6 +24,7 @@ import {
   Options,
   StreamOptions,
 } from "./types";
+import { validateName } from "./util";
 
 export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
@@ -165,6 +166,11 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   public async createBucket(name: string, options?: object): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {

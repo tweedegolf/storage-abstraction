@@ -17,6 +17,7 @@ import {
   Options,
   StreamOptions,
 } from "./types";
+import { validateName } from "./util";
 
 export class AdapterGoogleCloudStorage extends AbstractAdapter {
   protected _type = StorageType.GCS;
@@ -166,6 +167,11 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {
