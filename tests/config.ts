@@ -67,6 +67,15 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
       accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
     };
+  } else if (t === StorageType.MINIO) {
+    config = {
+      type: StorageType.MINIO,
+      endpoint: process.env.MINIO_ENDPOINT,
+      port: process.env.MINIO_PORT,
+      useSSL: process.env.MINIO_USE_SSL,
+      accessKeyId: process.env.MINIO_ACCESS_KEY,
+      secretAccessKey: process.env.MINIO_SECRET_KEY,
+    };
   } else {
     // const p = path.join(process.cwd(), "tests", "test_directory");
     const p = path.join("tests", "test_directory");

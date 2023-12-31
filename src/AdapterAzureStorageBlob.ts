@@ -33,7 +33,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   protected _client: BlobServiceClient;
   private sharedKeyCredential: StorageSharedKeyCredential;
 
-  constructor(config?: string | AdapterConfigAzure) {
+  constructor(config: string | AdapterConfigAzure) {
     super(config);
     if (this._configError === null) {
       if (

@@ -1,34 +1,20 @@
-/*
 import * as Minio from "minio";
 import fs from "fs";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { AdapterConfig, StorageType, ConfigMinioS3 } from "./types";
+import { AdapterConfig, StorageType } from "./types";
 import { parseUrl } from "./util";
 import { MakeBucketOpt } from "minio";
 
-// WIP
 export class AdapterMinio extends AbstractAdapter {
-  protected type = StorageType.MINIO;
-  protected storage: Minio.Client;
-  protected config: ConfigMinioS3;
-  private bucketNames: string[] = [];
-  private region: string = "";
+  protected _type = StorageType.MINIO;
+  protected _client: Minio.Client;
+  protected _configError: string | null = null;
+  protected _config: AdapterConfig;
 
   constructor(config: string | AdapterConfig) {
-    super();
-    this.config = this.parseConfig(config as ConfigMinioS3);
-    if (typeof this.config.bucketName !== "undefined") {
-      const msg = this.validateName(this.config.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this.config.bucketName;
-    }
-    if (typeof (this.config as ConfigMinioS3).region !== "undefined") {
-      this.region = (this.config as ConfigMinioS3).region;
-    }
-    this.storage = new Minio.Client({
+    super(config);
+    this._client = new Minio.Client({
       region: "auto",
       endPoint: this.config.endPoint,
       port: 9001,
@@ -295,5 +281,3 @@ export class AdapterMinio extends AbstractAdapter {
       .catch(() => false);
   }
 }
-
-*/

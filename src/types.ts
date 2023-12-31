@@ -233,6 +233,7 @@ export interface AdapterConfigB2 extends AdapterConfig {
   applicationKey: string;
   applicationKeyId: string;
 }
+export interface AdapterMinIO extends AdapterConfig {}
 
 export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;

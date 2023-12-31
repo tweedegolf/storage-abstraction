@@ -43,7 +43,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   protected _configError: string | null = null;
   protected _client: S3Client;
 
-  constructor(config?: string | AdapterConfig) {
+  constructor(config: string | AdapterConfig) {
     super(config);
     if (this._configError === null) {
       if (this.config.accessKeyId && this.config.secretAccessKey) {

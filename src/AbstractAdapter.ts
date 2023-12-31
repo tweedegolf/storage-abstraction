@@ -21,7 +21,7 @@ export abstract class AbstractAdapter implements IStorage {
   protected _configError: string | null = null;
   protected _client: any = null; // eslint-disable-line
 
-  constructor(config?: string | AdapterConfig) {
+  constructor(config: string | AdapterConfig) {
     if (typeof config === "string") {
       const { value, error } = parseUrl(config);
       if (error) {

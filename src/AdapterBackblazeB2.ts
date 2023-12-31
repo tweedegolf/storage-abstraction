@@ -32,7 +32,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   private authorized: boolean = false;
   private versioning: boolean = true;
 
-  constructor(config?: string | AdapterConfigB2) {
+  constructor(config: string | AdapterConfigB2) {
     super(config);
     if (this._configError === null) {
       if (

@@ -18,7 +18,7 @@ import {
   Options,
   StreamOptions,
 } from "./types";
-import { validateName } from "./util";
+import { parseUrl, validateName } from "./util";
 
 const getConfiguration = (): AdapterConfig => {
   return {
@@ -142,12 +142,22 @@ const adapter: IStorage = {
   fileExists,
 };
 
-const createAdapter = (config: AdapterConfig): IStorage => {
+const createAdapter = (config: AdapterConfig | string): IStorage => {
   console.log("create functional adapter");
+
+  let configError = null;
+  if (typeof config === "string") {
+    const { value, error } = parseUrl(config);
+    if (error) {
+      configError = `[configError] ${error}`;
+    }
+    config = value;
+  }
+
   const state = {
     applicationKeyId: config.applicationKeyId,
     applicationKey: config.applicationKey,
-    bucketName: "",
+    configError,
   };
 
   return adapter;
