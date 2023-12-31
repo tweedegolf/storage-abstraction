@@ -30,7 +30,7 @@ const types = [
 
 async function init() {
   // select the type of storage you want to test
-  storage = new Storage(getConfig(types[8]));
+  storage = new Storage(getConfig(types[3]));
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
 
@@ -217,16 +217,16 @@ async function run() {
   }
 
   // await bucketExists();
-  await createBucket();
+  // await createBucket();
   // await listBuckets();
 
-  await addFileFromPath();
-  await addFileFromBuffer();
-  await addFileFromStream();
-  await addFileFromPath();
-  await addFileFromBuffer();
-  await addFileFromStream();
-  await listFiles();
+  // await addFileFromPath();
+  // await addFileFromBuffer();
+  // await addFileFromStream();
+  // await addFileFromPath();
+  // await addFileFromBuffer();
+  // await addFileFromStream();
+  // await listFiles();
 
   // await getFileAsStream();
   // await getFileAsStreamPartial();
@@ -238,10 +238,12 @@ async function run() {
   // await fileExists();
   // await sizeOf();
   // await removeFile();
+  // await removeFile();
+  // await removeFile();
   // await fileExists();
-  await clearBucket();
+  // await clearBucket();
   // await listFiles();
-  await deleteBucket();
+  // await deleteBucket();
   // await listBuckets();
 
   // await cleanup();

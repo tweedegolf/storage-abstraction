@@ -81,6 +81,11 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       const [exists] = await file.exists();
       if (exists) {
         return { value: file.createReadStream(options as object), error: null };
+      } else {
+        return {
+          value: null,
+          error: `File '${fileName}' does not exist in bucket '${bucketName}'.`,
+        };
       }
     } catch (e) {
       return {
@@ -96,7 +101,13 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      await this.storage.bucket(bucketName).file(fileName).delete();
+      const file = this.storage.bucket(bucketName).file(fileName);
+      const [exists] = await file.exists();
+      if (exists) {
+        await this.storage.bucket(bucketName).file(fileName).delete();
+        return { value: "ok", error: null };
+      }
+      // no fail if the file does not exist
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };

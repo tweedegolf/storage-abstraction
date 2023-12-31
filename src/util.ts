@@ -109,24 +109,33 @@ export const getProtocol = (url: string): string => {
  *
  * Checks if the value of the name is not null or undefined
  */
-export const validateName = (name: string): string => {
-  if (name === null) {
-    return "Can not use `null` as bucket name";
-  }
-  if (name === "null") {
-    return 'Can not use "null" as bucket name';
-  }
-  if (name === "undefined") {
-    return 'Can not use "undefined" as bucket name';
-  }
-  if (name === "" || typeof name === "undefined") {
-    return "Please provide a bucket name";
-  }
-  if (name.indexOf(" ") !== -1) {
-    return "Please provide a valid bucket name";
-  }
-  return null;
+export const isBlankString = (str: string): boolean => {
+  return !str || /^\s*$/.test(str);
 };
+
+/**
+ * @param {string} name
+ *
+ * Checks if the value of the name is not null or undefined
+ */
+// export const validateName = (name: string): string => {
+//   if (name === null) {
+//     return "Can not use `null` as bucket name";
+//   }
+//   if (name === "null") {
+//     return 'Can not use "null" as bucket name';
+//   }
+//   if (name === "undefined") {
+//     return 'Can not use "undefined" as bucket name';
+//   }
+//   if (name === "" || typeof name === "undefined") {
+//     return "Please provide a bucket name";
+//   }
+//   if (name.indexOf(" ") !== -1) {
+//     return "Please provide a valid bucket name";
+//   }
+//   return null;
+// };
 
 /*
 // not in use, keep for reference

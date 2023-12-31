@@ -4,7 +4,7 @@ import path from "path";
 import { rimraf } from "rimraf";
 import dotenv from "dotenv";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, StorageType } from "../src/types";
+import { AdapterConfig, AdapterConfigAzure, StorageType } from "../src/types";
 import { saveFile } from "./util";
 import { Readable } from "stream";
 
@@ -45,9 +45,9 @@ if (type === StorageType.LOCAL) {
   config = {
     type,
     bucketName: process.env.BUCKET_NAME,
-    storageAccount: process.env.AZURE_STORAGE_ACCOUNT_NAME,
-    accessKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
-  };
+    accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+    accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
+  } as AdapterConfigAzure;
 } else {
   config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;
 }
@@ -89,9 +89,9 @@ describe(`[testing ${type} storage]`, async () => {
     try {
       storage = new Storage(config);
       bucketName = storage.config.bucketName || newBucketName1;
-      console.log("beforeAll");
+      // console.log("beforeAll");
       console.log(storage.config);
-      console.log("bucketName", bucketName);
+      // console.log("bucketName", bucketName);
     } catch (e) {
       console.error(e);
     }
@@ -108,7 +108,6 @@ describe(`[testing ${type} storage]`, async () => {
     //   preserveRoot: false,
     // });
   });
-
   let bucketExists: boolean;
   it("(1) check if bucket exists", async () => {
     const { value, error } = await storage.bucketExists(bucketName);
@@ -206,8 +205,11 @@ describe(`[testing ${type} storage]`, async () => {
 
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
-    expect(value).toBeNull();
-    expect(error).not.toBeNull();
+    // remove file does not fail if the file doesn't exist
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+    // expect(value).toBeNull();
+    // expect(error).not.toBeNull();
   });
 
   it("(11) list files 2", async () => {
@@ -228,6 +230,7 @@ describe(`[testing ${type} storage]`, async () => {
     const { value, error } = await storage.getFileAsStream(bucketName, "image2.jpg");
     expect(value).toBeNull();
     expect(error).not.toBeNull();
+    // console.log(error);
   });
 
   it("(14) get readable stream and save file", async () => {

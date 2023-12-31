@@ -22,7 +22,6 @@ import {
   AdapterConfigB2,
   StreamOptions,
 } from "./types";
-import { validateName } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
@@ -315,6 +314,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     const index = files.findIndex(({ name }) => name === fileName);
     if (index === -1) {
       // return { value: null, error: `Could not find file "${fileName}"` };
+      // no fail if the file does not exist
       return { value: "ok", error: null };
     }
 
@@ -358,11 +358,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
-    }
-
-    const msg = validateName(name);
-    if (msg !== null) {
-      return { value: null, error: msg };
     }
 
     if (typeof options.bucketType === "undefined") {

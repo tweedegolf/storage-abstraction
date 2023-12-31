@@ -20,7 +20,7 @@ import {
   StreamOptions,
 } from "./types";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseMode, validateName } from "./util";
+import { isBlankString, parseMode } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
@@ -141,9 +141,8 @@ export class AdapterLocal extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    const msg = validateName(name);
-    if (msg !== null) {
-      return { value: null, error: msg };
+    if (isBlankString(name)) {
+      return { value: null, error: "bucket name can not be an empty string" };
     }
 
     try {
@@ -301,9 +300,12 @@ export class AdapterLocal extends AbstractAdapter {
     }
 
     try {
-      await fs.promises.access(path.join(this._config.directory, bucketName));
+      const p = path.join(this._config.directory, bucketName);
+      // const r = fs.existsSync(p);
+      const m = await fs.promises.stat(p);
       return { value: true, error: null };
     } catch (e) {
+      console.log(e);
       return { value: false, error: null };
     }
   }

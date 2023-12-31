@@ -16,7 +16,7 @@ import {
   ResultObjectStream,
   StreamOptions,
 } from "./types";
-import { parseUrl, validateName } from "./util";
+import { parseUrl } from "./util";
 
 // stub of a 3rd-party service client library to silence ts-lint
 // see the last line of the constructor below
@@ -111,17 +111,10 @@ export class AdapterTemplate extends AbstractAdapter {
   }
 
   async createBucket(name: string): Promise<ResultObject> {
-    // You can use the validateName method of AbstractStorage to check for
-    // invalid entries or write your own code to do it.
-    // The function validateName is defined in ./util.js
-    const msg = validateName(name);
-    if (msg !== null) {
-      return Promise.reject(msg);
-    }
-
-    // Create bucket, if bucket has been created successfully you could
-    // add it to this.bucketNames so you don't have to check its existence
-    // again.
+    // Usually your cloud service will check if a valid bucket name has been provided:
+    // null, undefined and an empty string are not valid names in most cases
+    // However, you may want to add your own validate method. In ./src/util you'll find
+    // the function isBlankString that checks for empty strings.
     return { value: "ok", error: null };
   }
 

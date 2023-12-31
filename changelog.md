@@ -42,7 +42,7 @@
 - No more magic behind the screen; `init` and `selectBucket` have been removed.
 - No more local state: the storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.
 - The storage instance will also no longer hold a reference to all available buckets; a call to `listBuckets` will access the cloud storage service every time it is called; this is handy in case another process or user has created a new bucket.
-- ~~`validateName` will not only perform a local check, it will also check if the name is valid and/or not taken at the cloud storage service.~~ -> name is validated when you create a bucket
+- ~~`validateName` will not only perform a local check, it will also check if the name is valid and/or not taken at the cloud storage service.~~ -> name is validated by the cloud service when you create a bucket
 - `createBucket` resolves with an error when that bucket already exists
 - ~~`deleteBucket` has been renamed to `removeBucket` (analogue to `removeFile`)~~
 - `removeFile` has an additional optional boolean argument `allVersions`; if set to true all version of the specified file will be removed. Default: false
