@@ -28,9 +28,15 @@ const types = [
   "S3-Backblaze-B2", // 8
 ];
 
+let index = 0;
+// console.log(process.argv);
+if (process.argv[2]) {
+  index = parseInt(process.argv[2], 10);
+}
+
 async function init() {
-  // select the type of storage you want to test
-  storage = new Storage(getConfig(types[3]));
+  // select the type of storage you want to test or pass it on the command line
+  storage = new Storage(getConfig(types[index]));
   bucketName = storage.config.bucketName || newBucketName1;
   console.log(colorLog("init"), storage.config);
 

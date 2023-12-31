@@ -1046,12 +1046,42 @@ You can run the Jasmine tests per storage type using one of the following comman
 ```bash
 # test local disk
 npm run test-local
-# test Google Cloud Storage
-npm run test-gcs
+# or
+npm run test-jasmine 0
+
 # test Amazon S3
 npm run test-s3
+# or
+npm run test-jasmine 1
+
 # test Backblaze B2
 npm run test-b2
+# or
+npm run test-jasmine 2
+
+# test Google Cloud Storage
+npm run test-gcs
+# or
+npm run test-jasmine 3
+
+# test Azure Blob Storage
+npm run test-azure
+# or
+npm run test-jasmine 4
+
+# test MinIO
+npm run test-minio
+# or
+npm run test-jasmine 5
+
+# test Cubbit
+npm run test-jasmine 6
+
+# test Cloudflare R2
+npm run test-jasmine 7
+
+# test Backblaze B2 S3 API
+npm run test-jasmine 8
 ```
 
 As you can see in the file `package.json`, the command sets the `type` environment variable which is read by Jasmine.

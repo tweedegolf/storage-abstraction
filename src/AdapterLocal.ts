@@ -306,7 +306,8 @@ export class AdapterLocal extends AbstractAdapter {
       const m = await fs.promises.stat(p);
       return { value: true, error: null };
     } catch (e) {
-      console.log(e);
+      // console.log(e);
+      // error only means that the directory does not exist
       return { value: false, error: null };
     }
   }

@@ -1,56 +1,31 @@
 import "jasmine";
 import fs from "fs";
 import path from "path";
-import { rimraf } from "rimraf";
-import dotenv from "dotenv";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, AdapterConfigAzure, StorageType } from "../src/types";
+import { AdapterConfig, StorageType } from "../src/types";
 import { saveFile } from "./util";
 import { Readable } from "stream";
+import { getConfig } from "./config";
 
-dotenv.config();
+const types = [
+  StorageType.LOCAL, // 0
+  StorageType.S3, // 1
+  StorageType.B2, // 2
+  StorageType.GCS, // 3
+  StorageType.AZURE, // 4
+  StorageType.MINIO, // 5
+  "S3-Cubbit", // 6
+  "S3-Cloudflare-R2", // 7
+  "S3-Backblaze-B2", // 8
+];
 
-const type = process.env.TYPE || StorageType.LOCAL;
-
-let config: AdapterConfig | string = "";
-if (type === StorageType.LOCAL) {
-  config = {
-    type,
-    bucketName: process.env.BUCKET_NAME,
-    directory: process.env.LOCAL_DIRECTORY,
-  };
-} else if (type === StorageType.GCS) {
-  config = {
-    type: StorageType.GCS,
-    bucketName: process.env.BUCKET_NAME,
-    projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
-    keyFilename: process.env.GOOGLE_CLOUD_KEY_FILENAME,
-  };
-} else if (type === StorageType.S3) {
-  config = {
-    type,
-    bucketName: process.env.BUCKET_NAME,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-  };
-} else if (type === StorageType.B2) {
-  config = {
-    type,
-    bucketName: process.env.BUCKET_NAME,
-    applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
-    applicationKey: process.env.B2_APPLICATION_KEY,
-  };
-} else if (type === StorageType.AZURE) {
-  config = {
-    type,
-    bucketName: process.env.BUCKET_NAME,
-    accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
-    accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
-  } as AdapterConfigAzure;
-} else {
-  config = process.env.CONFIG_URL || `local://${process.cwd()}/the-buck`;
+let index = 0;
+// console.log(process.argv);
+if (process.argv[3]) {
+  index = parseInt(process.argv[3], 10);
 }
+const config = getConfig(types[index]);
+const type = (config as AdapterConfig).type || StorageType.LOCAL;
 
 const newBucketName1 = "bucket-test-sab-1";
 const newBucketName2 = "bucket-test-sab-2";
@@ -88,7 +63,8 @@ describe(`[testing ${type} storage]`, async () => {
     }
     try {
       storage = new Storage(config);
-      bucketName = storage.config.bucketName || newBucketName1;
+      // bucketName = storage.config.bucketName || newBucketName1;
+      bucketName = newBucketName1;
       // console.log("beforeAll");
       console.log(storage.config);
       // console.log("bucketName", bucketName);
@@ -433,12 +409,30 @@ describe(`[testing ${type} storage]`, async () => {
     // S3 doesn't allow you to delete a non-empty bucket
     // if (storage.getType() !== StorageType.S3) {
     // }
+    const { value, error } = await storage.deleteBucket(newBucketName1);
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+  });
+
+  it("(32) check if bucket has been deleted", async () => {
+    const { value, error } = await storage.listBuckets();
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
+
+    if (value !== null) {
+      const buckets = value;
+      const index = buckets.indexOf(newBucketName1);
+      expect(index).toBe(-1);
+    }
+  });
+
+  it("(33) delete non-empty bucket 2", async () => {
     const { value, error } = await storage.deleteBucket(newBucketName2);
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });
 
-  it("(32) check is bucket has been deleted", async () => {
+  it("(32) check if bucket 2 has been deleted", async () => {
     const { value, error } = await storage.listBuckets();
     expect(value).not.toBeNull();
     expect(error).toBeNull();
