@@ -36,7 +36,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
   private async getFileSize(bucketName: string, fileNames: string[]): Promise<ResultObjectFiles> {
     const result: Array<[string, number]> = [];
     for (let i = 0; i < fileNames.length; i += 1) {
-      const file = this.storage.bucket(bucketName).file(fileNames[i]);
+      const file = this._client.bucket(bucketName).file(fileNames[i]);
       try {
         const [metadata] = await file.getMetadata();
         result.push([file.name, parseInt(metadata.size as string, 10)]);
@@ -51,7 +51,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     return this._config as AdapterConfigGoogle;
   }
 
-  get storage(): GoogleCloudStorage {
+  get serviceClient(): GoogleCloudStorage {
     return this._client as GoogleCloudStorage;
   }
 
@@ -61,7 +61,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const file = this.storage.bucket(bucketName).file(fileName);
+      const file = this._client.bucket(bucketName).file(fileName);
       return { value: file.publicUrl(), error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -78,7 +78,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const file = this.storage.bucket(bucketName).file(fileName);
+      const file = this._client.bucket(bucketName).file(fileName);
       const [exists] = await file.exists();
       if (exists) {
         return { value: file.createReadStream(options as object), error: null };
@@ -102,10 +102,10 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const file = this.storage.bucket(bucketName).file(fileName);
+      const file = this._client.bucket(bucketName).file(fileName);
       const [exists] = await file.exists();
       if (exists) {
-        await this.storage.bucket(bucketName).file(fileName).delete();
+        await this._client.bucket(bucketName).file(fileName).delete();
         return { value: "ok", error: null };
       }
       // no fail if the file does not exist
@@ -144,7 +144,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
         readStream = (params as FileStreamParams).stream;
       }
 
-      const file = this.storage.bucket(params.bucketName).file(params.targetPath, options);
+      const file = this._client.bucket(params.bucketName).file(params.targetPath, options);
       const writeStream = file.createWriteStream(options);
       return new Promise((resolve) => {
         readStream
@@ -164,7 +164,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
   }
 
-  public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -175,7 +175,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const bucket = this.storage.bucket(name, options);
+      const bucket = this._client.bucket(name, options);
       const [exists] = await bucket.exists();
       if (exists) {
         return { value: null, error: "bucket exists" };
@@ -186,7 +186,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      await this.storage.createBucket(name, options);
+      await this._client.createBucket(name, options);
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -199,7 +199,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      await this.storage.bucket(name).deleteFiles({ force: true });
+      await this._client.bucket(name).deleteFiles({ force: true });
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -213,7 +213,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       return { value: null, error: e.message };
     }
     try {
-      await this.storage.bucket(name).delete();
+      await this._client.bucket(name).delete();
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -226,7 +226,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const [buckets] = await this.storage.getBuckets();
+      const [buckets] = await this._client.getBuckets();
       return { value: buckets.map((b) => b.name), error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -239,7 +239,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const data = await this.storage.bucket(bucketName).getFiles();
+      const data = await this._client.bucket(bucketName).getFiles();
       const names = data[0].map((f) => f.name);
       return this.getFileSize(bucketName, names);
     } catch (e) {
@@ -253,7 +253,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const file = this.storage.bucket(bucketName).file(fileName);
+      const file = this._client.bucket(bucketName).file(fileName);
       const [metadata] = await file.getMetadata();
       return { value: parseInt(metadata.size as string, 10), error: null };
     } catch (e) {
@@ -267,7 +267,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const data = await this.storage.bucket(name).exists();
+      const data = await this._client.bucket(name).exists();
       // console.log(data);
       return { value: data[0], error: null };
     } catch (e) {
@@ -281,7 +281,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
     }
 
     try {
-      const data = await this.storage.bucket(bucketName).file(fileName).exists();
+      const data = await this._client.bucket(bucketName).file(fileName).exists();
       // console.log(data);
       return { value: data[0], error: null };
     } catch (e) {

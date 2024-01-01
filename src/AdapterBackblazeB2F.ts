@@ -34,7 +34,7 @@ const getConfigError = (): string => "string";
 
 const getServiceClient = (): any => {}; // eslint-disable-line
 
-const createBucket = async (name: string): Promise<ResultObject> => {
+const createBucket = async (name: string, options?: Options): Promise<ResultObject> => {
   const error = validateName(name);
   if (error !== null) {
     return { value: null, error };

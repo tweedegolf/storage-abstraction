@@ -79,7 +79,7 @@ export abstract class AbstractAdapter implements IStorage {
     return await this.addFile(params);
   }
 
-  // async createBucket(name: string, options?: object): Promise<ResultObject> {
+  // async createBucket(name: string, options?: Options): Promise<ResultObject> {
   //   const error = validateName(name);
   //   if (error !== null) {
   //     return { value: null, error };
@@ -93,7 +93,7 @@ export abstract class AbstractAdapter implements IStorage {
     paramObject: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject>;
 
-  abstract createBucket(name: string, options?: object): Promise<ResultObject>;
+  abstract createBucket(name: string, options?: Options): Promise<ResultObject>;
 
   abstract clearBucket(name: string): Promise<ResultObject>;
 

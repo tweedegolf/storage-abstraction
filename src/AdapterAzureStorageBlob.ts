@@ -84,7 +84,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     return this._config as AdapterConfigAzure;
   }
 
-  get storage(): BlobServiceClient {
+  get serviceClient(): BlobServiceClient {
     return this._client as BlobServiceClient;
   }
 
@@ -98,7 +98,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const file = this.storage.getContainerClient(bucketName).getBlobClient(fileName);
+      const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const exists = await file.exists();
       if (!exists) {
         return {
@@ -138,7 +138,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const file = this.storage.getContainerClient(bucketName).getBlobClient(fileName);
+      const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const exists = await file.exists();
 
       if (!exists) {
@@ -163,7 +163,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
   }
 
-  public async createBucket(name: string, options?: object): Promise<ResultObject> {
+  public async createBucket(name: string, options?: Options): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -174,7 +174,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const res = await this.storage.createContainer(name, options);
+      const res = await this._client.createContainer(name, options);
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -187,13 +187,13 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      // const containerClient = this.storage.getContainerClient(name);
+      // const containerClient = this._client.getContainerClient(name);
       // const blobs = containerClient.listBlobsFlat();
       // for await (const blob of blobs) {
       //   console.log(blob.name);
       //   await containerClient.deleteBlob(blob.name);
       // }
-      const containerClient = this.storage.getContainerClient(name);
+      const containerClient = this._client.getContainerClient(name);
       const blobs = containerClient.listBlobsByHierarchy("/");
       for await (const blob of blobs) {
         if (blob.kind === "prefix") {
@@ -211,7 +211,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
   public async deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this.clearBucket(name);
-      const del = await this.storage.deleteContainer(name);
+      const del = await this._client.deleteContainer(name);
       //console.log('deleting container: ', del);
       return { value: "ok", error: null };
     } catch (e) {
@@ -227,7 +227,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     try {
       const bucketNames = [];
       // let i = 0;
-      for await (const container of this.storage.listContainers()) {
+      for await (const container of this._client.listContainers()) {
         // console.log(`${i++} ${container.name}`);
         bucketNames.push(container.name);
       }
@@ -244,7 +244,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
 
     try {
       const files: [string, number][] = [];
-      const data = this.storage.getContainerClient(bucketName).listBlobsFlat();
+      const data = this._client.getContainerClient(bucketName).listBlobsFlat();
       for await (const blob of data) {
         if (blob.properties["ResourceType"] !== "directory") {
           files.push([blob.name, blob.properties.contentLength]);
@@ -262,7 +262,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const container = this.storage.getContainerClient(bucketName);
+      const container = this._client.getContainerClient(bucketName);
       const file = await container.getBlobClient(fileName).deleteIfExists();
       return { value: "ok", error: null };
     } catch (e) {
@@ -276,7 +276,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const blob = this.storage.getContainerClient(bucketName).getBlobClient(fileName);
+      const blob = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const length = (await blob.getProperties()).contentLength;
       return { value: length, error: null };
     } catch (e) {
@@ -290,7 +290,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const cont = this.storage.getContainerClient(name);
+      const cont = this._client.getContainerClient(name);
       const exists = await cont.exists();
       return { value: exists, error: null };
     } catch (e) {
@@ -304,7 +304,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
     }
 
     try {
-      const exists = await this.storage
+      const exists = await this._client
         .getContainerClient(bucketName)
         .getBlobClient(fileName)
         .exists();
@@ -342,7 +342,7 @@ export class AdapterAzureStorageBlob extends AbstractAdapter {
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         readStream = (params as FileStreamParams).stream;
       }
-      const file = this.storage
+      const file = this._client
         .getContainerClient(params.bucketName)
         .getBlobClient(params.targetPath)
         .getBlockBlobClient();

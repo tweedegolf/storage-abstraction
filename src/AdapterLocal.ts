@@ -136,7 +136,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async createBucket(name: string): Promise<ResultObject> {
+  async createBucket(name: string, options?: Options): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }

@@ -60,7 +60,7 @@ export interface IStorage {
    * @param options: additional options for creating a bucket such as access rights
    * @returns string or error
    */
-  createBucket(name: string, options?: object): Promise<ResultObject>;
+  createBucket(name: string, options?: Options): Promise<ResultObject>;
 
   /**
    * @param name: deletes all file in the bucket.
@@ -233,7 +233,13 @@ export interface AdapterConfigB2 extends AdapterConfig {
   applicationKey: string;
   applicationKeyId: string;
 }
-export interface AdapterMinIO extends AdapterConfig {}
+export interface AdapterConfigMinIO extends AdapterConfig {
+  endPoint: string;
+  accessKey: string;
+  secretKey: string;
+  useSSL?: boolean;
+  port?: number;
+}
 
 export interface AdapterConfigLocal extends AdapterConfig {
   directory: string;

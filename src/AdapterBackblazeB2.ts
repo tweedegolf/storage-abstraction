@@ -17,10 +17,10 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
-  BackblazeBucketOptions,
   ResultObjectKeyValue,
   AdapterConfigB2,
   StreamOptions,
+  Options,
 } from "./types";
 import { validateName } from "./util";
 
@@ -62,7 +62,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     try {
-      const { data: _data } = await this.storage.authorize();
+      const { data: _data } = await this._client.authorize();
       // console.log(_data.allowed.capabilities);
       this.authorized = true;
       return { value: "ok", error: null };
@@ -73,7 +73,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   private async getBuckets(): Promise<ResultObjectBucketsB2> {
     try {
-      const { data } = await this.storage.listBuckets();
+      const { data } = await this._client.listBuckets();
       const value = data.buckets.map(({ bucketId, bucketName }) => {
         return {
           id: bucketId,
@@ -88,7 +88,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   private async getBucket(name: string): Promise<ResultObjectBucketB2> {
     try {
-      const { data } = await this.storage.getBucket({ bucketName: name });
+      const { data } = await this._client.getBucket({ bucketName: name });
       if (data.buckets.length > 0) {
         const { bucketId, bucketName } = data.buckets[0];
         return { value: { id: bucketId, name: bucketName }, error: null };
@@ -101,7 +101,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   private async getUploadUrl(bucketId: string): Promise<ResultObjectKeyValue> {
     try {
-      const { data } = await this.storage.getUploadUrl(bucketId);
+      const { data } = await this._client.getUploadUrl(bucketId);
       if (typeof data.uploadUrl === "undefined") {
         return { value: null, error: data.message };
       }
@@ -129,9 +129,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         maxFileCount: numFiles,
       };
       if (versioning) {
-        ({ data } = await this.storage.listFileVersions(options));
+        ({ data } = await this._client.listFileVersions(options));
       } else {
-        ({ data } = await this.storage.listFileNames(options));
+        ({ data } = await this._client.listFileNames(options));
       }
       return {
         value: data.files.map(({ fileId, fileName, contentType, contentLength }) => {
@@ -173,7 +173,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return this._config as AdapterConfigB2;
   }
 
-  get storage(): B2 {
+  get serviceClient(): B2 {
     return this._client as B2;
   }
 
@@ -221,7 +221,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         buffer = Buffer.concat(buffers);
       }
 
-      const { data: _data } = await this.storage.uploadFile({
+      const { data: _data } = await this._client.uploadFile({
         uploadUrl,
         uploadAuthToken,
         fileName: targetPath,
@@ -230,7 +230,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
       // console.log(_data);
       return {
-        value: `${this.storage.downloadUrl}/file/${bucketName}/${targetPath}`,
+        value: `${this._client.downloadUrl}/file/${bucketName}/${targetPath}`,
         error: null,
       };
     } catch (e) {
@@ -269,7 +269,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     delete options.end;
 
     try {
-      const { data } = await this.storage.downloadFileById({
+      const { data } = await this._client.downloadFileById({
         fileId: file.id,
         responseType: "stream",
         axios: {
@@ -296,7 +296,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: null, error };
     }
 
-    const url = `${this.storage.downloadUrl}/file/${bucketName}/${fileName}`;
+    const url = `${this._client.downloadUrl}/file/${bucketName}/${fileName}`;
     return { value: url, error: null };
   }
 
@@ -323,7 +323,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // delete the file, if the file has more versions, delete the most recent version
       const file = files[index];
       try {
-        await this.storage.deleteFileVersion({
+        await this._client.deleteFileVersion({
           fileId: file.id,
           fileName: file.name,
         });
@@ -339,7 +339,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
             .filter((f: FileB2) => f.name === fileName)
             .map(({ id: fileId, name: fileName }) => {
               console.log(fileName, fileId);
-              return this.storage.deleteFileVersion({
+              return this._client.deleteFileVersion({
                 fileId,
                 fileName,
               });
@@ -352,10 +352,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async createBucket(
-    name: string,
-    options: BackblazeBucketOptions = { bucketType: "allPrivate" }
-  ): Promise<ResultObject> {
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -371,7 +368,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     try {
-      const { data } = await this.storage.createBucket({
+      const { data } = await this._client.createBucket({
         ...options,
         bucketName: name,
       });
@@ -398,7 +395,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     try {
       const _data = await Promise.all(
         files.map((file: FileB2) =>
-          this.storage.deleteFileVersion({
+          this._client.deleteFileVersion({
             fileId: file.id,
             fileName: file.name,
           })
@@ -423,7 +420,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     try {
-      await this.storage.deleteBucket({ bucketId: bucket.id });
+      await this._client.deleteBucket({ bucketId: bucket.id });
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };

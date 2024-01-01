@@ -77,7 +77,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         MaxKeys: maxFiles,
       };
       const command = new ListObjectsCommand(input);
-      const { Contents } = await this.storage.send(command);
+      const { Contents } = await this._client.send(command);
       // console.log("Contents", Contents);
       return { value: Contents, error: null };
     } catch (e) {
@@ -95,7 +95,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         MaxKeys: maxFiles,
       };
       const command = new ListObjectVersionsCommand(input);
-      const { Versions } = await this.storage.send(command);
+      const { Versions } = await this._client.send(command);
       // console.log("Versions", Versions);
       return { value: Versions, error: null };
     } catch (e) {
@@ -107,7 +107,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return this._config as AdapterConfigS3;
   }
 
-  get storage(): S3Client {
+  get serviceClient(): S3Client {
     return this._client as S3Client;
   }
 
@@ -137,7 +137,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Range: range,
       };
       const command = new GetObjectCommand(params);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       return { value: response.Body as Readable, error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -155,14 +155,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Key: fileName,
       };
       const command = new DeleteObjectCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
   }
 
-  public async createBucket(name: string, options: object = {}): Promise<ResultObject> {
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -177,7 +177,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Bucket: name,
       };
       const command = new HeadBucketCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       if (response.$metadata.httpStatusCode === 200) {
         return { error: "bucket exists", value: null };
       }
@@ -192,7 +192,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       const command = new CreateBucketCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       // console.log("response", response);
       if (response.$metadata.httpStatusCode === 200) {
         return { value: "ok", error: null };
@@ -242,7 +242,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           },
         };
         const command = new DeleteObjectsCommand(input);
-        await this.storage.send(command);
+        await this._client.send(command);
         return { value: "ok", error: null };
       } catch (e) {
         return { value: null, error: e.message };
@@ -259,7 +259,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Bucket: name,
       };
       const command = new DeleteBucketCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       // console.log(response);
       return { value: "ok", error: null };
     } catch (e) {
@@ -278,7 +278,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     try {
       const input = {};
       const command = new ListBucketsCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       const bucketNames = response.Buckets?.map((b) => b?.Name);
       return { value: bucketNames, error: null };
     } catch (e) {
@@ -319,7 +319,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       const command = new PutObjectCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       return this.getFileAsURL(params.bucketName, params.targetPath);
     } catch (e) {
       return { value: null, error: e.message };
@@ -333,7 +333,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       const url = await getSignedUrl(
-        this.storage,
+        this._client,
         new GetObjectCommand({
           Bucket: bucketName,
           Key: fileName,
@@ -376,7 +376,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Key: fileName,
       };
       const command = new HeadObjectCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       return { value: response.ContentLength, error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -393,7 +393,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Bucket: bucketName,
       };
       const command = new HeadBucketCommand(input);
-      await this.storage.send(command);
+      await this._client.send(command);
       return { value: true, error: null };
     } catch (e) {
       return { value: false, error: null };
@@ -411,7 +411,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Key: fileName,
       };
       const command = new HeadObjectCommand(input);
-      await this.storage.send(command);
+      await this._client.send(command);
       return { value: true, error: null };
     } catch (e) {
       return { value: false, error: null };
