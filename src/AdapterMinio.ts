@@ -36,18 +36,24 @@ export class AdapterMinio extends AbstractAdapter {
         this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
       } else {
         const useSSL = this.config.useSSL;
-        if (typeof useSSL !== "boolean") {
+        if (typeof useSSL === "undefined") {
           this.config.useSSL = true;
         }
+        if (typeof useSSL === "string") {
+          this.config.useSSL = useSSL === "true";
+        }
         const port = this.config.port;
-        if (typeof port !== "number") {
+        if (typeof port === "undefined") {
           this.config.port = useSSL ? 443 : 80;
+        }
+        if (typeof port === "string") {
+          this.config.port = parseInt(port, 10);
         }
         const region = this.config.region;
         if (typeof region !== "string") {
           this.config.region = "auto";
         }
-        // console.log(useSSL, port, region);
+        console.log(useSSL, port, region);
         const c = {
           endPoint: this.config.endPoint,
           region: this.config.region,
@@ -56,6 +62,7 @@ export class AdapterMinio extends AbstractAdapter {
           accessKey: this.config.accessKey,
           secretKey: this.config.secretKey,
         };
+        console.log(c);
         this._client = new Minio.Client(c);
       }
     }
@@ -213,7 +220,7 @@ export class AdapterMinio extends AbstractAdapter {
 
       const { bucketName, targetPath } = params;
       const response = await this._client.putObject(bucketName, targetPath, fileData, options);
-      return this.getFileAsURL(params.bucketName, params.targetPath);
+      return this.getFileAsURL(params.bucketName, params.targetPath, options);
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -224,14 +231,9 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options?: Options // e.g. { expiry: 3600 }
   ): Promise<ResultObject> {
+    const expiry = options.expiry || 7 * 24 * 60 * 60;
     try {
-      const url = await this._client.presignedUrl(
-        "GET",
-        bucketName,
-        fileName,
-        options.expiry || null,
-        options
-      );
+      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
       return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e.message };

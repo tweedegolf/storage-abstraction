@@ -70,11 +70,11 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
   } else if (t === StorageType.MINIO) {
     config = {
       type: StorageType.MINIO,
-      endpoint: process.env.MINIO_ENDPOINT,
+      endPoint: process.env.MINIO_ENDPOINT,
       port: process.env.MINIO_PORT,
       useSSL: process.env.MINIO_USE_SSL,
-      accessKeyId: process.env.MINIO_ACCESS_KEY,
-      secretAccessKey: process.env.MINIO_SECRET_KEY,
+      accessKey: process.env.MINIO_ACCESS_KEY,
+      secretKey: process.env.MINIO_SECRET_KEY,
     };
   } else {
     // const p = path.join(process.cwd(), "tests", "test_directory");
