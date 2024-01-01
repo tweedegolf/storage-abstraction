@@ -126,52 +126,20 @@ export class AdapterMinio extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
-    let objects: Array<{ Key: string; VersionId?: string }>;
-
-    const stream = this._client.listObjectsV2(name, "", true);
-    await new Promise((resolve) => {
-      stream.on("data", function (obj) {
-        console.log(obj);
-      });
-      stream.on("error", function (err) {
-        console.log(err);
-      });
-    });
-
-    if (error === "no versions" || error === "ListObjectVersions not implemented") {
-      // if that fails remove non-versioned files
-      const { value, error } = await this.getFiles(name);
-      if (error === "no contents") {
-        return { value: null, error: "Could not remove files" };
-      } else if (error !== null) {
-        return { value: null, error };
-      } else if (typeof value !== "undefined") {
-        objects = value.map((value) => ({ Key: value.Key }));
-      }
-    } else if (error !== null) {
+    const { value: files, error } = await this.listFiles(name);
+    if (error !== null) {
       return { value: null, error };
-    } else if (typeof value !== "undefined") {
-      objects = value.map((value) => ({ Key: value.Key, VersionId: value.VersionId }));
     }
 
-    if (typeof objects !== "undefined") {
-      try {
-        const input = {
-          Bucket: name,
-          Delete: {
-            Objects: objects,
-            Quiet: false,
-          },
-        };
-        const command = new DeleteObjectsCommand(input);
-        await this._client.send(command);
-        return { value: "ok", error: null };
-      } catch (e) {
-        return { value: null, error: e.message };
-      }
+    try {
+      await this._client.removeObjects(
+        name,
+        files.map((t) => t[0])
+      );
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-
-    return { value: "ok", error: null };
   }
 
   public async deleteBucket(name: string): Promise<ResultObject> {
@@ -227,14 +195,8 @@ export class AdapterMinio extends AbstractAdapter {
         fileData = (params as FileStreamParams).stream;
       }
 
-      const input = {
-        Bucket: params.bucketName,
-        Key: params.targetPath,
-        Body: fileData,
-        ...options,
-      };
-      const command = new PutObjectCommand(input);
-      const response = await this._client.send(command);
+      const { bucketName, targetPath } = params;
+      const response = await this._client.putObject(bucketName, targetPath, fileData, options);
       return this.getFileAsURL(params.bucketName, params.targetPath);
     } catch (e) {
       return { value: null, error: e.message };
@@ -244,15 +206,14 @@ export class AdapterMinio extends AbstractAdapter {
   public async getFileAsURL(
     bucketName: string,
     fileName: string,
-    options?: Options // e.g. { expiresIn: 3600 }
+    options?: Options // e.g. { expiry: 3600 }
   ): Promise<ResultObject> {
     try {
-      const url = await getSignedUrl(
-        this._client,
-        new GetObjectCommand({
-          Bucket: bucketName,
-          Key: fileName,
-        }),
+      const url = await this._client.presignedUrl(
+        "GET",
+        bucketName,
+        fileName,
+        options.expiry || null,
         options
       );
       return { value: url, error: null };
@@ -308,14 +269,10 @@ export class AdapterMinio extends AbstractAdapter {
     }
 
     try {
-      const input = {
-        Bucket: bucketName,
-      };
-      const command = new HeadBucketCommand(input);
-      await this._client.send(command);
-      return { value: true, error: null };
+      const exists = await this._client.bucketExists(bucketName);
+      return { value: exists, error: null };
     } catch (e) {
-      return { value: false, error: null };
+      return { value: null, error: e.message };
     }
   }
 
@@ -325,13 +282,8 @@ export class AdapterMinio extends AbstractAdapter {
     }
 
     try {
-      const input = {
-        Bucket: bucketName,
-        Key: fileName,
-      };
-      const command = new HeadObjectCommand(input);
-      await this._client.send(command);
-      return { value: true, error: null };
+      const stats = await this._client.statObject(bucketName, fileName);
+      return { value: stats !== null, error: null };
     } catch (e) {
       return { value: false, error: null };
     }
