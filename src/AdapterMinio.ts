@@ -53,7 +53,7 @@ export class AdapterMinio extends AbstractAdapter {
         if (typeof region !== "string") {
           this.config.region = "auto";
         }
-        console.log(useSSL, port, region);
+        // console.log(useSSL, port, region);
         const c = {
           endPoint: this.config.endPoint,
           region: this.config.region,
@@ -62,7 +62,7 @@ export class AdapterMinio extends AbstractAdapter {
           accessKey: this.config.accessKey,
           secretKey: this.config.secretKey,
         };
-        console.log(c);
+        // console.log(c);
         this._client = new Minio.Client(c);
       }
     }
@@ -85,18 +85,25 @@ export class AdapterMinio extends AbstractAdapter {
       return { error: this.configError, value: null };
     }
 
-    let offset = 0;
-    let length: number;
     const { start, end } = options;
-    if (typeof start !== "undefined" && typeof end !== "undefined") {
+    let offset: number;
+    let length: number;
+    if (typeof start !== "undefined") {
       offset = start;
-      length = end - start;
-    } else if (typeof start === "undefined") {
+    } else {
       offset = 0;
+    }
+    if (typeof end !== "undefined") {
+      length = end - offset + 1;
     }
 
     try {
-      const stream = await this._client.getPartialObject(bucketName, fileName, offset, length);
+      let stream: Readable;
+      if (typeof length !== "undefined") {
+        stream = await this._client.getPartialObject(bucketName, fileName, offset, length);
+      } else {
+        stream = await this._client.getPartialObject(bucketName, fileName, offset);
+      }
       return { value: stream, error: null };
     } catch (e) {
       return { value: null, error: e.message };
