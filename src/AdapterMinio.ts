@@ -18,7 +18,6 @@ import {
   StreamOptions,
 } from "./types";
 import { validateName } from "./util";
-import { error } from "console";
 
 export class AdapterMinio extends AbstractAdapter {
   protected _type = StorageType.MINIO;
@@ -29,18 +28,35 @@ export class AdapterMinio extends AbstractAdapter {
   constructor(config: string | AdapterConfigMinIO) {
     super(config);
     if (this._configError === null) {
-      if (this.config.accessKey && this.config.secretKey && this.config.endPoint) {
+      if (
+        this.config.accessKey === "undefined" ||
+        this.config.secretKey === "undefined" ||
+        this.config.endPoint === "undefined"
+      ) {
+        this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
+      } else {
+        const useSSL = this.config.useSSL;
+        if (typeof useSSL !== "boolean") {
+          this.config.useSSL = true;
+        }
+        const port = this.config.port;
+        if (typeof port !== "number") {
+          this.config.port = useSSL ? 443 : 80;
+        }
+        const region = this.config.region;
+        if (typeof region !== "string") {
+          this.config.region = "auto";
+        }
+        // console.log(useSSL, port, region);
         const c = {
           endPoint: this.config.endPoint,
-          port: this.config.port || 443,
-          useSSL: this.config.useSSL || true,
+          region: this.config.region,
+          port: this.config.port,
+          useSSL: this.config.useSSL,
           accessKey: this.config.accessKey,
           secretKey: this.config.secretKey,
         };
-        console.log(c);
         this._client = new Minio.Client(c);
-      } else {
-        this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
       }
     }
   }
@@ -113,7 +129,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
 
     try {
-      const { region } = options;
+      const { region } = this._config;
       await this._client.makeBucket(name, region, options as Minio.MakeBucketOpt);
       return { value: "ok", error: null };
     } catch (e) {

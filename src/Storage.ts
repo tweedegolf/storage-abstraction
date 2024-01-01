@@ -11,7 +11,6 @@ import {
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectBoolean,
-  AdapterConfigGoogle,
   Options,
   StreamOptions,
 } from "./types";
@@ -23,7 +22,7 @@ const adapterClasses = {
   gcs: "AdapterGoogleCloudStorage",
   local: "AdapterLocal",
   azure: "AdapterAzureStorageBlob",
-  minio: "AdapterMinIO",
+  minio: "AdapterMinio",
 };
 
 // or here for functional adapters
