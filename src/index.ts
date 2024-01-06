@@ -6,6 +6,7 @@ import {
   AdapterConfigAzure,
   AdapterConfigGoogle,
   AdapterConfigLocal,
+  AdapterConfigMinIO,
 } from "./types";
 
 export {
@@ -16,4 +17,5 @@ export {
   AdapterConfigAzure,
   AdapterConfigGoogle,
   AdapterConfigLocal,
+  AdapterConfigMinIO,
 };

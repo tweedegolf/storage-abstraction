@@ -10,14 +10,13 @@ import { getConfig } from "./config";
 const types = [
   StorageType.LOCAL, // 0
   StorageType.S3, // 1
-  StorageType.B2, // 2
-  StorageType.GCS, // 3
+  StorageType.GCS, // 2
+  StorageType.B2, // 3
   StorageType.AZURE, // 4
   StorageType.MINIO, // 5
   "S3-Cubbit", // 6
   "S3-Cloudflare-R2", // 7
   "S3-Backblaze-B2", // 8
-  StorageType.MINIO, // 9 -> play.min.io
 ];
 
 let index = 0;
@@ -59,7 +58,7 @@ describe(`[testing ${type} storage]`, async () => {
         .stat(path.join(process.cwd(), "tests", "test_directory"))
         .catch(async (e) => {
           await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
-          console.log(e);
+          // console.log(e);
         });
     }
     try {
