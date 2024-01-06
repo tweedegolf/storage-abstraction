@@ -1,4 +1,5 @@
 .vscode
+minio
 node_modules
 publish/dist
 publish/README.md

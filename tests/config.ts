@@ -73,6 +73,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig
       endPoint: process.env.MINIO_ENDPOINT,
       port: process.env.MINIO_PORT,
       useSSL: process.env.MINIO_USE_SSL,
+      region: process.env.MINIO_REGION,
       accessKey: process.env.MINIO_ACCESS_KEY,
       secretKey: process.env.MINIO_SECRET_KEY,
     };

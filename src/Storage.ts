@@ -43,8 +43,10 @@ const availableAdapters: string = Object.keys(adapterClasses)
 
 export class Storage implements IStorage {
   private adapter: IStorage;
+  // public ready: Promise<void>;
 
   constructor(config: string | AdapterConfig) {
+    // this.ready = this.switchAdapter(config);
     this.switchAdapter(config);
   }
 
@@ -89,6 +91,7 @@ export class Storage implements IStorage {
     return this.adapter;
   }
 
+  // public async switchAdapter(args: string | AdapterConfig): Promise<void> {
   public switchAdapter(args: string | AdapterConfig): void {
     // console.log(args);
     let type: string;
@@ -110,8 +113,11 @@ export class Storage implements IStorage {
       const name = adapterClasses[type];
       const AdapterClass = require(path.join(__dirname, name))[name];
       this.adapter = new AdapterClass(args);
+      // const AdapterClass = await import(`./${name}`);
+      // this.adapter = new AdapterClass[name](args);
     } else if (adapterFunctions[type]) {
       const name = adapterFunctions[type];
+      // const module = require(path.join(__dirname, name));
       const module = require(path.join(__dirname, name));
       this.adapter = module.createAdapter(args);
     }

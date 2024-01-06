@@ -17,6 +17,7 @@ const types = [
   "S3-Cubbit", // 6
   "S3-Cloudflare-R2", // 7
   "S3-Backblaze-B2", // 8
+  StorageType.MINIO, // 9 -> play.min.io
 ];
 
 let index = 0;
