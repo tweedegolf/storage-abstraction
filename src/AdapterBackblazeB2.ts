@@ -1,38 +1,36 @@
 import B2 from "backblaze-b2";
 import fs from "fs";
 import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  StorageType,
-  ResultObjectBoolean,
   ResultObject,
-  ResultObjectStream,
-  ResultObjectBucketsB2,
-  ResultObjectFilesB2,
-  ResultObjectBucketB2,
-  ResultObjectFileB2,
-  FileB2,
-  FileBufferParams,
-  FileStreamParams,
-  FilePathParams,
+  ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
-  ResultObjectNumber,
   ResultObjectKeyValue,
-  AdapterConfigB2,
-  StreamOptions,
-  Options,
-} from "./types";
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import {
+  AdapterConfigBackblazeB2,
+  FileB2,
+  ResultObjectBucketB2,
+  ResultObjectBucketsB2,
+  ResultObjectFileB2,
+  ResultObjectFilesB2,
+} from "./types/adapter_backblaze_b2";
 import { validateName } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
-  protected _config: AdapterConfigB2;
+  protected _config: AdapterConfigBackblazeB2;
   protected _configError: string | null = null;
   protected _client: B2 = null;
   private authorized: boolean = false;
   private versioning: boolean = true;
 
-  constructor(config: string | AdapterConfigB2) {
+  constructor(config: string | AdapterConfigBackblazeB2) {
     super(config);
     if (this._configError === null) {
       if (
@@ -169,8 +167,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // public API
 
-  get config(): AdapterConfigB2 {
-    return this._config as AdapterConfigB2;
+  get config(): AdapterConfigBackblazeB2 {
+    return this._config as AdapterConfigBackblazeB2;
   }
 
   get serviceClient(): B2 {

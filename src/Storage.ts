@@ -19,9 +19,9 @@ import {
 const adapterClasses = {
   b2: "AdapterBackblazeB2",
   s3: "AdapterAmazonS3",
-  gcs: "AdapterGoogleCloud",
+  gcs: "AdapterGoogleCloudStorage",
   local: "AdapterLocal",
-  azure: "AdapterAzureBlob",
+  azure: "AdapterAzureStorageBlob",
   minio: "AdapterMinio",
 };
 

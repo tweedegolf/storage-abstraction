@@ -1,4 +1,6 @@
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, AdapterConfig, AdapterConfigLocal } from "./types";
+import { AdapterLocal } from "./AdapterLocal";
+import { AdapterConfigLocal } from "./types/adapter_local";
+import { StorageType, AdapterConfig } from "./types/general";
 
-export { AbstractAdapter, StorageType, AdapterConfig, AdapterConfigLocal };
+export { AdapterLocal, AbstractAdapter, StorageType, AdapterConfig, AdapterConfigLocal };

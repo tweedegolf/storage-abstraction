@@ -1,4 +1,6 @@
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, AdapterConfig, AdapterConfigAzure } from "./types";
+import { AdapterAzureBlob } from "./AdapterAzureBlob";
+import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
+import { StorageType, AdapterConfig } from "./types/general";
 
-export { AbstractAdapter, StorageType, AdapterConfig, AdapterConfigAzure };
+export { AdapterAzureBlob, AbstractAdapter, StorageType, AdapterConfig, AdapterConfigAzureBlob };

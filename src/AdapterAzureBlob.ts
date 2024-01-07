@@ -1,6 +1,5 @@
 import fs from "fs";
 import { Readable } from "stream";
-import { AbstractAdapter } from "./AbstractAdapter";
 import {
   AnonymousCredential,
   BlobGenerateSasUrlOptions,
@@ -9,31 +8,28 @@ import {
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  StorageType,
-  ResultObjectStream,
   ResultObject,
+  ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
-  ResultObjectBoolean,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
-  AdapterConfigAzure,
-  Options,
-  StreamOptions,
-} from "./types";
+  ResultObjectStream,
+} from "./types/result";
+import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
 import { validateName } from "./util";
 
 export class AdapterAzureBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
-  protected _config: AdapterConfigAzure;
+  protected _config: AdapterConfigAzureBlob;
   protected _configError: string | null = null;
   protected _client: BlobServiceClient;
   private sharedKeyCredential: StorageSharedKeyCredential;
 
-  constructor(config: string | AdapterConfigAzure) {
+  constructor(config: string | AdapterConfigAzureBlob) {
     super(config);
     if (this._configError === null) {
       if (
@@ -80,8 +76,8 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  get config(): AdapterConfigAzure {
-    return this._config as AdapterConfigAzure;
+  get config(): AdapterConfigAzureBlob {
+    return this._config as AdapterConfigAzureBlob;
   }
 
   get serviceClient(): BlobServiceClient {

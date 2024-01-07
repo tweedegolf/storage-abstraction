@@ -1,25 +1,29 @@
 import fs from "fs";
 import B2 from "backblaze-b2";
 
+import { Options, StreamOptions, StorageType, IStorage } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  StorageType,
-  IStorage,
   ResultObject,
-  ResultObjectBuckets,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
-  ResultObjectStream,
-  ResultObjectFiles,
-  ResultObjectNumber,
   ResultObjectBoolean,
-  AdapterConfig,
-  Options,
-  StreamOptions,
-} from "./types";
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectKeyValue,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import {
+  AdapterConfigBackblazeB2,
+  FileB2,
+  ResultObjectBucketB2,
+  ResultObjectBucketsB2,
+  ResultObjectFileB2,
+  ResultObjectFilesB2,
+} from "./types/adapter_backblaze_b2";
+
 import { parseUrl, validateName } from "./util";
 
-const getConfiguration = (): AdapterConfig => {
+const getConfig = (): AdapterConfigBackblazeB2 => {
   return {
     type: StorageType.B2,
     applicationKeyId: "",
@@ -112,7 +116,7 @@ const adapter: IStorage = {
     return getType();
   },
   get config() {
-    return getConfiguration();
+    return getConfig();
   },
   get configError() {
     return getConfigError();
@@ -122,7 +126,7 @@ const adapter: IStorage = {
   },
   getType,
   getConfigError,
-  getConfiguration,
+  getConfig,
   getServiceClient,
   createBucket,
   clearBucket,
@@ -141,7 +145,7 @@ const adapter: IStorage = {
   fileExists,
 };
 
-const createAdapter = (config: AdapterConfig | string): IStorage => {
+const createAdapter = (config: string | AdapterConfigBackblazeB2): IStorage => {
   console.log("create functional adapter");
 
   let configError = null;
@@ -152,10 +156,11 @@ const createAdapter = (config: AdapterConfig | string): IStorage => {
     }
     config = value;
   }
+  const conf = config as AdapterConfigBackblazeB2;
 
   const state = {
-    applicationKeyId: config.applicationKeyId,
-    applicationKey: config.applicationKey,
+    applicationKey: conf.applicationKey,
+    applicationKeyId: conf.applicationKeyId,
     configError,
   };
 

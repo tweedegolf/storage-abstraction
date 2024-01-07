@@ -3,22 +3,18 @@ import path from "path";
 import { glob } from "glob";
 import { rimraf } from "rimraf";
 import { Readable } from "stream";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  StorageType,
-  AdapterConfigLocal,
-  ResultObjectBoolean,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
   ResultObject,
+  ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
-  ResultObjectStream,
   ResultObjectNumber,
+  ResultObjectStream,
   ResultObjectStringArray,
-  Options,
-  StreamOptions,
-} from "./types";
+} from "./types/result";
+import { AdapterConfigLocal } from "./types/adapter_local";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { parseMode, validateName } from "./util";
 

@@ -15,7 +15,7 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/*.ts"],
+  "include": ["src/*.ts", "src/types/adapter_local.ts", "src/types/general.ts"],
   // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",

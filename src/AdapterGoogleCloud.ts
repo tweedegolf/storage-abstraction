@@ -2,30 +2,26 @@ import fs from "fs";
 import { Readable } from "stream";
 import { Storage as GoogleCloudStorage } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  StorageType,
   ResultObject,
-  ResultObjectStream,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
+  ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
-  ResultObjectBoolean,
-  AdapterConfigGoogle,
-  Options,
-  StreamOptions,
-} from "./types";
+  ResultObjectStream,
+} from "./types/result";
+import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
 import { validateName } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
   protected _type = StorageType.GCS;
-  protected _config: AdapterConfigGoogle;
+  protected _config: AdapterConfigGoogleCloud;
   protected _configError: string | null = null;
   protected _client: GoogleCloudStorage;
 
-  constructor(config?: string | AdapterConfigGoogle) {
+  constructor(config?: string | AdapterConfigGoogleCloud) {
     super(config);
     if (this._configError === null) {
       this._client = new GoogleCloudStorage(this._config as object);
@@ -47,8 +43,8 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     return { value: result, error: null };
   }
 
-  get config(): AdapterConfigGoogle {
-    return this._config as AdapterConfigGoogle;
+  get config(): AdapterConfigGoogleCloud {
+    return this._config as AdapterConfigGoogleCloud;
   }
 
   get serviceClient(): GoogleCloudStorage {

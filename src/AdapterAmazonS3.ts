@@ -1,6 +1,5 @@
 import fs from "fs";
 import { Readable } from "stream";
-import { AbstractAdapter } from "./AbstractAdapter";
 import {
   CreateBucketCommand,
   CreateBucketCommandInput,
@@ -19,31 +18,28 @@ import {
   _Object,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  AdapterConfig,
-  StorageType,
-  ResultObjectStream,
   ResultObject,
+  ResultObjectBoolean,
   ResultObjectBuckets,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
   ResultObjectFiles,
   ResultObjectNumber,
-  ResultObjectBoolean,
-  Options,
-  AdapterConfigS3,
-  StreamOptions,
-} from "./types";
+  ResultObjectStream,
+} from "./types/result";
+import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
+
 import { validateName } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
-  protected _config: AdapterConfigS3;
+  protected _config: AdapterConfigAmazonS3;
   protected _configError: string | null = null;
   protected _client: S3Client;
 
-  constructor(config: string | AdapterConfig) {
+  constructor(config: string | AdapterConfigAmazonS3) {
     super(config);
     if (this._configError === null) {
       if (this.config.accessKeyId && this.config.secretAccessKey) {
@@ -103,8 +99,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  get config(): AdapterConfigS3 {
-    return this._config as AdapterConfigS3;
+  get config(): AdapterConfigAmazonS3 {
+    return this._config as AdapterConfigAmazonS3;
   }
 
   get serviceClient(): S3Client {

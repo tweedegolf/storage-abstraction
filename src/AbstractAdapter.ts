@@ -1,18 +1,13 @@
+import { AdapterConfig, IStorage, Options, StreamOptions } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  AdapterConfig,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
-  IStorage,
-  Options,
-  StreamOptions,
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectStream,
-} from "./types";
+} from "./types/result";
 import { parseUrl } from "./util";
 
 export abstract class AbstractAdapter implements IStorage {
@@ -58,7 +53,7 @@ export abstract class AbstractAdapter implements IStorage {
     return this.configError;
   }
 
-  getConfiguration(): AdapterConfig {
+  getConfig(): AdapterConfig {
     return this.config;
   }
 

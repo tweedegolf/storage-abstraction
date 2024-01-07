@@ -1,31 +1,27 @@
-import * as Minio from "minio";
 import fs from "fs";
+import * as Minio from "minio";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
-  AdapterConfigMinIO,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
-  Options,
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectStream,
-  StorageType,
-  StreamOptions,
-} from "./types";
+} from "./types/result";
+import { AdapterConfigMinio } from "./types/adapter_minio";
 import { validateName } from "./util";
 
 export class AdapterMinio extends AbstractAdapter {
   protected _type = StorageType.MINIO;
   protected _client: Minio.Client;
   protected _configError: string | null = null;
-  protected _config: AdapterConfigMinIO;
+  protected _config: AdapterConfigMinio;
 
-  constructor(config: string | AdapterConfigMinIO) {
+  constructor(config: string | AdapterConfigMinio) {
     super(config);
     if (this._configError === null) {
       if (
@@ -68,8 +64,8 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  get config(): AdapterConfigMinIO {
-    return this._config as AdapterConfigMinIO;
+  get config(): AdapterConfigMinio {
+    return this._config as AdapterConfigMinio;
   }
 
   get serviceClient(): Minio.Client {

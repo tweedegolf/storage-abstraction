@@ -1,4 +1,12 @@
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, AdapterConfig, AdapterConfigGoogle } from "./types";
+import { AdapterGoogleCloud } from "./AdapterGoogleCloud";
+import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
+import { StorageType, AdapterConfig } from "./types/general";
 
-export { AbstractAdapter, StorageType, AdapterConfig, AdapterConfigGoogle };
+export {
+  AdapterGoogleCloud,
+  AbstractAdapter,
+  StorageType,
+  AdapterConfig,
+  AdapterConfigGoogleCloud,
+};
