@@ -1,8 +1,7 @@
 .vscode
 minio
 node_modules
-publish/dist
-publish/README.md
+publish/*
 tests/test_directory
 tests_local
 gcs.json

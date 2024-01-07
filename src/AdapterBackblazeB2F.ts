@@ -1,6 +1,5 @@
 import fs from "fs";
 import B2 from "backblaze-b2";
-require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 import {
   StorageType,
