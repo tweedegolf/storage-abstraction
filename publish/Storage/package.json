@@ -7,12 +7,12 @@
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "peerDependencies": {
-    "@tweedegolf/sab-adapter-backblaze-b2": "^2.0.0",
-    "@tweedegolf/sab-adapter-amazon-s3": "^2.0.0",
-    "@tweedegolf/sab-adapter-azure-blob": "^2.0.0",
-    "@tweedegolf/sab-adapter-google-cloud": "^2.0.0",
-    "@tweedegolf/sab-adapter-local": "^2.0.0",
-    "@tweedegolf/sab-adapter-minio": "^2.0.0"
+    "@tweedegolf/sab-adapter-backblaze-b2": "^1.0.0",
+    "@tweedegolf/sab-adapter-amazon-s3": "^1.0.0",
+    "@tweedegolf/sab-adapter-azure-blob": "^1.0.0",
+    "@tweedegolf/sab-adapter-google-cloud": "^1.0.0",
+    "@tweedegolf/sab-adapter-local": "^1.0.0",
+    "@tweedegolf/sab-adapter-minio": "^1.0.0"
   },
   "scripts": {},
   "keywords": [
