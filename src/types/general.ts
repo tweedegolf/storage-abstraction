@@ -8,6 +8,7 @@ import {
 } from "./result";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_params";
 
+// add your custom type here
 export enum StorageType {
   LOCAL = "local",
   GCS = "gcs", // Google Cloud Storage
@@ -16,9 +17,13 @@ export enum StorageType {
   AZURE = "azure", // Azure Storage Blob
   MINIO = "minio",
 }
+export interface StorageAdapterConfig {
+  type: string;
+  bucketName?: string;
+  [id: string]: any; // eslint-disable-line
+}
 
 export interface AdapterConfig {
-  type: string;
   bucketName?: string;
   [id: string]: any; // eslint-disable-line
 }
@@ -32,7 +37,7 @@ export interface StreamOptions extends Options {
   end?: number;
 }
 
-export interface IStorage {
+export interface IAdapter {
   getServiceClient(): any; // eslint-disable-line
 
   serviceClient: any; // eslint-disable-line

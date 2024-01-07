@@ -1,4 +1,4 @@
-import { AdapterConfig, IStorage, Options, StreamOptions } from "./types/general";
+import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -10,7 +10,7 @@ import {
 } from "./types/result";
 import { parseUrl } from "./util";
 
-export abstract class AbstractAdapter implements IStorage {
+export abstract class AbstractAdapter implements IAdapter {
   protected _type = "abstract-adapter";
   protected _config: AdapterConfig | null;
   protected _configError: string | null = null;
@@ -32,29 +32,29 @@ export abstract class AbstractAdapter implements IStorage {
     return this._type;
   }
 
+  getType(): string {
+    return this.type;
+  }
+
   get config(): AdapterConfig {
     return this._config;
+  }
+
+  getConfig(): AdapterConfig {
+    return this.config;
   }
 
   get configError(): string {
     return this._configError;
   }
 
-  // eslint-disable-next-line
-  get serviceClient(): any {
-    return this._client;
-  }
-
-  getType(): string {
-    return this.type;
-  }
-
   getConfigError(): string {
     return this.configError;
   }
 
-  getConfig(): AdapterConfig {
-    return this.config;
+  // eslint-disable-next-line
+  get serviceClient(): any {
+    return this._client;
   }
 
   // eslint-disable-next-line

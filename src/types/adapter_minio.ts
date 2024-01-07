@@ -1,9 +1,11 @@
 import { AdapterConfig } from "./general";
 
-export interface AdapterConfigMinio extends AdapterConfig {
+export interface AdapterConfigMinio {
   endPoint: string;
   accessKey: string;
   secretKey: string;
+  region?: string;
   useSSL?: boolean;
   port?: number;
+  [key: string]: any; // eslint-disable-line
 }

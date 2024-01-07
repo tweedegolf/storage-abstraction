@@ -68,7 +68,15 @@ export class AdapterMinio extends AbstractAdapter {
     return this._config as AdapterConfigMinio;
   }
 
+  public getConfig(): AdapterConfigMinio {
+    return this._config as AdapterConfigMinio;
+  }
+
   get serviceClient(): Minio.Client {
+    return this._client as Minio.Client;
+  }
+
+  public getServiceClient(): Minio.Client {
     return this._client as Minio.Client;
   }
 

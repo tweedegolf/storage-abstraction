@@ -1,7 +1,7 @@
 import fs from "fs";
 import B2 from "backblaze-b2";
 
-import { Options, StreamOptions, StorageType, IStorage } from "./types/general";
+import { Options, StreamOptions, StorageType, IAdapter } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -111,7 +111,7 @@ const bucketExists = async (bucketName: string): Promise<ResultObjectBoolean> =>
   return { value: true, error: null };
 };
 
-const adapter: IStorage = {
+const adapter: IAdapter = {
   get type() {
     return getType();
   },
@@ -145,7 +145,7 @@ const adapter: IStorage = {
   fileExists,
 };
 
-const createAdapter = (config: string | AdapterConfigBackblazeB2): IStorage => {
+const createAdapter = (config: string | AdapterConfigBackblazeB2): IAdapter => {
   console.log("create functional adapter");
 
   let configError = null;
@@ -154,13 +154,12 @@ const createAdapter = (config: string | AdapterConfigBackblazeB2): IStorage => {
     if (error) {
       configError = `[configError] ${error}`;
     }
-    config = value;
+    config = value as AdapterConfigBackblazeB2;
   }
-  const conf = config as AdapterConfigBackblazeB2;
 
   const state = {
-    applicationKey: conf.applicationKey,
-    applicationKeyId: conf.applicationKeyId,
+    applicationKey: config.applicationKey,
+    applicationKeyId: config.applicationKeyId,
     configError,
   };
 

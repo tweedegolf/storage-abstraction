@@ -1,4 +1,5 @@
-import { AdapterConfig, ParseUrlResult, ResultObjectNumber, StorageType } from "./types/general";
+import { AdapterConfig, StorageType } from "./types/general";
+import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 
 /**
  * @param: url

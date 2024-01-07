@@ -1,19 +1,20 @@
 import path from "path";
 import {
-  IStorage,
+  IAdapter,
   AdapterConfig,
-  FileBufferParams,
-  ResultObject,
-  FilePathParams,
-  FileStreamParams,
-  ResultObjectBuckets,
-  ResultObjectStream,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectBoolean,
   Options,
   StreamOptions,
-} from "./types";
+  StorageAdapterConfig,
+} from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import {
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
 
 //  add new storage adapters here
 const adapterClasses = {
@@ -41,58 +42,25 @@ const availableAdapters: string = Object.keys(adapterClasses)
   .sort()
   .join(", ");
 
-export class Storage implements IStorage {
-  private adapter: IStorage;
+export class Storage implements IAdapter {
+  private _adapter: IAdapter;
   // public ready: Promise<void>;
 
-  constructor(config: string | AdapterConfig) {
+  constructor(config: string | StorageAdapterConfig) {
     // this.ready = this.switchAdapter(config);
     this.switchAdapter(config);
   }
 
-  get type(): string {
-    return this.adapter.type;
+  get adapter(): IAdapter {
+    return this._adapter;
   }
 
-  public getType(): string {
-    return this.adapter.type;
-  }
-
-  get config(): AdapterConfig {
-    return this.adapter.config;
-  }
-
-  public getConfiguration(): AdapterConfig {
-    return this.adapter.config;
-  }
-
-  get configError(): string {
-    return this.adapter.configError;
-  }
-
-  public getConfigError(): string {
-    return this.adapter.configError;
-  }
-  //eslint-disable-next-line
-  get serviceClient(): any {
-    return this.adapter.serviceClient;
-  }
-  //eslint-disable-next-line
-  public getServiceClient(): any {
-    return this.adapter.serviceClient;
-  }
-
-  //eslint-disable-next-line
-  // get adapter(): any {
-  //   return this.adapter;
-  // }
-  //eslint-disable-next-line
-  public getAdapter(): any {
+  public getAdapter(): IAdapter {
     return this.adapter;
   }
 
   // public async switchAdapter(args: string | AdapterConfig): Promise<void> {
-  public switchAdapter(args: string | AdapterConfig): void {
+  public switchAdapter(args: string | StorageAdapterConfig): void {
     // console.log(args);
     let type: string;
     if (typeof args === "string") {
@@ -112,18 +80,50 @@ export class Storage implements IStorage {
     if (adapterClasses[type]) {
       const name = adapterClasses[type];
       const AdapterClass = require(path.join(__dirname, name))[name];
-      this.adapter = new AdapterClass(args);
+      this._adapter = new AdapterClass(args);
       // const AdapterClass = await import(`./${name}`);
       // this.adapter = new AdapterClass[name](args);
     } else if (adapterFunctions[type]) {
       const name = adapterFunctions[type];
       // const module = require(path.join(__dirname, name));
       const module = require(path.join(__dirname, name));
-      this.adapter = module.createAdapter(args);
+      this._adapter = module.createAdapter(args);
     }
   }
 
   // all methods below are implementing IStorage
+
+  get type(): string {
+    return this.adapter.type;
+  }
+
+  public getType(): string {
+    return this.adapter.type;
+  }
+
+  get config(): AdapterConfig {
+    return this.adapter.config;
+  }
+
+  public getConfig(): AdapterConfig {
+    return this.adapter.config;
+  }
+
+  get configError(): string {
+    return this.adapter.configError;
+  }
+
+  public getConfigError(): string {
+    return this.adapter.configError;
+  }
+  //eslint-disable-next-line
+  get serviceClient(): any {
+    return this.adapter.serviceClient;
+  }
+  //eslint-disable-next-line
+  public getServiceClient(): any {
+    return this.adapter.serviceClient;
+  }
 
   public async addFile(
     paramObject: FilePathParams | FileBufferParams | FileStreamParams
