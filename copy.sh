@@ -7,22 +7,31 @@ rm -rf ./publish/AdapterBackblazeB2/dist
 rm -rf ./publish/AdapterAzureBlob/dist
 rm -rf ./publish/AdapterMinio/dist
 
-mkdir -p ./publish/Storage/dist
-mkdir -p ./publish/AdapterLocal/dist
-mkdir -p ./publish/AdapterAmazonS3/dist
-mkdir -p ./publish/AdapterGoogleCloud/dist
-mkdir -p ./publish/AdapterBackblazeB2/dist
-mkdir -p ./publish/AdapterAzureBlob/dist
-mkdir -p ./publish/AdapterMinio/dist
+mkdir -p ./publish/Storage/dist/types
+mkdir -p ./publish/AdapterLocal/dist/types
+mkdir -p ./publish/AdapterAmazonS3/dist/types
+mkdir -p ./publish/AdapterGoogleCloud/dist/types
+mkdir -p ./publish/AdapterBackblazeB2/dist/types
+mkdir -p ./publish/AdapterAzureBlob/dist/types
+mkdir -p ./publish/AdapterMinio/dist/types
+
+mkdir -p ./publish/Storage/dist/index
+mkdir -p ./publish/AdapterLocal/dist/index
+mkdir -p ./publish/AdapterAmazonS3/dist/index
+mkdir -p ./publish/AdapterGoogleCloud/dist/index
+mkdir -p ./publish/AdapterBackblazeB2/dist/index
+mkdir -p ./publish/AdapterAzureBlob/dist/index
+mkdir -p ./publish/AdapterMinio/dist/index
 
 # Storage
-cp ./publish/dist/types/general* ./publish/Storage/dist
-cp ./publish/dist/types/result* ./publish/Storage/dist
-cp ./publish/dist/types/add_file_params* ./publish/Storage/di*
+cp ./publish/dist/types/general* ./publish/Storage/dist/types
+cp ./publish/dist/types/result* ./publish/Storage/dist/types
+cp ./publish/dist/types/add_file_params* ./publish/Storage/dist/types
+
 mv ./publish/dist/Storage* ./publish/Storage/dist
-mv ./publish/dist/indexes/Storage.d.ts ./publish/Storage/dist/index.d.ts
-mv ./publish/dist/indexes/Storage.js ./publish/Storage/dist/index.js
-mv ./publish/dist/indexes/Storage.js.map ./publish/Storage/dist/index.js.map
+mv ./publish/dist/indexes/Storage.d.ts ./publish/Storage/dist/index/index.d.ts
+mv ./publish/dist/indexes/Storage.js ./publish/Storage/dist/index/index.js
+mv ./publish/dist/indexes/Storage.js.map ./publish/Storage/dist/index/index.js.map
 
 # AdapterLocal
 cp ./publish/dist/AbstractAdapter* ./publish/AdapterLocal/dist
