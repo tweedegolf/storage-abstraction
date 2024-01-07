@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const names = [
+const classes = [
   "Storage",
   "AdapterLocal",
   "AdapterMinio",
@@ -11,18 +11,22 @@ const names = [
   "AdapterBackblazeB2",
 ];
 
-const files = {
+const extensions = ["js", "js.map", "d.ts"];
+
+const types = ["general", "result", "add_file_params"];
+
+const specificTypes = {
   Storage: [],
-  AdapterLocal: [],
-  AdapterMinio: [],
-  AdapterAmazonS3: [],
-  AdapterGoogleCloud: [],
-  AdapterAzureBlob: [],
-  AdapterBackblazeB2: [],
+  AdapterLocal: ["adapter_local"],
+  AdapterMinio: ["adapter_minio"],
+  AdapterAmazonS3: ["adapter_amazon_s3"],
+  AdapterGoogleCloud: ["adapter_google_cloud"],
+  AdapterAzureBlob: ["adapter_azure_blob"],
+  AdapterBackblazeB2: ["adapter_backblaze_b2"],
 };
 
 async function beforeAll(): Promise<string> {
-  const promises = names.reduce((acc: Array<Promise<void>>, val: string) => {
+  const promises = classes.reduce((acc: Array<Promise<void>>, val: string) => {
     acc.push(fs.promises.rm(path.join("publish", val, "dist"), { recursive: true, force: true }));
     return acc;
   }, []);
@@ -37,47 +41,61 @@ async function beforeAll(): Promise<string> {
 }
 
 async function createDirs(): Promise<string> {
-  const promises = names.reduce((acc: Array<Promise<void>>, val: string) => {
-    acc.push(fs.promises.mkdir(path.join("publish", val, "dist")));
-    acc.push(fs.promises.mkdir(path.join("publish", val, "dist", "types")));
-    acc.push(fs.promises.mkdir(path.join("publish", val, "dist", "index")));
-    return acc;
-  }, []);
-
-  for (const p of promises) {
-    await p;
+  try {
+    for (let i = 0; i < classes.length; i++) {
+      await fs.promises.mkdir(path.join("publish", classes[i], "dist"));
+      await fs.promises.mkdir(path.join("publish", classes[i], "dist", "types"));
+      await fs.promises.mkdir(path.join("publish", classes[i], "dist", "index"));
+    }
+    return "ok";
+  } catch (e) {
+    return e.message;
   }
-
-  return "ok";
-  // return Promise.all(promises)
-  //   .then(() => {
-  //     return "ok";
-  //   })
-  //   .catch((e) => {
-  //     return e.message;
-  //   });
 }
 
 async function copy(): Promise<string> {
-  const promises = names.reduce((acc: Array<Promise<void>>, val: string) => {
-    acc.push(
-      fs.promises.copyFile(
-        path.join("publish", "dist", `${val}.js`),
-        path.join("publish", val, "dist", `${val}.js`)
-      )
-    );
-    acc.push(
-      fs.promises.copyFile(
-        path.join("publish", "dist", `${val}.js.map`),
-        path.join("publish", val, "dist", `${val}.js.map`)
-      )
-    );
-    acc.push(
-      fs.promises.copyFile(
-        path.join("publish", "dist", `${val}.d.ts`),
-        path.join("publish", val, "dist", `${val}.d.ts`)
-      )
-    );
+  const promises = classes.reduce((acc: Array<Promise<void>>, val: string) => {
+    extensions.forEach((ext) => {
+      acc.push(
+        fs.promises.copyFile(
+          path.join("publish", "dist", `${val}.${ext}`),
+          path.join("publish", val, "dist", `${val}.${ext}`)
+        )
+      );
+
+      acc.push(
+        fs.promises.copyFile(
+          path.join("publish", "dist", "indexes", `${val}.${ext}`),
+          path.join("publish", val, "dist", "index", `${val}.${ext}`)
+        )
+      );
+
+      acc.push(
+        fs.promises.copyFile(
+          path.join("publish", "dist", `AbstractAdapter.${ext}`),
+          path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
+        )
+      );
+
+      types.forEach((type) => {
+        acc.push(
+          fs.promises.copyFile(
+            path.join("publish", "dist", "types", `${type}.${ext}`),
+            path.join("publish", val, "dist", "types", `${type}.${ext}`)
+          )
+        );
+      });
+
+      specificTypes[val].forEach((type: string) => {
+        acc.push(
+          fs.promises.copyFile(
+            path.join("publish", "dist", "types", `${type}.${ext}`),
+            path.join("publish", val, "dist", "types", `${type}.${ext}`)
+          )
+        );
+      });
+    });
+
     return acc;
   }, []);
 
@@ -99,10 +117,12 @@ async function run() {
   if (t !== "ok") {
     process.exit(1);
   }
-  // const u = await copy();
-  // if (u !== "ok") {
-  //   process.exit(1);
-  // }
+  const u = await copy();
+  if (u !== "ok") {
+    process.exit(1);
+  }
+  await fs.promises.rm(path.join("publish", "dist"), { recursive: true, force: true });
+  process.exit(0);
 }
 
 run();

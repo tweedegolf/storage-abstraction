@@ -1,0 +1,33 @@
+import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+export declare abstract class AbstractAdapter implements IAdapter {
+    protected _type: string;
+    protected _config: AdapterConfig | null;
+    protected _configError: string | null;
+    protected _client: any;
+    constructor(config: string | AdapterConfig);
+    get type(): string;
+    getType(): string;
+    get config(): AdapterConfig;
+    getConfig(): AdapterConfig;
+    get configError(): string;
+    getConfigError(): string;
+    get serviceClient(): any;
+    getServiceClient(): any;
+    addFileFromPath(params: FilePathParams): Promise<ResultObject>;
+    addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;
+    addFileFromStream(params: FileStreamParams): Promise<ResultObject>;
+    abstract addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+    abstract createBucket(name: string, options?: Options): Promise<ResultObject>;
+    abstract clearBucket(name: string): Promise<ResultObject>;
+    abstract deleteBucket(name: string): Promise<ResultObject>;
+    abstract listBuckets(): Promise<ResultObjectBuckets>;
+    abstract getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+    abstract getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
+    abstract removeFile(bucketName: string, fileName: string, allVersions?: boolean): Promise<ResultObject>;
+    abstract listFiles(bucketName: string, maxFiles: number): Promise<ResultObjectFiles>;
+    abstract sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+    abstract fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+    abstract bucketExists(name: string): Promise<ResultObjectBoolean>;
+}
