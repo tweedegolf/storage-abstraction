@@ -18,9 +18,9 @@ const path_1 = __importDefault(require("path"));
 const adapterClasses = {
     b2: "AdapterBackblazeB2",
     s3: "AdapterAmazonS3",
-    gcs: "AdapterGoogleCloud",
+    gcs: "AdapterGoogleCloudStorage",
     local: "AdapterLocal",
-    azure: "AdapterAzureBlob",
+    azure: "AdapterAzureStorageBlob",
     minio: "AdapterMinio",
 };
 // or here for functional adapters
@@ -43,37 +43,9 @@ class Storage {
         // this.ready = this.switchAdapter(config);
         this.switchAdapter(config);
     }
-    get type() {
-        return this.adapter.type;
+    get adapter() {
+        return this._adapter;
     }
-    getType() {
-        return this.adapter.type;
-    }
-    get config() {
-        return this.adapter.config;
-    }
-    getConfiguration() {
-        return this.adapter.config;
-    }
-    get configError() {
-        return this.adapter.configError;
-    }
-    getConfigError() {
-        return this.adapter.configError;
-    }
-    //eslint-disable-next-line
-    get serviceClient() {
-        return this.adapter.serviceClient;
-    }
-    //eslint-disable-next-line
-    getServiceClient() {
-        return this.adapter.serviceClient;
-    }
-    //eslint-disable-next-line
-    // get adapter(): any {
-    //   return this.adapter;
-    // }
-    //eslint-disable-next-line
     getAdapter() {
         return this.adapter;
     }
@@ -100,7 +72,7 @@ class Storage {
         if (adapterClasses[type]) {
             const name = adapterClasses[type];
             const AdapterClass = require(path_1.default.join(__dirname, name))[name];
-            this.adapter = new AdapterClass(args);
+            this._adapter = new AdapterClass(args);
             // const AdapterClass = await import(`./${name}`);
             // this.adapter = new AdapterClass[name](args);
         }
@@ -108,10 +80,36 @@ class Storage {
             const name = adapterFunctions[type];
             // const module = require(path.join(__dirname, name));
             const module = require(path_1.default.join(__dirname, name));
-            this.adapter = module.createAdapter(args);
+            this._adapter = module.createAdapter(args);
         }
     }
     // all methods below are implementing IStorage
+    get type() {
+        return this.adapter.type;
+    }
+    getType() {
+        return this.adapter.type;
+    }
+    get config() {
+        return this.adapter.config;
+    }
+    getConfig() {
+        return this.adapter.config;
+    }
+    get configError() {
+        return this.adapter.configError;
+    }
+    getConfigError() {
+        return this.adapter.configError;
+    }
+    //eslint-disable-next-line
+    get serviceClient() {
+        return this.adapter.serviceClient;
+    }
+    //eslint-disable-next-line
+    getServiceClient() {
+        return this.adapter.serviceClient;
+    }
     addFile(paramObject) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.adapter.addFile(paramObject);

@@ -1,17 +1,20 @@
-import { IStorage, AdapterConfig, FileBufferParams, ResultObject, FilePathParams, FileStreamParams, ResultObjectBuckets, ResultObjectStream, ResultObjectFiles, ResultObjectNumber, ResultObjectBoolean, Options, StreamOptions } from "./types";
-export declare class Storage implements IStorage {
-    private adapter;
-    constructor(config: string | AdapterConfig);
+import { IAdapter, AdapterConfig, Options, StreamOptions, StorageAdapterConfig } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+export declare class Storage implements IAdapter {
+    private _adapter;
+    constructor(config: string | StorageAdapterConfig);
+    get adapter(): IAdapter;
+    getAdapter(): IAdapter;
+    switchAdapter(args: string | StorageAdapterConfig): void;
     get type(): string;
     getType(): string;
     get config(): AdapterConfig;
-    getConfiguration(): AdapterConfig;
+    getConfig(): AdapterConfig;
     get configError(): string;
     getConfigError(): string;
     get serviceClient(): any;
     getServiceClient(): any;
-    getAdapter(): any;
-    switchAdapter(args: string | AdapterConfig): void;
     addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
     addFileFromPath(params: FilePathParams): Promise<ResultObject>;
     addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;

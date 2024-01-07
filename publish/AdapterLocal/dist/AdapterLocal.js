@@ -18,13 +18,13 @@ const path_1 = __importDefault(require("path"));
 const glob_1 = require("glob");
 const rimraf_1 = require("rimraf");
 const stream_1 = require("stream");
-const types_1 = require("./types");
+const general_1 = require("./types/general");
 const AbstractAdapter_1 = require("./AbstractAdapter");
 const util_1 = require("./util");
 class AdapterLocal extends AbstractAdapter_1.AbstractAdapter {
     constructor(config) {
         super(config);
-        this._type = types_1.StorageType.LOCAL;
+        this._type = general_1.StorageType.LOCAL;
         this._configError = null;
         if (typeof this._config.mode !== "undefined") {
             const { value, error } = (0, util_1.parseMode)(this._config.mode);

@@ -1,21 +1,24 @@
 import B2 from "backblaze-b2";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, ResultObjectBoolean, ResultObject, ResultObjectStream, FileBufferParams, FileStreamParams, FilePathParams, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, AdapterConfigB2, StreamOptions, Options } from "./types";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2";
 export declare class AdapterBackblazeB2 extends AbstractAdapter {
     protected _type: StorageType;
-    protected _config: AdapterConfigB2;
+    protected _config: AdapterConfigBackblazeB2;
     protected _configError: string | null;
     protected _client: B2;
     private authorized;
     private versioning;
-    constructor(config: string | AdapterConfigB2);
+    constructor(config: string | AdapterConfigBackblazeB2);
     private authorize;
     private getBuckets;
     private getBucket;
     private getUploadUrl;
     private getFiles;
     private getFile;
-    get config(): AdapterConfigB2;
+    get config(): AdapterConfigBackblazeB2;
     get serviceClient(): B2;
     addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
     getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;

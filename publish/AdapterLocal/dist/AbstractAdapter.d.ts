@@ -1,17 +1,19 @@
-import { AdapterConfig, FileBufferParams, FilePathParams, FileStreamParams, IStorage, Options, StreamOptions, ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types";
-export declare abstract class AbstractAdapter implements IStorage {
+import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+export declare abstract class AbstractAdapter implements IAdapter {
     protected _type: string;
     protected _config: AdapterConfig | null;
     protected _configError: string | null;
     protected _client: any;
     constructor(config: string | AdapterConfig);
     get type(): string;
-    get config(): AdapterConfig;
-    get configError(): string;
-    get serviceClient(): any;
     getType(): string;
+    get config(): AdapterConfig;
+    getConfig(): AdapterConfig;
+    get configError(): string;
     getConfigError(): string;
-    getConfiguration(): AdapterConfig;
+    get serviceClient(): any;
     getServiceClient(): any;
     addFileFromPath(params: FilePathParams): Promise<ResultObject>;
     addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;

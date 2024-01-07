@@ -23,12 +23,12 @@ exports.AdapterBackblazeB2 = void 0;
 const backblaze_b2_1 = __importDefault(require("backblaze-b2"));
 const fs_1 = __importDefault(require("fs"));
 const AbstractAdapter_1 = require("./AbstractAdapter");
-const types_1 = require("./types");
+const general_1 = require("./types/general");
 const util_1 = require("./util");
 class AdapterBackblazeB2 extends AbstractAdapter_1.AbstractAdapter {
     constructor(config) {
         super(config);
-        this._type = types_1.StorageType.B2;
+        this._type = general_1.StorageType.B2;
         this._configError = null;
         this._client = null;
         this.authorized = false;

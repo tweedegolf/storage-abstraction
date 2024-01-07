@@ -1,14 +1,17 @@
-import { AbstractAdapter } from "./AbstractAdapter";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { StorageType, ResultObjectStream, ResultObject, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectBoolean, FileBufferParams, FilePathParams, FileStreamParams, AdapterConfigAzure, Options, StreamOptions } from "./types";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
 export declare class AdapterAzureBlob extends AbstractAdapter {
     protected _type: StorageType;
-    protected _config: AdapterConfigAzure;
+    protected _config: AdapterConfigAzureBlob;
     protected _configError: string | null;
     protected _client: BlobServiceClient;
     private sharedKeyCredential;
-    constructor(config: string | AdapterConfigAzure);
-    get config(): AdapterConfigAzure;
+    constructor(config: string | AdapterConfigAzureBlob);
+    get config(): AdapterConfigAzureBlob;
     get serviceClient(): BlobServiceClient;
     getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
     getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;

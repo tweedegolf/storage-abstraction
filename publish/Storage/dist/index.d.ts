@@ -1,3 +1,3 @@
-import { Storage } from "./Storage";
-import { StorageType, IStorage, AdapterConfig } from "./types";
-export { Storage, IStorage, StorageType, AdapterConfig };
+import { Storage } from "../Storage";
+import { StorageType, IAdapter, AdapterConfig } from "../types/general";
+export { Storage, IAdapter as IStorage, StorageType, AdapterConfig };

@@ -14,11 +14,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAdapter = void 0;
 const fs_1 = __importDefault(require("fs"));
-const types_1 = require("./types");
+const general_1 = require("./types/general");
 const util_1 = require("./util");
-const getConfiguration = () => {
+const getConfig = () => {
     return {
-        type: types_1.StorageType.B2,
+        type: general_1.StorageType.B2,
         applicationKeyId: "",
         applicationKey: "",
     };
@@ -80,7 +80,7 @@ const adapter = {
         return getType();
     },
     get config() {
-        return getConfiguration();
+        return getConfig();
     },
     get configError() {
         return getConfigError();
@@ -90,7 +90,7 @@ const adapter = {
     },
     getType,
     getConfigError,
-    getConfiguration,
+    getConfig,
     getServiceClient,
     createBucket,
     clearBucket,
@@ -119,8 +119,8 @@ const createAdapter = (config) => {
         config = value;
     }
     const state = {
-        applicationKeyId: config.applicationKeyId,
         applicationKey: config.applicationKey,
+        applicationKeyId: config.applicationKeyId,
         configError,
     };
     return adapter;

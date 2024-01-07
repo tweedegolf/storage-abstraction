@@ -14,15 +14,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdapterAmazonS3 = void 0;
 const fs_1 = __importDefault(require("fs"));
-const AbstractAdapter_1 = require("./AbstractAdapter");
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
-const types_1 = require("./types");
+const AbstractAdapter_1 = require("./AbstractAdapter");
+const general_1 = require("./types/general");
 const util_1 = require("./util");
 class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
     constructor(config) {
         super(config);
-        this._type = types_1.StorageType.S3;
+        this._type = general_1.StorageType.S3;
         this._configError = null;
         if (this._configError === null) {
             if (this.config.accessKeyId && this.config.secretAccessKey) {

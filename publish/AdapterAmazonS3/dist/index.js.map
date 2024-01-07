@@ -1,1 +1,1 @@
-{"version":3,"file":"indexAdapterAmazonS3.js","sourceRoot":"","sources":["../../src/indexAdapterAmazonS3.ts"],"names":[],"mappings":";;;AAAA,uDAAoD;AAG3C,gGAHA,iCAAe,OAGA;AAFxB,mCAAsE;AAE5C,4FAFjB,mBAAW,OAEiB"}
+{"version":3,"file":"AdapterAmazonS3.js","sourceRoot":"","sources":["../../../src/indexes/AdapterAmazonS3.ts"],"names":[],"mappings":";;;AAAA,wDAAqD;AAK3B,gGALjB,iCAAe,OAKiB;AAJzC,wDAAqD;AAI5C,gGAJA,iCAAe,OAIA;AAFxB,8CAA8D;AAEnB,4FAFlC,qBAAW,OAEkC"}

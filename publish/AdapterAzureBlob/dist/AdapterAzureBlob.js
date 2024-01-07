@@ -22,15 +22,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdapterAzureBlob = void 0;
 const fs_1 = __importDefault(require("fs"));
 const stream_1 = require("stream");
-const AbstractAdapter_1 = require("./AbstractAdapter");
 const storage_blob_1 = require("@azure/storage-blob");
 const identity_1 = require("@azure/identity");
-const types_1 = require("./types");
+const AbstractAdapter_1 = require("./AbstractAdapter");
+const general_1 = require("./types/general");
 const util_1 = require("./util");
 class AdapterAzureBlob extends AbstractAdapter_1.AbstractAdapter {
     constructor(config) {
         super(config);
-        this._type = types_1.StorageType.AZURE;
+        this._type = general_1.StorageType.AZURE;
         this._configError = null;
         if (this._configError === null) {
             if (typeof this.config.accountName === "undefined" &&

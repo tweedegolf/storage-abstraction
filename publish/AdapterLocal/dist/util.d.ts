@@ -1,4 +1,4 @@
-import { ParseUrlResult, ResultObjectNumber } from "./types";
+import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 /**
  * @param: url
  *

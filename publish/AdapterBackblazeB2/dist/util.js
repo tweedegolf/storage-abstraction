@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateName = exports.isBlankString = exports.getProtocol = exports.parseMode = exports.parseIntFromString = exports.parseUrl = exports.parseQuerystring = void 0;
-const types_1 = require("./types");
+const general_1 = require("./types/general");
 /**
  * @param: url
  *
@@ -32,7 +32,7 @@ const parseUrl = (url) => {
     let type;
     if (url.indexOf("://") === -1) {
         type = url;
-        if (Object.values(types_1.StorageType).includes(type) === false) {
+        if (Object.values(general_1.StorageType).includes(type) === false) {
             return { value: null, error: `"${type}" is not a valid storage type` };
         }
         return { value: { type }, error: null };

@@ -15,18 +15,7 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/*.ts",
-    "src/types/adapter_local.ts",
-    "src/types/general.ts",
-    "src/indexes/indexAdapterAmazonS3.ts",
-    "src/indexes/indexAdapterAzureBlob.ts",
-    "src/indexes/indexAdapterBackblazeB2.ts",
-    "src/indexes/indexAdapterGoogleCloud.ts",
-    "src/indexes/indexAdapterLocal.ts",
-    "src/indexes/indexAdapterMinio.ts",
-    "src/indexes/indexStorage.ts"
-  ],
+  "include": ["src/*.ts", "src/types/*.ts", "src/indexes/*.ts"],
   // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",

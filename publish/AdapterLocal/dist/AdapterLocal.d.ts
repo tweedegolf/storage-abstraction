@@ -1,4 +1,7 @@
-import { StorageType, AdapterConfigLocal, ResultObjectBoolean, FileBufferParams, FilePathParams, FileStreamParams, ResultObject, ResultObjectBuckets, ResultObjectFiles, ResultObjectStream, ResultObjectNumber, Options, StreamOptions } from "./types";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+import { AdapterConfigLocal } from "./types/adapter_local";
 import { AbstractAdapter } from "./AbstractAdapter";
 export declare class AdapterLocal extends AbstractAdapter {
     protected _type: StorageType;

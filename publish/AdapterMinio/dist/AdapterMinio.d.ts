@@ -1,14 +1,19 @@
 import * as Minio from "minio";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { AdapterConfigMinIO, FileBufferParams, FilePathParams, FileStreamParams, Options, ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream, StorageType, StreamOptions } from "./types";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+import { AdapterConfigMinio } from "./types/adapter_minio";
 export declare class AdapterMinio extends AbstractAdapter {
     protected _type: StorageType;
     protected _client: Minio.Client;
     protected _configError: string | null;
-    protected _config: AdapterConfigMinIO;
-    constructor(config: string | AdapterConfigMinIO);
-    get config(): AdapterConfigMinIO;
+    protected _config: AdapterConfigMinio;
+    constructor(config: string | AdapterConfigMinio);
+    get config(): AdapterConfigMinio;
+    getConfig(): AdapterConfigMinio;
     get serviceClient(): Minio.Client;
+    getServiceClient(): Minio.Client;
     getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
     removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
     createBucket(name: string, options?: Options): Promise<ResultObject>;

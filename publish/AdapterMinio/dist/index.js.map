@@ -1,1 +1,1 @@
-{"version":3,"file":"indexAdapterMinio.js","sourceRoot":"","sources":["../../src/indexAdapterMinio.ts"],"names":[],"mappings":";;;AAAA,uDAAoD;AAI7B,gGAJd,iCAAe,OAIc;AAHtC,iDAA8C;AAGrC,6FAHA,2BAAY,OAGA;AAFrB,mCAAyE;AAEjC,4FAF/B,mBAAW,OAE+B"}
+{"version":3,"file":"AdapterMinio.js","sourceRoot":"","sources":["../../../src/indexes/AdapterMinio.ts"],"names":[],"mappings":";;;AAAA,wDAAqD;AAK9B,gGALd,iCAAe,OAKc;AAJtC,kDAA+C;AAItC,6FAJA,2BAAY,OAIA;AAFrB,8CAA8D;AAEtB,4FAF/B,qBAAW,OAE+B"}

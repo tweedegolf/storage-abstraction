@@ -36,15 +36,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdapterMinio = void 0;
-const Minio = __importStar(require("minio"));
 const fs_1 = __importDefault(require("fs"));
+const Minio = __importStar(require("minio"));
 const AbstractAdapter_1 = require("./AbstractAdapter");
-const types_1 = require("./types");
+const general_1 = require("./types/general");
 const util_1 = require("./util");
 class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
     constructor(config) {
         super(config);
-        this._type = types_1.StorageType.MINIO;
+        this._type = general_1.StorageType.MINIO;
         this._configError = null;
         if (this._configError === null) {
             if (this.config.accessKey === "undefined" ||
@@ -88,7 +88,13 @@ class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
     get config() {
         return this._config;
     }
+    getConfig() {
+        return this._config;
+    }
     get serviceClient() {
+        return this._client;
+    }
+    getServiceClient() {
         return this._client;
     }
     getFileAsStream(bucketName, fileName, options) {

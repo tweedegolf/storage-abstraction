@@ -30,24 +30,24 @@ class AbstractAdapter {
     get type() {
         return this._type;
     }
+    getType() {
+        return this.type;
+    }
     get config() {
         return this._config;
+    }
+    getConfig() {
+        return this.config;
     }
     get configError() {
         return this._configError;
     }
-    // eslint-disable-next-line
-    get serviceClient() {
-        return this._client;
-    }
-    getType() {
-        return this.type;
-    }
     getConfigError() {
         return this.configError;
     }
-    getConfiguration() {
-        return this.config;
+    // eslint-disable-next-line
+    get serviceClient() {
+        return this._client;
     }
     // eslint-disable-next-line
     getServiceClient() {

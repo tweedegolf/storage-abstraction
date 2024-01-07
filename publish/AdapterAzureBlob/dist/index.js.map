@@ -1,1 +1,1 @@
-{"version":3,"file":"indexAdapterAzureBlob.js","sourceRoot":"","sources":["../../src/indexAdapterAzureBlob.ts"],"names":[],"mappings":";;;AAAA,uDAAoD;AAG3C,gGAHA,iCAAe,OAGA;AAFxB,mCAAyE;AAE/C,4FAFjB,mBAAW,OAEiB"}
+{"version":3,"file":"AdapterAzureBlob.js","sourceRoot":"","sources":["../../../src/indexes/AdapterAzureBlob.ts"],"names":[],"mappings":";;;AAAA,wDAAqD;AAK1B,gGALlB,iCAAe,OAKkB;AAJ1C,0DAAuD;AAI9C,iGAJA,mCAAgB,OAIA;AAFzB,8CAA8D;AAElB,4FAFnC,qBAAW,OAEmC"}

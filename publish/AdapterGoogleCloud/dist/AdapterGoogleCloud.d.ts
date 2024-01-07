@@ -1,14 +1,17 @@
 import { Storage as GoogleCloudStorage } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { StorageType, ResultObject, ResultObjectStream, FileBufferParams, FilePathParams, FileStreamParams, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectBoolean, AdapterConfigGoogle, Options, StreamOptions } from "./types";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "./types/result";
+import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
 export declare class AdapterGoogleCloud extends AbstractAdapter {
     protected _type: StorageType;
-    protected _config: AdapterConfigGoogle;
+    protected _config: AdapterConfigGoogleCloud;
     protected _configError: string | null;
     protected _client: GoogleCloudStorage;
-    constructor(config?: string | AdapterConfigGoogle);
+    constructor(config?: string | AdapterConfigGoogleCloud);
     private getFileSize;
-    get config(): AdapterConfigGoogle;
+    get config(): AdapterConfigGoogleCloud;
     get serviceClient(): GoogleCloudStorage;
     getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
     getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;

@@ -1,1 +1,1 @@
-{"version":3,"file":"indexAdapterGoogleCloud.js","sourceRoot":"","sources":["../../src/indexAdapterGoogleCloud.ts"],"names":[],"mappings":";;;AAAA,uDAAoD;AAG3C,gGAHA,iCAAe,OAGA;AAFxB,mCAA0E;AAEhD,4FAFjB,mBAAW,OAEiB"}
+{"version":3,"file":"AdapterGoogleCloud.js","sourceRoot":"","sources":["../../../src/indexes/AdapterGoogleCloud.ts"],"names":[],"mappings":";;;AAAA,wDAAqD;AAOnD,gGAPO,iCAAe,OAOP;AANjB,8DAA2D;AAKzD,mGALO,uCAAkB,OAKP;AAHpB,8CAA8D;AAK5D,4FALO,qBAAW,OAKP"}
