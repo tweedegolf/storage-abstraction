@@ -1,3 +1,4 @@
 import { AbstractAdapter } from "./AbstractAdapter";
+import { AdapterMinio } from "./AdapterMinio";
 import { StorageType, AdapterConfig, AdapterConfigMinIO } from "./types";
-export { AbstractAdapter, StorageType, AdapterConfig, AdapterConfigMinIO };
+export { AdapterMinio, AbstractAdapter, StorageType, AdapterConfig, AdapterConfigMinIO };

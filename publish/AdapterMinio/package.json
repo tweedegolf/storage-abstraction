@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-minio",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Provides an abstraction layer for interacting with MinIO cloud storage service.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
