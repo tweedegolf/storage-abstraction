@@ -1,10 +1,8 @@
-.vscode
-minio
-node_modules
-publish/*
-tests/test_directory
-tests_local
-gcs.json
-yarn-error.log
 .env
 .idea
+.vscode
+gcs.json
+node_modules
+minio
+tests_local
+tests/test_directory

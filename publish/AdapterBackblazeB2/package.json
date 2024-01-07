@@ -1,0 +1,30 @@
+{
+  "name": "@tweedegolf/sab-adapter-backblaze-b2",
+  "version": "2.0.0",
+  "description": "Provides an abstraction layer for interacting with Backblaze B2 cloud service.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://github.com/tweedegolf/storage-abstraction/",
+  "repository": "https://github.com/tweedegolf/storage-abstraction/",
+  "dependencies": {
+    "backblaze-b2": "^1.7.0"
+  },
+  "scripts": {},
+  "keywords": [
+    "backblaze b2",
+    "amazon s3",
+    "storage",
+    "storage abstraction",
+    "cloud filesystem",
+    "google cloud",
+    "cloudflare r2",
+    "cubbit",
+    "minio",
+    "azure"
+  ],
+  "author": "daniel@tweedegolf.nl",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

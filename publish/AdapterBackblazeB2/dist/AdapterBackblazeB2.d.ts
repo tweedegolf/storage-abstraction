@@ -1,0 +1,32 @@
+import B2 from "backblaze-b2";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { StorageType, ResultObjectBoolean, ResultObject, ResultObjectStream, FileBufferParams, FileStreamParams, FilePathParams, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, AdapterConfigB2, StreamOptions, Options } from "./types";
+export declare class AdapterBackblazeB2 extends AbstractAdapter {
+    protected _type: StorageType;
+    protected _config: AdapterConfigB2;
+    protected _configError: string | null;
+    protected _client: B2;
+    private authorized;
+    private versioning;
+    constructor(config: string | AdapterConfigB2);
+    private authorize;
+    private getBuckets;
+    private getBucket;
+    private getUploadUrl;
+    private getFiles;
+    private getFile;
+    get config(): AdapterConfigB2;
+    get serviceClient(): B2;
+    addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+    getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+    getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject>;
+    removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
+    createBucket(name: string, options?: Options): Promise<ResultObject>;
+    clearBucket(name: string): Promise<ResultObject>;
+    deleteBucket(name: string): Promise<ResultObject>;
+    listBuckets(): Promise<ResultObjectBuckets>;
+    listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+    sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+    bucketExists(bucketName: string): Promise<ResultObjectBoolean>;
+    fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+}

@@ -1,0 +1,30 @@
+import { IStorage, AdapterConfig, FileBufferParams, ResultObject, FilePathParams, FileStreamParams, ResultObjectBuckets, ResultObjectStream, ResultObjectFiles, ResultObjectNumber, ResultObjectBoolean, Options, StreamOptions } from "./types";
+export declare class Storage implements IStorage {
+    private adapter;
+    constructor(config: string | AdapterConfig);
+    get type(): string;
+    getType(): string;
+    get config(): AdapterConfig;
+    getConfiguration(): AdapterConfig;
+    get configError(): string;
+    getConfigError(): string;
+    get serviceClient(): any;
+    getServiceClient(): any;
+    getAdapter(): any;
+    switchAdapter(args: string | AdapterConfig): void;
+    addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+    addFileFromPath(params: FilePathParams): Promise<ResultObject>;
+    addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;
+    addFileFromStream(params: FileStreamParams): Promise<ResultObject>;
+    createBucket(name: string, options?: object): Promise<ResultObject>;
+    clearBucket(name: string): Promise<ResultObject>;
+    deleteBucket(name: string): Promise<ResultObject>;
+    listBuckets(): Promise<ResultObjectBuckets>;
+    getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+    getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
+    removeFile(bucketName: string, fileName: string, allVersions?: boolean): Promise<ResultObject>;
+    listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+    sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+    bucketExists(bucketName: string): Promise<ResultObjectBoolean>;
+    fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+}
