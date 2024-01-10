@@ -1,6 +1,6 @@
 import { AdapterConfig } from "./general";
 
-export interface AdapterConfigMinio {
+export interface AdapterConfigMinio extends AdapterConfig {
   endPoint: string;
   accessKey: string;
   secretKey: string;

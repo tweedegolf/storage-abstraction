@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
-Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage. Supported cloud storage services are:
+Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage service. Supported cloud storage services are:
 
 - MinIO
 - Azure Blob
@@ -16,51 +16,51 @@ Also S3 compliant cloud services are supported. Tested S3 compatible services ar
 - CloudFlare
 - Cubbit
 
-Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using storage on local disk and then use Google Cloud or Amazon S3 in your production environment without changing any code.
+Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using local disk storage and then use for instance Google Cloud or Amazon S3 in your production environment without changing any code.
 
 ## Table of contents
 
 <!-- toc -->
 
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  * [Local storage](#local-storage)
-  * [Google Cloud](#google-cloud)
-  * [Amazon S3](#amazon-s3)
-    + [S3 Compatible Storage](#s3-compatible-storage)
-    + [Cloudflare R2](#cloudflare-r2)
-    + [Backblaze S3](#backblaze-s3)
-  * [Backblaze B2](#backblaze-b2)
-  * [Azure Blob Storage](#azure-blob-storage)
+  - [Local storage](#local-storage)
+  - [Google Cloud](#google-cloud)
+  - [Amazon S3](#amazon-s3)
+    - [S3 Compatible Storage](#s3-compatible-storage)
+    - [Cloudflare R2](#cloudflare-r2)
+    - [Backblaze S3](#backblaze-s3)
+  - [Backblaze B2](#backblaze-b2)
+  - [Azure Blob Storage](#azure-blob-storage)
 - [API methods](#api-methods)
-  * [createBucket](#createbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [listBuckets](#listbuckets)
-  * [addFile](#addfile)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromStream](#addfilefromstream)
-  * [getFileAsURL](#getfileasurl)
-  * [getFileAsStream](#getfileasstream)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-  * [bucketExists](#bucketexists)
-  * [fileExists](#fileexists)
-  * [listFiles](#listfiles)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [getConfigurationError](#getconfigurationerror)
-  * [getServiceClient](#getserviceclient)
-  * [switchAdapter](#switchadapter)
+  - [createBucket](#createbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [listBuckets](#listbuckets)
+  - [addFile](#addfile)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromStream](#addfilefromstream)
+  - [getFileAsURL](#getfileasurl)
+  - [getFileAsStream](#getfileasstream)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
+  - [bucketExists](#bucketexists)
+  - [fileExists](#fileexists)
+  - [listFiles](#listfiles)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [getConfigurationError](#getconfigurationerror)
+  - [getServiceClient](#getserviceclient)
+  - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -979,7 +979,7 @@ export interface AdapterConfig {
   [id: string]: any; // eslint-disable-line
 }
 
-export interface YourAdapterConfig extend AdapterConfig {
+export interface YourAdapterConfig extends AdapterConfig {
   additionalKey: string,
   ...
 }

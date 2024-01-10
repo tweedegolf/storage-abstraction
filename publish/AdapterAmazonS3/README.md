@@ -1,21 +1,13 @@
 # MinIO Adapter
 
-This adapter is a peer dependency of the [storage abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). It provides an abstraction layer over the API of the MinIO cloud storage service. You can use it both stand alone and as the adapter of a `Storage` instance:
+This adapter is a peer dependency of the [storage abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). It provides an abstraction layer over the API of the Amazon S3 cloud storage service and S3 compatible services like Cubbit, Cloudflare R2 and Backblaze B2 S3. You can use it both stand alone and as the adapter of a `Storage` instance:
 
 1. Stand alone
 
 ```typescript
-import { AdapterMinio } from "@tweedegolf/sab-adapter-minio";
+import { AdapterAmazonS3 } from "@tweedegolf/sab-adapter-amazon-s3";
 
-const a = new AdapterMinio({
-  port: 9000,
-  useSSL: true,
-  region: "us-east-1",
-  endPoint: "play.min.io",
-  accessKey: "Q3AM3UQ867SPQQA43P2F",
-  secretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-});
-
+const a = new AdapterAmazonS3();
 const r = await a.listBuckets();
 console.log(r);
 ```
@@ -24,16 +16,10 @@ console.log(r);
 
 ```typescript
 import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
-import { AdapterMinio } from "@tweedegolf/sab-adapter-minio";
+import { AdapterAmazonS3 } from "@tweedegolf/sab-adapter-amazon-s3";
 
 const s = new Storage({
-  type: StorageType.MINIO,
-  port: 9000,
-  useSSL: true,
-  region: "us-east-1",
-  endPoint: "play.min.io",
-  accessKey: "Q3AM3UQ867SPQQA43P2F",
-  secretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
+  type: StorageType.S3,
 });
 
 const r = await a.listBuckets();
@@ -42,7 +28,7 @@ console.log(r);
 
 ## Configuration
 
-The Adapter class takes one argument of type `AdapterConfig` and the Storage class takes one argument of type `StorageAdapterConfig`
+The Adapter class takes one optional argument of type `AdapterConfig` and the Storage class takes one mandatory argument of type `StorageAdapterConfig`
 
 ```typescript
 export interface AdapterConfig {

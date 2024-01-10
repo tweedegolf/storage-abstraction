@@ -40,7 +40,7 @@ export class AdapterMinio extends AbstractAdapter {
         }
         const port = this.config.port;
         if (typeof port === "undefined") {
-          this.config.port = useSSL ? 443 : 80;
+          this.config.port = this.config.useSSL ? 443 : 80;
         }
         if (typeof port === "string") {
           this.config.port = parseInt(port, 10);
