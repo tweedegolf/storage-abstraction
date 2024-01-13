@@ -73,6 +73,35 @@ export interface AdapterConfigMinio extends AdapterConfig {
 }
 ```
 
+### Backblaze B2
+
+> peer dependencies: <br/> > `npm i backblaze-b2`
+
+Adapter config:
+
+```typescript
+export interface AdapterConfigB2 extends AdapterConfig {
+  applicationKey: string;
+  applicationKeyId: string;
+}
+```
+
+Example with configuration object:
+
+```typescript
+const s = new Storage({
+  type: StorageType.B2,
+  applicationKey: "key",
+  applicationKeyId: "keyId",
+});
+```
+
+Example with configuration url:
+
+```typescript
+const s = new Storage("b2://applicationKeyId=keyId&applicationKey=key");
+```
+
 ## API
 
 For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.

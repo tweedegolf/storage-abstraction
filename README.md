@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
-Provides an abstraction layer for interacting with a storage; this storage can be a local file system or a cloud storage service. Supported cloud storage services are:
+Provides an abstraction layer for interacting with a storage; the storage can be a local file system or a cloud storage service. Supported cloud storage services are:
 
 - MinIO
 - Azure Blob
@@ -13,10 +13,10 @@ Provides an abstraction layer for interacting with a storage; this storage can b
 Also S3 compliant cloud services are supported. Tested S3 compatible services are:
 
 - Backblaze S3
-- CloudFlare
+- CloudFlare R2
 - Cubbit
 
-Because the API only provides basic storage operations (see [below](#api-methods)) the API is cloud agnostic. This means for instance that you can develop your application using local disk storage and then use for instance Google Cloud or Amazon S3 in your production environment without changing any code.
+The API only provides basic storage operations (see [below](#adapter-api)) and therefor the API is cloud agnostic. This means that you can develop your application using local disk storage and then use for instance Google Cloud or Amazon S3 in your production environment without the need to change any code.
 
 ## Table of contents
 
@@ -26,15 +26,7 @@ Because the API only provides basic storage operations (see [below](#api-methods
   - [Configuration object](#configuration-object)
   - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
-  - [Local storage](#local-storage)
-  - [Google Cloud](#google-cloud)
-  - [Amazon S3](#amazon-s3)
-    - [S3 Compatible Storage](#s3-compatible-storage)
-    - [Cloudflare R2](#cloudflare-r2)
-    - [Backblaze S3](#backblaze-s3)
-  - [Backblaze B2](#backblaze-b2)
-  - [Azure Blob Storage](#azure-blob-storage)
-- [API methods](#api-methods)
+- [Adapter API](#adapter-api)
   - [createBucket](#createbucket)
   - [clearBucket](#clearbucket)
   - [deleteBucket](#deletebucket)
@@ -54,6 +46,7 @@ Because the API only provides basic storage operations (see [below](#api-methods
   - [getConfiguration](#getconfiguration)
   - [getConfigurationError](#getconfigurationerror)
   - [getServiceClient](#getserviceclient)
+- [Storage API](#storage-api)
   - [switchAdapter](#switchadapter)
 - [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
@@ -67,20 +60,58 @@ Because the API only provides basic storage operations (see [below](#api-methods
 
 <!-- tocstop -->
 
+## How it works
+
+A `Storage` instance is a thin wrapper around one of the available adapters. These adapters are peer dependencies and available as separate packages on npm. This way your code base stays as slim as possible because you only have to add the adapter(s) that you need to your project.
+
+List of available adapters:
+
+- [Local file system](https://www.npmjs.com/package/@tweedegolf/sab-adapter-local) `npm i @tweedegolf/sab-adapter-local`
+- [Amazon S3 (and compatible)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3) `npm i @tweedegolf/sab-adapter-amazon-s3`
+- [Google cloud](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud) `npm i @tweedegolf/sab-adapter-google-cloud`
+- [Backblaze B2](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) `npm i @tweedegolf/sab-adapter-backblaze-b2`
+- [Azure Blob](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob) `npm i @tweedegolf/sab-adapter-azure-blob`
+- [MinIO](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio) `npm i @tweedegolf/sab-adapter-minio`
+
+A `Storage` instance creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
+
+```typescript
+// member function of class Storage
+public async createBucket(name: string): Promise<ResultObject> {
+  return this.adapter.createBucket(name);
+}
+```
+
+The class `Storage` implements the interface `IAdapter` and this interface declares the complete API. Because all adapters have to implement this interface as well, either by extending `AbstractAdapter` or otherwise, all API calls on `Storage` can be directly forwarded to the adapters.
+
+The adapter subsequently creates an instance of the cloud storage specific service client and this instance handles the actual communication with the cloud service. For instance:
+
+```typescript
+// Amazon S3 adapter
+private const _client = new S3Client();
+
+// Azure Blob Storage adapter
+private const _client = new BlobServiceClient();
+```
+
+Therefor, dependent on what definitions you use, this library could be seen as a wrapper or a shim.
+
 ## Instantiate a storage
 
 ```javascript
 const s = new Storage(config);
 ```
 
-When instantiating a new `Storage` the argument `config` is used to create an adapter that translates the generic API calls to storage specific calls. You can provide the `config` argument in 2 forms:
+When you create a new `Storage` instance the `config` argument is used to create the adapter. You can provide the `config` argument in 2 forms:
 
 1. using a configuration object (js: `typeof === "object"` ts: `AdapterConfig`)
 2. using a configuration URL (`typeof === "string"`)
 
 Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
 
-The configuration must at least specify a type; the type is used to create the appropriate adapter. The value of the type is one of the enum members of `StorageType`:
+The configuration must at least specify a type; the type is used to determine which adapter must be created. Note that the adapters are peer dependencies and not included in the Storage Abstraction project so you have to add them to you project before you can use them.
+
+The value of the type is one of the enum members of `StorageType`:
 
 ```typescript
 enum StorageType {
@@ -98,7 +129,7 @@ enum StorageType {
 A configuration object type that extends `AdapterConfig`:
 
 ```typescript
-interface AdapterConfig {
+interface StorageAdapterConfig {
   type: string;
   bucketName?: string;
   [id: string]: any; // other service specific mandatory or optional keys
@@ -169,312 +200,7 @@ If you want to use one or more of the adapters in your project make sure you ins
 
 You can also add more adapters yourself very easily, see [below](#adding-more-adapters)
 
-### Local storage
-
-> peer dependencies: <br/> > `npm i glob rimraf`
-
-Adapter config:
-
-```typescript
-export interface AdapterConfigLocal extends AdapterConfig {
-  directory: string;
-  mode?: number;
-}
-```
-
-Example with configuration object:
-
-```typescript
-const s = new Storage({
-  type: StorageType.LOCAL,
-  directory: "path/to/directory",
-  mode: 750,
-});
-```
-
-Example with configuration url:
-
-```typescript
-const s = new Storage("local://directory=path/to/directory&mode=750");
-```
-
-With the optional key `mode` you can set the access rights when you create new local buckets. The default value is `0o777`, note that the actual value is dependent on the umask settings on your system (Linux and MacOS only). You can pass this value both in decimal and in octal format. E.g. `rwxrwxrwx` is `0o777` in octal format or `511` in decimal format.
-
-When you use a configuration URL you can only pass values as strings. String values without radix prefix will be interpreted as decimal numbers, so "777" is _not_ the same as "0o777" and yields `41411`. This is probably not what you want. The configuration parser handles this by returning the default value in case you pass a value over decimal `511`.
-
-Examples:
-
-```typescript
-const config = {
-  type: StorageType.LOCAL,
-  directory: "path/to/folder",
-  mode: 488, // decimal literal
-};
-const s = new Storage(config);
-
-// or
-const url = "local://directory=path/to/folder&mode=488";
-const s = new Storage(url);
-
-// and the same with octal values:
-
-const config = {
-  type: StorageType.LOCAL,
-  directory: "path/to/folder",
-  mode: 0o750, // octal literal
-};
-const s = new Storage(config);
-
-// or
-const url = "local://directory=path/to/folder&mode=0o750";
-const s = new Storage(url);
-```
-
-Buckets will be created inside the directory `path/to/folder`, parent folders will be created if necessary.
-
-### Google Cloud
-
-> peer dependencies: <br/> > `npm i @google-cloud/storage`
-
-Adapter config:
-
-```typescript
-export interface AdapterConfigGoogle extends AdapterConfig {
-  keyFilename?: string;
-}
-```
-
-Example with configuration object:
-
-```typescript
-const s = new Storage({
-  type: StorageType.GCS,
-  keyFilename: "path/to/keyFile.json",
-});
-```
-
-Example with configuration url:
-
-```typescript
-const s = new Storage("gcs://keyFilename=path/to/keyFile.json");
-```
-
-Google cloud service can read default credentials from an environment variable.
-
-```typescript
-const s = new Storage({ type: StorageType.GCS });
-// using a config url:
-const s = new Storage("gcs://");
-// and even:
-const s = new Storage("gcs");
-```
-
-Environment variable that is automatically read:
-
-```shell
-GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
-```
-
-### Amazon S3
-
-> peer dependencies: <br/> > `npm i aws-sdk`
-
-Adapter config:
-
-```typescript
-export interface AdapterConfigS3 extends AdapterConfig {
-  region?: string;
-  endpoint?: string;
-  credentials?: {
-    accessKeyId?: string;
-    secretAccessKey?: string;
-  };
-  accessKeyId?: string;
-  secretAccessKey?: string;
-}
-```
-
-Example with configuration object:
-
-```typescript
-// Cubbit S3 compatible
-const s = new Storage({
-  type: StorageType.S3,
-  accessKeyId: 'your-key-id'
-  secretAccessKey: 'your-secret'
-  endpoint: "https://s3.cubbit.eu/",
-  region: "auto",
-});
-```
-
-Example with configuration url:
-
-```typescript
-// Cubbit S3 compatible
-const s = new Storage(
-  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.cubbit.eu/&region=auto"
-);
-```
-
-If you use Amazon S3 it is possible to skip the passing in of the `accessKeyId`, `secretAccessKey` and `region`; the aws sdk will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
-
-```typescript
-// only for Amazon S3
-const s = new Storage({ type: StorageType.S3 });
-// with a config url:
-const s = new Storage("s3://");
-// and even:
-const s = new Storage("s3");
-```
-
-The environment variables that you need to set for this are:
-
-```shell
-AWS_ACCESS_KEY_ID="your access key"
-AWS_SECRET_ACCESS_KEY="your secret"
-AWS_REGION="eu-west-1"
-
-```
-
-Note that this does _not_ work for S3 compatible services because the aws sdk doesn't read the endpoint from environment variables.
-
-Also, if you pass a value for `endpoint` in the config, for some reason aws sdk does read the environment variable `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
-
-So for S3 compatible services setting a value for `endpoint`, `accessKeyId` and `secretAccessKey` in the config is mandatory.
-
-For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config because aws sdk always reads the `AWS_REGION` environment variable if no value is provided in the config. Note that the names of the regions may differ from service to service, see below.
-
-#### <a name='s3-compatible-storage'></a>S3 Compatible Storage
-
-Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use the `AdapterAmazonS3` but you have to add a value for `endpoint` in the config.
-
-#### Cloudflare R2
-
-```typescript
-const s = new Storage({
-  type: StorageType.S3,
-  region: 'auto'
-  endpoint: process.env.R2_ENDPOINT,
-  accessKeyId: process.env.R2_ACCESS_KEY,
-  secretAccessKey: process.env.R2_SECRET_KEY,
-});
-```
-
-The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`.
-
-Jurisdiction is optional, e.g. `eu`.
-
-It is mandatory to set a value for `region`, use one of these values:
-
-- `auto`
-- `wnam`
-- `enam`
-- `weur`
-- `eeur`
-- `apac`
-
-You can also set the region using the `AWS_REGION` environment variable.
-
-#### Backblaze S3
-
-```typescript
-const s = new Storage({
-  type: StorageType.S3,
-  region: "eu-central-003",
-  endpoint: process.env.B2_ENDPOINT,
-  accessKeyId: process.env.B2_APPLICATION_KEY_ID,
-  secretAccessKey: process.env.B2_APPLICATION_KEY,
-});
-```
-
-The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint aws sdk still expects you to set a value for `region` in the configuration. As just stated, you can simply retrieve your region from the endpoint.
-
-Backblaze also has a native API, see below.
-
-### Backblaze B2
-
-> peer dependencies: <br/> > `npm i backblaze-b2`
-
-Adapter config:
-
-```typescript
-export interface AdapterConfigB2 extends AdapterConfig {
-  applicationKey: string;
-  applicationKeyId: string;
-}
-```
-
-Example with configuration object:
-
-```typescript
-const s = new Storage({
-  type: StorageType.B2,
-  applicationKey: "key",
-  applicationKeyId: "keyId",
-});
-```
-
-Example with configuration url:
-
-```typescript
-const s = new Storage("b2://applicationKeyId=keyId&applicationKey=key");
-```
-
-### Azure Blob Storage
-
-> peer dependencies: <br/> > `npm i @azure/storage-blob`
-
-Adapter config
-
-```typescript
-export interface AdapterConfigAzure extends AdapterConfig {
-  accountName?: string;
-  connectionString?: string;
-  accountKey?: string;
-  sasToken?: string;
-}
-```
-
-Example with configuration object:
-
-```typescript
-const s = new Storage({
-  type: StorageType.AZURE,
-  accountName: "yourAccount",
-  accountKey: "yourKey",
-});
-```
-
-Example with configuration url:
-
-```typescript
-const s = new Storage("azure://accountName=yourAccount");
-```
-
-There are multiple ways to login to Azure Blob Storage. Microsoft recommends to use passwordless authorization, for this you need to provide a value for `accountName` which is the name of your storage account. Then you can either login using the Azure CLI command `az login` or by setting the following environment variables:
-
-```shell
-AZURE_TENANT_ID
-AZURE_CLIENT_ID
-AZURE_CLIENT_SECRET
-
-```
-
-You can find these values in the Azure Portal
-
-Alternately you can login by:
-
-- providing a value for `connectionString`
-- providing a value for both `accountName` and `accountKey`
-- providing a value for both `accountName` and `sasToken`
-
-Note that if you don't use the `accountKey` for authorization and you add files to a bucket you will get this error message:
-
-`'Can only generate the SAS when the client is initialized with a shared key credential'`
-
-This does not mean that the file hasn't been uploaded, it simply means that no public url can been generated for this file.
-
-## API methods
+## Adapter API
 
 All methods that access the underlying cloud storage service return a promise that always resolves in a `ResponseObject` type or a variant thereof:
 
@@ -902,6 +628,22 @@ const storage = new Storage(config);
 console.log(storage.serviceClient);
 ```
 
+## Storage API
+
+The Storage class has two extra method besides all methods of the `IAdapter` interface.
+
+### <a name='getadapter'></a>getAdapter
+
+```typescript
+getAdapter(): IAdapter;
+
+// also implemented as getter
+const s = new Storage({type: StorageType.S3})
+const a = s.adapter;
+```
+
+Returns the instance of the Adapter class that this Storage instance is currently using to access a storage
+
 ### <a name='switchadapter'></a>switchAdapter
 
 ```typescript
@@ -910,38 +652,11 @@ switchAdapter(config: string | AdapterConfig): void;
 
 Switch to another adapter in an existing `Storage` instance at runtime. The config parameter is the same type of object or URL that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
 
-## How it works
-
-A `Storage` instance is actually a thin wrapper around one of the available adapters; it creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
-
-```typescript
-// member function of class Storage
-async createBucket(name: string): Promise<ResultObject> => {
-  return this.adapter.createBucket(name);
-};
-```
-
-The class `Storage` implements the interface `IStorage` and this interface declares the complete API. Because all adapters have to implement this interface as well, either by extending `AbstractAdapter` or otherwise, all API calls on `Storage` can be directly forwarded to the adapters.
-
-The adapter subsequently takes care of translating the generic API calls to storage specific functions. Therefor, dependent on what definitions you use, this library could be seen as a wrapper or a shim.
-
-Inside the adapter an instance of the cloud storage specific service client is created; this instance handles the actual communication with the cloud service. For instance:
-
-```typescript
-// Amazon S3 adapter
-private const _client = new S3Client();
-
-// Azure Blob Storage adapter
-private const _client = new BlobServiceClient();
-```
-
-The method `switchAdapter` is not declared in `IStorage` but in the `Storage` class itself; this is because the adapter have to implement `IStorage` and an adapter cannot (and should not) switch itself into another adapter
-
-`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
-
 More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/) and [Cubbit](https://www.cubbit.io/).
 
 ## Adding more adapters
+
+`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
 
 If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
 

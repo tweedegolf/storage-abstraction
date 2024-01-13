@@ -73,6 +73,49 @@ export interface AdapterConfigMinio extends AdapterConfig {
 }
 ```
 
+### Google Cloud
+
+> peer dependencies: <br/> > `npm i @google-cloud/storage`
+
+Adapter config:
+
+```typescript
+export interface AdapterConfigGoogle extends AdapterConfig {
+  keyFilename?: string;
+}
+```
+
+Example with configuration object:
+
+```typescript
+const s = new Storage({
+  type: StorageType.GCS,
+  keyFilename: "path/to/keyFile.json",
+});
+```
+
+Example with configuration url:
+
+```typescript
+const s = new Storage("gcs://keyFilename=path/to/keyFile.json");
+```
+
+Google cloud service can read default credentials from an environment variable.
+
+```typescript
+const s = new Storage({ type: StorageType.GCS });
+// using a config url:
+const s = new Storage("gcs://");
+// and even:
+const s = new Storage("gcs");
+```
+
+Environment variable that is automatically read:
+
+```shell
+GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
+```
+
 ## API
 
 For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
