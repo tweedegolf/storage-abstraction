@@ -41,7 +41,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   constructor(config?: string | AdapterConfigAmazonS3) {
     super(config);
-    if (this._configError === null) {
+    try {
       if (this.config.accessKeyId && this.config.secretAccessKey) {
         const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
         delete o.credentials;
@@ -60,6 +60,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         delete o.secretAccessKey;
         this._client = new S3Client(o);
       }
+    } catch (e) {
+      this._configError = `[configError] ${e.message}`;
     }
   }
 

@@ -3,10 +3,9 @@ import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 
 /**
  * @param: url
- *
- * strips off the querystring of an url and returns it as an object
+ * Converts url with querystring into key-value object
  */
-export const parseQuerystring = (url: string): { [id: string]: string } => {
+export const parseQueryString2 = (url: string): { [id: string]: string } => {
   let options = {};
   const questionMark = url.indexOf("?");
   if (questionMark !== -1) {
@@ -27,20 +26,27 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
  * @param url
  * Parses a url into a key-value object.
  */
-export const parseUrl = (url: string): ParseUrlResult => {
+export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
+  const p = url.indexOf("://");
   let type: string;
-  if (url.indexOf("://") === -1) {
+  let config: AdapterConfig;
+
+  if (p === -1) {
     type = url;
-    if (Object.values(StorageType).includes(type as StorageType) === false) {
-      return { value: null, error: `"${type}" is not a valid storage type` };
-    }
-    return { value: { type }, error: null };
-    // return { value: null, error: "Please provide a valid configuration url" };
+    config = { type };
+  } else {
+    type = url.substring(0, p);
+    config = parseQueryString(url.substring(p + 3), type);
   }
 
-  type = url.substring(0, url.indexOf("://"));
-  const config: AdapterConfig = url
-    .substring(url.indexOf("://") + 3)
+  if (checkType === true && Object.values(StorageType).includes(type as StorageType) === false) {
+    return { value: null, error: `"${type}" is not a valid storage type` };
+  }
+  return { value: config, error: null };
+};
+
+export const parseQueryString = (s: string, type?: string): { [id: string]: string } => {
+  return s
     .split("&")
     .map((pair) => pair.split("="))
     .reduce(
@@ -48,9 +54,8 @@ export const parseUrl = (url: string): ParseUrlResult => {
         acc[val[0]] = val[1];
         return acc;
       },
-      { type }
+      type ? { type } : {}
     );
-  return { value: config, error: null };
 };
 
 /**

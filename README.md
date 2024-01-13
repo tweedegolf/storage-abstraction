@@ -22,8 +22,10 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 <!-- toc -->
 
+- [How it works](#how-it-works)
 - [Instantiate a storage](#instantiate-a-storage)
   - [Configuration object](#configuration-object)
+    - [How bucketName is used](#how-bucketname-is-used)
   - [Configuration URL](#configuration-url)
 - [Adapters](#adapters)
 - [Adapter API](#adapter-api)
@@ -47,8 +49,8 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
   - [getConfigurationError](#getconfigurationerror)
   - [getServiceClient](#getserviceclient)
 - [Storage API](#storage-api)
+  - [getAdapter](#getadapter)
   - [switchAdapter](#switchadapter)
-- [How it works](#how-it-works)
 - [Adding more adapters](#adding-more-adapters)
   - [Define your configuration](#define-your-configuration)
   - [Adapter class](#adapter-class)
@@ -136,7 +138,9 @@ interface StorageAdapterConfig {
 }
 ```
 
-Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of storage; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
+Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of adapter; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
+
+#### How bucketName is used
 
 In earlier versions of this library the value you provided in the config for `bucketName` was stored locally. This made it for instance possible to add a file to a bucket without specifying the bucket:
 
@@ -192,11 +196,18 @@ const c1 = {
 
 ## Adapters
 
-The adapters are the key part of this library; where the `Storage` is merely a thin wrapper (see [How it works](#how-it-works)), adapters perform the actual actions on the storage by translating generic API methods calls to storage specific calls.
+The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the storage by translating generic API methods calls to storage specific calls. The adapters are peer dependencies and not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
 
-Below follows a description of the available adapters; what the configuration objects and URLs look like and what the default values are. Also per adapter the peer dependencies are listed as a handy copy-pasteble npm command. The peer dependencies are usually wrapper libraries such as aws-sdk but can also be specific modules with a specific functionality such as rimraf for local storage.
+A description of the available adapters; what the configuration objects and URLs look like and what the default values are can be found in the README of the adapter packages:
 
-If you want to use one or more of the adapters in your project make sure you install the required peer dependencies. By installing only the dependencies that you will actually use, your project codebase will stay as slim and maintainable as possible.
+| type          | npm command                                  | readme                                                                                                    |
+| ------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Local storage | `npm i @tweedegolf/sab-adapter-local`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-local?activeTab=readme)        |
+| Amazon S3     | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
+| Google Cloud  | `npm i @tweedegolf/sab-adapter-google-cloud` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud?activeTab=readme) |
+| Azure Blob    | `npm i @tweedegolf/sab-adapter-azure-blob`   | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob?activeTab=readme)   |
+| MinIO         | `npm i @tweedegolf/sab-adapter-minio`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio?activeTab=readme)        |
+| Backblaze B2  | `npm i @tweedegolf/sab-adapter-backblaze-b2` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2?activeTab=readme) |
 
 You can also add more adapters yourself very easily, see [below](#adding-more-adapters)
 
@@ -650,23 +661,37 @@ Returns the instance of the Adapter class that this Storage instance is currentl
 switchAdapter(config: string | AdapterConfig): void;
 ```
 
-Switch to another adapter in an existing `Storage` instance at runtime. The config parameter is the same type of object or URL that you use to instantiate a storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate `Storage` instances. This method is also called by the constructor to instantiate the initial storage type.
+This method is used to instantiate the right adapter when you create a Storage instance. The method can also be used to switch to another adapter in an existing Storage instance at runtime.
 
-More adapter classes can be added for different storage types, note however that there are many cloud storage providers that keep their API compliant with Amazon S3, for instance [Wasabi](https://wasabi.com/) and [Cubbit](https://www.cubbit.io/).
+The config parameter is the same type of object or URL that you use to instantiate a Storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate Storage instances:
+
+```typescript
+import { Storage } from "@tweedegolf/storage-abstraction"
+import { AdapterAmazonS3 } from "@tweedegolf/sab-adapter-amazon-s3";
+import { AdapterGoogleCloud } from "@tweedegolf/sab-adapter-google-cloud";
+
+const s1 = new Storage({type: "s3"});
+const s2 = new Storage({type: "gcs"});
+
+s2.addFile({
+  bucketName: "bucketOnGoogleCloud"
+  stream: s1.getFileAsStream("bucketOnAmazon", "some-image.png"),
+  targetPath: "copy-of-some-image.png",
+})
+
+```
 
 ## Adding more adapters
 
-`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
+It is relatively easy to add an adapter for an unsupported cloud service. Note however that many cloud storage services are compatible with Amazon S3 so if that is the case, please check first if the Amazon S3 adapter does the job; it might work right away. Sometimes even if a storage service is S3 compatible you have to write a separate adapter. For instance: although MinIO is S3 compliant it was necessary to write a separate adapter for MinIO.
 
 If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
 
-Your adapter might have additional dependencies such as a service client library like for instance aws-sdk as is used in the Amazon S3 adapter. Add these dependencies to the peer dependencies in the package.json file in the `./publish` folder
+Your adapter might have additional dependencies such as a service client library like for instance aws-sdk as is used in the Amazon S3 adapter. Add these dependencies to the package.json file in the `./publish/YourAdapter` folder.
 
-This way your extra dependencies will not be installed automatically but have to be installed manually if the user actually uses your adapter in their code.
+Please add your dependencies also to the package.json file in the root folder of the Storage Abstraction package in case you add some tests for your adapter. Your dependencies will not be added to the Storage Abstraction package because only the files in the publish folder are published to npm and there is a stripped version of the package.json file in the `./publish/Storage` folder. You could publish your adapter to npm and add it as a peer dependency to this package.json.
 
-Please add an npm command to your documentation that users can copy paste to their terminal, e.g. `npm i storage-wrapper additional-module`.
-
-And for library developers you can add your dependencies to the dependencies in the package.json file in the root directory as well because only the files in the publish folder are published to npm.
+`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
 
 ### Define your configuration
 
@@ -685,32 +710,38 @@ enum StorageType {
 }
 ```
 
-Your configuration object type should at least contain a key `type`, you could accomplish this by extending the interface `AdapterConfig`:
+A configuration object type should at least contain a key `type`. To enforce this the Storage class expects the config object to be of type `StorageAdapterConfig`:
 
 ```typescript
 export interface AdapterConfig {
-  type: string;
   bucketName?: string;
   [id: string]: any; // eslint-disable-line
 }
 
+export interface StorageAdapterConfig extends AdapterConfig {
+  type: string;
+}
+```
+
+For your custom configuration object you can either choose to extend `StorageAdapterConfig` or `AdapterConfig`. If you choose the latter you can use your adapter standalone without having to provide a redundant `type` key which is why the configuration object of all existing adapters extend `AdapterConfig`.
+
+```typescript
 export interface YourAdapterConfig extends AdapterConfig {
   additionalKey: string,
   ...
 }
-```
 
-example:
+const s = new Storage({
+  type: StorageType.YOUR_TYPE, // mandatory for Storage
+  key1: string, // other mandatory or optional key that your adapter need for instantiation
+  key2: string,
+}) // works!
 
-```typescript
-// your configuration object
-const o = {
-  type: "yourtype", // mandatory
-  key1?: string, // other mandatory or optional key that your adapter need for instantiation
-  key2?: string,
-  ...
-}
+const a = new YourAdapter({
+  key1: string,
+  key2: string,
 
+}) // works, type is not mandatory
 ```
 
 Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL
@@ -722,7 +753,9 @@ example:
 const u = "yourtype://key1=value1&key2=value2...";
 ```
 
-You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url is just a query string you can use the `parseURL` function in `./util.ts`; this function is implemented in `AbstractAdapter` and currently not overridden by any of the adapters.
+You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url is just a query string you can use the `parseURL` function in `./util.ts`; this function is imported and used by the parse method of `AbstractAdapter` and can also be overridden by your adapter.
+
+### Use your adapter standalone
 
 ### Adapter class
 
@@ -730,15 +763,15 @@ You could choose to let your adapter class extend the class `AbstractStorage`. I
 
 One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
 
-For the rest it contains stub methods that need to be overruled or extended by the adapter subclasses.
+The abstract stub methods need to be implemented and the other `IAdapter` methods need to be overruled the adapter subclasses. Note that your adapter should not implement `getAdapter` and `switchAdapter`
 
-You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IStorage` interface. The `parse` function in `AbstractAdapter` is among other util functions defined in the file `./src/util.ts` so you can easily import these in your own class if necessary.
+You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. The `parse` function in `AbstractAdapter` is among other util functions defined in the file `./src/util.ts` so you can easily import these in your own class if necessary.
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 
 ### Adapter function
 
-The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape or type of the interface `IStorage`.
+The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape or type of the interface `IAdapter`.
 
 If you like, you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
 

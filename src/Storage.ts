@@ -59,18 +59,20 @@ export class Storage implements IAdapter {
     return this.adapter;
   }
 
-  // public async switchAdapter(args: string | AdapterConfig): Promise<void> {
-  public switchAdapter(args: string | StorageAdapterConfig): void {
-    // console.log(args);
+  // public async switchAdapter(config: string | AdapterConfig): Promise<void> {
+  public switchAdapter(config: string | StorageAdapterConfig): void {
+    // console.log(config);
+    // at this point we are only interested in the type of the config
     let type: string;
-    if (typeof args === "string") {
-      if (args.indexOf("://") !== -1) {
-        type = args.substring(0, args.indexOf("://"));
+    if (typeof config === "string") {
+      if (config.indexOf("://") !== -1) {
+        type = config.substring(0, config.indexOf("://"));
       } else {
-        type = args;
+        // you can also pass a string that only contains the type, e.g. "gcs"
+        type = config;
       }
     } else {
-      type = args.type;
+      type = config.type;
     }
     // console.log("type", type);
     // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
@@ -80,14 +82,14 @@ export class Storage implements IAdapter {
     if (adapterClasses[type]) {
       const name = adapterClasses[type];
       const AdapterClass = require(path.join(__dirname, name))[name];
-      this._adapter = new AdapterClass(args);
+      this._adapter = new AdapterClass(config);
       // const AdapterClass = await import(`./${name}`);
       // this.adapter = new AdapterClass[name](args);
     } else if (adapterFunctions[type]) {
       const name = adapterFunctions[type];
       // const module = require(path.join(__dirname, name));
       const module = require(path.join(__dirname, name));
-      this._adapter = module.createAdapter(args);
+      this._adapter = module.createAdapter(config);
     }
   }
 

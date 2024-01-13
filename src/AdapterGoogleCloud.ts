@@ -23,8 +23,10 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   constructor(config?: string | AdapterConfigGoogleCloud) {
     super(config);
-    if (this._configError === null) {
+    try {
       this._client = new GoogleCloudStorage(this._config as object);
+    } catch (e) {
+      this._configError = `[configError] ${e.message}`;
     }
   }
 

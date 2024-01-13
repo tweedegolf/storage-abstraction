@@ -21,7 +21,7 @@ import {
   ResultObjectFilesB2,
 } from "./types/adapter_backblaze_b2";
 
-import { parseUrl, validateName } from "./util";
+import { parseQueryString, parseUrl, validateName } from "./util";
 
 const getConfig = (): AdapterConfigBackblazeB2 => {
   return {
@@ -147,19 +147,17 @@ const adapter: IAdapter = {
 
 const createAdapter = (config: string | AdapterConfigBackblazeB2): IAdapter => {
   console.log("create functional adapter");
-
-  let configError = null;
+  const configError = null;
+  let conf: AdapterConfigBackblazeB2;
   if (typeof config === "string") {
-    const { value, error } = parseUrl(config);
-    if (error) {
-      configError = `[configError] ${error}`;
-    }
-    config = value as AdapterConfigBackblazeB2;
+    conf = parseQueryString(config) as AdapterConfigBackblazeB2;
+  } else {
+    conf = { ...config };
   }
 
   const state = {
-    applicationKey: config.applicationKey,
-    applicationKeyId: config.applicationKeyId,
+    applicationKey: conf.applicationKey,
+    applicationKeyId: conf.applicationKeyId,
     configError,
   };
 

@@ -17,17 +17,15 @@ export enum StorageType {
   AZURE = "azure", // Azure Storage Blob
   MINIO = "minio",
 }
-export interface StorageAdapterConfig {
-  type: string;
-  bucketName?: string;
-  [id: string]: any; // eslint-disable-line
-}
 
 export interface AdapterConfig {
   bucketName?: string;
   [id: string]: any; // eslint-disable-line
 }
 
+export interface StorageAdapterConfig extends AdapterConfig {
+  type: string;
+}
 export interface Options {
   [id: string]: any; // eslint-disable-line
 }

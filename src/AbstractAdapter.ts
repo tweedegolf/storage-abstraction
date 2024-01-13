@@ -8,7 +8,7 @@ import {
   ResultObjectNumber,
   ResultObjectStream,
 } from "./types/result";
-import { parseUrl } from "./util";
+import { parseQueryString } from "./util";
 
 export abstract class AbstractAdapter implements IAdapter {
   protected _type = "abstract-adapter";
@@ -18,11 +18,12 @@ export abstract class AbstractAdapter implements IAdapter {
 
   constructor(config: string | AdapterConfig) {
     if (typeof config === "string") {
-      const { value, error } = parseUrl(config);
-      if (error) {
-        this._configError = `[configError] ${error}`;
+      const p = config.indexOf("://");
+      if (p !== -1) {
+        // strip the type, we don't need it anymore at this point
+        config = config.substring(p);
       }
-      this._config = value;
+      this._config = parseQueryString(config);
     } else {
       this._config = { ...config };
     }

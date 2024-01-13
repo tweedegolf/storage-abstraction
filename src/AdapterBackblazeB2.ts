@@ -32,19 +32,16 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   constructor(config: string | AdapterConfigBackblazeB2) {
     super(config);
-    if (this._configError === null) {
-      if (
-        typeof this._config.applicationKey === "undefined" ||
-        typeof this._config.applicationKeyId === "undefined"
-      ) {
-        this._configError =
-          'Please provide both a value for "applicationKey" and "applicationKeyId"';
-      } else {
-        try {
-          this._client = new B2(this._config);
-        } catch (e) {
-          this._configError = e.message;
-        }
+    if (
+      typeof this._config.applicationKey === "undefined" ||
+      typeof this._config.applicationKeyId === "undefined"
+    ) {
+      this._configError = 'Please provide both a value for "applicationKey" and "applicationKeyId"';
+    } else {
+      try {
+        this._client = new B2(this._config);
+      } catch (e) {
+        this._configError = `[configError] ${e.message}`;
       }
     }
   }
