@@ -25,14 +25,22 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 - [How it works](#how-it-works)
 - [Instantiate a storage](#instantiate-a-storage)
   - [Configuration object](#configuration-object)
-    - [How bucketName is used](#how-bucketname-is-used)
   - [Configuration URL](#configuration-url)
+  - [How bucketName is used](#how-bucketname-is-used)
 - [Adapters](#adapters)
+- [Adapter Introspect API](#adapter-introspect-api)
+  - [getType](#gettype)
+  - [getConfiguration](#getconfiguration)
+  - [getConfigurationError](#getconfigurationerror)
+  - [getServiceClient](#getserviceclient)
 - [Adapter API](#adapter-api)
+  - [listBuckets](#listbuckets)
+  - [listFiles](#listfiles)
+  - [bucketExists](#bucketexists)
+  - [fileExists](#fileexists)
   - [createBucket](#createbucket)
   - [clearBucket](#clearbucket)
   - [deleteBucket](#deletebucket)
-  - [listBuckets](#listbuckets)
   - [addFile](#addfile)
   - [addFileFromPath](#addfilefrompath)
   - [addFileFromBuffer](#addfilefrombuffer)
@@ -41,18 +49,12 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
   - [getFileAsStream](#getfileasstream)
   - [removeFile](#removefile)
   - [sizeOf](#sizeof)
-  - [bucketExists](#bucketexists)
-  - [fileExists](#fileexists)
-  - [listFiles](#listfiles)
-  - [getType](#gettype)
-  - [getConfiguration](#getconfiguration)
-  - [getConfigurationError](#getconfigurationerror)
-  - [getServiceClient](#getserviceclient)
 - [Storage API](#storage-api)
   - [getAdapter](#getadapter)
   - [switchAdapter](#switchadapter)
 - [Adding more adapters](#adding-more-adapters)
   - [Define your configuration](#define-your-configuration)
+  - [Use your adapter standalone](#use-your-adapter-standalone)
   - [Adapter class](#adapter-class)
   - [Adapter function](#adapter-function)
   - [Register your adapter](#register-your-adapter)
@@ -75,7 +77,7 @@ List of available adapters:
 - [Azure Blob](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob) `npm i @tweedegolf/sab-adapter-azure-blob`
 - [MinIO](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio) `npm i @tweedegolf/sab-adapter-minio`
 
-A `Storage` instance creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
+When you create a `Storage` instance it creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
 
 ```typescript
 // member function of class Storage
@@ -104,14 +106,14 @@ Therefor, dependent on what definitions you use, this library could be seen as a
 const s = new Storage(config);
 ```
 
-When you create a new `Storage` instance the `config` argument is used to create the adapter. You can provide the `config` argument in 2 forms:
+When you create a new `Storage` instance the `config` argument is used to instantiate the right adapter. You can provide the `config` argument in 2 forms:
 
 1. using a configuration object (js: `typeof === "object"` ts: `AdapterConfig`)
 2. using a configuration URL (`typeof === "string"`)
 
 Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
 
-The configuration must at least specify a type; the type is used to determine which adapter must be created. Note that the adapters are peer dependencies and not included in the Storage Abstraction project so you have to add them to you project before you can use them.
+The configuration must at least specify a type; the type is used to determine which adapter should be created. Note that the adapters are peer dependencies and not included in the Storage Abstraction project so you have to add them to you project before you can use them.
 
 The value of the type is one of the enum members of `StorageType`:
 
@@ -126,47 +128,24 @@ enum StorageType {
 }
 ```
 
+The Storage instance is only interested in the type so it checks if the type is valid and then passes the rest of the configuration on to the adapter constructor. It is the responsibility of the adapter to perform further checks on the configuration. I.e. if all mandatory values are available such as credentials or an endpoint.
+
 ### Configuration object
 
-A configuration object type that extends `AdapterConfig`:
+To enforce that the configuration object contains a `type` key, it expects the configuration object to be of type `StorageAdapterConfig`
 
 ```typescript
-interface StorageAdapterConfig {
-  type: string;
+interface AdapterConfig {
   bucketName?: string;
-  [id: string]: any; // other service specific mandatory or optional keys
+  [id: string]: any; // any service specific mandatory or optional key
+}
+
+interface StorageAdapterConfig extends AdapterConfig {
+  type: string;
 }
 ```
 
 Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of adapter; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
-
-#### How bucketName is used
-
-In earlier versions of this library the value you provided in the config for `bucketName` was stored locally. This made it for instance possible to add a file to a bucket without specifying the bucket:
-
-```typescript
-storage.addFile("path/to/your/file"); // the file was automatically added to the selected bucket
-```
-
-Since version 2.0 you always have to specify the bucket for every bucket action:
-
-```typescript
-storage.addFile({
-  bucketName: "your-bucket",
-  origPath: "path/to/your/file",
-  targetPath: "folder/file",
-});
-```
-
-It can still be useful to provide a bucket name with the config, for instance:
-
-```typescript
-storage.addFile({
-  bucketName: storage.config.bucketName,
-  origPath: "path/to/your/file",
-  targetPath: "folder/file",
-});
-```
 
 ### Configuration URL
 
@@ -194,9 +173,37 @@ const c1 = {
 };
 ```
 
+### How bucketName is used
+
+In earlier versions of this library the value you provided in the configuration for `bucketName` was stored locally. This made it for instance possible to add a file to a bucket without specifying the bucket:
+
+```typescript
+storage.addFile("path/to/your/file"); // the file was automatically added to the selected bucket
+```
+
+Since version 2.0 you always have to specify the bucket for every bucket action:
+
+```typescript
+storage.addFile({
+  bucketName: "your-bucket",
+  origPath: "path/to/your/file",
+  targetPath: "folder/file",
+});
+```
+
+It can still be useful to provide a bucket name with the configuration, for instance:
+
+```typescript
+storage.addFile({
+  bucketName: storage.config.bucketName,
+  origPath: "path/to/your/file",
+  targetPath: "folder/file",
+});
+```
+
 ## Adapters
 
-The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the storage by translating generic API methods calls to storage specific calls. The adapters are peer dependencies and not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
+The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the cloud storage by translating generic API methods calls to storage specific calls. The adapters are peer dependencies and not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
 
 A description of the available adapters; what the configuration objects and URLs look like and what the default values are can be found in the README of the adapter packages:
 
@@ -211,9 +218,95 @@ A description of the available adapters; what the configuration objects and URLs
 
 You can also add more adapters yourself very easily, see [below](#adding-more-adapters)
 
+## Adapter Introspect API
+
+These methods can be used to introspect the adapter. Unlike all other methods, these methods do not return a promise but return a value immediately.
+
+### getType
+
+```typescript
+getType(): string;
+```
+
+Returns the type of storage, value is one of the enum `StorageType`.
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.type);
+```
+
+### getConfiguration
+
+```typescript
+getConfiguration(): AdapterConfig
+```
+
+Returns the typed configuration object as provided when the storage was instantiated. If you have provided the configuration in url form, the function will return it as an configuration object.
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.config);
+```
+
+### getConfigurationError
+
+```typescript
+getConfigurationError(): string | null
+```
+
+Returns an error message if something has gone wrong with initialization or authorization. Returns `null` otherwise.
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.configError);
+```
+
+### getServiceClient
+
+```typescript
+getServiceClient(): any
+```
+
+Under the hood some adapters create an instance of a service client that actually makes connection with the cloud storage. If that is the case, this method returns the instance of that service client.
+
+For instance in the adapter for Amazon S3 an instance of the S3Client of the aws sdk v3 is instantiated; this instance will be returned if you call `getServiceClient` on a storage instance with an S3 adapter.
+
+```typescript
+// inside the Amazon S3 adapter an instance of the S3Client is created. S3Client is part of the aws-sdk
+this._client = new S3Client();
+```
+
+This method is particularly handy if you need to make API calls that are not implemented in this library. The example below shows how the `CopyObjectCommand` is used directly on the service client. The API of the Storage Abstraction does not (yet) offer a method to copy an object that is already stored in the cloud service so this can be a way to circumvent that.
+
+```typescript
+const storage = new Storage(config);
+const client = storage.getServiceClient();
+
+const input = {
+  Bucket: "destinationbucket",
+  CopySource: "/sourcebucket/HappyFacejpg",
+  Key: "HappyFaceCopyjpg",
+};
+const command = new CopyObjectCommand(input);
+const response = await client.send(command);
+```
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.serviceClient);
+```
+
 ## Adapter API
 
-All methods that access the underlying cloud storage service return a promise that always resolves in a `ResponseObject` type or a variant thereof:
+These methods are actually accessing the underlying cloud storage service. All these methods are async and return a promise that always resolves in a `ResponseObject` type or a variant thereof:
 
 ```typescript
 export interface ResultObject {
@@ -225,6 +318,82 @@ export interface ResultObject {
 If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"` or for instance an array of bucket names
 
 In case the call yields an error, the `value` key will be `null` and the `error` key will hold the error message. Usually this is the error message as sent by the cloud storage service so if necessary you can lookup the error message in the documentation of that service to learn more about the error.
+
+### listBuckets
+
+```typescript
+listBuckets(): Promise<ResultObjectBuckets>
+```
+
+Returns an array with the names of all buckets in the storage.
+
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+
+return type:
+
+```typescript
+export type ResultObjectBuckets = {
+  value: Array<string> | null;
+  error: string | null;
+};
+```
+
+### listFiles
+
+```typescript
+listFiles(bucketName: string): Promise<ResultObjectFiles>;
+```
+
+Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file.
+
+return type:
+
+```typescript
+export type ResultObjectFiles = {
+  error: string | null;
+  value: Array<[string, number]> | null;
+};
+```
+
+If the call succeeds the `value` key will hold an array of tuples.
+
+### bucketExists
+
+```typescript
+bucketExists(name: string): Promise<ResultObjectBoolean>;
+```
+
+Check whether a bucket exists or not.
+
+return type:
+
+```typescript
+export type ResultObjectBoolean = {
+  error: string | null;
+  value: boolean | null;
+};
+```
+
+If the call succeeds the `value` key will hold a boolean value.
+
+### fileExists
+
+```typescript
+fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+```
+
+Check whether a file exists or not.
+
+return type:
+
+```typescript
+export type ResultObjectBoolean = {
+  error: string | null;
+  value: boolean | null;
+};
+```
+
+If the call succeeds the `value` key will hold a boolean value.
 
 ### <a name='createbucket'></a>createBucket
 
@@ -292,25 +461,6 @@ export interface ResultObject {
 ```
 
 If the call succeeds the `value` key will hold the string "ok".
-
-### <a name='listbuckets'></a>listBuckets
-
-```typescript
-listBuckets(): Promise<ResultObjectBuckets>
-```
-
-Returns an array with the names of all buckets in the storage.
-
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
-
-return type:
-
-```typescript
-export type ResultObjectBuckets = {
-  value: Array<string> | null;
-  error: string | null;
-};
-```
 
 ### addFile
 
@@ -514,131 +664,6 @@ export type ResultObjectNumber = {
 
 If the call succeeds the `value` key will hold the size of the file.
 
-### bucketExists
-
-```typescript
-bucketExists(name: string): Promise<ResultObjectBoolean>;
-```
-
-Returns whether a bucket exists or not.
-
-return type:
-
-```typescript
-export type ResultObjectBoolean = {
-  error: string | null;
-  value: boolean | null;
-};
-```
-
-If the call succeeds the `value` key will hold a boolean value.
-
-### fileExists
-
-```typescript
-fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
-```
-
-Returns whether a file exists or not.
-
-return type:
-
-```typescript
-export type ResultObjectBoolean = {
-  error: string | null;
-  value: boolean | null;
-};
-```
-
-If the call succeeds the `value` key will hold a boolean value.
-
-### listFiles
-
-```typescript
-listFiles(bucketName: string): Promise<ResultObjectFiles>;
-```
-
-Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file.
-
-return type:
-
-```typescript
-export type ResultObjectFiles = {
-  error: string | null;
-  value: Array<[string, number]> | null;
-};
-```
-
-If the call succeeds the `value` key will hold an array of tuples.
-
-### getType
-
-```typescript
-getType(): string;
-```
-
-Returns the type of storage, value is one of the enum `StorageType`.
-
-Also implemented as getter:
-
-```typescript
-const storage = new Storage(config);
-console.log(storage.type);
-```
-
-### <a name='getconfiguration'></a>getConfiguration
-
-```typescript
-getConfiguration(): AdapterConfig
-```
-
-Returns the typed configuration object as provided when the storage was instantiated. If you have provided the configuration in url form, the function will return it as an configuration object.
-
-Also implemented as getter:
-
-```typescript
-const storage = new Storage(config);
-console.log(storage.config);
-```
-
-### getConfigurationError
-
-```typescript
-getConfigurationError(): string | null
-```
-
-Returns an error message if something has gone wrong with initialization or authorization. Returns `null` otherwise.
-
-Also implemented as getter:
-
-```typescript
-const storage = new Storage(config);
-console.log(storage.configError);
-```
-
-### getServiceClient
-
-```typescript
-getServiceClient(): any
-```
-
-Returns the instance of the service client of the cloud storage. Under the hood each adapter creates an instance of a service client that actually make connection with the cloud storage.
-
-For instance in the adapter for Amazon S3 an instance of the S3Client of the aws sdk v3 is instantiated; this instance will be returned if you call `getServiceClient` on a storage instance with an S3 adapter.
-
-This method is particularly handy if you need to make API calls that are not implemented in this library.
-
-```typescript
-this._client = new S3Client();
-```
-
-Also implemented as getter:
-
-```typescript
-const storage = new Storage(config);
-console.log(storage.serviceClient);
-```
-
 ## Storage API
 
 The Storage class has two extra method besides all methods of the `IAdapter` interface.
@@ -653,7 +678,7 @@ const s = new Storage({type: StorageType.S3})
 const a = s.adapter;
 ```
 
-Returns the instance of the Adapter class that this Storage instance is currently using to access a storage
+Returns the instance of the Adapter class that this Storage instance is currently using to access a storage service.
 
 ### <a name='switchadapter'></a>switchAdapter
 
@@ -663,7 +688,9 @@ switchAdapter(config: string | AdapterConfig): void;
 
 This method is used to instantiate the right adapter when you create a Storage instance. The method can also be used to switch to another adapter in an existing Storage instance at runtime.
 
-The config parameter is the same type of object or URL that you use to instantiate a Storage. This method can be handy if your application needs a view on multiple storages. If your application needs to copy over files from one storage to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate Storage instances:
+The config parameter is the same type of object or URL that you use to instantiate a Storage. This method can be handy if your application needs a view on multiple storages.
+
+If your application needs to copy over files from one storage service to another, say for instance from Google Cloud to Amazon S3, then it is more convenient to create 2 separate Storage instances:
 
 ```typescript
 import { Storage } from "@tweedegolf/storage-abstraction"
@@ -681,7 +708,7 @@ s2.addFile({
 
 ```
 
-## Adding more adapters
+## Adding an adapter
 
 It is relatively easy to add an adapter for an unsupported cloud service. Note however that many cloud storage services are compatible with Amazon S3 so if that is the case, please check first if the Amazon S3 adapter does the job; it might work right away. Sometimes even if a storage service is S3 compatible you have to write a separate adapter. For instance: although MinIO is S3 compliant it was necessary to write a separate adapter for MinIO.
 
@@ -691,9 +718,15 @@ Your adapter might have additional dependencies such as a service client library
 
 Please add your dependencies also to the package.json file in the root folder of the Storage Abstraction package in case you add some tests for your adapter. Your dependencies will not be added to the Storage Abstraction package because only the files in the publish folder are published to npm and there is a stripped version of the package.json file in the `./publish/Storage` folder. You could publish your adapter to npm and add it as a peer dependency to this package.json.
 
-`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
+Follow these steps:
 
-### Define your configuration
+1. Add a new type to the `StorageType` enum
+2. Define a configuration object (and a configuration url if you like)
+3. Write your adapter, make sure it implements all API methods
+4. Register your adapter
+5. Publish your adapter on npm and add it as a peer dependency to the Storage Abstraction package
+
+### Add your storage type
 
 You should add the name of the your type to the enum `StorageType`.
 
@@ -709,6 +742,8 @@ enum StorageType {
   YOUR_TYPE = "yourtype",
 }
 ```
+
+### Define your configuration
 
 A configuration object type should at least contain a key `type`. To enforce this the Storage class expects the config object to be of type `StorageAdapterConfig`:
 
@@ -753,19 +788,17 @@ example:
 const u = "yourtype://key1=value1&key2=value2...";
 ```
 
-You can format the configuration URL completely as you like as long as your adapter has an appropriate parsing function. If your url is just a query string you can use the `parseURL` function in `./util.ts`; this function is imported and used by the parse method of `AbstractAdapter` and can also be overridden by your adapter.
-
-### Use your adapter standalone
+You can format the configuration URL completely as you like as long as your adapter has an appropriate parse function. If your url is just a query string you don't need to write a parse function, can either use the parse function of `AbstractAdapter` by extending this class or import the `parseUrl` or `parseQueryString` function from `./src/util.ts`.
 
 ### Adapter class
 
-You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it parses the configuration.
+You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it parses the configuration url into an object.
 
 One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
 
-The abstract stub methods need to be implemented and the other `IAdapter` methods need to be overruled the adapter subclasses. Note that your adapter should not implement `getAdapter` and `switchAdapter`
+The abstract stub methods need to be implemented and the other `IAdapter` methods need to be overruled the adapter subclasses. Note that your adapter should not implement the Storage methods `getAdapter` and `switchAdapter`
 
-You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. The `parse` function in `AbstractAdapter` is among other util functions defined in the file `./src/util.ts` so you can easily import these in your own class if necessary.
+You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. You'll find some configuration parse functions in `./src/util.ts` so you can easily import these in your own class if necessary.
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 
@@ -776,6 +809,8 @@ The only requirement for this type of adapter is that your module exports a func
 If you like, you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
 
 ### Register your adapter
+
+`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
 
 After you've finished your adapter module you need to register it, this requires 3 simple steps:
 

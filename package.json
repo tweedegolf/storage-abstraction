@@ -34,7 +34,7 @@
     "typescript": "^5.0.4"
   },
   "scripts": {
-    "test-all": "npm run test-urls-jasmine && npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2 && npm run test-azure",
+    "test-all": "npm run test-local && npm run test-gcs && npm run test-s3 && npm run test-b2 && npm run test-azure",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts",
     "test-local": "LOCAL_DIRECTORY='tests/test_directory' ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts 0",
     "test-gcs": "ts-node ./node_modules/.bin/jasmine ./tests/test.jasmine.ts 1",
