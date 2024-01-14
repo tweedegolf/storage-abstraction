@@ -15,32 +15,9 @@ import {
   ResultObjectNumber,
   ResultObjectStream,
 } from "./types/result";
+import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters";
 
-//  add new storage adapters here
-const adapterClasses = {
-  b2: "AdapterBackblazeB2",
-  s3: "AdapterAmazonS3",
-  gcs: "AdapterGoogleCloudStorage",
-  local: "AdapterLocal",
-  azure: "AdapterAzureStorageBlob",
-  minio: "AdapterMinio",
-};
-
-// or here for functional adapters
-const adapterFunctions = {
-  b2f: "AdapterBackblazeB2F",
-};
-
-const availableAdapters: string = Object.keys(adapterClasses)
-  .concat(Object.keys(adapterFunctions))
-  .reduce((acc, val) => {
-    if (acc.findIndex((v) => v === val) === -1) {
-      acc.push(val);
-    }
-    return acc;
-  }, [])
-  .sort()
-  .join(", ");
+const availableAdapters: string = getAvailableAdapters();
 
 export class Storage implements IAdapter {
   private _adapter: IAdapter;
@@ -80,15 +57,30 @@ export class Storage implements IAdapter {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
     if (adapterClasses[type]) {
-      const name = adapterClasses[type];
-      const AdapterClass = require(path.join(__dirname, name))[name];
+      const adapterName = adapterClasses[type][0];
+      const adapterPath = adapterClasses[type][1];
+      // const AdapterClass = require(path.join(__dirname, name));
+      let AdapterClass: any; // eslint-disable-line
+      try {
+        AdapterClass = require(adapterPath)[adapterName];
+        console.log(`using remote adapter class ${adapterName}`);
+      } catch (e) {
+        console.log(`using local adapter class ${adapterName}`);
+        AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
+      }
       this._adapter = new AdapterClass(config);
       // const AdapterClass = await import(`./${name}`);
       // this.adapter = new AdapterClass[name](args);
     } else if (adapterFunctions[type]) {
-      const name = adapterFunctions[type];
+      const adapterName = adapterClasses[type][0];
+      const adapterPath = adapterClasses[type][1];
       // const module = require(path.join(__dirname, name));
-      const module = require(path.join(__dirname, name));
+      let module: any; // eslint-disable-line
+      try {
+        module = require(adapterPath);
+      } catch (e) {
+        module = require(require(path.join(__dirname, adapterPath)));
+      }
       this._adapter = module.createAdapter(config);
     }
   }

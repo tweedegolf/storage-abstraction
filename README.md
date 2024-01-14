@@ -720,15 +720,15 @@ Please add your dependencies also to the package.json file in the root folder of
 
 Follow these steps:
 
-1. Add a new type to the `StorageType` enum
+1. Add a new type to the `StorageType` enum in `./src/types/general.ts`
 2. Define a configuration object (and a configuration url if you like)
 3. Write your adapter, make sure it implements all API methods
-4. Register your adapter
-5. Publish your adapter on npm and add it as a peer dependency to the Storage Abstraction package
+4. Register your adapter in `./src/adapters.ts`
+5. Publish your adapter on npm and add it as a peer dependency to the Storage Abstraction package in `./publish/Storage/package.json`. You may also want to add the newly supported storage service to the keywords array.
 
 ### Add your storage type
 
-You should add the name of the your type to the enum `StorageType`.
+You should add the name of the your type to the enum `StorageType` in `./src/types/general.ts`. It is not mandatory but may be very handy.
 
 ```typescript
 // add your type to the enum
@@ -758,7 +758,7 @@ export interface StorageAdapterConfig extends AdapterConfig {
 }
 ```
 
-For your custom configuration object you can either choose to extend `StorageAdapterConfig` or `AdapterConfig`. If you choose the latter you can use your adapter standalone without having to provide a redundant `type` key which is why the configuration object of all existing adapters extend `AdapterConfig`.
+For your custom configuration object you can either choose to extend `StorageAdapterConfig` or `AdapterConfig`. If you choose the latter you can use your adapter standalone without having to provide a redundant key `type`, which is why the configuration object of all existing adapters extend `AdapterConfig`.
 
 ```typescript
 export interface YourAdapterConfig extends AdapterConfig {
@@ -779,7 +779,7 @@ const a = new YourAdapter({
 }) // works, type is not mandatory
 ```
 
-Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL
+Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL. Upon instantiation the Storage class checks if a protocol is present on the provided url.
 
 example:
 
@@ -788,7 +788,7 @@ example:
 const u = "yourtype://key1=value1&key2=value2...";
 ```
 
-You can format the configuration URL completely as you like as long as your adapter has an appropriate parse function. If your url is just a query string you don't need to write a parse function, can either use the parse function of `AbstractAdapter` by extending this class or import the `parseUrl` or `parseQueryString` function from `./src/util.ts`.
+You can format the configuration URL completely as you like as long as your adapter has an appropriate function to parse it in an object. If your url is just a query string you don't need to write a parse function, you can either use the parse function of `AbstractAdapter` by extending this class or import the `parseUrl` or `parseQueryString` function from `./src/util.ts`.
 
 ### Adapter class
 
@@ -806,19 +806,36 @@ You can use this [template](https://github.com/tweedegolf/storage-abstraction/bl
 
 The only requirement for this type of adapter is that your module exports a function `createAdapter` that takes a configuration object or URL as parameter and returns an object that has the shape or type of the interface `IAdapter`.
 
-If you like, you can use the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
+You may want to check if you can use some of the utility functions defined in `./src/util.js`. Also there is a [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_functional.ts) file that you can use as a starting point for your module.
 
 ### Register your adapter
 
-`switchAdapter` parses the configuration and creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a path to an adapter module; the module will be loaded in runtime using `require()`.
+The `switchAdapter` method of Storage parses the type from the configuration and then creates the appropriate adapter instance. This is done by a lookup table that maps a storage type to a tuple that contains the name of the adapter and the path to the adapter module:
 
-After you've finished your adapter module you need to register it, this requires 3 simple steps:
+```typescript
+export const adapterClasses = {
+  s3: ["AdapterAmazonS3", "@tweedegolf/sab-adapter-amazon-s3"],
+  your_type: ["AdapterYourService", "@you/sab-adapter-your-service"],
+  ...
+};
+```
 
-1] As mentioned earlier the adapters are loaded at runtime, therefor you have to add your type and the path to your module to the lookup table at the top of the file [`./src/Storage.ts`](https://github.com/tweedegolf/storage-abstraction/blob/master/src/Storage.ts#L5).
+If `switchAdapter` fails to find the module at the specified path it tries to find it in the source folder by looking for a file that has the same name as your adapter, so in the example above it looks for `./src/AdapterYourService.ts`.
 
-2] Add your type to the enum `StorageTypes` in `./src/types.ts`.
+Once the module is found it will be loaded in runtime using `require()`. An error will be thrown the type is not declared or if the module can not be found.
 
-3] Also in the file `./src/types.ts` add your configuration type that ideally extends `AdapterConfig`.
+The lookup table is defined in `./src/adapters.ts`.
+
+### Adding your adapter code to this package
+
+You can create your own adapter in a separate repository and publish it from there to npm. You may also want to add your adapter code to this package, to do this follow these steps:
+
+1. Place the adapter in the `./src` folder
+2. Create a file that contains all your types in the `./src/types` folder
+3. Create an index file in the `./src/indexes` folder
+4. Create a folder with the same name as your adapter in the `./publish` folder
+5. Add a package.json and a README.md file to this folder
+6. Add your adapter to the `copy.ts` file in the root folder
 
 ## Tests
 

@@ -1,20 +1,15 @@
 import fs from "fs";
+import { validateName } from "./util";
+import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
 import {
-  AdapterConfig,
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
-  IStorage,
-  Options,
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
   ResultObjectStream,
-  StreamOptions,
-} from "./types";
-import { validateName } from "./util";
+} from "./types/result";
+import { FilePathParams, FileBufferParams, FileStreamParams } from "./types/add_file_params";
 
 /**
  * You can use this template as a starting point for your own functional adapter. You are
@@ -26,7 +21,7 @@ import { validateName } from "./util";
  */
 
 const getType = (): string => "string";
-const getConfiguration = (): AdapterConfig => ({}) as AdapterConfig;
+const getConfig = (): AdapterConfig => ({}) as AdapterConfig;
 const getConfigError = (): string | null => null;
 const getServiceClient = (): any => "instance of your 3-rd party service client"; // eslint-disable-line
 
@@ -117,14 +112,14 @@ const fileExists = async (bucketName: string, fileName: string): Promise<ResultO
   return { value: true, error: null };
 };
 
-const adapter: IStorage = {
+const adapter: IAdapter = {
   getType,
   get type() {
     return this.getType();
   },
-  getConfiguration,
+  getConfig,
   get config() {
-    return getConfiguration();
+    return getConfig();
   },
   getConfigError,
   get configError() {
@@ -151,8 +146,8 @@ const adapter: IStorage = {
   bucketExists,
 };
 
-const createAdapter = (config: AdapterConfig): IStorage => {
-  console.log("create adapter");
+const createAdapter = (config: AdapterConfig): IAdapter => {
+  console.log("create adapter", config);
   return adapter;
 };
 

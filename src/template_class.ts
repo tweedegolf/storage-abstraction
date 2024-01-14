@@ -2,21 +2,17 @@ import fs from "fs";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 // Use ConfigTemplate as starting point for your own configuration object
-import {
-  AdapterConfig,
-  ResultObject,
-  FilePathParams,
-  FileBufferParams,
-  FileStreamParams,
-  ResultObjectBoolean,
-  ResultObjectFiles,
-  ResultObjectBuckets,
-  ResultObjectNumber,
-  Options,
-  ResultObjectStream,
-  StreamOptions,
-} from "./types";
 import { parseUrl, validateName } from "./util";
+import { AdapterConfig, Options, StreamOptions } from "./types/general";
+import {
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import { FilePathParams, FileBufferParams, FileStreamParams } from "./types/add_file_params";
 
 // stub of a 3rd-party service client library to silence ts-lint
 // see the last line of the constructor below
@@ -35,7 +31,7 @@ export class AdapterTemplate extends AbstractAdapter {
   // for your interface but it is convenient if you start your name with Config and then
   // the name of your storage service in camelcase, e.g. ConfigMyStorageType.
   constructor(config: string | AdapterConfig) {
-    super();
+    super(config);
     if (typeof config === "string") {
       // you may want to implement your own parser instead of the default query string parser
       const { value, error } = parseUrl(config);
