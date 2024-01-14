@@ -1,9 +1,9 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "2.0.0",
+  "version": "2.0.7",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or any of the supported cloud storage services.",
-  "main": "dist/index/index.js",
-  "types": "dist/index/index.d.ts",
+  "main": "dist/index/Storage.js",
+  "types": "dist/index/Storage.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "peerDependencies": {

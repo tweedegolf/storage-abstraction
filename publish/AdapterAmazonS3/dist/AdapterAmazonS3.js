@@ -24,7 +24,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
         super(config);
         this._type = general_1.StorageType.S3;
         this._configError = null;
-        if (this._configError === null) {
+        try {
             if (this.config.accessKeyId && this.config.secretAccessKey) {
                 const o = Object.assign({}, this.config); // eslint-disable-line
                 delete o.credentials;
@@ -41,6 +41,9 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                 delete o.secretAccessKey;
                 this._client = new client_s3_1.S3Client(o);
             }
+        }
+        catch (e) {
+            this._configError = `[configError] ${e.message}`;
         }
     }
     getFiles(name, maxFiles = 10000) {

@@ -46,42 +46,45 @@ class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
         super(config);
         this._type = general_1.StorageType.MINIO;
         this._configError = null;
-        if (this._configError === null) {
-            if (this.config.accessKey === "undefined" ||
-                this.config.secretKey === "undefined" ||
-                this.config.endPoint === "undefined") {
-                this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
+        if (this.config.accessKey === "undefined" ||
+            this.config.secretKey === "undefined" ||
+            this.config.endPoint === "undefined") {
+            this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
+        }
+        else {
+            const useSSL = this.config.useSSL;
+            if (typeof useSSL === "undefined") {
+                this.config.useSSL = true;
             }
-            else {
-                const useSSL = this.config.useSSL;
-                if (typeof useSSL === "undefined") {
-                    this.config.useSSL = true;
-                }
-                if (typeof useSSL === "string") {
-                    this.config.useSSL = useSSL === "true";
-                }
-                const port = this.config.port;
-                if (typeof port === "undefined") {
-                    this.config.port = useSSL ? 443 : 80;
-                }
-                if (typeof port === "string") {
-                    this.config.port = parseInt(port, 10);
-                }
-                const region = this.config.region;
-                if (typeof region !== "string") {
-                    this.config.region = "auto";
-                }
-                // console.log(useSSL, port, region);
-                const c = {
-                    endPoint: this.config.endPoint,
-                    region: this.config.region,
-                    port: this.config.port,
-                    useSSL: this.config.useSSL,
-                    accessKey: this.config.accessKey,
-                    secretKey: this.config.secretKey,
-                };
-                // console.log(c);
+            if (typeof useSSL === "string") {
+                this.config.useSSL = useSSL === "true";
+            }
+            const port = this.config.port;
+            if (typeof port === "undefined") {
+                this.config.port = this.config.useSSL ? 443 : 80;
+            }
+            if (typeof port === "string") {
+                this.config.port = parseInt(port, 10);
+            }
+            const region = this.config.region;
+            if (typeof region !== "string") {
+                this.config.region = "auto";
+            }
+            // console.log(useSSL, port, region);
+            const c = {
+                endPoint: this.config.endPoint,
+                region: this.config.region,
+                port: this.config.port,
+                useSSL: this.config.useSSL,
+                accessKey: this.config.accessKey,
+                secretKey: this.config.secretKey,
+            };
+            // console.log(c);
+            try {
                 this._client = new Minio.Client(c);
+            }
+            catch (e) {
+                this._configError = `[configError] ${e.message}`;
             }
         }
     }

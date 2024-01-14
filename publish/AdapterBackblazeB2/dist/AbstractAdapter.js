@@ -17,11 +17,12 @@ class AbstractAdapter {
         this._configError = null;
         this._client = null; // eslint-disable-line
         if (typeof config === "string") {
-            const { value, error } = (0, util_1.parseUrl)(config);
-            if (error) {
-                this._configError = `[configError] ${error}`;
+            const p = config.indexOf("://");
+            if (p !== -1) {
+                // strip the type, we don't need it anymore at this point
+                config = config.substring(p);
             }
-            this._config = value;
+            this._config = (0, util_1.parseQueryString)(config);
         }
         else {
             this._config = Object.assign({}, config);

@@ -24,8 +24,11 @@ class AdapterGoogleCloud extends AbstractAdapter_1.AbstractAdapter {
         super(config);
         this._type = general_1.StorageType.GCS;
         this._configError = null;
-        if (this._configError === null) {
+        try {
             this._client = new storage_1.Storage(this._config);
+        }
+        catch (e) {
+            this._configError = `[configError] ${e.message}`;
         }
     }
     // util method used by listFiles

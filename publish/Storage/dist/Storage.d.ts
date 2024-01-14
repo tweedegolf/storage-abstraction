@@ -6,7 +6,7 @@ export declare class Storage implements IAdapter {
     constructor(config: string | StorageAdapterConfig);
     get adapter(): IAdapter;
     getAdapter(): IAdapter;
-    switchAdapter(args: string | StorageAdapterConfig): void;
+    switchAdapter(config: string | StorageAdapterConfig): void;
     get type(): string;
     getType(): string;
     get config(): AdapterConfig;

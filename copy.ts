@@ -76,6 +76,14 @@ async function copy(): Promise<string> {
           path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
         )
       );
+      if (val === "Storage") {
+        acc.push(
+          fs.promises.copyFile(
+            path.join("publish", "dist", `adapters.${ext}`),
+            path.join("publish", val, "dist", `adapters.${ext}`)
+          )
+        );
+      }
 
       types.forEach((type) => {
         acc.push(
@@ -111,14 +119,17 @@ async function copy(): Promise<string> {
 async function run() {
   const s = await beforeAll();
   if (s !== "ok") {
+    console.log(`error beforeAll ${s}`);
     process.exit(1);
   }
   const t = await createDirs();
   if (t !== "ok") {
+    console.log(`error createDirs ${t}`);
     process.exit(1);
   }
   const u = await copy();
   if (u !== "ok") {
+    console.log(`error copy ${u}`);
     process.exit(1);
   }
   await fs.promises.rm(path.join("publish", "dist"), { recursive: true, force: true });

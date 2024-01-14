@@ -32,34 +32,52 @@ class AdapterAzureBlob extends AbstractAdapter_1.AbstractAdapter {
         super(config);
         this._type = general_1.StorageType.AZURE;
         this._configError = null;
-        if (this._configError === null) {
-            if (typeof this.config.accountName === "undefined" &&
-                typeof this.config.connectionString === "undefined") {
-                this._configError =
-                    '[configError] Please provide at least a value for "accountName" or for "connectionString';
-                return;
-            }
+        if (typeof this.config.accountName === "undefined" &&
+            typeof this.config.connectionString === "undefined") {
+            this._configError =
+                '[configError] Please provide at least a value for "accountName" or for "connectionString';
+            return;
+        }
+        if (typeof this.config.accountKey !== "undefined") {
             // option 1: accountKey
-            if (typeof this.config.accountKey !== "undefined") {
-                try {
-                    this.sharedKeyCredential = new storage_blob_1.StorageSharedKeyCredential(this.config.accountName, this.config.accountKey);
-                }
-                catch (e) {
-                    this._configError = `[configError] ${JSON.parse(e.message).code}`;
-                }
+            try {
+                this.sharedKeyCredential = new storage_blob_1.StorageSharedKeyCredential(this.config.accountName, this.config.accountKey);
+            }
+            catch (e) {
+                this._configError = `[configError] ${JSON.parse(e.message).code}`;
+            }
+            try {
                 this._client = new storage_blob_1.BlobServiceClient(`https://${this.config.accountName}.blob.core.windows.net`, this.sharedKeyCredential, this.config.options);
-                // option 2: sasToken
             }
-            else if (typeof this.config.sasToken !== "undefined") {
+            catch (e) {
+                this._configError = `[configError] ${e.message}`;
+            }
+        }
+        else if (typeof this.config.sasToken !== "undefined") {
+            // option 2: sasToken
+            try {
                 this._client = new storage_blob_1.BlobServiceClient(`https://${this.config.accountName}.blob.core.windows.net?${this.config.sasToken}`, new storage_blob_1.AnonymousCredential(), this.config.options);
-                // option 3: connection string
             }
-            else if (typeof this.config.connectionString !== "undefined") {
+            catch (e) {
+                this._configError = `[configError] ${e.message}`;
+            }
+        }
+        else if (typeof this.config.connectionString !== "undefined") {
+            // option 3: connection string
+            try {
                 this._client = storage_blob_1.BlobServiceClient.fromConnectionString(this.config.connectionString);
-                // option 4: password less
             }
-            else {
+            catch (e) {
+                this._configError = `[configError] ${e.message}`;
+            }
+        }
+        else {
+            // option 4: password less
+            try {
                 this._client = new storage_blob_1.BlobServiceClient(`https://${this.config.accountName}.blob.core.windows.net`, new identity_1.DefaultAzureCredential(), this.config.options);
+            }
+            catch (e) {
+                this._configError = `[configError] ${e.message}`;
             }
         }
     }

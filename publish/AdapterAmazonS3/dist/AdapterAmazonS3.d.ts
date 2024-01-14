@@ -9,7 +9,7 @@ export declare class AdapterAmazonS3 extends AbstractAdapter {
     protected _config: AdapterConfigAmazonS3;
     protected _configError: string | null;
     protected _client: S3Client;
-    constructor(config: string | AdapterConfigAmazonS3);
+    constructor(config?: string | AdapterConfigAmazonS3);
     private getFiles;
     private getFileVersions;
     get config(): AdapterConfigAmazonS3;

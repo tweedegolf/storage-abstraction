@@ -51,7 +51,8 @@ export class Storage implements IAdapter {
     } else {
       type = config.type;
     }
-    // console.log("type", type);
+    console.log("type", type);
+    console.log("adapterClasses", adapterClasses);
     // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
     if (!adapterClasses[type] && !adapterFunctions[type]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);

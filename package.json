@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,8 +58,8 @@
     "testBucketName": "ts-node ./tests_local/testBucketName.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
-    "copy": "ts-node copy.ts",
-    "copy-readme": "cp ./README.md ./publish",
+    "copy": "npm run tsc && ts-node copy.ts",
+    "copy-readme": "cp ./README.md ./publish/Storage",
     "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",
     "toc": "markdown-toc -i README.md",
     "prepare": "npm run prepublishOnly"

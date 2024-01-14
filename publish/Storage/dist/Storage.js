@@ -14,29 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Storage = void 0;
 const path_1 = __importDefault(require("path"));
-//  add new storage adapters here
-const adapterClasses = {
-    b2: "AdapterBackblazeB2",
-    s3: "AdapterAmazonS3",
-    gcs: "AdapterGoogleCloudStorage",
-    local: "AdapterLocal",
-    azure: "AdapterAzureStorageBlob",
-    minio: "AdapterMinio",
-};
-// or here for functional adapters
-const adapterFunctions = {
-    b2f: "AdapterBackblazeB2F",
-};
-const availableAdapters = Object.keys(adapterClasses)
-    .concat(Object.keys(adapterFunctions))
-    .reduce((acc, val) => {
-    if (acc.findIndex((v) => v === val) === -1) {
-        acc.push(val);
-    }
-    return acc;
-}, [])
-    .sort()
-    .join(", ");
+const adapters_1 = require("./adapters");
+const availableAdapters = (0, adapters_1.getAvailableAdapters)();
 class Storage {
     // public ready: Promise<void>;
     constructor(config) {
@@ -49,38 +28,58 @@ class Storage {
     getAdapter() {
         return this.adapter;
     }
-    // public async switchAdapter(args: string | AdapterConfig): Promise<void> {
-    switchAdapter(args) {
-        // console.log(args);
+    // public async switchAdapter(config: string | AdapterConfig): Promise<void> {
+    switchAdapter(config) {
+        // console.log(config);
+        // at this point we are only interested in the type of the config
         let type;
-        if (typeof args === "string") {
-            if (args.indexOf("://") !== -1) {
-                type = args.substring(0, args.indexOf("://"));
+        if (typeof config === "string") {
+            if (config.indexOf("://") !== -1) {
+                type = config.substring(0, config.indexOf("://"));
             }
             else {
-                type = args;
+                // you can also pass a string that only contains the type, e.g. "gcs"
+                type = config;
             }
         }
         else {
-            type = args.type;
+            type = config.type;
         }
-        // console.log("type", type);
+        console.log("type", type);
+        console.log("adapterClasses", adapters_1.adapterClasses);
         // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
-        if (!adapterClasses[type] && !adapterFunctions[type]) {
+        if (!adapters_1.adapterClasses[type] && !adapters_1.adapterFunctions[type]) {
             throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
         }
-        if (adapterClasses[type]) {
-            const name = adapterClasses[type];
-            const AdapterClass = require(path_1.default.join(__dirname, name))[name];
-            this._adapter = new AdapterClass(args);
+        if (adapters_1.adapterClasses[type]) {
+            const adapterName = adapters_1.adapterClasses[type][0];
+            const adapterPath = adapters_1.adapterClasses[type][1];
+            // const AdapterClass = require(path.join(__dirname, name));
+            let AdapterClass; // eslint-disable-line
+            try {
+                AdapterClass = require(adapterPath)[adapterName];
+                console.log(`using remote adapter class ${adapterName}`);
+            }
+            catch (e) {
+                console.log(`using local adapter class ${adapterName}`);
+                AdapterClass = require(path_1.default.join(__dirname, adapterName))[adapterName];
+            }
+            this._adapter = new AdapterClass(config);
             // const AdapterClass = await import(`./${name}`);
             // this.adapter = new AdapterClass[name](args);
         }
-        else if (adapterFunctions[type]) {
-            const name = adapterFunctions[type];
+        else if (adapters_1.adapterFunctions[type]) {
+            const adapterName = adapters_1.adapterClasses[type][0];
+            const adapterPath = adapters_1.adapterClasses[type][1];
             // const module = require(path.join(__dirname, name));
-            const module = require(path_1.default.join(__dirname, name));
-            this._adapter = module.createAdapter(args);
+            let module; // eslint-disable-line
+            try {
+                module = require(adapterPath);
+            }
+            catch (e) {
+                module = require(require(path_1.default.join(__dirname, adapterPath)));
+            }
+            this._adapter = module.createAdapter(config);
         }
     }
     // all methods below are implementing IStorage
