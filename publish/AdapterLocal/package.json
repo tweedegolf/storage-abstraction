@@ -2,8 +2,8 @@
   "name": "@tweedegolf/sab-adapter-local",
   "version": "1.0.0",
   "description": "Provides an abstraction layer for interacting with local storage on your local machine or on your server.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/AdapterLocal/index.js",
+  "types": "dist/AdapterLocal/index.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {

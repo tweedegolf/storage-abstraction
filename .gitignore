@@ -4,6 +4,9 @@
 gcs.json
 minio
 node_modules
+publish/**/src
+publish/**/src
+publish/**/src
 publish/**/dist/**/*.js
 publish/**/dist/**/*.js.map
 publish/**/dist/**/*.d.ts

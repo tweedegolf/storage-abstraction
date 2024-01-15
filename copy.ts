@@ -44,7 +44,7 @@ async function beforeAll(): Promise<string> {
 async function createDirs(): Promise<string> {
   try {
     for (let i = 0; i < classes.length; i++) {
-      await fs.promises.mkdir(path.join("publish", classes[i], "src"));
+      // await fs.promises.mkdir(path.join("publish", classes[i], "src"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist", "types"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist", "index"));
@@ -105,6 +105,13 @@ async function copy(): Promise<string> {
         );
       });
     });
+
+    // acc.push(
+    //   fs.promises.copyFile(
+    //     path.join("src", `${val}.ts`),
+    //     path.join("publish", val, "src", `${val}.ts`)
+    //   )
+    // );
 
     return acc;
   }, []);
