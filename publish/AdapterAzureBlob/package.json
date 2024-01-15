@@ -2,8 +2,8 @@
   "name": "@tweedegolf/sab-adapter-azure-blob",
   "version": "1.0.0",
   "description": "Provides an abstraction layer for interacting with Microsoft Azure Blob Storage cloud service.",
-  "main": "dist/AdapterAzureBlob/index.js",
-  "types": "dist/AdapterAzureBlob/index.d.ts",
+  "main": "dist/index/AdapterAzureBlob.js",
+  "types": "dist/index/AdapterAzureBlob.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {

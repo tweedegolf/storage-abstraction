@@ -78,6 +78,12 @@ async function copy(): Promise<string> {
           path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
         )
       );
+      acc.push(
+        fs.promises.copyFile(
+          path.join("publish", "dist", `util.${ext}`),
+          path.join("publish", val, "dist", `util.${ext}`)
+        )
+      );
       if (val === "Storage") {
         acc.push(
           fs.promises.copyFile(

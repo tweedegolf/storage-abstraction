@@ -51,8 +51,8 @@ export class Storage implements IAdapter {
     } else {
       type = config.type;
     }
-    console.log("type", type);
-    console.log("adapterClasses", adapterClasses);
+    // console.log("type", type);
+    // console.log("adapterClasses", adapterClasses);
     // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
     if (!adapterClasses[type] && !adapterFunctions[type]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
@@ -64,10 +64,15 @@ export class Storage implements IAdapter {
       let AdapterClass: any; // eslint-disable-line
       try {
         AdapterClass = require(adapterPath)[adapterName];
-        console.log(`using remote adapter class ${adapterName}`);
+        // console.log(`using remote adapter class ${adapterName}`);
       } catch (e) {
-        console.log(`using local adapter class ${adapterName}`);
-        AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
+        // console.log(`using local adapter class ${adapterName}`);
+        console.log(e.message);
+        try {
+          AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
+        } catch (e) {
+          throw new Error(e.message);
+        }
       }
       this._adapter = new AdapterClass(config);
       // const AdapterClass = await import(`./${name}`);
