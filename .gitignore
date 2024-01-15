@@ -4,5 +4,8 @@
 gcs.json
 minio
 node_modules
+publish/**/dist/**/*.js
+publish/**/dist/**/*.js.map
+publish/**/dist/**/*.d.ts
 tests_local
 tests/test_directory
