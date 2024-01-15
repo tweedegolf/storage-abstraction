@@ -2,21 +2,33 @@
 
 This adapter is a peer dependency of the [storage abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). It provides an abstraction layer over the API of the Amazon S3 cloud storage service and S3 compatible services like Cubbit, Cloudflare R2 and Backblaze B2 S3.
 
+If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
+
 ```typescript
 import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
-import { AdapterAmazonS3 } from "@tweedegolf/sab-adapter-amazon-s3";
 
-const s = new Storage({
+const configuration = {
   type: StorageType.S3,
-});
+};
 
-const r = await a.listBuckets();
-console.log(r);
+const storage = new Storage(configuration);
+
+const result = await a.listBuckets();
+
+console.log(result);
 ```
+
+When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
 ## Configuration
 
-The Adapter class takes one optional argument of type `AdapterConfig` and the Storage class takes one mandatory argument of type `StorageAdapterConfig`
+The configuration object that you pass to the Storage constructor is forwarded to the constructor of the adapter.
+
+The Storage constructor is only interested in the `type` key of the configuration object, all other keys are necessary for configuring the adapter.
+
+The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
+
+The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this `AdapterConfig`.
 
 ```typescript
 export interface AdapterConfig {
@@ -29,25 +41,7 @@ export interface StorageAdapterConfig extends AdapterConfig {
 }
 ```
 
-As you can see argument the Storage class expects an additional key `type`. This is necessary because the Storage class is cloud service agnostic and doesn't know anything about the adapter it uses.
-
-The Amazon S3 adapter requires some service specific mandatory keys:
-
-```typescript
-export interface AdapterConfigMinio extends AdapterConfig {
-  endPoint: string;
-  accessKey: string;
-  secretKey: string;
-  region?: string;
-  useSSL?: boolean;
-  port?: number;
-  [key: string]: any; // eslint-disable-line
-}
-```
-
-### Amazon S3
-
-Adapter config:
+The type of the configuration object for this adapter:
 
 ```typescript
 export interface AdapterConfigS3 extends AdapterConfig {
@@ -84,7 +78,9 @@ const s = new Storage(
 );
 ```
 
-If you use Amazon S3 it is possible to skip the passing in of the `accessKeyId`, `secretAccessKey` and `region`; the aws sdk will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
+### Amazon S3
+
+If you use this adapter to interact with the original Amazon S3 service it is possible to skip the passing in of the `accessKeyId`, `secretAccessKey` and `region`; the AWS SDK will automatically read it from a chain of providers, e.g. from environment variables or the ECS task role, so this will work:
 
 ```typescript
 // only for Amazon S3
@@ -104,15 +100,15 @@ AWS_REGION="eu-west-1"
 
 ```
 
-Note that this does _not_ work for S3 compatible services because the aws sdk doesn't read the endpoint from environment variables.
+Note that this does _not_ work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables.
 
-Also, if you pass a value for `endpoint` in the config, for some reason aws sdk does read the environment variable `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+Also, if you pass a value for `endpoint` in the config, for some reason AWS SDK does read the environment variables `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` anymore.
 
 So for S3 compatible services setting a value for `endpoint`, `accessKeyId` and `secretAccessKey` in the config is mandatory.
 
-For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config because aws sdk always reads the `AWS_REGION` environment variable if no value is provided in the config. Note that the names of the regions may differ from service to service, see below.
+For S3 compatible services `region` is mandatory as well but you don't have to pass this in the config because AWS SDK always reads the `AWS_REGION` environment variable if no value is provided in the config. Note that the names of the regions may differ from service to service, see below.
 
-#### <a name='s3-compatible-storage'></a>S3 Compatible Storage
+### S3 Compatible Storage
 
 Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use the `AdapterAmazonS3` but you have to add a value for `endpoint` in the config.
 
@@ -155,9 +151,9 @@ const s = new Storage({
 });
 ```
 
-The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint aws sdk still expects you to set a value for `region` in the configuration. As just stated, you can simply retrieve your region from the endpoint.
+The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint AWS SDK still expects you to set a value for `region` in the configuration or in the `AWS_REGION` environment variable. As just stated, you can simply retrieve your region from the endpoint.
 
-Backblaze also has a native API, see below.
+Backblaze also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
 
 ## API
 
