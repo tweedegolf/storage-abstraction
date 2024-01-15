@@ -19,11 +19,11 @@
   // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",
-    "tests",
-    "tests_local",
+    "publish",
     "spec",
-    "dist",
     "src/template_class.ts",
-    "src/template_functional.ts"
+    "src/template_functional.ts",
+    "tests",
+    "tests_local"
   ]
 }

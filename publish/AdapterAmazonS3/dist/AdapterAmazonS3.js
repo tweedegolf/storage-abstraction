@@ -14,8 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdapterAmazonS3 = void 0;
 const fs_1 = __importDefault(require("fs"));
-const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
+const client_s3_1 = require("@aws-sdk/client-s3");
 const AbstractAdapter_1 = require("./AbstractAdapter");
 const general_1 = require("./types/general");
 const util_1 = require("./util");

@@ -27,6 +27,7 @@ const specificTypes = {
 
 async function beforeAll(): Promise<string> {
   const promises = classes.reduce((acc: Array<Promise<void>>, val: string) => {
+    acc.push(fs.promises.rm(path.join("publish", val, "src"), { recursive: true, force: true }));
     acc.push(fs.promises.rm(path.join("publish", val, "dist"), { recursive: true, force: true }));
     return acc;
   }, []);
@@ -43,6 +44,7 @@ async function beforeAll(): Promise<string> {
 async function createDirs(): Promise<string> {
   try {
     for (let i = 0; i < classes.length; i++) {
+      await fs.promises.mkdir(path.join("publish", classes[i], "src"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist", "types"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist", "index"));

@@ -2,7 +2,7 @@
 .idea
 .vscode
 gcs.json
-node_modules
 minio
+node_modules
 tests_local
 tests/test_directory
