@@ -1,4 +1,4 @@
-# Amazon S3 Adapter
+# Amazon S3 Storage Adapter
 
 This adapter is a peer dependency of the [storage abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). It provides an abstraction layer over the API of the Amazon S3 cloud storage service and S3 compatible services like Cubbit, Cloudflare R2 and Backblaze B2 S3.
 
@@ -13,12 +13,14 @@ const configuration = {
 
 const storage = new Storage(configuration);
 
-const result = await a.listBuckets();
+const result = await storage.listBuckets();
 
 console.log(result);
 ```
 
-When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
+The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
+
+When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
 ## Configuration
 
@@ -56,6 +58,8 @@ export interface AdapterConfigS3 extends AdapterConfig {
 }
 ```
 
+## Examples
+
 Example with configuration object:
 
 ```typescript
@@ -77,6 +81,8 @@ const s = new Storage(
   "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.cubbit.eu/&region=auto"
 );
 ```
+
+For more information about configuration urls read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
 
 ### Amazon S3
 
