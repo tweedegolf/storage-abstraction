@@ -19,7 +19,7 @@ const result = await storage.listBuckets();
 console.log(result);
 ```
 
-The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
+The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses and adapters are completely interchangeable. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
 
 When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
@@ -31,7 +31,7 @@ The Storage constructor is only interested in the `type` key of the configuratio
 
 The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
 
-The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this `AdapterConfig`.
+The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this type.
 
 ```typescript
 export interface AdapterConfig {
@@ -69,6 +69,8 @@ Example with configuration url:
 const s = new Storage("gcs://keyFilename=path/to/keyFile.json");
 ```
 
+For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
+
 ## Google Cloud Storage
 
 Google cloud service can read default credentials from an environment variable.
@@ -87,10 +89,6 @@ Environment variable that is automatically read:
 GOOGLE_APPLICATION_CREDENTIALS="path/to/keyFile.json"
 ```
 
-## API
-
-For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
-
 ## Standalone
 
 You can also use the adapter standalone, without the need to create a Storage instance:
@@ -102,3 +100,7 @@ const a = new AdapterGoogleStorage();
 const r = await a.listBuckets();
 console.log(r);
 ```
+
+## API
+
+For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.

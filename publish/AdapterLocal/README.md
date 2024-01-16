@@ -2,7 +2,7 @@
 
 This adapter is a peer dependency of the [storage abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). It mimics a cloud storage service and uses your local file system to store files and folders.
 
-The API is a general abstraction of the APIs of several cloud storage services.
+The API is a general abstraction over the APIs of several cloud storage services.
 
 This adapter is meant to be used in development phase; you can develop and test your application using the local storage adapter and seamlessly switch to one of the available adapters that interact with a cloud storage service on your production server.
 
@@ -26,7 +26,7 @@ const result = await storage.listBuckets();
 console.log(result);
 ```
 
-The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
+The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses and adapters are completely interchangeable. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
 
 When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
@@ -38,7 +38,7 @@ The Storage constructor is only interested in the `type` key of the configuratio
 
 The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
 
-The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this `AdapterConfig`.
+The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this type.
 
 ```typescript
 export interface AdapterConfig {
@@ -78,6 +78,8 @@ Example with configuration url:
 const s = new Storage("local://directory=path/to/directory&mode=750");
 ```
 
+For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
+
 ## Local storage
 
 With the optional key `mode` you can set the access rights when you create new local buckets. The default value is `0o777`, note that the actual value is dependent on the umask settings on your system (Linux and MacOS only). You can pass this value both in decimal and in octal format. E.g. `rwxrwxrwx` is `0o777` in octal format or `511` in decimal format.
@@ -114,10 +116,6 @@ const s = new Storage(url);
 
 Buckets will be created inside the directory `path/to/folder`, parent folders will be created if necessary.
 
-## API
-
-For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
-
 ## Standalone
 
 You can also use the adapter standalone, without the need to create a Storage instance:
@@ -131,3 +129,7 @@ const a = new AdapterLocal({
 const r = await a.listBuckets();
 console.log(r);
 ```
+
+## API
+
+For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.

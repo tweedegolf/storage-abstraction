@@ -18,7 +18,7 @@ const result = await storage.listBuckets();
 console.log(result);
 ```
 
-The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
+The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses and adapters are completely interchangeable. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
 
 When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
@@ -30,7 +30,7 @@ The Storage constructor is only interested in the `type` key of the configuratio
 
 The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
 
-The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this `AdapterConfig`.
+The adapter expects the configuration to be of type `AdapterConfig` or a type that extends this type.
 
 ```typescript
 export interface AdapterConfig {
@@ -82,7 +82,7 @@ const s = new Storage(
 );
 ```
 
-For more information about configuration urls read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
+For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
 
 ### Amazon S3
 
@@ -108,7 +108,7 @@ AWS_REGION="eu-west-1"
 
 Note that this does _not_ work for S3 compatible services because the AWS SDK doesn't read the endpoint from environment variables.
 
-Also, if you pass a value for `endpoint` in the config, for some reason AWS SDK does read the environment variables `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` anymore.
+Also, if you pass a value for `endpoint` in the config, for some reason AWS SDK does not read the environment variables `AWS_REGION` `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` anymore.
 
 So for S3 compatible services setting a value for `endpoint`, `accessKeyId` and `secretAccessKey` in the config is mandatory.
 
@@ -124,9 +124,9 @@ Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use t
 const s = new Storage({
   type: StorageType.S3,
   region: 'auto'
-  endpoint: process.env.R2_ENDPOINT,
-  accessKeyId: process.env.R2_ACCESS_KEY,
-  secretAccessKey: process.env.R2_SECRET_KEY,
+  endpoint: R2_ENDPOINT,
+  accessKeyId: R2_ACCESS_KEY,
+  secretAccessKey: R2_SECRET_KEY,
 });
 ```
 
@@ -151,19 +151,15 @@ You can also set the region using the `AWS_REGION` environment variable.
 const s = new Storage({
   type: StorageType.S3,
   region: "eu-central-003",
-  endpoint: process.env.B2_ENDPOINT,
-  accessKeyId: process.env.B2_APPLICATION_KEY_ID,
-  secretAccessKey: process.env.B2_APPLICATION_KEY,
+  endpoint: B2_ENDPOINT,
+  accessKeyId: B2_APPLICATION_KEY_ID,
+  secretAccessKey: B2_APPLICATION_KEY,
 });
 ```
 
-The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint AWS SDK still expects you to set a value for `region` in the configuration or in the `AWS_REGION` environment variable. As just stated, you can simply retrieve your region from the endpoint.
+The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint AWS SDK still expects you to set a value for `region` in the configuration or in the `AWS_REGION` environment variable. You can simply retrieve your region from the endpoint.
 
 Backblaze also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
-
-## API
-
-For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
 
 ## Standalone
 
@@ -176,3 +172,7 @@ const a = new AdapterAmazonS3();
 const r = await a.listBuckets();
 console.log(r);
 ```
+
+## API
+
+For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
