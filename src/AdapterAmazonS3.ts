@@ -17,7 +17,7 @@ import {
   ListObjectsCommand,
   PutObjectCommand,
   S3Client,
-  S3ClientConfig,
+  S3ClientConfig
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { ConfigAmazonS3, AdapterConfig, StorageType, S3Compatible } from "./types";
@@ -61,8 +61,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       region: this.region,
       credentials: {
         accessKeyId: this.config.accessKeyId,
-        secretAccessKey: this.config.secretAccessKey,
-      },
+        secretAccessKey: this.config.secretAccessKey
+      }
     };
 
     if (typeof this.config.endpoint !== "undefined") {
@@ -99,7 +99,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         part2: secretAccessKey,
         part3: region,
         bucketName,
-        queryString,
+        queryString
       } = parseUrl(config);
       cfg = {
         type,
@@ -107,7 +107,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         secretAccessKey,
         region,
         bucketName,
-        ...queryString,
+        ...queryString
       };
     } else {
       cfg = { ...config };
@@ -144,7 +144,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     const params = {
       Bucket: this.bucketName,
       Key: fileName,
-      Range: `bytes=${options.start}-${options.end || ""}`,
+      Range: `bytes=${options.start}-${options.end || ""}`
     };
 
     const command = new GetObjectCommand(params);
@@ -155,7 +155,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   async removeFile(fileName: string): Promise<string> {
     const input = {
       Bucket: this.bucketName,
-      Key: fileName,
+      Key: fileName
     };
     const command = new DeleteObjectCommand(input);
     const response = await this.storage.send(command);
@@ -178,7 +178,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     try {
       const input = {
-        Bucket: name,
+        Bucket: name
       };
       const command = new HeadBucketCommand(input);
       const response = await this.storage.send(command);
@@ -196,12 +196,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     try {
       const input: CreateBucketCommandInput = {
         Bucket: name,
-        ...options,
+        ...options
       };
       // see issue: https://github.com/aws/aws-sdk-js/issues/3647
       if (typeof this.config.region !== "undefined" && this.config.region !== "us-east-1") {
         input.CreateBucketConfiguration = {
-          LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")],
+          LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")]
         };
       }
 
@@ -264,7 +264,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     const input1 = {
       Bucket: n,
-      MaxKeys: 1000,
+      MaxKeys: 1000
     };
     const command1 = new ListObjectsCommand(input1);
     const response1 = await this.storage.send(command1);
@@ -278,8 +278,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       Bucket: n,
       Delete: {
         Objects: Contents.map((value) => ({ Key: value.Key })),
-        Quiet: false,
-      },
+        Quiet: false
+      }
     };
     const command2 = new DeleteObjectsCommand(input2);
     const response = await this.storage.send(command2);
@@ -296,7 +296,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
     try {
       const input = {
-        Bucket: n,
+        Bucket: n
       };
       const command = new DeleteBucketCommand(input);
       const response = await this.storage.send(command);
@@ -352,7 +352,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       ...options,
       Bucket: this.bucketName,
       Key: targetPath,
-      Body: arg,
+      Body: arg
     };
 
     if (typeof arg === "string") {
@@ -367,7 +367,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     if (this.region !== "") {
       const input = {
-        Bucket: this.bucketName,
+        Bucket: this.bucketName
       };
       const command = new GetBucketLocationCommand(input);
       const response = await this.storage.send(command);
@@ -388,7 +388,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     const input = {
       Bucket: this.bucketName,
-      MaxKeys: maxFiles,
+      MaxKeys: maxFiles
     };
     const command = new ListObjectsCommand(input);
     const response = await this.storage.send(command);
@@ -406,7 +406,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     const input = {
       Bucket: this.bucketName,
-      Key: name,
+      Key: name
     };
     const command = new HeadObjectCommand(input);
     const response = await this.storage.send(command);
@@ -420,7 +420,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     const input = {
       Bucket: this.bucketName,
-      Key: name,
+      Key: name
     };
     const command = new HeadObjectCommand(input);
     return this.storage
@@ -431,5 +431,13 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       .catch(() => {
         return false;
       });
+  }
+
+  async getFileAsURL(fileName: string): Promise<string> {
+    return await getSignedUrl(
+      this.storage,
+      new GetObjectCommand({ Bucket: this.bucketName, Key: fileName }),
+      { expiresIn: 3600 }
+    );
   }
 }
