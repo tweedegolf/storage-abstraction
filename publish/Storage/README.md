@@ -823,7 +823,7 @@ export const adapterClasses = {
 
 If `switchAdapter` fails to find the module at the specified path it tries to find it in the source folder by looking for a file that has the same name as your adapter, so in the example above it looks for `./src/AdapterYourService.ts`.
 
-Once the module is found it will be loaded in runtime using `require()`. An error will be thrown the type is not declared or if the module can not be found.
+Once the module is found it will be loaded at runtime using `require()`. An error will be thrown the type is not declared or if the module can not be found.
 
 The lookup table is defined in `./src/adapters.ts`.
 
