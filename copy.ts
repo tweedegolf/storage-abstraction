@@ -110,6 +110,9 @@ async function copy(): Promise<string> {
           )
         );
       });
+
+      // copy README to Storage
+      acc.push(fs.promises.copyFile("README.md", path.join("publish", "Storage", "README.md")));
     });
 
     // acc.push(

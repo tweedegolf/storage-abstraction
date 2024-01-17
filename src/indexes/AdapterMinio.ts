@@ -1,6 +1,5 @@
-import { AbstractAdapter } from "../AbstractAdapter";
-import { AdapterMinio } from "../AdapterMinio";
-import { AdapterConfigMinio } from "../types/adapter_minio";
-import { StorageType, AdapterConfig } from "../types/general";
-
-export { AdapterMinio, AbstractAdapter, StorageType, AdapterConfig, AdapterConfigMinio };
+export { AdapterMinio } from "../AdapterMinio";
+export * from "../types/adapter_minio";
+export * from "../types/general";
+export * from "../types/result";
+export * from "../types/add_file_params";

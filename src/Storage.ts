@@ -67,7 +67,7 @@ export class Storage implements IAdapter {
         // console.log(`using remote adapter class ${adapterName}`);
       } catch (e) {
         // console.log(`using local adapter class ${adapterName}`);
-        console.log(e.message);
+        // console.log(e.message);
         try {
           AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
         } catch (e) {

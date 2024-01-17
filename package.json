@@ -59,9 +59,9 @@
     "tsc": "node_modules/.bin/tsc",
     "copy": "npm run tsc && ts-node copy.ts",
     "copy-readme": "cp ./README.md ./publish/Storage",
-    "prepublishOnly": "npm run tsc && npm run toc && npm run copy-readme",
+    "prepublishOnly": "",
     "toc": "markdown-toc -i README.md",
-    "prepare": "npm run prepublishOnly"
+    "prepare": "npm run copy && npm run toc && npm run copy-readme"
   },
   "keywords": [
     "storage",

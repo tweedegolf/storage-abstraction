@@ -30,7 +30,6 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
-
 import { validateName } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
