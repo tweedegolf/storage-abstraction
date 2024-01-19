@@ -24,41 +24,41 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 - [How it works](#how-it-works)
 - [Instantiate a storage](#instantiate-a-storage)
-  - [Configuration object](#configuration-object)
-  - [Configuration URL](#configuration-url)
-  - [How bucketName is used](#how-bucketname-is-used)
+  * [Configuration object](#configuration-object)
+  * [Configuration URL](#configuration-url)
+  * [How bucketName is used](#how-bucketname-is-used)
 - [Adapters](#adapters)
 - [Adapter Introspect API](#adapter-introspect-api)
-  - [getType](#gettype)
-  - [getConfiguration](#getconfiguration)
-  - [getConfigurationError](#getconfigurationerror)
-  - [getServiceClient](#getserviceclient)
+  * [getType](#gettype)
+  * [getConfiguration](#getconfiguration)
+  * [getConfigurationError](#getconfigurationerror)
+  * [getServiceClient](#getserviceclient)
 - [Adapter API](#adapter-api)
-  - [listBuckets](#listbuckets)
-  - [listFiles](#listfiles)
-  - [bucketExists](#bucketexists)
-  - [fileExists](#fileexists)
-  - [createBucket](#createbucket)
-  - [clearBucket](#clearbucket)
-  - [deleteBucket](#deletebucket)
-  - [addFile](#addfile)
-  - [addFileFromPath](#addfilefrompath)
-  - [addFileFromBuffer](#addfilefrombuffer)
-  - [addFileFromStream](#addfilefromstream)
-  - [getFileAsURL](#getfileasurl)
-  - [getFileAsStream](#getfileasstream)
-  - [removeFile](#removefile)
-  - [sizeOf](#sizeof)
+  * [listBuckets](#listbuckets)
+  * [listFiles](#listfiles)
+  * [bucketExists](#bucketexists)
+  * [fileExists](#fileexists)
+  * [createBucket](#createbucket)
+  * [clearBucket](#clearbucket)
+  * [deleteBucket](#deletebucket)
+  * [addFile](#addfile)
+  * [addFileFromPath](#addfilefrompath)
+  * [addFileFromBuffer](#addfilefrombuffer)
+  * [addFileFromStream](#addfilefromstream)
+  * [getFileAsURL](#getfileasurl)
+  * [getFileAsStream](#getfileasstream)
+  * [removeFile](#removefile)
+  * [sizeOf](#sizeof)
 - [Storage API](#storage-api)
-  - [getAdapter](#getadapter)
-  - [switchAdapter](#switchadapter)
+  * [getAdapter](#getadapter)
+  * [switchAdapter](#switchadapter)
 - [Adding an adapter](#adding-an-adapter)
-  - [Add your storage type](#add-your-storage-type)
-  - [Define your configuration](#define-your-configuration)
-  - [Adapter class](#adapter-class)
-  - [Adapter function](#adapter-function)
-  - [Register your adapter](#register-your-adapter)
-  - [Adding your adapter code to this package](#adding-your-adapter-code-to-this-package)
+  * [Add your storage type](#add-your-storage-type)
+  * [Define your configuration](#define-your-configuration)
+  * [Adapter class](#adapter-class)
+  * [Adapter function](#adapter-function)
+  * [Register your adapter](#register-your-adapter)
+  * [Adding your adapter code to this package](#adding-your-adapter-code-to-this-package)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -67,7 +67,9 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 ## How it works
 
-A `Storage` instance is a thin wrapper around one of the available adapters. These adapters are peer dependencies and available as separate packages on npm. This way your code base stays as slim as possible because you only have to add the adapter(s) that you need to your project.
+A `Storage` instance is a thin wrapper around one of the available adapters. These adapters are available as separate packages on npm. This way your code base stays as slim as possible because you only have to add the adapter(s) that you need to your project.
+
+Most adapters are wrappers around the cloud storage service specific service clients, e.g. the AWS SDK.
 
 List of available adapters:
 
@@ -114,7 +116,7 @@ When you create a new `Storage` instance the `config` argument is used to instan
 
 Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
 
-The configuration must at least specify a type; the type is used to determine which adapter should be created. Note that the adapters are peer dependencies and not included in the Storage Abstraction project so you have to add them to you project before you can use them.
+The configuration must at least specify a type; the type is used to determine which adapter should be created. Note that the adapters are not included in the Storage Abstraction package so you have to add them to you project's package.json before you can use them.
 
 The value of the type is one of the enum members of `StorageType`:
 
@@ -204,7 +206,7 @@ storage.addFile({
 
 ## Adapters
 
-The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the cloud storage by translating generic API methods calls to storage specific calls. The adapters are peer dependencies and not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
+The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the cloud storage by translating generic API methods calls to storage specific calls. The adapters are not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
 
 A description of the available adapters; what the configuration objects and URLs look like and what the default values are can be found in the README of the adapter packages:
 
@@ -217,7 +219,7 @@ A description of the available adapters; what the configuration objects and URLs
 | MinIO         | `npm i @tweedegolf/sab-adapter-minio`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio?activeTab=readme)        |
 | Backblaze B2  | `npm i @tweedegolf/sab-adapter-backblaze-b2` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2?activeTab=readme) |
 
-You can also add more adapters yourself very easily, see [below](#adding-more-adapters)
+You can also add more adapters yourself very easily, see [below](#adding-more-adapters).
 
 ## Adapter Introspect API
 
@@ -715,7 +717,9 @@ If you want to add an adapter you can choose to make your adapter a class or a f
 
 Your adapter might have additional dependencies such as a service client library like for instance aws-sdk as is used in the Amazon S3 adapter. Add these dependencies to the package.json file in the `./publish/YourAdapter` folder.
 
-Please add your dependencies also to the package.json file in the root folder of the Storage Abstraction package in case you add some tests for your adapter. Your dependencies will not be added to the Storage Abstraction package because only the files in the publish folder are published to npm and there is a stripped version of the package.json file in the `./publish/Storage` folder. You could publish your adapter to npm and add it as a peer dependency to this package.json.
+Please add your dependencies also to the package.json file in the root folder of the Storage Abstraction package in case you add some tests for your adapter. Your dependencies will not be added to the Storage Abstraction package because only the files in the publish folder are published to npm and there is a stripped version of the package.json file in the `./publish/Storage` folder.
+
+It would be very much appreciated if you could publish your adapter to npm and add your adapter to this README, see [this table](#adapters).
 
 Follow these steps:
 
@@ -723,7 +727,8 @@ Follow these steps:
 2. Define a configuration object (and a configuration url if you like)
 3. Write your adapter, make sure it implements all API methods
 4. Register your adapter in `./src/adapters.ts`
-5. Publish your adapter on npm and add it as a peer dependency to the Storage Abstraction package in `./publish/Storage/package.json`. You may also want to add the newly supported storage service to the keywords array.
+5. Publish your adapter on npm.
+6. You may also want to add the newly supported cloud storage service to the keywords array in the package.json file of the Storage Abstraction storage.
 
 ### Add your storage type
 

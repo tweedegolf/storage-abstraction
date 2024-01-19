@@ -1,8 +1,10 @@
 # Local Storage Adapter
 
-This adapter is a peer dependency of the [storage abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). It mimics a cloud storage service and uses your local file system to store files and folders.
+An adapter that mimics a cloud storage service and uses your local file system to store files and folders.
 
-The API is a general abstraction over the APIs of several cloud storage services.
+This adapter is one of the adapters that is meant to be used as a plugin of the [Storage Abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). However it can be used standalone as well, see [below](#standalone).
+
+The [API](https://github.com/tweedegolf/storage-abstraction/tree/master?tab=readme-ov-file#adapter-api) of the adapter abstracts away the differences between the API's of cloud storage services. The API only supports the basic, most commonly used cloud service operations such as creating a bucket, storing files and so on.
 
 This adapter is meant to be used in development phase; you can develop and test your application using the local storage adapter and seamlessly switch to one of the available adapters that interact with a cloud storage service on your production server.
 
