@@ -20,11 +20,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
-import {
-  FileBufferParams,
-  FilePathParams,
-  FileStreamParams,
-} from "./types/add_file_params";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -145,10 +141,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async removeFile(
-    bucketName: string,
-    fileName: string
-  ): Promise<ResultObject> {
+  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -166,10 +159,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async createBucket(
-    name: string,
-    options: Options = {}
-  ): Promise<ResultObject> {
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -223,10 +213,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     // first try to remove the versioned files
     const { value, error } = await this.getFileVersions(name);
-    if (
-      error === "no versions" ||
-      error === "ListObjectVersions not implemented"
-    ) {
+    if (error === "no versions" || error === "ListObjectVersions not implemented") {
       // if that fails remove non-versioned files
       const { value, error } = await this.getFiles(name);
       if (error === "no contents") {
@@ -362,10 +349,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async listFiles(
-    bucketName: string,
-    maxFiles: number = 10000
-  ): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string, maxFiles: number = 10000): Promise<ResultObjectFiles> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -384,10 +368,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async sizeOf(
-    bucketName: string,
-    fileName: string
-  ): Promise<ResultObjectNumber> {
+  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -422,10 +403,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async fileExists(
-    bucketName: string,
-    fileName: string
-  ): Promise<ResultObjectBoolean> {
+  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
@@ -441,13 +419,5 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     } catch (e) {
       return { value: false, error: null };
     }
-  }
-
-  async getFileAsURL(fileName: string): Promise<string> {
-    return await getSignedUrl(
-      this.storage,
-      new GetObjectCommand({ Bucket: this.bucketName, Key: fileName }),
-      { expiresIn: 3600 }
-    );
   }
 }
