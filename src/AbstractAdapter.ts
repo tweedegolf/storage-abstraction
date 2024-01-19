@@ -86,8 +86,8 @@ export abstract class AbstractAdapter implements IAdapter {
 
   protected _removeFile(
     arg1: string,
-    arg2?: string | boolean,
-    arg3?: boolean
+    arg2: string | boolean,
+    arg3: boolean
   ): { bucketName: string; fileName: string; allVersions: boolean; error: string } {
     let bucketName: string;
     let fileName: string;
@@ -124,7 +124,7 @@ export abstract class AbstractAdapter implements IAdapter {
 
   protected _listFiles(
     arg1: number | string,
-    arg2?: number
+    arg2: number
   ): { bucketName: string; maxFiles: number; error: string } {
     let bucketName: string;
     let maxFiles: number = 10000;
@@ -161,6 +161,79 @@ export abstract class AbstractAdapter implements IAdapter {
     };
   }
 
+  protected _getFileAsURL(
+    arg1: string,
+    arg2: Options | string,
+    arg3: Options
+  ): { bucketName: string; fileName: string; options: Options; error: string } {
+    let bucketName: string;
+    let fileName: string;
+    let options: Options = {};
+    if (typeof arg1 === "string" && typeof arg2 === "string") {
+      bucketName = arg1;
+      fileName = arg2;
+      if (typeof arg3 !== "undefined") {
+        options = arg3;
+      }
+    } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
+      if (this._bucketName === null) {
+        return {
+          bucketName: null,
+          fileName: null,
+          options: null,
+          error: "no bucket selected",
+        };
+      }
+      bucketName = this._bucketName;
+      fileName = arg1;
+      if (typeof arg2 !== "undefined") {
+        options = arg2;
+      }
+    }
+    return {
+      bucketName,
+      fileName,
+      options,
+      error: null,
+    };
+  }
+  protected _getFileAsStream(
+    arg1: string,
+    arg2: StreamOptions | string,
+    arg3: StreamOptions
+  ): { bucketName: string; fileName: string; options: StreamOptions; error: string } {
+    let bucketName: string;
+    let fileName: string;
+    let options: StreamOptions = {};
+    if (typeof arg1 === "string" && typeof arg2 === "string") {
+      bucketName = arg1;
+      fileName = arg2;
+      if (typeof arg3 !== "undefined") {
+        options = arg3;
+      }
+    } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
+      if (this._bucketName === null) {
+        return {
+          bucketName: null,
+          fileName: null,
+          options: null,
+          error: "no bucket selected",
+        };
+      }
+      bucketName = this._bucketName;
+      fileName = arg1;
+      if (typeof arg2 !== "undefined") {
+        options = arg2;
+      }
+    }
+    return {
+      bucketName,
+      fileName,
+      options,
+      error: null,
+    };
+  }
+
   // async createBucket(name: string, options?: Options): Promise<ResultObject> {
   //   const error = validateName(name);
   //   if (error !== null) {
@@ -179,20 +252,20 @@ export abstract class AbstractAdapter implements IAdapter {
 
   abstract listBuckets(): Promise<ResultObjectBuckets>;
 
-  abstract listFiles(numFiles?: number): Promise<ResultObjectFiles>;
-  abstract listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
-  abstract listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles>;
+  // abstract listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  // abstract listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  abstract listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles>;
 
   abstract getFileAsStream(
-    bucketName: string,
-    fileName: string,
-    options?: StreamOptions
+    arg1: string,
+    arg2?: StreamOptions | string,
+    arg3?: StreamOptions
   ): Promise<ResultObjectStream>;
 
   abstract getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options?: Options
+    arg1: string,
+    arg2?: Options | string,
+    arg3?: Options
   ): Promise<ResultObject>;
 
   abstract clearBucket(name?: string): Promise<ResultObject>;

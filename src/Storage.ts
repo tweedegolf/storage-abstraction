@@ -162,25 +162,33 @@ export class Storage implements IAdapter {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: StreamOptions = {}
+    options: StreamOptions
+  ): Promise<ResultObjectStream>;
+  async getFileAsStream(fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
+  async getFileAsStream(
+    arg1: string,
+    arg2?: StreamOptions | string,
+    arg3?: StreamOptions
   ): Promise<ResultObjectStream> {
-    return this.adapter.getFileAsStream(bucketName, fileName, options);
+    return this.adapter.getFileAsStream(arg1, arg2, arg3);
   }
 
   async getFileAsURL(
     bucketName: string,
     fileName: string,
-    options: Options = {}
-  ): Promise<ResultObject> {
-    return this.adapter.getFileAsURL(bucketName, fileName, options);
+    options?: Options
+  ): Promise<ResultObject>;
+  async getFileAsURL(fileName: string, options?: Options): Promise<ResultObject>;
+  async getFileAsURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
+    return this.adapter.getFileAsURL(arg1, arg2, arg3);
   }
 
-  async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
   async removeFile(
     bucketName: string,
     fileName: string,
     allVersions?: boolean
   ): Promise<ResultObject>;
+  async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
   async removeFile(
     arg1: string,
     arg2?: boolean | string,
@@ -189,9 +197,9 @@ export class Storage implements IAdapter {
     return this.adapter.removeFile(arg1, arg2, arg3);
   }
 
-  async listFiles(numFiles?: number): Promise<ResultObjectFiles>;
   async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
-  async listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles> {
+  async listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  async listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles> {
     return this.adapter.listFiles(arg1, arg2);
   }
 

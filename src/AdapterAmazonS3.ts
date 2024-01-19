@@ -350,12 +350,29 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: e.message };
     }
   }
-
   public async getFileAsURL(
     bucketName: string,
     fileName: string,
     options?: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject>;
+  public async getFileAsURL(
+    fileName: string,
+    options?: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject>;
+  public async getFileAsURL(
+    arg1: string,
+    arg2?: Options | string,
+    arg3?: Options
   ): Promise<ResultObject> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const { bucketName, fileName, options, error } = super._getFileAsURL(arg1, arg2, arg3);
+    if (error !== null) {
+      return { value: null, error };
+    }
+
     try {
       const url = await getSignedUrl(
         this._client,
@@ -371,7 +388,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles> {
+  public async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  public async listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  public async listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles> {
     if (this._configError !== null) {
       return { value: null, error: this.configError };
     }
