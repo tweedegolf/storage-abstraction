@@ -64,6 +64,14 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._client;
   }
 
+  set(bucketName: string) {
+    this._bucketName = bucketName;
+  }
+
+  get bucketName(): string {
+    return this._bucketName;
+  }
+
   async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
     return await this.addFile(params);
   }
@@ -76,17 +84,11 @@ export abstract class AbstractAdapter implements IAdapter {
     return await this.addFile(params);
   }
 
-  async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
-  async removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions?: boolean
-  ): Promise<ResultObject>;
-  async removeFile(arg1: string, arg2?: string | boolean, arg3?: boolean): Promise<ResultObject> {
-    if (this._configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected _removeFile(
+    arg1: string,
+    arg2?: string | boolean,
+    arg3?: boolean
+  ): { bucketName: string; fileName: string; allVersions: boolean; error: string } {
     let bucketName: string;
     let fileName: string;
     let allVersions: boolean = false;
@@ -100,49 +102,24 @@ export abstract class AbstractAdapter implements IAdapter {
     } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
       if (this._bucketName === null) {
         return {
-          value: null,
+          bucketName: null,
+          fileName: null,
+          allVersions: null,
           error: "No bucket selected",
         };
       }
+      bucketName = this._bucketName;
+      fileName = arg1;
       if (typeof arg2 === "boolean") {
         allVersions = arg2;
       }
     }
-    return this.removeFile(bucketName, fileName, allVersions);
-  }
-
-  async clearBucket(name?: string): Promise<ResultObject> {
-    if (this._configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    if (typeof name === "undefined") {
-      if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
-      }
-      name = this._bucketName;
-    }
-    return this.clearBucket(name);
-  }
-
-  async deleteBucket(name?: string): Promise<ResultObject> {
-    if (this._configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    if (typeof name === "undefined") {
-      if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
-      }
-      name = this._bucketName;
-    }
-    return this.deleteBucket(name);
+    return {
+      bucketName,
+      fileName,
+      allVersions,
+      error: null,
+    };
   }
 
   protected _listFiles(
@@ -151,6 +128,7 @@ export abstract class AbstractAdapter implements IAdapter {
   ): { bucketName: string; maxFiles: number; error: string } {
     let bucketName: string;
     let maxFiles: number = 10000;
+
     if (typeof arg1 === "number") {
       if (this._bucketName === null) {
         return {
@@ -166,6 +144,15 @@ export abstract class AbstractAdapter implements IAdapter {
       if (typeof arg2 === "number") {
         maxFiles = arg2;
       }
+    } else {
+      if (this._bucketName === null) {
+        return {
+          bucketName: null,
+          maxFiles,
+          error: "no bucket selected",
+        };
+      }
+      bucketName = this._bucketName;
     }
     return {
       bucketName,
@@ -208,9 +195,20 @@ export abstract class AbstractAdapter implements IAdapter {
     options?: Options
   ): Promise<ResultObject>;
 
+  abstract clearBucket(name?: string): Promise<ResultObject>;
+
+  abstract deleteBucket(name?: string): Promise<ResultObject>;
+
   abstract sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
   abstract fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+
+  abstract removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions?: boolean
+  ): Promise<ResultObject>;
+  abstract removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
 
   abstract bucketExists(name: string): Promise<ResultObjectBoolean>;
 }

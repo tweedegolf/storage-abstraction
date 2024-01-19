@@ -111,14 +111,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return this._client as S3Client;
   }
 
-  set(bucketName: string) {
-    this._bucketName = bucketName;
-  }
-
-  get bucketName(): string {
-    return this._bucketName;
-  }
-
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
@@ -160,9 +152,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-    const bucketName = arg1;
-    const fileName = arg2 as string;
-    const allVersions = arg3;
+
+    const { bucketName, fileName, allVersions, error } = super._removeFile(arg1, arg2, arg3);
+    if (error !== null) {
+      return { value: null, error };
+    }
 
     try {
       const input = {
@@ -178,6 +172,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
     const error = validateName(name);
     if (error !== null) {
       return { value: null, error };
@@ -219,6 +217,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   public async clearBucket(name: string): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
     let objects: Array<{ Key: string; VersionId?: string }>;
 
     // first try to remove the versioned files
@@ -303,6 +305,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: this.configError };
     }
 
+    if (typeof params.bucketName === "undefined") {
+      if (this._bucketName === null) {
+        return {
+          value: null,
+          error: "no bucket selected",
+        };
+      }
+      params.bucketName = this._bucketName;
+    }
+
     let { options } = params;
     if (typeof options !== "object") {
       options = {};
@@ -359,15 +371,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async listFiles(maxFiles: number): Promise<ResultObjectFiles>;
-  public async listFiles(bucketName: string, maxFiles?: number): Promise<ResultObjectFiles>;
   public async listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles> {
     if (this._configError !== null) {
       return { value: null, error: this.configError };
     }
 
     const { bucketName, maxFiles, error } = super._listFiles(arg1, arg2);
-    console.log(bucketName, maxFiles);
     if (error !== null) {
       return { value: null, error };
     }
