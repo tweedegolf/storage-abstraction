@@ -190,7 +190,9 @@ export interface IAdapter {
    * all of them in one go or delete only the latest version (only if applicable such as with Backblaze B2 and S3
    * when you've enabled versioning)
    */
+  removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
   removeFile(bucketName: string, fileName: string, allVersions?: boolean): Promise<ResultObject>;
+  removeFile(arg1: string, arg2?: boolean | string, arg3?: boolean): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket

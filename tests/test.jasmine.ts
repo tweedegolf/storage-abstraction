@@ -2,7 +2,7 @@ import "jasmine";
 import fs from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, StorageType } from "../src/types";
+import { AdapterConfig, StorageType } from "../src/types/general";
 import { saveFile } from "./util";
 import { Readable } from "stream";
 import { getConfig } from "./config";

@@ -109,11 +109,13 @@ export abstract class AbstractAdapter implements IAdapter {
     options?: Options
   ): Promise<ResultObject>;
 
+  abstract removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
   abstract removeFile(
     bucketName: string,
     fileName: string,
     allVersions?: boolean
   ): Promise<ResultObject>;
+  abstract removeFile(arg1: string, arg2?: string | string, arg3?: boolean): Promise<ResultObject>;
 
   abstract listFiles(bucketName: string, maxFiles: number): Promise<ResultObjectFiles>;
 

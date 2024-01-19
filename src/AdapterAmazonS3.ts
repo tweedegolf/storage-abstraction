@@ -141,9 +141,38 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  public async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
+  public async removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions?: boolean
+  ): Promise<ResultObject>;
+  public async removeFile(
+    arg1: string,
+    arg2?: string | boolean,
+    arg3?: boolean
+  ): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+    const fileName = arg1;
+    let bucketName: string;
+    let allVersions: boolean;
+
+    if (typeof arg2 === "undefined" || typeof arg2 === "boolean") {
+      bucketName = "aapenbeer";
+    }
+
+    if (typeof arg2 !== "undefined" && typeof arg2 === "boolean") {
+      allVersions = arg2;
+    }
+
+    if (typeof arg2 !== "undefined" && typeof arg2 === "string") {
+      bucketName = arg2;
+    }
+
+    if (typeof arg3 !== "undefined" && typeof arg3 === "boolean") {
+      allVersions = arg3;
     }
 
     try {

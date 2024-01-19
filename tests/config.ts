@@ -1,12 +1,12 @@
 import "jasmine";
 import path from "path";
 import dotenv from "dotenv";
-import { AdapterConfig, StorageType } from "../src/types";
+import { StorageAdapterConfig, StorageType } from "../src/types/general";
 
-export function getConfig(t: string = StorageType.LOCAL): string | AdapterConfig {
+export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapterConfig {
   dotenv.config();
 
-  let config: AdapterConfig | string = "";
+  let config: StorageAdapterConfig | string = "";
   if (t === StorageType.LOCAL) {
     config = {
       type: StorageType.LOCAL,

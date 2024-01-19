@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
-import { IStorage, StorageType } from "../src/types";
+import { IAdapter, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
 import { saveFile, timeout } from "./util";
 
@@ -193,7 +193,7 @@ async function removeFile() {
   console.log(colorLog("removeFile"), r);
 }
 
-async function deleteAllBuckets(list: Array<string>, storage: IStorage, delay: number = 500) {
+async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: number = 500) {
   for (let i = 0; i < list.length; i++) {
     const b = list[i];
     console.log(colorLog("remove bucket"), b);
