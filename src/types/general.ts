@@ -92,7 +92,7 @@ export interface IAdapter {
   /**
    * @param name: deletes all file in the bucket.
    */
-  clearBucket(name: string): Promise<ResultObject>;
+  clearBucket(name?: string): Promise<ResultObject>;
 
   /**
    * deletes the bucket with the provided name
@@ -102,7 +102,7 @@ export interface IAdapter {
    * { error: null | string, value: null | string }
    * ```
    */
-  deleteBucket(name: string): Promise<ResultObject>;
+  deleteBucket(name?: string): Promise<ResultObject>;
 
   /**
    * @returns an array of the names of the buckets in this storage
@@ -190,8 +190,8 @@ export interface IAdapter {
    * all of them in one go or delete only the latest version (only if applicable such as with Backblaze B2 and S3
    * when you've enabled versioning)
    */
-  removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
   removeFile(bucketName: string, fileName: string, allVersions?: boolean): Promise<ResultObject>;
+  removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
   removeFile(arg1: string, arg2?: boolean | string, arg3?: boolean): Promise<ResultObject>;
 
   /**
@@ -199,7 +199,9 @@ export interface IAdapter {
    * @param numFiles optional, only works for S3 compatible storages: the maximal number of files to retrieve
    * @returns an array of tuples containing the file path and the file size of all files in the bucket.
    */
+  listFiles(numFiles?: number): Promise<ResultObjectFiles>;
   listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
@@ -212,7 +214,7 @@ export interface IAdapter {
    * @param bucketName name of the bucket
    * @returns boolean
    */
-  bucketExists(bucketName: string): Promise<ResultObjectBoolean>;
+  bucketExists(bucketName?: string): Promise<ResultObjectBoolean>;
 
   /**
    * @param bucketName name of the bucket where the file is stored

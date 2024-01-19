@@ -8,7 +8,7 @@ import { Options } from "./general";
  * @param options additional option such as access rights
  **/
 export type FilePathParams = {
-  bucketName: string;
+  bucketName?: string;
   origPath: string;
   targetPath: string;
   options?: Options;
@@ -21,7 +21,7 @@ export type FilePathParams = {
  * @param options additional option such as access rights
  **/
 export type FileBufferParams = {
-  bucketName: string;
+  bucketName?: string;
   buffer: Buffer;
   targetPath: string;
   options?: Options;
@@ -34,7 +34,7 @@ export type FileBufferParams = {
  * @param options additional option such as access rights
  **/
 export type FileStreamParams = {
-  bucketName: string;
+  bucketName?: string;
   stream: Readable;
   targetPath: string;
   options?: Options;

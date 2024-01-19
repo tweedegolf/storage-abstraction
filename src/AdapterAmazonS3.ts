@@ -62,6 +62,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     } catch (e) {
       this._configError = `[configError] ${e.message}`;
     }
+    if (typeof this._config.bucketName !== "undefined") {
+      this._bucketName = this._config.bucketName;
+    }
   }
 
   private async getFiles(
@@ -108,6 +111,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return this._client as S3Client;
   }
 
+  set(bucketName: string) {
+    this._bucketName = bucketName;
+  }
+
+  get bucketName(): string {
+    return this._bucketName;
+  }
+
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
@@ -141,12 +152,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
-  public async removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions?: boolean
-  ): Promise<ResultObject>;
   public async removeFile(
     arg1: string,
     arg2?: string | boolean,
@@ -155,25 +160,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-    const fileName = arg1;
-    let bucketName: string;
-    let allVersions: boolean;
-
-    if (typeof arg2 === "undefined" || typeof arg2 === "boolean") {
-      bucketName = "aapenbeer";
-    }
-
-    if (typeof arg2 !== "undefined" && typeof arg2 === "boolean") {
-      allVersions = arg2;
-    }
-
-    if (typeof arg2 !== "undefined" && typeof arg2 === "string") {
-      bucketName = arg2;
-    }
-
-    if (typeof arg3 !== "undefined" && typeof arg3 === "boolean") {
-      allVersions = arg3;
-    }
+    const bucketName = arg1;
+    const fileName = arg2 as string;
+    const allVersions = arg3;
 
     try {
       const input = {
@@ -189,10 +178,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
     const error = validateName(name);
     if (error !== null) {
       return { value: null, error };
@@ -234,10 +219,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   public async clearBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
     let objects: Array<{ Key: string; VersionId?: string }>;
 
     // first try to remove the versioned files
@@ -378,9 +359,17 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async listFiles(bucketName: string, maxFiles: number = 10000): Promise<ResultObjectFiles> {
-    if (this.configError !== null) {
+  public async listFiles(maxFiles: number): Promise<ResultObjectFiles>;
+  public async listFiles(bucketName: string, maxFiles?: number): Promise<ResultObjectFiles>;
+  public async listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles> {
+    if (this._configError !== null) {
       return { value: null, error: this.configError };
+    }
+
+    const { bucketName, maxFiles, error } = super._listFiles(arg1, arg2);
+    console.log(bucketName, maxFiles);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {

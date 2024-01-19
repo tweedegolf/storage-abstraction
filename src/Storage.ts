@@ -189,8 +189,10 @@ export class Storage implements IAdapter {
     return this.adapter.removeFile(arg1, arg2, arg3);
   }
 
-  async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles> {
-    return this.adapter.listFiles(bucketName, numFiles);
+  async listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  async listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles> {
+    return this.adapter.listFiles(arg1, arg2);
   }
 
   async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {

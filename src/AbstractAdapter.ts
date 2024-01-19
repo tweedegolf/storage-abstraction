@@ -14,6 +14,7 @@ export abstract class AbstractAdapter implements IAdapter {
   protected _type = "abstract-adapter";
   protected _config: AdapterConfig | null;
   protected _configError: string | null = null;
+  protected _bucketName: string = null;
   protected _client: any = null; // eslint-disable-line
 
   constructor(config: string | AdapterConfig) {
@@ -75,6 +76,104 @@ export abstract class AbstractAdapter implements IAdapter {
     return await this.addFile(params);
   }
 
+  async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
+  async removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions?: boolean
+  ): Promise<ResultObject>;
+  async removeFile(arg1: string, arg2?: string | boolean, arg3?: boolean): Promise<ResultObject> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    let bucketName: string;
+    let fileName: string;
+    let allVersions: boolean = false;
+
+    if (typeof arg1 === "string" && typeof arg2 === "string") {
+      bucketName = arg1;
+      fileName = arg2;
+      if (typeof arg3 === "boolean") {
+        allVersions = arg3;
+      }
+    } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
+      if (this._bucketName === null) {
+        return {
+          value: null,
+          error: "No bucket selected",
+        };
+      }
+      if (typeof arg2 === "boolean") {
+        allVersions = arg2;
+      }
+    }
+    return this.removeFile(bucketName, fileName, allVersions);
+  }
+
+  async clearBucket(name?: string): Promise<ResultObject> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    if (typeof name === "undefined") {
+      if (this._bucketName === null) {
+        return {
+          value: null,
+          error: "no bucket selected",
+        };
+      }
+      name = this._bucketName;
+    }
+    return this.clearBucket(name);
+  }
+
+  async deleteBucket(name?: string): Promise<ResultObject> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    if (typeof name === "undefined") {
+      if (this._bucketName === null) {
+        return {
+          value: null,
+          error: "no bucket selected",
+        };
+      }
+      name = this._bucketName;
+    }
+    return this.deleteBucket(name);
+  }
+
+  protected _listFiles(
+    arg1: number | string,
+    arg2?: number
+  ): { bucketName: string; maxFiles: number; error: string } {
+    let bucketName: string;
+    let maxFiles: number = 10000;
+    if (typeof arg1 === "number") {
+      if (this._bucketName === null) {
+        return {
+          bucketName: null,
+          maxFiles,
+          error: "no bucket selected",
+        };
+      }
+      bucketName = this._bucketName;
+      maxFiles = arg1;
+    } else if (typeof arg1 === "string") {
+      bucketName = arg1;
+      if (typeof arg2 === "number") {
+        maxFiles = arg2;
+      }
+    }
+    return {
+      bucketName,
+      maxFiles,
+      error: null,
+    };
+  }
+
   // async createBucket(name: string, options?: Options): Promise<ResultObject> {
   //   const error = validateName(name);
   //   if (error !== null) {
@@ -91,11 +190,11 @@ export abstract class AbstractAdapter implements IAdapter {
 
   abstract createBucket(name: string, options?: Options): Promise<ResultObject>;
 
-  abstract clearBucket(name: string): Promise<ResultObject>;
-
-  abstract deleteBucket(name: string): Promise<ResultObject>;
-
   abstract listBuckets(): Promise<ResultObjectBuckets>;
+
+  abstract listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  abstract listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  abstract listFiles(arg1: number | string, arg2?: number): Promise<ResultObjectFiles>;
 
   abstract getFileAsStream(
     bucketName: string,
@@ -108,16 +207,6 @@ export abstract class AbstractAdapter implements IAdapter {
     fileName: string,
     options?: Options
   ): Promise<ResultObject>;
-
-  abstract removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
-  abstract removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions?: boolean
-  ): Promise<ResultObject>;
-  abstract removeFile(arg1: string, arg2?: string | string, arg3?: boolean): Promise<ResultObject>;
-
-  abstract listFiles(bucketName: string, maxFiles: number): Promise<ResultObjectFiles>;
 
   abstract sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
