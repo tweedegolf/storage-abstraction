@@ -17,6 +17,16 @@
   - added `configError` and `storage.configError`
   - added `getServiceClient` and `storage.serviceClient`
 - Configuration urls are now completely in the form of a query string: `s3://region=us-west-1&accessKeyId=KEYID&secretAccessKey=SECRET`
+- Supported storages:
+  - Amazon S3
+  - Cubbit
+  - Cloudflare R2
+  - Backblaze B2 S3 compatible
+  - Backblaze B2
+  - Google Cloud
+  - Azure Blob
+  - MinIO
+  - local storage
 
 ### Old API (1.5.x) compared to new API (2.x)
 
