@@ -197,6 +197,7 @@ export abstract class AbstractAdapter implements IAdapter {
       error: null,
     };
   }
+
   protected _getFileAsStream(
     arg1: string,
     arg2: StreamOptions | string,
@@ -234,6 +235,33 @@ export abstract class AbstractAdapter implements IAdapter {
     };
   }
 
+  protected _getFileAndBucket(
+    arg1: string,
+    arg2?: string
+  ): { bucketName: string; fileName: string; error: string } {
+    let bucketName: string = null;
+    let fileName: string = null;
+    if (typeof arg2 === "string") {
+      bucketName = arg1;
+      fileName = arg2;
+    } else if (typeof arg2 === "undefined") {
+      fileName = arg1;
+      if (this._bucketName === null) {
+        return {
+          bucketName,
+          fileName,
+          error: "no bucket selected",
+        };
+      }
+      bucketName = this._bucketName;
+    }
+    return {
+      bucketName,
+      fileName,
+      error: null,
+    };
+  }
+
   // async createBucket(name: string, options?: Options): Promise<ResultObject> {
   //   const error = validateName(name);
   //   if (error !== null) {
@@ -244,17 +272,23 @@ export abstract class AbstractAdapter implements IAdapter {
 
   // stubs
 
-  abstract addFile(
-    paramObject: FilePathParams | FileBufferParams | FileStreamParams
-  ): Promise<ResultObject>;
+  abstract listBuckets(): Promise<ResultObjectBuckets>;
 
   abstract createBucket(name: string, options?: Options): Promise<ResultObject>;
 
-  abstract listBuckets(): Promise<ResultObjectBuckets>;
+  abstract clearBucket(name?: string): Promise<ResultObject>;
 
-  // abstract listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
-  // abstract listFiles(numFiles?: number): Promise<ResultObjectFiles>;
-  abstract listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles>;
+  abstract deleteBucket(name?: string): Promise<ResultObject>;
+
+  abstract bucketExists(name?: string): Promise<ResultObjectBoolean>;
+
+  abstract listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  abstract listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  // abstract listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles>;
+
+  abstract addFile(
+    paramObject: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject>;
 
   abstract getFileAsStream(
     arg1: string,
@@ -268,13 +302,13 @@ export abstract class AbstractAdapter implements IAdapter {
     arg3?: Options
   ): Promise<ResultObject>;
 
-  abstract clearBucket(name?: string): Promise<ResultObject>;
-
-  abstract deleteBucket(name?: string): Promise<ResultObject>;
-
   abstract sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+  abstract sizeOf(fileName: string): Promise<ResultObjectNumber>;
+  // abstract sizeOf(arg1: string, arg2?: string): Promise<ResultObjectNumber>;
 
   abstract fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+  abstract fileExists(fileName: string): Promise<ResultObjectBoolean>;
+  // abstract fileExists(arg1: string, arg2?: string): Promise<ResultObjectBoolean>;
 
   abstract removeFile(
     bucketName: string,
@@ -282,6 +316,5 @@ export abstract class AbstractAdapter implements IAdapter {
     allVersions?: boolean
   ): Promise<ResultObject>;
   abstract removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
-
-  abstract bucketExists(name: string): Promise<ResultObjectBoolean>;
+  // abstract removeFile(arg1: string, arg2?: boolean | string, arg3?: boolean): Promise<ResultObject>;
 }

@@ -145,6 +145,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   public async removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions?: boolean
+  ): Promise<ResultObject>;
+  public async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
+  public async removeFile(
     arg1: string,
     arg2?: string | boolean,
     arg3?: boolean
@@ -216,9 +222,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async clearBucket(name: string): Promise<ResultObject> {
+  public async clearBucket(name?: string): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+
+    if (typeof name === "undefined") {
+      if (this._bucketName === null) {
+        return { value: null, error: "no bucket selected" };
+      }
+      name = this._bucketName;
     }
 
     let objects: Array<{ Key: string; VersionId?: string }>;
@@ -264,7 +277,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return { value: "ok", error: null };
   }
 
-  public async deleteBucket(name: string): Promise<ResultObject> {
+  public async deleteBucket(name?: string): Promise<ResultObject> {
+    if (typeof name === "undefined") {
+      if (this._bucketName === null) {
+        return { value: null, error: "no bucket selected" };
+      }
+      name = this._bucketName;
+    }
+
     try {
       await this.clearBucket(name);
       const input = {
@@ -414,9 +434,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+  public async sizeOf(fileName: string): Promise<ResultObjectNumber>;
+  public async sizeOf(arg1: string, arg2?: string): Promise<ResultObjectNumber> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+    const { bucketName, fileName, error } = super._getFileAndBucket(arg1, arg2);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {
@@ -449,9 +475,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+  public async fileExists(fileName: string): Promise<ResultObjectBoolean>;
+  public async fileExists(arg1: string, arg2?: string): Promise<ResultObjectBoolean> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
+    }
+    const { bucketName, fileName, error } = super._getFileAndBucket(arg1, arg2);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {
