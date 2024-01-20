@@ -7,5 +7,4 @@ export interface AdapterConfigMinio extends AdapterConfig {
   region?: string;
   useSSL?: boolean;
   port?: number;
-  [key: string]: any; // eslint-disable-line
 }

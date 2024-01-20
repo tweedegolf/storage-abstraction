@@ -13,7 +13,6 @@
     "@azure/storage-blob": "^12.17.0",
     "@google-cloud/storage": "^7.6.0",
     "@nichoth/backblaze-b2": "^1.7.1",
-    "backblaze-b2": "^1.7.0",
     "minio": "^7.1.3",
     "rimraf": "^5.0.5"
   },
