@@ -1,6 +1,6 @@
 import fs, { ReadStream } from "fs";
 import { Readable } from "stream";
-import B2 from "backblaze-b2";
+import B2 from "@nichoth/backblaze-b2";
 require("@gideo-llc/backblaze-b2-upload-any").install(B2);
 
 import { StorageType, IStorage, ConfigBackblazeB2, AdapterConfig, JSON as TypeJSON } from "./types";

@@ -1,4 +1,4 @@
-import B2 from "backblaze-b2";
+import B2 from "@nichoth/backblaze-b2";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import {
