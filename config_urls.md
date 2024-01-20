@@ -5,9 +5,9 @@ const url = "local://path/to/bucket@bucket_name?mode=511&extra_option2=value2...
 
 const config: AdapterConfigLocal = {
   bucketName: "bucket_name",
-  directory: "path/to/bucket"
+  directory: "path/to/bucket",
   mode: "511",
-}
+};
 ```
 
 ### Amazon S3
@@ -18,10 +18,10 @@ const url =
 
 const config: AdapterConfigAmazonS3 = {
   bucketName: "bucket_name",
-  accessKeyId: "access_key_id"
+  accessKeyId: "access_key_id",
   secretAccessKey: "secret_access_key",
   region: "region",
-}
+};
 
 // read accessKeyId and secretAccessKey from environment
 const url = "s3://@region/bucket_name?extra_option1=value1&extra_option2=value2...";
@@ -29,14 +29,14 @@ const url = "s3://@region/bucket_name?extra_option1=value1&extra_option2=value2.
 const config: AdapterConfigAmazonS3 = {
   bucketName: "bucket_name",
   region: "region",
-}
+};
 
 // read accessKeyId, secretAccessKey and region from environment
 const url = "s3://@bucket_name?extra_option1=value1&extra_option2=value2...";
 
 const config: AdapterConfigAmazonS3 = {
   bucketName: "bucket_name",
-}
+};
 ```
 
 ### Google Cloud Storage
@@ -44,16 +44,16 @@ const config: AdapterConfigAmazonS3 = {
 ```typescript
 const url = "gcs://path/to/key_file.json@bucket_name?extra_option1=value1&extra_option2=value2...";
 
-const config :AdapterConfigGoogleCloud = {
+const config: AdapterConfigGoogleCloud = {
   bucketName: "bucket_name",
-  keyFilename: "path/to/key_file.json";
-}
+  keyFilename: "path/to/key_file.json",
+};
 
 // read path to keyFile.json from environment
 const url = "gcs://@bucket_name?extra_option1=value1&extra_option2=value2...";
-const config :AdapterConfigGoogleCloud = {
+const config: AdapterConfigGoogleCloud = {
   bucketName: "bucket_name",
-}
+};
 ```
 
 ### Backblaze B2
@@ -62,11 +62,11 @@ const config :AdapterConfigGoogleCloud = {
 const url =
   "b2://application_key_id:application_key@bucket_name?extra_option1=value1&extra_option2=value2...";
 
-const config:AdapterConfigBackblazeB2 = {
+const config: AdapterConfigBackblazeB2 = {
   bucketName: "bucket_name",
-  applicationKeyId: "application_key_id";
-  applicationKey: "application_key";
-}
+  applicationKeyId: "application_key_id",
+  applicationKey: "application_key",
+};
 ```
 
 ### Azure Blob Storage
@@ -78,26 +78,26 @@ const url =
 
 const config: AdapterConfigAzureBlob = {
   bucketName: "container_name",
-  accountName: "account_name";
-  accountKey: "account_key";
-}
+  accountName: "account_name",
+  accountKey: "account_key",
+};
 
-  // passwordless
+// passwordless
 const url = "azure://account_name@container_name?extra_option1=value1&extra_option2=value2...";
 
 const config: AdapterConfigAzureBlob = {
   bucketName: "container_name",
-  accountName: "account_name";
-}
+  accountName: "account_name",
+};
 
 // sasToken
 const url = "azure://account_name@container_name?sas_token=SAS_TOKEN&extra_option2=value2...";
 
 const config: AdapterConfigAzureBlob = {
   bucketName: "container_name",
-  accountName: "account_name";
-  sasToken: "SAS_TOKEN";
-}
+  accountName: "account_name",
+  sasToken: "SAS_TOKEN",
+};
 
 // connection string
 const url =
@@ -105,9 +105,9 @@ const url =
 
 const config: AdapterConfigAzureBlob = {
   bucketName: "container_name",
-  accountName: "account_name";
-  connectionString: "CONNECTION_STRING";
-}
+  accountName: "account_name",
+  connectionString: "CONNECTION_STRING",
+};
 ```
 
 ### MinIO
@@ -118,33 +118,33 @@ const url =
 
 const config: AdapterConfigMinio = {
   bucketName: "bucket_name",
-  accessKey: "access_key";
-  secretKey: "secret_key";
-  endPoint: "END_POINT";
-  region: "region";
-  useSSL: "USE_SSL";
-  port: "PORT";
-}
+  accessKey: "access_key",
+  secretKey: "secret_key",
+  endPoint: "END_POINT",
+  region: "region",
+  useSSL: "USE_SSL",
+  port: "PORT",
+};
 
 // without region, defaults to "auto"
 const url = "minio://accessKey:secretKey@bucket_name?endPoint=END_POINT&port=PORT&useSSL=USE_SSL";
 
 const config: AdapterConfigMinio = {
   bucketName: "bucket_name",
-  accessKey: "access_key";
-  secretKey: "secret_key";
-  endPoint: "END_POINT";
-  useSSL: "USE_SSL";
-  port: "PORT";
-}
+  accessKey: "access_key",
+  secretKey: "secret_key",
+  endPoint: "END_POINT",
+  useSSL: "USE_SSL",
+  port: "PORT",
+};
 
 // without region, port and useSSL, will default to "auto", "443" and "true"
 const url = "minio://accessKey:secretKey@bucket_name?endPoint=END_POINT";
 
 const config: AdapterConfigMinio = {
   bucketName: "bucket_name",
-  accessKey: "access_key";
-  secretKey: "secret_key";
-  endPoint: "END_POINT";
-}
+  accessKey: "access_key",
+  secretKey: "secret_key",
+  endPoint: "END_POINT",
+};
 ```
