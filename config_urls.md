@@ -14,7 +14,7 @@ const config: AdapterConfigLocal = {
 
 ```typescript
 const url =
-  "s3://access_key_id:secret_access_key@region/bucket_name?extra_option1=value1&extra_option2=value2...";
+  "s3://access_key_id:secret_access_key@bucket_name?region=region&extra_option2=value2...";
 
 const config: AdapterConfigAmazonS3 = {
   bucketName: "bucket_name",
@@ -24,7 +24,7 @@ const config: AdapterConfigAmazonS3 = {
 };
 
 // read accessKeyId and secretAccessKey from environment
-const url = "s3://@region/bucket_name?extra_option1=value1&extra_option2=value2...";
+const url = "s3://@bucket_name?region=region&extra_option2=value2...";
 
 const config: AdapterConfigAmazonS3 = {
   bucketName: "bucket_name",

@@ -59,6 +59,94 @@ export const parseQueryString = (s: string, type?: string): { [id: string]: stri
 };
 
 /**
+ * @param: url
+ *
+ * strips off the querystring of an url and returns it as an object
+ */
+export const parseQuerystring = (url: string): { [id: string]: string } => {
+  let options = {};
+  const questionMark = url.indexOf("?");
+  if (questionMark !== -1) {
+    options = url
+      .substring(questionMark + 1)
+      .split("&")
+      .map((pair) => pair.split("="))
+      .reduce((acc, val) => {
+        // acc[val[0]] = `${val[1]}`.valueOf();
+        acc[val[0]] = val[1];
+        return acc;
+      }, {});
+  }
+  return options;
+};
+
+/**
+ * @param url
+ * Parses a url string into fragments and parses the query string into a
+ * key-value object.
+ */
+export const parseUrl2 = (
+  url: string
+): {
+  error: null | string;
+  type: string;
+  part1: string;
+  part2: string;
+  bucketName: string;
+  extraOptions: { [key: string]: string };
+} => {
+  let type = null;
+  let part1 = null;
+  let part2 = null;
+  let bucketName = null;
+  let extraOptions = null;
+
+  if (isBlankString(url)) {
+    return {
+      type,
+      part1,
+      part2,
+      bucketName,
+      extraOptions,
+      error: "please provide a configuration url",
+    };
+  }
+  type = url.substring(0, url.indexOf("://"));
+  let config = url.substring(url.indexOf("://") + 3);
+  const at = config.indexOf("@");
+  const questionMark = config.indexOf("?");
+  const colon = config.indexOf(":");
+
+  // parse options
+  if (questionMark !== -1) {
+    extraOptions = parseQuerystring(url);
+    config = config.substring(0, questionMark);
+  }
+  // console.log("config", config);
+
+  // get bucket name and region
+  let bucketString = "";
+  if (at !== -1) {
+    bucketString = config.substring(at + 1);
+    if (questionMark !== -1) {
+      bucketName = bucketString.substring(0, questionMark);
+    } else {
+      bucketName = bucketString;
+    }
+    config = config.substring(0, at);
+  }
+
+  // get credentials
+  if (colon !== -1) {
+    [part1, part2] = config.split(":");
+  } else if (config !== "") {
+    part1 = config;
+  }
+
+  return { type, part1, part2, bucketName, extraOptions, error: null };
+};
+
+/**
  * @param {string} s
  *
  * Parses a string that contains a radix prefix to a number
@@ -111,7 +199,7 @@ export const getProtocol = (url: string): string => {
 };
 
 /**
- * @param {string} name
+ * @param {string} str
  *
  * Checks if the value of the name is not null or undefined
  */
