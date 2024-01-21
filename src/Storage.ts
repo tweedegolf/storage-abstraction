@@ -28,6 +28,22 @@ export class Storage implements IAdapter {
     this.switchAdapter(config);
   }
 
+  setSelectedBucket(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
+  }
+
+  getSelectedBucket(): string | null {
+    return this.adapter.bucketName;
+  }
+
+  set(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
+  }
+
+  get bucketName(): string | null {
+    return this.adapter.bucketName;
+  }
+
   get adapter(): IAdapter {
     return this._adapter;
   }

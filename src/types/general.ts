@@ -75,6 +75,14 @@ export interface IAdapter {
 
   configError: null | string;
 
+  getSelectedBucket(): null | string;
+
+  setSelectedBucket(name: null | string): void;
+
+  bucketName: null | string;
+
+  set(bucketName: null | string): void;
+
   /**
    * Returns an object that contains both the options passed with the configuration and the
    * default options of the storage type if not overruled by the options you passed in.
