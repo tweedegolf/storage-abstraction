@@ -30,7 +30,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
-import { validateName } from "./util";
+import { parseUrl, validateName } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
@@ -40,6 +40,32 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   constructor(config?: string | AdapterConfigAmazonS3) {
     super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
+    } else {
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const { type, part1, part2, bucketName, extraOptions } = value;
+        if (extraOptions !== null) {
+          this._config = { type, ...extraOptions };
+        } else {
+          this._config = { type };
+        }
+        if (part1 !== null) {
+          this._config.accessKeyId = part1;
+        }
+        if (part2 !== null) {
+          this._config.secretAccessKey = part2;
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
+      }
+      // console.log(this._config);
+    }
+
     try {
       if (this.config.accessKeyId && this.config.secretAccessKey) {
         const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line

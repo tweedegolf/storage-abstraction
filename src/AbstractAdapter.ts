@@ -8,7 +8,6 @@ import {
   ResultObjectNumber,
   ResultObjectStream,
 } from "./types/result";
-import { parseQueryString } from "./util";
 
 export abstract class AbstractAdapter implements IAdapter {
   protected _type = "abstract-adapter";
@@ -17,18 +16,7 @@ export abstract class AbstractAdapter implements IAdapter {
   protected _bucketName: string = null;
   protected _client: any = null; // eslint-disable-line
 
-  constructor(config: string | AdapterConfig) {
-    if (typeof config === "string") {
-      const p = config.indexOf("://");
-      if (p !== -1) {
-        // strip the type, we don't need it anymore at this point
-        config = config.substring(p);
-      }
-      this._config = parseQueryString(config);
-    } else {
-      this._config = { ...config };
-    }
-  }
+  constructor(config: string | AdapterConfig) {}
 
   get type(): string {
     return this._type;

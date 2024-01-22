@@ -12,6 +12,7 @@ import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_p
 export enum StorageType {
   LOCAL = "local",
   GCS = "gcs", // Google Cloud Storage
+  GS = "gs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
   B2 = "b2", // BackBlaze B2
   AZURE = "azure", // Azure Storage Blob

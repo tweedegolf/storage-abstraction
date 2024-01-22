@@ -1,9 +1,14 @@
-import { AdapterConfig } from "./general";
 import { Readable } from "stream";
 
 export type ParseUrlResult = {
   error: string | null;
-  value: AdapterConfig;
+  value: {
+    type: string;
+    part1: string;
+    part2: string;
+    bucketName: string;
+    extraOptions: { [key: string]: string };
+  };
 };
 
 export interface ResultObject {

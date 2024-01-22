@@ -114,7 +114,7 @@ const config: AdapterConfigAzureBlob = {
 
 ```typescript
 const url =
-  "minio://access_key:secret_key@region/bucket_name?endPoint=END_POINT&port=PORT&useSSL=USE_SSL";
+  "minio://access_key:secret_key@bucket_name?region=region&endPoint=END_POINT&port=PORT&useSSL=USE_SSL";
 
 const config: AdapterConfigMinio = {
   bucketName: "bucket_name",

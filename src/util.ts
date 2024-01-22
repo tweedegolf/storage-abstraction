@@ -1,69 +1,11 @@
-import { AdapterConfig, StorageType } from "./types/general";
+import { StorageType } from "./types/general";
 import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 
 /**
- * @param: url
- * Converts url with querystring into key-value object
- */
-export const parseQueryString2 = (url: string): { [id: string]: string } => {
-  let options = {};
-  const questionMark = url.indexOf("?");
-  if (questionMark !== -1) {
-    options = url
-      .substring(questionMark + 1)
-      .split("&")
-      .map((pair) => pair.split("="))
-      .reduce((acc, val) => {
-        // acc[val[0]] = `${val[1]}`.valueOf();
-        acc[val[0]] = val[1];
-        return acc;
-      }, {});
-  }
-  return options;
-};
-
-/**
- * @param url
- * Parses a url into a key-value object.
- */
-export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
-  const p = url.indexOf("://");
-  let type: string;
-  let config: AdapterConfig;
-
-  if (p === -1) {
-    type = url;
-    config = { type };
-  } else {
-    type = url.substring(0, p);
-    config = parseQueryString(url.substring(p + 3), type);
-  }
-
-  if (checkType === true && Object.values(StorageType).includes(type as StorageType) === false) {
-    return { value: null, error: `"${type}" is not a valid storage type` };
-  }
-  return { value: config, error: null };
-};
-
-export const parseQueryString = (s: string, type?: string): { [id: string]: string } => {
-  return s
-    .split("&")
-    .map((pair) => pair.split("="))
-    .reduce(
-      (acc, val) => {
-        acc[val[0]] = val[1];
-        return acc;
-      },
-      type ? { type } : {}
-    );
-};
-
-/**
- * @param: url
- *
+ * @param {string} url
  * strips off the querystring of an url and returns it as an object
  */
-export const parseQuerystring = (url: string): { [id: string]: string } => {
+export const parseQueryString = (url: string): { [id: string]: string } => {
   let options = {};
   const questionMark = url.indexOf("?");
   if (questionMark !== -1) {
@@ -81,20 +23,11 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
 };
 
 /**
- * @param url
- * Parses a url string into fragments and parses the query string into a
+ * @param {string} url
+ * Parses a config url string into fragments and parses the query string into a
  * key-value object.
  */
-export const parseUrl2 = (
-  url: string
-): {
-  error: null | string;
-  type: string;
-  part1: string;
-  part2: string;
-  bucketName: string;
-  extraOptions: { [key: string]: string };
-} => {
+export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   let type = null;
   let part1 = null;
   let part2 = null;
@@ -103,28 +36,34 @@ export const parseUrl2 = (
 
   if (isBlankString(url)) {
     return {
-      type,
-      part1,
-      part2,
-      bucketName,
-      extraOptions,
+      value: null,
       error: "please provide a configuration url",
     };
   }
-  type = url.substring(0, url.indexOf("://"));
-  let config = url.substring(url.indexOf("://") + 3);
+  const p = url.indexOf("://");
+  if (p === -1) {
+    return {
+      value: { type: url, part1, part2, bucketName, extraOptions },
+      error: null,
+    };
+  }
+  type = url.substring(0, p);
+  if (checkType === true && Object.values(StorageType).includes(type as StorageType) === false) {
+    return { value: null, error: `"${type}" is not a valid storage type` };
+  }
+
+  let config = url.substring(p + 3);
   const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
   const colon = config.indexOf(":");
 
   // parse options
   if (questionMark !== -1) {
-    extraOptions = parseQuerystring(url);
+    extraOptions = parseQueryString(url);
     config = config.substring(0, questionMark);
   }
-  // console.log("config", config);
 
-  // get bucket name and region
+  // get bucket name
   let bucketString = "";
   if (at !== -1) {
     bucketString = config.substring(at + 1);
@@ -143,7 +82,7 @@ export const parseUrl2 = (
     part1 = config;
   }
 
-  return { type, part1, part2, bucketName, extraOptions, error: null };
+  return { value: { type, part1, part2, bucketName, extraOptions }, error: null };
 };
 
 /**
@@ -190,15 +129,6 @@ export const parseMode = (mode: number | string): ResultObjectNumber => {
 };
 
 /**
- * @param {string} url
- *
- * strips off the protocol of an url and returns it
- */
-export const getProtocol = (url: string): string => {
-  return;
-};
-
-/**
  * @param {string} str
  *
  * Checks if the value of the name is not null or undefined
@@ -230,87 +160,3 @@ export const validateName = (name: string): string => {
   }
   return null;
 };
-
-/*
-// not in use, keep for reference
-export const getGCSProjectIdAsync = async (config: string): Promise<string> => {
-  const data = await fs.promises.readFile(config).catch(e => {
-    throw e;
-  });
-  const json = JSON.parse(data.toString("utf-8"));
-  return json.project_id;
-};
-
-// not in use, keep for reference
-export const readFilePromise = (path: string): Promise<Buffer> =>
-  new Promise(function(resolve, reject) {
-    fs.readFile(path, function(err, data) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-  
-  export const BucketLocationConstraintAsString = (c: BucketLocationConstraint): string => {
-    return;
-  };
-*/
-
-/**
- * @param url
- * Parses a url string into fragments and parses the query string into a
- * key-value object.
- 
-export const parseUrl = (url: string): ParseUrlResult => {
-  if (url.indexOf("://") === -1) {
-    return { value: null, error: "Please provide a valid configuration url" };
-  }
-  const type = url.substring(0, url.indexOf("://"));
-  // if (Object.values(StorageType).includes(type as StorageType) === false) {
-  //   return { value: null, error: `"${type}" is not a valid storage type` };
-  // }
-  let config = url.substring(url.indexOf("://") + 3);
-  const at = config.indexOf("@");
-  const questionMark = config.indexOf("?");
-  const colon = config.indexOf(":");
-  let part1 = "";
-  let part2 = "";
-  let part3 = "";
-  let bucketName = "";
-
-  // parse options
-  const queryString: { [key: string]: string } = parseQuerystring(url);
-  if (questionMark !== -1) {
-    config = config.substring(0, questionMark);
-  }
-  // console.log("config", config);
-
-  // get bucket name and region
-  let bucketString = "";
-  if (at !== -1) {
-    bucketString = config.substring(at + 1);
-    const slash = bucketString.indexOf("/");
-    if (slash !== -1) {
-      // Amazon S3 @region/bucket
-      bucketName = bucketString.substring(slash + 1);
-      part3 = bucketString.substring(0, slash);
-    } else {
-      bucketName = bucketString;
-    }
-    // console.log(bucketName, bucketString, slash);
-    config = config.substring(0, at);
-  }
-
-  // get credentials
-  if (colon !== -1) {
-    [part1, part2] = config.split(":");
-  } else {
-    part1 = config;
-  }
-
-  // console.log(type, part1, part2, region, bucketName, queryString);
-  return { error: null, value: { type, part1, part2, part3, bucketName, queryString } };
-};
-*/
