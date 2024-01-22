@@ -1,4 +1,4 @@
-import B2 from "backblaze-b2";
+import B2 from "@nichoth/backblaze-b2";
 import fs from "fs";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
@@ -20,7 +20,7 @@ import {
   ResultObjectFileB2,
   ResultObjectFilesB2,
 } from "./types/adapter_backblaze_b2";
-import { validateName } from "./util";
+import { parseUrl, validateName } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;
@@ -32,6 +32,26 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   constructor(config: string | AdapterConfigBackblazeB2) {
     super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
+    } else {
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const { type, part1, part2, bucketName, extraOptions } = value;
+        if (extraOptions !== null) {
+          this._config = { type, applicationKeyId: part1, applicationKey: part2, ...extraOptions };
+        } else {
+          this._config = { type, applicationKeyId: part1, applicationKey: part2 };
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
+      }
+      // console.log(this._config);
+    }
+
     if (
       typeof this._config.applicationKey === "undefined" ||
       typeof this._config.applicationKeyId === "undefined"
@@ -49,9 +69,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   // util members
 
   private async authorize(): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
     if (this.authorized) {
       return { value: "ok", error: null };
     }
@@ -162,17 +179,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return { value: null, error: `Could not find file "${name}" in bucket "${bucketName}".` };
   }
 
-  // public API
+  // protected, called by methods of public API via AbstractAdapter
 
-  get config(): AdapterConfigBackblazeB2 {
-    return this._config as AdapterConfigBackblazeB2;
-  }
-
-  get serviceClient(): B2 {
-    return this._client as B2;
-  }
-
-  public async addFile(
+  protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     const { error } = await this.authorize();
@@ -234,7 +243,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async getFileAsStream(
+  protected async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions = { start: 0 }
@@ -281,10 +290,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async getFileAsURL(
+  protected async _getFileAsURL(
     bucketName: string,
-    fileName: string
-    // options?: Options
+    fileName: string,
+    options: Options
   ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
@@ -295,7 +304,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return { value: url, error: null };
   }
 
-  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -347,35 +356,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    const msg = validateName(name);
-    if (msg !== null) {
-      return { value: null, error: msg };
-    }
-
-    if (typeof options.bucketType === "undefined") {
-      options.bucketType = "allPrivate";
-    }
-
-    try {
-      const { data } = await this._client.createBucket({
-        ...options,
-        bucketName: name,
-      });
-      const { bucketType: _type } = data;
-      // console.log(_type);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.response.data.message };
-    }
-  }
-
-  public async clearBucket(name: string): Promise<ResultObject> {
+  protected async _clearBucket(name: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -403,7 +384,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async deleteBucket(name: string): Promise<ResultObject> {
+  protected async _deleteBucket(name: string): Promise<ResultObject> {
     const data = await this.clearBucket(name);
     if (data.error !== null) {
       return { value: null, error: data.error };
@@ -420,6 +401,76 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } catch (e) {
       return { value: null, error: e.message };
     }
+  }
+
+  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    const data = await this.getFiles(bucketName, this.versioning, numFiles);
+    if (data.error === null) {
+      const { value: files } = data;
+      return {
+        value: files.map((f) => {
+          return [f.name, f.contentLength];
+        }),
+        error: null,
+      };
+    } else {
+      return { value: null, error: data.error };
+    }
+  }
+
+  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    const data = await this.getFile(bucketName, fileName);
+    if (data.error === null) {
+      const { value: file } = data;
+      return { value: file.contentLength, error: null };
+    } else {
+      return { value: null, error: data.error };
+    }
+  }
+
+  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    const data = await this.getBucket(bucketName);
+    if (data.error === null) {
+      return { value: true, error: null };
+    } else if (data.error.startsWith("Could not find bucket")) {
+      return { value: false, error: null };
+    } else {
+      return { value: null, error: data.error };
+    }
+  }
+
+  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    const { error, value } = await this.sizeOf(bucketName, fileName);
+    if (error === null) {
+      return { value: true, error: null };
+    } else {
+      return { value: false, error: null };
+    }
+  }
+
+  // public
+
+  get config(): AdapterConfigBackblazeB2 {
+    return this._config as AdapterConfigBackblazeB2;
+  }
+
+  get serviceClient(): B2 {
+    return this._client as B2;
   }
 
   public async listBuckets(): Promise<ResultObjectBuckets> {
@@ -442,63 +493,31 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  public async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
     }
 
-    const data = await this.getFiles(bucketName, this.versioning, numFiles);
-    if (data.error === null) {
-      const { value: files } = data;
-      return {
-        value: files.map((f) => {
-          return [f.name, f.contentLength];
-        }),
-        error: null,
-      };
-    } else {
-      return { value: null, error: data.error };
-    }
-  }
-
-  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { value: null, error };
+    const msg = validateName(name);
+    if (msg !== null) {
+      return { value: null, error: msg };
     }
 
-    const data = await this.getFile(bucketName, fileName);
-    if (data.error === null) {
-      const { value: file } = data;
-      return { value: file.contentLength, error: null };
-    } else {
-      return { value: null, error: data.error };
-    }
-  }
-
-  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { value: null, error };
+    if (typeof options.bucketType === "undefined") {
+      options.bucketType = "allPrivate";
     }
 
-    const data = await this.getBucket(bucketName);
-    if (data.error === null) {
-      return { value: true, error: null };
-    } else if (data.error.startsWith("Could not find bucket")) {
-      return { value: false, error: null };
-    } else {
-      return { value: null, error: data.error };
-    }
-  }
-
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    const { error, value } = await this.sizeOf(bucketName, fileName);
-    if (error === null) {
-      return { value: true, error: null };
-    } else {
-      return { value: false, error: null };
+    try {
+      const { data } = await this._client.createBucket({
+        ...options,
+        bucketName: name,
+      });
+      const { bucketType: _type } = data;
+      // console.log(_type);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.response.data.message };
     }
   }
 }

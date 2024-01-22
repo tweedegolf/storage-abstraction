@@ -20,7 +20,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
-import { validateName } from "./util";
+import { parseUrl, validateName } from "./util";
 
 export class AdapterAzureBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
@@ -31,6 +31,32 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   constructor(config: string | AdapterConfigAzureBlob) {
     super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
+    } else {
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const { type, part1, part2, bucketName, extraOptions } = value;
+        if (extraOptions !== null) {
+          this._config = { type, ...extraOptions };
+        } else {
+          this._config = { type };
+        }
+        if (part1 !== null) {
+          this._config.accountName = part1;
+        }
+        if (part2 !== null) {
+          this._config.accountKey = part2;
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
+      }
+      // console.log(this._config);
+    }
+
     if (
       typeof this.config.accountName === "undefined" &&
       typeof this.config.connectionString === "undefined"
@@ -90,23 +116,13 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  get config(): AdapterConfigAzureBlob {
-    return this._config as AdapterConfigAzureBlob;
-  }
+  // protected, called by methods of public API via AbstractAdapter
 
-  get serviceClient(): BlobServiceClient {
-    return this._client as BlobServiceClient;
-  }
-
-  public async getFileAsStream(
+  protected async _getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: StreamOptions
+    options: StreamOptions
   ): Promise<ResultObjectStream> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
     try {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const exists = await file.exists();
@@ -142,11 +158,11 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
     try {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const exists = await file.exists();
@@ -173,29 +189,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  public async createBucket(name: string, options?: Options): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    const error = validateName(name);
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    try {
-      const res = await this._client.createContainer(name, options);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async clearBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _clearBucket(name: string): Promise<ResultObject> {
     try {
       // const containerClient = this._client.getContainerClient(name);
       // const blobs = containerClient.listBlobsFlat();
@@ -218,7 +212,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  public async deleteBucket(name: string): Promise<ResultObject> {
+  protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this.clearBucket(name);
       const del = await this._client.deleteContainer(name);
@@ -229,29 +223,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  public async listBuckets(): Promise<ResultObjectBuckets> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-    // let i = 0;
-    try {
-      const bucketNames = [];
-      // let i = 0;
-      for await (const container of this._client.listContainers()) {
-        // console.log(`${i++} ${container.name}`);
-        bucketNames.push(container.name);
-      }
-      return { value: bucketNames, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async listFiles(bucketName: string): Promise<ResultObjectFiles> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       const files: [string, number][] = [];
       const data = this._client.getContainerClient(bucketName).listBlobsFlat();
@@ -266,76 +238,9 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const container = this._client.getContainerClient(bucketName);
-      const file = await container.getBlobClient(fileName).deleteIfExists();
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const blob = this._client.getContainerClient(bucketName).getBlobClient(fileName);
-      const length = (await blob.getProperties()).contentLength;
-      return { value: length, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async bucketExists(name: string): Promise<ResultObjectBoolean> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const cont = this._client.getContainerClient(name);
-      const exists = await cont.exists();
-      return { value: exists, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const exists = await this._client
-        .getContainerClient(bucketName)
-        .getBlobClient(fileName)
-        .exists();
-      return { value: exists, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async addFile(
+  protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    let { options } = params;
-    if (typeof options !== "object") {
-      options = {};
-    }
-
     try {
       let readStream: Readable;
       if (typeof (params as FilePathParams).origPath === "string") {
@@ -356,12 +261,100 @@ export class AdapterAzureBlob extends AbstractAdapter {
         .getContainerClient(params.bucketName)
         .getBlobClient(params.targetPath)
         .getBlockBlobClient();
-      const writeStream = await file.uploadStream(readStream, 64000, 20, options);
+      const writeStream = await file.uploadStream(readStream, 64000, 20, params.options);
       if (writeStream.errorCode) {
         return { value: null, error: writeStream.errorCode };
       } else {
-        return this.getFileAsURL(params.bucketName, params.targetPath);
+        return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
       }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+    try {
+      const container = this._client.getContainerClient(bucketName);
+      const file = await container.getBlobClient(fileName).deleteIfExists();
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    try {
+      const blob = this._client.getContainerClient(bucketName).getBlobClient(fileName);
+      const length = (await blob.getProperties()).contentLength;
+      return { value: length, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _bucketExists(name: string): Promise<ResultObjectBoolean> {
+    try {
+      const cont = this._client.getContainerClient(name);
+      const exists = await cont.exists();
+      return { value: exists, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    try {
+      const exists = await this._client
+        .getContainerClient(bucketName)
+        .getBlobClient(fileName)
+        .exists();
+      return { value: exists, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  // public
+
+  get config(): AdapterConfigAzureBlob {
+    return this._config as AdapterConfigAzureBlob;
+  }
+
+  get serviceClient(): BlobServiceClient {
+    return this._client as BlobServiceClient;
+  }
+
+  public async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+    // let i = 0;
+    try {
+      const bucketNames = [];
+      // let i = 0;
+      for await (const container of this._client.listContainers()) {
+        // console.log(`${i++} ${container.name}`);
+        bucketNames.push(container.name);
+      }
+      return { value: bucketNames, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  public async createBucket(name: string, options?: Options): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    try {
+      const res = await this._client.createContainer(name, options);
+      return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }

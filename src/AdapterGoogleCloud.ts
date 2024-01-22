@@ -13,7 +13,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
-import { validateName } from "./util";
+import { parseUrl, validateName } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
   protected _type = StorageType.GCS;
@@ -23,6 +23,29 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   constructor(config?: string | AdapterConfigGoogleCloud) {
     super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
+    } else {
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const { type, part1, bucketName, extraOptions } = value;
+        if (extraOptions !== null) {
+          this._config = { type, ...extraOptions };
+        } else {
+          this._config = { type };
+        }
+        if (part1 !== null) {
+          this._config.accessKeyId = part1;
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
+      }
+      // console.log(this._config);
+    }
+
     try {
       this._client = new GoogleCloudStorage(this._config as object);
     } catch (e) {
@@ -53,11 +76,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     return this._client as GoogleCloudStorage;
   }
 
-  public async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       return { value: file.publicUrl(), error: null };
@@ -66,15 +85,11 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async getFileAsStream(
+  protected async _getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: StreamOptions
+    options: StreamOptions
   ): Promise<ResultObjectStream> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       const [exists] = await file.exists();
@@ -94,11 +109,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       const [exists] = await file.exists();
@@ -113,18 +124,9 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async addFile(
+  protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    let { options } = params;
-    if (typeof options !== "object") {
-      options = {};
-    }
-
     try {
       let readStream: Readable;
       if (typeof (params as FilePathParams).origPath === "string") {
@@ -142,8 +144,8 @@ export class AdapterGoogleCloud extends AbstractAdapter {
         readStream = (params as FileStreamParams).stream;
       }
 
-      const file = this._client.bucket(params.bucketName).file(params.targetPath, options);
-      const writeStream = file.createWriteStream(options);
+      const file = this._client.bucket(params.bucketName).file(params.targetPath, params.options);
+      const writeStream = file.createWriteStream(params.options);
       return new Promise((resolve) => {
         readStream
           .pipe(writeStream)
@@ -191,11 +193,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async clearBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _clearBucket(name: string): Promise<ResultObject> {
     try {
       await this._client.bucket(name).deleteFiles({ force: true });
       return { value: "ok", error: null };
@@ -204,7 +202,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async deleteBucket(name: string): Promise<ResultObject> {
+  protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this.clearBucket(name);
     } catch (e) {
@@ -231,11 +229,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       const data = await this._client.bucket(bucketName).getFiles();
       const names = data[0].map((f) => f.name);
@@ -245,11 +239,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       const [metadata] = await file.getMetadata();
@@ -259,11 +249,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async bucketExists(name: string): Promise<ResultObjectBoolean> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _bucketExists(name: string): Promise<ResultObjectBoolean> {
     try {
       const data = await this._client.bucket(name).exists();
       // console.log(data);
@@ -273,11 +259,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  public async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       const data = await this._client.bucket(bucketName).file(fileName).exists();
       // console.log(data);

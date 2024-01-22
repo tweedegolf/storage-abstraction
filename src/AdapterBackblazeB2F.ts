@@ -1,5 +1,5 @@
 import fs from "fs";
-import B2 from "backblaze-b2";
+import B2 from "@nichoth/backblaze-b2";
 
 import { Options, StreamOptions, StorageType, IAdapter } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
@@ -8,18 +8,10 @@ import {
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
-  ResultObjectKeyValue,
   ResultObjectNumber,
   ResultObjectStream,
 } from "./types/result";
-import {
-  AdapterConfigBackblazeB2,
-  FileB2,
-  ResultObjectBucketB2,
-  ResultObjectBucketsB2,
-  ResultObjectFileB2,
-  ResultObjectFilesB2,
-} from "./types/adapter_backblaze_b2";
+import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2";
 
 import { parseQueryString, parseUrl, validateName } from "./util";
 
@@ -45,11 +37,11 @@ const createBucket = async (name: string, options?: Options): Promise<ResultObje
   return { value: "ok", error: null };
 };
 
-const clearBucket = async (name: string): Promise<ResultObject> => {
+const clearBucket = async (name?: string): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };
 
-const deleteBucket = async (name: string): Promise<ResultObject> => {
+const deleteBucket = async (name?: string): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };
 
@@ -76,26 +68,30 @@ const addFile = async (
 };
 
 const getFileAsStream = async (
-  bucketName: string,
-  fileName: string,
-  options?: StreamOptions
+  arg1: string,
+  arg2: StreamOptions | string,
+  arg3?: StreamOptions
 ): Promise<ResultObjectStream> => {
   return { value: fs.createReadStream(""), error: null };
 };
 
 const getFileAsURL = async (
-  bucketName: string,
-  fileName: string,
-  options?: Options
+  arg1: string,
+  arg2: Options | string,
+  arg3?: Options
 ): Promise<ResultObject> => {
   return { value: "url", error: null };
 };
 
-const removeFile = async (bucketName: string, fileName: string): Promise<ResultObject> => {
+const removeFile = async (
+  arg1: string,
+  arg2?: boolean | string,
+  arg3?: boolean
+): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };
 
-const listFiles = async (bucketName: string, numFiles?: number): Promise<ResultObjectFiles> => {
+const listFiles = async (arg1: number | string, arg2?: number): Promise<ResultObjectFiles> => {
   return { value: [["s", 0]], error: null };
 };
 
@@ -103,7 +99,7 @@ const sizeOf = async (bucketName: string, fileName: string): Promise<ResultObjec
   return { value: 42, error: null };
 };
 
-const fileExists = async (bucketName: string, fileName: string): Promise<ResultObjectBoolean> => {
+const fileExists = async (bucketName: string, fileName?: string): Promise<ResultObjectBoolean> => {
   return { value: true, error: null };
 };
 
@@ -123,6 +119,14 @@ const adapter: IAdapter = {
   },
   get serviceClient() {
     return getServiceClient();
+  },
+  get bucketName() {
+    return getServiceClient();
+  },
+  set(bucketName: string): void {},
+  setSelectedBucket(bucketName: string): void {},
+  getSelectedBucket(): string {
+    return "bucketName";
   },
   getType,
   getConfigError,
