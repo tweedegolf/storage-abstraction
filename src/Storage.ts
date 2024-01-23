@@ -178,9 +178,9 @@ export class Storage implements IAdapter {
   async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: StreamOptions
+    options?: StreamOptions
   ): Promise<ResultObjectStream>;
-  async getFileAsStream(fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
+  async getFileAsStream(fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
   async getFileAsStream(
     arg1: string,
     arg2?: StreamOptions | string,

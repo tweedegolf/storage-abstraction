@@ -178,7 +178,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name?: string): Promise<ResultObject> {
+  protected async _clearBucket(name: string): Promise<ResultObject> {
     let objects: Array<{ Key: string; VersionId?: string }>;
 
     // first try to remove the versioned files
@@ -356,7 +356,15 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return this._config as AdapterConfigAmazonS3;
   }
 
+  getConfig(): AdapterConfigAmazonS3 {
+    return this._config as AdapterConfigAmazonS3;
+  }
+
   get serviceClient(): S3Client {
+    return this._client as S3Client;
+  }
+
+  getServiceClient(): S3Client {
     return this._client as S3Client;
   }
 
@@ -393,11 +401,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new HeadBucketCommand(input);
       const response = await this._client.send(command);
       if (response.$metadata.httpStatusCode === 200) {
-        return { error: "bucket exists", value: null };
+        return { value: null, error: "bucket exists" };
       }
-    } catch (_e) {
-      // this error simply means that the bucket doesn't exist yet
-      // so it is safe to ignore it and continue
+    } catch (e) {
+      return { value: null, error: e.message };
     }
 
     try {

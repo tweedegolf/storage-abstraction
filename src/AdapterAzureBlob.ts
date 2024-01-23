@@ -272,7 +272,11 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected async _removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions: boolean
+  ): Promise<ResultObject> {
     try {
       const container = this._client.getContainerClient(bucketName);
       const file = await container.getBlobClient(fileName).deleteIfExists();
@@ -320,7 +324,15 @@ export class AdapterAzureBlob extends AbstractAdapter {
     return this._config as AdapterConfigAzureBlob;
   }
 
+  getConfig(): AdapterConfigAzureBlob {
+    return this._config as AdapterConfigAzureBlob;
+  }
+
   get serviceClient(): BlobServiceClient {
+    return this._client as BlobServiceClient;
+  }
+
+  getServiceClient(): BlobServiceClient {
     return this._client as BlobServiceClient;
   }
 

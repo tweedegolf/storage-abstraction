@@ -263,11 +263,11 @@ export abstract class AbstractAdapter implements IAdapter {
   public async getFileAsStream(
     bucketName: string,
     fileName: string,
-    options: StreamOptions
+    options?: StreamOptions
   ): Promise<ResultObjectStream>;
   public async getFileAsStream(
     fileName: string,
-    options: StreamOptions
+    options?: StreamOptions
   ): Promise<ResultObjectStream>;
   public async getFileAsStream(
     arg1: string,
@@ -306,7 +306,7 @@ export abstract class AbstractAdapter implements IAdapter {
   public async getFileAsURL(
     bucketName: string,
     fileName: string,
-    options: Options // e.g. { expiresIn: 3600 }
+    options?: Options // e.g. { expiresIn: 3600 }
   ): Promise<ResultObject>;
   public async getFileAsURL(fileName: string, options?: Options): Promise<ResultObject>;
   public async getFileAsURL(

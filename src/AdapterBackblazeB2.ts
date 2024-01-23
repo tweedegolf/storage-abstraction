@@ -304,7 +304,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return { value: url, error: null };
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected async _removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions: boolean
+  ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -469,7 +473,15 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return this._config as AdapterConfigBackblazeB2;
   }
 
+  getConfig(): AdapterConfigBackblazeB2 {
+    return this._config as AdapterConfigBackblazeB2;
+  }
+
   get serviceClient(): B2 {
+    return this._client as B2;
+  }
+
+  getServiceClient(): B2 {
     return this._client as B2;
   }
 

@@ -16,7 +16,7 @@ import {
 } from "./types/result";
 import { AdapterConfigLocal } from "./types/adapter_local";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseMode, validateName } from "./util";
+import { parseMode, parseUrl, validateName } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
@@ -25,6 +25,26 @@ export class AdapterLocal extends AbstractAdapter {
 
   constructor(config: AdapterConfigLocal) {
     super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
+    } else {
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const { type, part1, bucketName, extraOptions } = value;
+        if (extraOptions !== null) {
+          this._config = { type, directory: part1, ...extraOptions };
+        } else {
+          this._config = { type, directory: part1 };
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
+      }
+      // console.log(this._config);
+    }
+
     if (typeof this._config.mode !== "undefined") {
       const { value, error } = parseMode(this._config.mode);
       if (error !== null) {
@@ -77,20 +97,11 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  // Public API
+  // protected, called by methods of public API via AbstractAdapter
 
-  public async addFile(
+  protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    let { options } = params;
-    if (typeof options !== "object") {
-      options = {};
-    }
-
     const dest = path.join(this._config.directory, params.bucketName, params.targetPath);
 
     const { error } = await this.createDirectory(path.dirname(dest));
@@ -112,7 +123,7 @@ export class AdapterLocal extends AbstractAdapter {
         readStream = (params as FileStreamParams).stream;
       }
       // console.time();
-      const writeStream = fs.createWriteStream(dest, options);
+      const writeStream = fs.createWriteStream(dest, params.options);
       return new Promise((resolve) => {
         readStream
           .pipe(writeStream)
@@ -132,34 +143,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async createBucket(name: string, options?: Options): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    const error = validateName(name);
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    try {
-      const p = path.join(this._config.directory, name);
-      const created = await this.createDirectory(p);
-      if (created) {
-        return { value: "ok", error: null };
-      } else {
-        return { value: null, error: `Could not create bucket ${p}` };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  async clearBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _clearBucket(name: string): Promise<ResultObject> {
     try {
       // remove all files and folders inside bucket directory, but not the directory itself
       const p = path.join(this._config.directory, name);
@@ -170,11 +154,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, name);
       await rimraf(p);
@@ -184,30 +164,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async listBuckets(): Promise<ResultObjectBuckets> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const dirents = await fs.promises.readdir(this._config.directory, { withFileTypes: true });
-      const files = dirents
-        .filter((dirent) => dirent.isFile() === false)
-        .map((dirent) => dirent.name);
-      // const stats = await Promise.all(
-      //   files.map((f) => fs.promises.stat(path.join(this._config.directory, f)))
-      // );
-      return { value: files, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  async listFiles(bucketName: string): Promise<ResultObjectFiles> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _listFiles(bucketName: string): Promise<ResultObjectFiles> {
     try {
       const storagePath = path.join(this._config.directory, bucketName);
       const { value: files, error } = await this.globFiles(storagePath);
@@ -227,15 +184,11 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async getFileAsStream(
+  protected async _getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: StreamOptions
+    options: StreamOptions
   ): Promise<ResultObjectStream> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       await fs.promises.access(p);
@@ -246,11 +199,11 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       await fs.promises.access(p);
@@ -260,11 +213,11 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions: boolean
+  ): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       if (!fs.existsSync(p)) {
@@ -277,11 +230,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       const { size } = await fs.promises.stat(p);
@@ -291,11 +240,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const p = path.join(this._config.directory, bucketName);
       // const r = fs.existsSync(p);
@@ -308,16 +253,64 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
+  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       await fs.promises.access(path.join(this._config.directory, bucketName, fileName));
       return { value: true, error: null };
     } catch (e) {
       return { value: false, error: null };
+    }
+  }
+
+  // public
+
+  get config(): AdapterConfigLocal {
+    return this._config;
+  }
+
+  getConfig(): AdapterConfigLocal {
+    return this.config;
+  }
+
+  public async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const dirents = await fs.promises.readdir(this._config.directory, { withFileTypes: true });
+      const files = dirents
+        .filter((dirent) => dirent.isFile() === false)
+        .map((dirent) => dirent.name);
+      // const stats = await Promise.all(
+      //   files.map((f) => fs.promises.stat(path.join(this._config.directory, f)))
+      // );
+      return { value: files, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  public async createBucket(name: string, options?: Options): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    try {
+      const p = path.join(this._config.directory, name);
+      const created = await this.createDirectory(p);
+      if (created) {
+        return { value: "ok", error: null };
+      } else {
+        return { value: null, error: `Could not create bucket ${p}` };
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
     }
   }
 }
