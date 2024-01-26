@@ -1,3 +1,4 @@
+import { URL } from "url";
 import { StorageType } from "./types/general";
 import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 
@@ -27,6 +28,47 @@ export const parseQueryString = (url: string): { [id: string]: string } => {
  * Parses a config url string into fragments and parses the query string into a
  * key-value object.
  */
+export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult => {
+  let parsed = null;
+  let extraOptions = null;
+
+  if (isBlankString(url)) {
+    return {
+      value: null,
+      error: "please provide a configuration url",
+    };
+  }
+
+  try {
+    parsed = new URL(url);
+  } catch (e) {
+    return { value: null, error: e.message };
+  }
+
+  if (Object.keys(parsed.searchParams)) {
+    extraOptions = {};
+    for (const [key, val] of parsed.searchParams) {
+      extraOptions[key] = val;
+    }
+  }
+
+  return {
+    value: {
+      type: parsed.protocol || null,
+      part1: parsed.username || null,
+      part2: parsed.password || null,
+      bucketName: parsed.host || null,
+      extraOptions,
+    },
+    error: null,
+  };
+};
+
+/**
+ * @param {string} url
+ * Parses a config url string into fragments and parses the query string into a
+ * key-value object.
+ */
 export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   let type = null;
   let part1 = null;
@@ -40,6 +82,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
       error: "please provide a configuration url",
     };
   }
+
   const p = url.indexOf("://");
   if (p === -1) {
     return {

@@ -2,7 +2,7 @@
 export const adapterClasses = {
   b2: ["AdapterBackblazeB2", "@tweedegolf/sab-adapter-backblaze-b2"],
   s3: ["AdapterAmazonS3", "@tweedegolf/sab-adapter-amazon-s3"],
-  gcs: ["AdapterGoogleCloudStorage", "@tweedegolf/sab-adapter-google-cloud"],
+  gcs: ["AdapterGoogleCloud", "@tweedegolf/sab-adapter-google-cloud"],
   local: ["AdapterLocal", "@tweedegolf/sab-adapter-local"],
   azure: ["AdapterAzureStorageBlob", "@tweedegolf/sab-adapter-azure-blob"],
   minio: ["AdapterMinio", "@tweedegolf/sab-adapter-minio"],

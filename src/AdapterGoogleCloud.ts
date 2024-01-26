@@ -25,6 +25,9 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     super(config);
     if (typeof config !== "string") {
       this._config = { ...config };
+      if (typeof config.bucketName !== "undefined") {
+        this._bucketName = config.bucketName;
+      }
     } else {
       const { value, error } = parseUrl(config);
       if (error !== null) {
@@ -43,7 +46,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
           this._config.bucketName = bucketName;
         }
       }
-      // console.log(this._config);
     }
 
     try {
@@ -51,21 +53,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     } catch (e) {
       this._configError = `[configError] ${e.message}`;
     }
-  }
-
-  // util method used by listFiles
-  private async getFileSize(bucketName: string, fileNames: string[]): Promise<ResultObjectFiles> {
-    const result: Array<[string, number]> = [];
-    for (let i = 0; i < fileNames.length; i += 1) {
-      const file = this._client.bucket(bucketName).file(fileNames[i]);
-      try {
-        const [metadata] = await file.getMetadata();
-        result.push([file.name, parseInt(metadata.size as string, 10)]);
-      } catch (e) {
-        return { value: null, error: e.message };
-      }
-    }
-    return { value: result, error: null };
   }
 
   // protected, called by methods of public API via AbstractAdapter
@@ -165,8 +152,10 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       const data = await this._client.bucket(bucketName).getFiles();
-      const names = data[0].map((f) => f.name);
-      return this.getFileSize(bucketName, names);
+      return {
+        value: data[0].map((f) => [f.name, parseInt(f.metadata.size as string, 10)]),
+        error: null,
+      };
     } catch (e) {
       return { value: null, error: e.message };
     }
