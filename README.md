@@ -225,7 +225,7 @@ s.getConfiguration().bucketName; // undefined
 
 ### <a name='google-cloud'></a>Google Cloud
 
-> peer dependencies: <br/> > `npm i @google-cloud/storage ramda`
+> peer dependencies: <br/> > `npm i @google-cloud/storage`
 
 Configuration object:
 

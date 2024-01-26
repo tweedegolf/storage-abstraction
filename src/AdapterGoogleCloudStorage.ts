@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import zip from "@ramda/zip";
 import { Readable } from "stream";
 import {
   Storage as GoogleCloudStorage,
@@ -301,9 +300,7 @@ export class AdapterGoogleCloudStorage extends AbstractAdapter {
       throw new Error("no bucket selected");
     }
     const data = await this.storage.bucket(this.bucketName).getFiles();
-    const names = data[0].map((f) => f.name);
-    const sizes = await this.getMetaData(names);
-    return zip(names, sizes) as [string, number][];
+    return data[0].map((f) => [f.name, parseInt(f.metadata.size as string, 10)]);
   }
 
   async sizeOf(name: string): Promise<number> {
