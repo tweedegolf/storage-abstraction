@@ -1,3 +1,8 @@
+# 1.5.6
+
+- removed unnecessary call to getMetaData in GCS adapter
+- removed @ramda/zip dependency
+
 # 1.5.5
 
 - changed Backblaze B2 service client dependency to a [fork](https://www.npmjs.com/package/@nichoth/backblaze-b2) that fixes the long standing Axios security issue &rarr; all credits: [nichoth](https://github.com/nichoth)
