@@ -7,7 +7,7 @@
   };
   ```
 
-- No more local state: the storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.
+- ~~No more local state: the storage instance will no longer hold a reference to the last used or selected bucket in its local state; you will have to provide a bucket name for every bucket operation, for instance `clearBucket`, but also `removeFile`.~~
 - The storage instance will also no longer hold a reference to all available buckets; a call to `listBuckets` will access the cloud storage service every time it is called; this is handy in case another process or user has created or deleted a new bucket.
 - `createBucket` resolves with an error if that bucket already exists
 - `removeFile` has an additional optional boolean argument `allVersions`; if set to true all versions of the specified file will be removed. Default: false
@@ -16,7 +16,7 @@
   - `getConfig()` and `getType()` are implemented as getter as well, resp.: `storage.config` and `storage.type`
   - added `configError` and `storage.configError`
   - added `getServiceClient` and `storage.serviceClient`
-- Configuration urls are now completely in the form of a query string: `s3://region=us-west-1&accessKeyId=KEYID&secretAccessKey=SECRET`
+- ~~Configuration urls are now completely in the form of a query string: `s3://region=us-west-1&accessKeyId=KEYID&secretAccessKey=SECRET`~~
 - Supported storages:
   - Amazon S3
   - Cubbit
@@ -43,12 +43,12 @@
 #### selectBucket
 
 `selectBucket(name: string | null): Promise<string>`<br/>
-`N/A`
+`N/A` &rarr; re-implemented in 2.1
 
 #### getSelectedBucket
 
 `getSelectedBucket(): string`<br/>
-`N/A`
+`N/A` &rarr; re-implemented in 2.1
 
 #### validateName
 
@@ -62,7 +62,7 @@
 
 #### createBucket
 
-`createBucket(name: string, options?: object): Promise<string>`<br/>
+`createBucket(name?: string, options?: object): Promise<string>`<br/>
 `createBucket(name: string, options?: object): Promise<ResultObject>`
 
 #### clearBucket

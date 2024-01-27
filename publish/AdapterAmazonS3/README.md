@@ -66,7 +66,7 @@ export interface AdapterConfigS3 extends AdapterConfig {
 
 ## Examples
 
-Example with configuration object:
+Examples with configuration object:
 
 ```typescript
 // Cubbit S3 compatible
@@ -77,14 +77,27 @@ const s = new Storage({
   endpoint: "https://s3.cubbit.eu/",
   region: "auto",
 });
+
+const s = new Storage({
+  type: StorageType.S3,
+  accessKeyId: 'your-key-id'
+  secretAccessKey: 'your-secret'
+  endpoint: "https://s3.cubbit.eu/",
+  region: "auto",
+  bucketName: "the-buck",
+});
 ```
 
-Example with configuration url:
+Same example with configuration url:
 
 ```typescript
 // Cubbit S3 compatible
 const s = new Storage(
-  "s3://accessKeyId=your-key-id&secretAccessKey=your-access-key&endpoint=https://s3.cubbit.eu/&region=auto"
+  "s3://your-key-id:your-access-key?endpoint=https://s3.cubbit.eu/&region=auto"
+);
+
+const s = new Storage(
+  "s3://your-key-id:your-access-key@the-buck?endpoint=https://s3.cubbit.eu/&region=auto"
 );
 ```
 

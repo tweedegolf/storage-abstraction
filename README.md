@@ -24,41 +24,43 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 - [How it works](#how-it-works)
 - [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
-  * [How bucketName is used](#how-bucketname-is-used)
+  - [Configuration object](#configuration-object)
+  - [Configuration URL](#configuration-url)
+  - [How bucketName is used](#how-bucketname-is-used)
 - [Adapters](#adapters)
 - [Adapter Introspect API](#adapter-introspect-api)
-  * [getType](#gettype)
-  * [getConfiguration](#getconfiguration)
-  * [getConfigurationError](#getconfigurationerror)
-  * [getServiceClient](#getserviceclient)
+  - [getType](#gettype)
+  - [getSelectedBucket](#getselectedbucket)
+  - [setSelectedBucket](#setselectedbucket)
+  - [getConfiguration](#getconfiguration)
+  - [getConfigurationError](#getconfigurationerror)
+  - [getServiceClient](#getserviceclient)
 - [Adapter API](#adapter-api)
-  * [listBuckets](#listbuckets)
-  * [listFiles](#listfiles)
-  * [bucketExists](#bucketexists)
-  * [fileExists](#fileexists)
-  * [createBucket](#createbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [addFile](#addfile)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromStream](#addfilefromstream)
-  * [getFileAsURL](#getfileasurl)
-  * [getFileAsStream](#getfileasstream)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
+  - [listBuckets](#listbuckets)
+  - [listFiles](#listfiles)
+  - [bucketExists](#bucketexists)
+  - [fileExists](#fileexists)
+  - [createBucket](#createbucket)
+  - [clearBucket](#clearbucket)
+  - [deleteBucket](#deletebucket)
+  - [addFile](#addfile)
+  - [addFileFromPath](#addfilefrompath)
+  - [addFileFromBuffer](#addfilefrombuffer)
+  - [addFileFromStream](#addfilefromstream)
+  - [getFileAsURL](#getfileasurl)
+  - [getFileAsStream](#getfileasstream)
+  - [removeFile](#removefile)
+  - [sizeOf](#sizeof)
 - [Storage API](#storage-api)
-  * [getAdapter](#getadapter)
-  * [switchAdapter](#switchadapter)
+  - [getAdapter](#getadapter)
+  - [switchAdapter](#switchadapter)
 - [Adding an adapter](#adding-an-adapter)
-  * [Add your storage type](#add-your-storage-type)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
-  * [Adding your adapter code to this package](#adding-your-adapter-code-to-this-package)
+  - [Add your storage type](#add-your-storage-type)
+  - [Define your configuration](#define-your-configuration)
+  - [Adapter class](#adapter-class)
+  - [Adapter function](#adapter-function)
+  - [Register your adapter](#register-your-adapter)
+  - [Adding your adapter code to this package](#adding-your-adapter-code-to-this-package)
 - [Tests](#tests)
 - [Example application](#example-application)
 - [Questions and requests](#questions-and-requests)
@@ -152,7 +154,15 @@ Besides the mandatory key `type` one or more keys may be mandatory or optional d
 
 ### Configuration URL
 
-Configuration urls always start with a protocol that defines the type of storage:
+The general format of configuration urls is:
+
+```typescript
+const u = "protocol://part1:part2@bucketName:port/path/to/object?region=auto&option2=value2...";
+```
+
+For most storage services `part1` and `part2` are the credentials, such as key id and secret or username and password.
+
+The url always start with a protocol that defines the type of storage:
 
 - `local://` &rarr; local storage
 - `minio://` &rarr; MinIO
@@ -161,47 +171,56 @@ Configuration urls always start with a protocol that defines the type of storage
 - `gcs://` &rarr; Google Cloud
 - `azure://` &rarr; Azure Blob Storage
 
-These values match the values in the enum `StorageType` shown above. What follows after the `://` is a query string without the initial `?` that contains mandatory and optional parameters for the configuration.
+These values match the values in the enum `StorageType` shown above.
 
 ```typescript
 // example with extra Azure option "maxTries"
-const c = "azure://accountName=your-account&bucketName=your-bucket&maxTries=10";
+const c = "azure://account_name:account_key@bucket_name?maxTries=10";
 
 // internally the config url is converted to a config object:
 const c1 = {
   type: StorageType.AZURE,
-  accountName: "your-account",
-  bucketName: "your-bucket",
+  accountName: "account_name",
+  accountKey: "account_key",
+  bucketName: "bucket_name",
   maxTries: 10,
 };
 ```
 
+Because not all components of the url are mandatory you can leave them out. This will result in invalid urls but the parser will parse them anyway:
+
+```typescript
+// port and bucket
+const u = "protocol://part1:part2@bucket:port/path/to/object?region=auto&option2=value2";
+
+// no bucket but with @
+const u = "protocol://part1:part2@:port/path/to/object?region=auto&option2=value2";
+
+// no bucket
+const u = "protocol://part1:part2:port/path/to/object?region=auto&option2=value2";
+
+// no credentials, note: @ is mandatory!
+const u = "protocol://@bucket/path/to/object?region=auto&option2=value2";
+
+// no credentials, no bucket
+const u = "protocol:///path/to/object?region=auto&option2=value2";
+
+// no credentials, no bucket, no extra options (query string)
+const u = "protocol:///path/to/object";
+
+// only protocol
+const u = "protocol://";
+
+// bare
+const u = "protocol";
+```
+
 ### How bucketName is used
 
-In earlier versions of this library the value you provided in the configuration for `bucketName` was stored locally. This made it for instance possible to add a file to a bucket without specifying the bucket:
+If you provide a bucket name it will be stored in the state of the Storage instance. This makes it for instance possible to add a file to a bucket without specifying the name of bucket:
 
 ```typescript
 storage.addFile("path/to/your/file"); // the file was automatically added to the selected bucket
-```
-
-Since version 2.0 you always have to specify the bucket for every bucket action:
-
-```typescript
-storage.addFile({
-  bucketName: "your-bucket",
-  origPath: "path/to/your/file",
-  targetPath: "folder/file",
-});
-```
-
-It can still be useful to provide a bucket name with the configuration, for instance:
-
-```typescript
-storage.addFile({
-  bucketName: storage.config.bucketName,
-  origPath: "path/to/your/file",
-  targetPath: "folder/file",
-});
 ```
 
 ## Adapters
@@ -238,6 +257,48 @@ Also implemented as getter:
 ```typescript
 const storage = new Storage(config);
 console.log(storage.type);
+```
+
+### getSelectedBucket
+
+```typescript
+getSelectedBucket(): null | string
+```
+
+Returns the name of the bucket that you've provided with the config upon instantiation or that you've set afterwards using `setSelectedBucket`
+
+Also implemented as getter:
+
+```typescript
+const storage = new Storage(config);
+console.log(storage.bucket);
+```
+
+### setSelectedBucket
+
+```typescript
+setSelectedBucket(null | string): void
+```
+
+Sets the name of the bucket that will be stored in the local state of the Adapter instance. This overrides the value that you may have provided with the config upon instantiation. You can also clear this value by passing `null` as argument.
+
+If you select a bucket you don't have to provide a bucket name when you call
+
+- `clearBucket`
+- `deleteBucket`
+- `bucketExists`
+- `addFile`, `addFileFromStream`, `addFileFromBuffer`, `addFileFromPath`
+- `getFileAsURL`, `getFileAsStream`
+- `fileExists`
+- `removeFile`
+- `listFiles`
+- `sizeof`
+
+Also implemented as setter:
+
+```typescript
+const storage = new Storage(config);
+storage.bucket = "the-buck-2";
 ```
 
 ### getConfiguration
@@ -363,7 +424,7 @@ If the call succeeds the `value` key will hold an array of tuples.
 ### bucketExists
 
 ```typescript
-bucketExists(name: string): Promise<ResultObjectBoolean>;
+bucketExists(name?: string): Promise<ResultObjectBoolean>;
 ```
 
 Check whether a bucket exists or not.
@@ -382,7 +443,7 @@ If the call succeeds the `value` key will hold a boolean value.
 ### fileExists
 
 ```typescript
-fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+fileExists(bucketName?: string, fileName: string): Promise<ResultObjectBoolean>;
 ```
 
 Check whether a file exists or not.
@@ -426,7 +487,7 @@ If the bucket exists or the creating the bucket fails for another reason the `er
 ### <a name='clearbucket'></a>clearBucket
 
 ```typescript
-clearBucket(name: string): Promise<ResultObject>;
+clearBucket(bucketName?: string): Promise<ResultObject>;
 ```
 
 Removes all files in the bucket.

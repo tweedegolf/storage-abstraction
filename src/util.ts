@@ -57,6 +57,7 @@ export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult
       type: parsed.protocol || null,
       part1: parsed.username || null,
       part2: parsed.password || null,
+      port: parsed.port || null,
       bucketName: parsed.host || null,
       extraOptions,
     },
@@ -73,6 +74,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   let type = null;
   let part1 = null;
   let part2 = null;
+  let port = null;
   let bucketName = null;
   let extraOptions = null;
 
@@ -86,7 +88,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   const p = url.indexOf("://");
   if (p === -1) {
     return {
-      value: { type: url, part1, part2, bucketName, extraOptions },
+      value: { type: url, part1, part2, port, bucketName, extraOptions },
       error: null,
     };
   }
@@ -98,7 +100,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   let config = url.substring(p + 3);
   const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
-  const colon = config.indexOf(":");
+  let colon2 = -1;
 
   // parse options
   if (questionMark !== -1) {
@@ -110,22 +112,36 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   let bucketString = "";
   if (at !== -1) {
     bucketString = config.substring(at + 1);
+    // remove port
+    colon2 = bucketString.indexOf(":");
+    if (colon2 !== -1) {
+      port = bucketString.substring(colon2 + 1);
+      bucketString = bucketString.substring(0, colon2);
+    }
     if (questionMark !== -1) {
       bucketName = bucketString.substring(0, questionMark);
     } else {
       bucketName = bucketString;
     }
+    if (isBlankString(bucketName)) {
+      bucketName = null;
+    }
     config = config.substring(0, at);
   }
 
   // get credentials
+  const colon = config.indexOf(":");
   if (colon !== -1) {
-    [part1, part2] = config.split(":");
+    if (colon2 === -1) {
+      [part1, part2, port] = config.split(":");
+    } else {
+      [part1, part2] = config.split(":");
+    }
   } else if (config !== "") {
     part1 = config;
   }
 
-  return { value: { type, part1, part2, bucketName, extraOptions }, error: null };
+  return { value: { type, part1, part2, port, bucketName, extraOptions }, error: null };
 };
 
 /**

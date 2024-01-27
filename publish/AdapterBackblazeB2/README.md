@@ -62,20 +62,29 @@ export interface AdapterConfigB2 extends AdapterConfig {
 
 ## Examples
 
-Example with configuration object:
+Examples with configuration object:
 
 ```typescript
 const s = new Storage({
   type: StorageType.B2,
-  applicationKey: "key",
-  applicationKeyId: "keyId",
+  applicationKeyId: "your-key-id",
+  applicationKey: "your-key",
+});
+
+const s = new Storage({
+  type: StorageType.B2,
+  applicationKeyId: "your-key-id",
+  applicationKey: "your-key",
+  bucketName: "the-buck",
 });
 ```
 
-Example with configuration url:
+Same examples with configuration url:
 
 ```typescript
-const s = new Storage("b2://applicationKeyId=keyId&applicationKey=key");
+const s = new Storage("b2://your-key-id:your-key");
+
+const s = new Storage("b2://your-key-id:your-key@the-buck");
 ```
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).

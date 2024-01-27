@@ -70,22 +70,45 @@ export interface AdapterConfigMinio extends AdapterConfig {
 
 ## Examples
 
-Example with configuration object:
+Examples with configuration object:
 
 ```typescript
 const s = new Storage({
   type: StorageType.MINIO,
   endPoint: "play.min.io",
-  accessKey: "Q3AM3UQ867SPQQA43P2F",
-  secretKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
+  accessKey: "your-access-key",
+  secretKey: "your-secret-key",
+});
+
+const s = new Storage({
+  type: StorageType.MINIO,
+  endPoint: "play.min.io",
+  accessKey: "your-access-key",
+  secretKey: "your-secret-key",
+  bucketName: "the-buck",
+  port: 9000,
+});
+
+const s = new Storage({
+  type: StorageType.MINIO,
+  endPoint: "play.min.io",
+  accessKey: "your-access-key",
+  secretKey: "your-secret-key",
+  port: 9000,
 });
 ```
 
-Example with configuration url:
+Same xamples with configuration url:
 
 ```typescript
 const s = new Storage(
-  "minio://endPoint=play.min.io&accessKey=Q3AM3UQ867SPQQA43P2F&secretKey=zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"
+  "minio://your-access-key:your-secret-key?endPoint=play.min.io"
+
+const s = new Storage(
+  "minio://your-access-key:your-secret-key@the-buck:9000?endPoint=play.min.io"
+
+const s = new Storage(
+  "minio://your-access-key:your-secret-key:9000?endPoint=play.min.io"
 );
 ```
 

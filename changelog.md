@@ -7,6 +7,23 @@
 
 - Complete overhaul of the API. If you are using API 1.x please read the [migration document](migration_to_api2.1.md)
 
+# 1.5.6
+
+- removed unnecessary call to getMetaData in GCS adapter
+- removed @ramda/zip dependency
+
+# 1.5.5
+
+- changed Backblaze B2 service client dependency to a [fork](https://www.npmjs.com/package/@nichoth/backblaze-b2) that fixes the long standing Axios security issue &rarr; all credits: [nichoth](https://github.com/nichoth)
+
+# 1.5.4
+
+- added `getFileAsURL` to Amazon S3 adapter &rarr; all credits: [DennisSnijder](https://github.com/DennisSnijder)
+
+# 1.5.3
+
+- fix for issue #48 &rarr; all credits: [Pezmc](https://github.com/Pezmc)
+
 # 1.4.7 - 1.5.2
 
 - Added support for Azure &rarr; all credits: [tesirm99](https://github.com/tesirm99)

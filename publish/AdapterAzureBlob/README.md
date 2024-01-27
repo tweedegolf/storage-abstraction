@@ -64,20 +64,30 @@ export interface AdapterConfigAzure extends AdapterConfig {
 
 ## Examples
 
-Example with configuration object:
+Examples with configuration object:
 
 ```typescript
 const s = new Storage({
   type: StorageType.AZURE,
-  accountName: "yourAccount",
-  accountKey: "yourKey",
+  accountName: "your-account-name",
+  accountKey: "your-account-key",
+});
+
+const s = new Storage({
+  type: StorageType.AZURE,
+  accountName: "your-account-name",
+  accountKey: "your-account-key",
+  bucketName: "the-buck"
+  maxTries: 3
 });
 ```
 
-Example with configuration url:
+Same examples with configuration url:
 
 ```typescript
-const s = new Storage("azure://accountName=yourAccount");
+const s = new Storage("azure://your-account-name:your-account-key");
+
+const s = new Storage("azure://your-account-name:your-account-key@the-buck?maxTries=3");
 ```
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).

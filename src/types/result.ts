@@ -6,6 +6,7 @@ export type ParseUrlResult = {
     type: string;
     part1: string;
     part2: string;
+    port: string;
     bucketName: string;
     extraOptions: { [key: string]: string };
   };

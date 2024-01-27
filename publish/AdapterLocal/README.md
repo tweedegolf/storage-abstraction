@@ -64,7 +64,7 @@ export interface AdapterConfigLocal extends AdapterConfig {
 
 ## Examples
 
-Example with configuration object:
+Examples with configuration object:
 
 ```typescript
 const s = new Storage({
@@ -72,12 +72,21 @@ const s = new Storage({
   directory: "path/to/directory",
   mode: 750,
 });
+
+const s = new Storage({
+  type: StorageType.LOCAL,
+  directory: "path/to/directory",
+  mode: 750,
+  bucketName: "the-buck",
+});
 ```
 
-Example with configuration url:
+Same examples with configuration url:
 
 ```typescript
-const s = new Storage("local://directory=path/to/directory&mode=750");
+const s = new Storage("local://path/to/directory?mode=750");
+
+const s = new Storage("local://path/to/directory@the-buck?mode=750");
 ```
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).

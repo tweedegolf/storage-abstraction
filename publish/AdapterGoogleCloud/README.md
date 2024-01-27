@@ -60,19 +60,27 @@ export interface AdapterConfigGoogle extends AdapterConfig {
 
 ## Examples
 
-Example with configuration object:
+Examples with configuration object:
 
 ```typescript
 const s = new Storage({
   type: StorageType.GCS,
   keyFilename: "path/to/keyFile.json",
 });
+
+const s = new Storage({
+  type: StorageType.GCS,
+  keyFilename: "path/to/keyFile.json",
+  bucketName: "the-buck",
+});
 ```
 
-Example with configuration url:
+Same examples with configuration url:
 
 ```typescript
-const s = new Storage("gcs://keyFilename=path/to/keyFile.json");
+const s = new Storage("gcs://path/to/keyFile.json");
+
+const s = new Storage("gcs://path/to/keyFile.json@the-buck");
 ```
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
