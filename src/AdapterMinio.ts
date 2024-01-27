@@ -30,14 +30,20 @@ export class AdapterMinio extends AbstractAdapter {
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
-        const { type, part1, part2, bucketName, extraOptions } = value;
+        const {
+          protocol: type,
+          username: accessKey,
+          password: secretKey,
+          host: bucketName,
+          searchParams,
+        } = value;
         let endPoint: string;
-        if (extraOptions !== null) {
-          ({ endPoint } = extraOptions);
-          delete extraOptions.endPoint;
-          this._config = { type, accessKey: part1, secretKey: part2, endPoint, ...extraOptions };
+        if (searchParams !== null) {
+          ({ endPoint } = searchParams);
+          delete searchParams.endPoint;
+          this._config = { type, accessKey, secretKey, endPoint, ...searchParams };
         } else {
-          this._config = { type, accessKey: part1, secretKey: part2, endPoint };
+          this._config = { type, accessKey, secretKey, endPoint };
         }
         if (bucketName !== null) {
           this._config.bucketName = bucketName;
@@ -46,11 +52,7 @@ export class AdapterMinio extends AbstractAdapter {
       // console.log(this._config);
     }
 
-    if (
-      typeof this.config.accessKey === "undefined" ||
-      typeof this.config.secretKey === "undefined" ||
-      typeof this.config.endPoint === "undefined"
-    ) {
+    if (!this.config.accessKey || !this.config.secretKey || !this.config.endPoint) {
       this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
     } else {
       const useSSL = this.config.useSSL;

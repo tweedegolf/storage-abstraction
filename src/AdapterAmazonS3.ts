@@ -47,17 +47,23 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
-        const { type, part1, part2, bucketName, extraOptions } = value;
-        if (extraOptions !== null) {
-          this._config = { type, ...extraOptions };
+        const {
+          protocol: type,
+          username: accessKeyId,
+          password: secretAccessKey,
+          host: bucketName,
+          searchParams,
+        } = value;
+        if (searchParams !== null) {
+          this._config = { type, ...searchParams };
         } else {
           this._config = { type };
         }
-        if (part1 !== null) {
-          this._config.accessKeyId = part1;
+        if (accessKeyId !== null) {
+          this._config.accessKeyId = accessKeyId;
         }
-        if (part2 !== null) {
-          this._config.secretAccessKey = part2;
+        if (secretAccessKey !== null) {
+          this._config.secretAccessKey = secretAccessKey;
         }
         if (bucketName !== null) {
           this._config.bucketName = bucketName;

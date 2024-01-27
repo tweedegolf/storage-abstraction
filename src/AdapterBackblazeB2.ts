@@ -39,11 +39,17 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
-        const { type, part1, part2, bucketName, extraOptions } = value;
-        if (extraOptions !== null) {
-          this._config = { type, applicationKeyId: part1, applicationKey: part2, ...extraOptions };
+        const {
+          protocol: type,
+          username: applicationKeyId,
+          password: applicationKey,
+          host: bucketName,
+          searchParams,
+        } = value;
+        if (searchParams !== null) {
+          this._config = { type, applicationKeyId, applicationKey, ...searchParams };
         } else {
-          this._config = { type, applicationKeyId: part1, applicationKey: part2 };
+          this._config = { type, applicationKeyId, applicationKey };
         }
         if (bucketName !== null) {
           this._config.bucketName = bucketName;
@@ -52,10 +58,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // console.log(this._config);
     }
 
-    if (
-      typeof this._config.applicationKey === "undefined" ||
-      typeof this._config.applicationKeyId === "undefined"
-    ) {
+    if (!this._config.applicationKey || !this._config.applicationKeyId) {
       this._configError = 'Please provide both a value for "applicationKey" and "applicationKeyId"';
     } else {
       try {

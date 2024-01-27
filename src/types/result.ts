@@ -3,12 +3,13 @@ import { Readable } from "stream";
 export type ParseUrlResult = {
   error: string | null;
   value: {
-    type: string;
-    part1: string;
-    part2: string;
+    protocol: string;
+    username: string;
+    password: string;
+    host: string;
     port: string;
-    bucketName: string;
-    extraOptions: { [key: string]: string };
+    path: string;
+    searchParams: { [key: string]: string };
   };
 };
 

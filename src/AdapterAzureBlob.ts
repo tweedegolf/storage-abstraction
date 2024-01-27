@@ -38,17 +38,23 @@ export class AdapterAzureBlob extends AbstractAdapter {
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
-        const { type, part1, part2, bucketName, extraOptions } = value;
-        if (extraOptions !== null) {
-          this._config = { type, ...extraOptions };
+        const {
+          protocol: type,
+          username: accountName,
+          password: accountKey,
+          host: bucketName,
+          searchParams,
+        } = value;
+        if (searchParams !== null) {
+          this._config = { type, ...searchParams };
         } else {
           this._config = { type };
         }
-        if (part1 !== null) {
-          this._config.accountName = part1;
+        if (accountName !== null) {
+          this._config.accountName = accountName;
         }
-        if (part2 !== null) {
-          this._config.accountKey = part2;
+        if (accountKey !== null) {
+          this._config.accountKey = accountKey;
         }
         if (bucketName !== null) {
           this._config.bucketName = bucketName;
@@ -57,10 +63,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       // console.log(this._config);
     }
 
-    if (
-      typeof this.config.accountName === "undefined" &&
-      typeof this.config.connectionString === "undefined"
-    ) {
+    if (!this.config.accountName && !this.config.connectionString) {
       this._configError =
         '[configError] Please provide at least a value for "accountName" or for "connectionString';
       return;

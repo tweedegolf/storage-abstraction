@@ -32,11 +32,11 @@ export class AdapterLocal extends AbstractAdapter {
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
-        const { type, part1, bucketName, extraOptions } = value;
-        if (extraOptions !== null) {
-          this._config = { type, directory: part1, ...extraOptions };
+        const { protocol: type, username: directory, host: bucketName, searchParams } = value;
+        if (searchParams !== null) {
+          this._config = { type, directory, ...searchParams };
         } else {
-          this._config = { type, directory: part1 };
+          this._config = { type, directory };
         }
         if (bucketName !== null) {
           this._config.bucketName = bucketName;

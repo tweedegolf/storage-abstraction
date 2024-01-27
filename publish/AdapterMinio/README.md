@@ -98,11 +98,12 @@ const s = new Storage({
 });
 ```
 
-Same xamples with configuration url:
+Same examples with configuration url:
 
 ```typescript
 const s = new Storage(
   "minio://your-access-key:your-secret-key?endPoint=play.min.io"
+
 
 const s = new Storage(
   "minio://your-access-key:your-secret-key@the-buck:9000?endPoint=play.min.io"
@@ -110,6 +111,42 @@ const s = new Storage(
 const s = new Storage(
   "minio://your-access-key:your-secret-key:9000?endPoint=play.min.io"
 );
+```
+
+You can pass the port using a colon but you can also pass it as a query param, the following urls are equal because the `searchParams` object will be flattened into the config object:
+
+```typescript
+const s = new Storage("minio://your-access-key:your-secret-key@the-buck:9000");
+const p = {
+  protocol: "minio",
+  username: "your-access-key",
+  password: "your-secret-key",
+  host: "the-buck",
+  port: "9000",
+  path: null,
+  searchParams: null,
+};
+
+// same as:
+const s = new Storage("minio://your-access-key:your-secret-key@the-buck?port=9000");
+const p = {
+  protocol: "minio",
+  username: "your-access-key",
+  password: "your-secret-key",
+  host: "the-buck",
+  port: null,
+  path: null,
+  searchParams: { port: "9000" },
+};
+
+// both are converted to:
+const c: AdapterConfigMinio = {
+  type: "minio",
+  accessKey: "your-access-key";
+  secretKey: "your-secret-keu";
+  bucketName: "the-buck",
+  port: 9000;
+}
 ```
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).

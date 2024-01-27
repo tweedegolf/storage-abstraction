@@ -30,7 +30,7 @@ export const parseQueryString = (url: string): { [id: string]: string } => {
  */
 export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult => {
   let parsed = null;
-  let extraOptions = null;
+  let searchParams = null;
 
   if (isBlankString(url)) {
     return {
@@ -46,20 +46,21 @@ export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult
   }
 
   if (Object.keys(parsed.searchParams)) {
-    extraOptions = {};
+    searchParams = {};
     for (const [key, val] of parsed.searchParams) {
-      extraOptions[key] = val;
+      searchParams[key] = val;
     }
   }
 
   return {
     value: {
-      type: parsed.protocol || null,
-      part1: parsed.username || null,
-      part2: parsed.password || null,
+      protocol: parsed.protocol || null,
+      username: parsed.username || null,
+      password: parsed.password || null,
+      host: parsed.host || null,
       port: parsed.port || null,
-      bucketName: parsed.host || null,
-      extraOptions,
+      path: parsed.path || null,
+      searchParams,
     },
     error: null,
   };
@@ -71,12 +72,13 @@ export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult
  * key-value object.
  */
 export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
-  let type = null;
-  let part1 = null;
-  let part2 = null;
+  let protocol = null;
+  let username = null;
+  let password = null;
   let port = null;
-  let bucketName = null;
-  let extraOptions = null;
+  let path = null;
+  let host = null;
+  let searchParams = null;
 
   if (isBlankString(url)) {
     return {
@@ -88,43 +90,43 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   const p = url.indexOf("://");
   if (p === -1) {
     return {
-      value: { type: url, part1, part2, port, bucketName, extraOptions },
+      value: { protocol: url, username, password, host, port, path, searchParams },
       error: null,
     };
   }
-  type = url.substring(0, p);
-  if (checkType === true && Object.values(StorageType).includes(type as StorageType) === false) {
-    return { value: null, error: `"${type}" is not a valid storage type` };
+  protocol = url.substring(0, p);
+  if (
+    checkType === true &&
+    Object.values(StorageType).includes(protocol as StorageType) === false
+  ) {
+    return { value: null, error: `"${protocol}" is not a valid storage type` };
   }
 
   let config = url.substring(p + 3);
   const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
-  let colon2 = -1;
 
   // parse options
   if (questionMark !== -1) {
-    extraOptions = parseQueryString(url);
+    searchParams = parseQueryString(url);
     config = config.substring(0, questionMark);
   }
 
-  // get bucket name
-  let bucketString = "";
+  // get host (bucket name)
   if (at !== -1) {
-    bucketString = config.substring(at + 1);
+    host = config.substring(at + 1);
     // remove port
-    colon2 = bucketString.indexOf(":");
-    if (colon2 !== -1) {
-      port = bucketString.substring(colon2 + 1);
-      bucketString = bucketString.substring(0, colon2);
+    const colon = host.indexOf(":");
+    if (colon !== -1) {
+      port = host.substring(colon + 1);
+      host = host.substring(0, colon);
     }
+    // console.log(colon, port);
     if (questionMark !== -1) {
-      bucketName = bucketString.substring(0, questionMark);
-    } else {
-      bucketName = bucketString;
+      host = host.substring(0, questionMark);
     }
-    if (isBlankString(bucketName)) {
-      bucketName = null;
+    if (isBlankString(host)) {
+      host = null;
     }
     config = config.substring(0, at);
   }
@@ -132,16 +134,40 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   // get credentials
   const colon = config.indexOf(":");
   if (colon !== -1) {
-    if (colon2 === -1) {
-      [part1, part2, port] = config.split(":");
+    if (port === null) {
+      [username, password, port] = config.split(":");
+      if (typeof port === "undefined") {
+        port = null;
+      }
     } else {
-      [part1, part2] = config.split(":");
+      [username, password] = config.split(":");
     }
   } else if (config !== "") {
-    part1 = config;
+    username = config;
   }
 
-  return { value: { type, part1, part2, port, bucketName, extraOptions }, error: null };
+  // remove path from port in case it hasn't been removed
+  if (port !== null) {
+    const slash = port.indexOf("/");
+    if (slash !== -1) {
+      path = port.substring(slash + 1);
+      port = port.substring(0, slash);
+    }
+  }
+
+  // remove path from bucketName in case it hasn't been removed
+  if (host !== null) {
+    const slash = host.indexOf("/");
+    if (slash !== -1) {
+      path = host.substring(slash + 1);
+      host = host.substring(0, slash);
+    }
+  }
+
+  return {
+    value: { protocol, username, password, host, port, path, searchParams },
+    error: null,
+  };
 };
 
 /**

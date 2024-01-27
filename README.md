@@ -157,12 +157,12 @@ Besides the mandatory key `type` one or more keys may be mandatory or optional d
 The general format of configuration urls is:
 
 ```typescript
-const u = "protocol://part1:part2@bucketName:port/path/to/object?region=auto&option2=value2...";
+const u = "protocol://username:password@host:port/path/to/object?region=auto&option2=value2...";
 ```
 
-For most storage services `part1` and `part2` are the credentials, such as key id and secret or username and password.
+For most storage services `username` and `password` are the credentials, such as key id and secret but this is not mandatory; you may use these values for other purposes.
 
-The url always start with a protocol that defines the type of storage:
+The protocol part of the url defines the type of storage:
 
 - `local://` &rarr; local storage
 - `minio://` &rarr; MinIO
@@ -173,6 +173,7 @@ The url always start with a protocol that defines the type of storage:
 
 These values match the values in the enum `StorageType` shown above.
 
+<!--
 ```typescript
 // example with extra Azure option "maxTries"
 const c = "azure://account_name:account_key@bucket_name?maxTries=10";
@@ -186,33 +187,137 @@ const c1 = {
   maxTries: 10,
 };
 ```
+// -->
 
-Because not all components of the url are mandatory you can leave them out. This will result in invalid urls but the parser will parse them anyway:
+The url parser generates a generic object with generic keys that resembles the standard javascript [URL object](https://developer.mozilla.org/en-US/docs/Web/API/URL). This object will be converted to the adapter specific AdapterConfig format in the constructor of the adapter. When converted the `searchParams` object will be flattened into the config object, for example:
 
 ```typescript
 // port and bucket
-const u = "protocol://part1:part2@bucket:port/path/to/object?region=auto&option2=value2";
+const u = "s3://key:secret@the-buck/path/to/object?region=auto&option2=value2";
+
+// output parser
+const p = {
+  protocol: "s3",
+  username: "key",
+  password: "secret",
+  host: "the-buck",
+  port: null,
+  path: "path/to/object",
+  searchParams: {
+    region: "auto",
+    option2: "value2",
+  },
+};
+
+// AdapterConfigAmazonS3
+const c = {
+  type: "s3",
+  accessKeyId: "key",
+  secretAccessKey: "secret",
+  bucketName: "the-buck",
+  region: "auto",
+  option2: "value2",
+};
+```
+
+The components of the url represent config parameters and because not all adapters require the same and/or the same number of parameters,not all components of the url are mandatory. When you leave certain components out, it may result in an invalid url according to the [official specification](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) but the parser will parse them anyway.
+
+```typescript
+// port and bucket
+const u = "s3://part1:part2@bucket:9000/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "part1",
+  part2: "part2",
+  host: "bucket",
+  port: "9000",
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
 
 // no bucket but with @
-const u = "protocol://part1:part2@:port/path/to/object?region=auto&option2=value2";
+const u = "s3://part1:part2@:9000/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "part1",
+  password: "part2",
+  host: null,
+  port: "9000",
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
 
 // no bucket
-const u = "protocol://part1:part2:port/path/to/object?region=auto&option2=value2";
+const u = "s3://part1:part2:9000/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "part1",
+  password: "part2",
+  host: null,
+  port: "9000",
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
 
-// no credentials, note: @ is mandatory!
-const u = "protocol://@bucket/path/to/object?region=auto&option2=value2";
+// no credentials, note: @ is mandatory in order to be able to parse the bucket name
+const u = "s3://@bucket/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: null,
+  password: null,
+  host: "bucket",
+  port: null,
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
 
 // no credentials, no bucket
-const u = "protocol:///path/to/object?region=auto&option2=value2";
+const u = "s3:///path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "/path/to/object",
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: { region: "auto", option2: "value2" },
+};
 
 // no credentials, no bucket, no extra options (query string)
-const u = "protocol:///path/to/object";
+const u = "s3:///path/to/object";
+const p = {
+  protocol: "s3",
+  username: "/path/to/object",
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: null,
+};
 
 // only protocol
-const u = "protocol://";
+const u = "s3://";
+const p = {
+  protocol: "s3",
+  username: null,
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: null,
+};
 
-// bare
-const u = "protocol";
+// absolutely bare
+const u = "s3";
+const p = {
+  protocol: "s3",
+  username: null,
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: null,
+};
 ```
 
 ### How bucketName is used
