@@ -54,7 +54,7 @@ export class AdapterTemplate extends AbstractAdapter {
     this._client = new WrapperLibrary(this._config);
   }
 
-  async getFileAsStream(
+  async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options?: StreamOptions
@@ -65,7 +65,7 @@ export class AdapterTemplate extends AbstractAdapter {
     return { value: r, error: null };
   }
 
-  async getFileAsURL(
+  async _getFileAsURL(
     bucketName: string,
     fileName: string,
     options?: Options
@@ -76,7 +76,7 @@ export class AdapterTemplate extends AbstractAdapter {
     return { value: "https://public.url.to.your.file", error: null };
   }
 
-  async removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     return { value: "ok", error: null };
   }
 
@@ -85,10 +85,10 @@ export class AdapterTemplate extends AbstractAdapter {
   // 1. addFileFromPath
   // 2. addFileFromBuffer
   // 3. addFileFromStream
-  async addFile(params: FilePathParams): Promise<ResultObject>;
-  async addFile(params: FileBufferParams): Promise<ResultObject>;
-  async addFile(params: FileStreamParams): Promise<ResultObject>;
-  async addFile(
+  async _addFile(params: FilePathParams): Promise<ResultObject>;
+  async _addFile(params: FileBufferParams): Promise<ResultObject>;
+  async _addFile(params: FileStreamParams): Promise<ResultObject>;
+  async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     return { value: "ok", error: null };
@@ -117,11 +117,11 @@ export class AdapterTemplate extends AbstractAdapter {
     return { value: "ok", error: null };
   }
 
-  async clearBucket(name: string): Promise<ResultObject> {
+  async _clearBucket(name: string): Promise<ResultObject> {
     return { value: "ok", error: null };
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
+  async _deleteBucket(name: string): Promise<ResultObject> {
     return { value: "ok", error: null };
   }
 
@@ -133,7 +133,7 @@ export class AdapterTemplate extends AbstractAdapter {
     };
   }
 
-  async listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
+  async _listFiles(bucketName: string, numFiles: number = 1000): Promise<ResultObjectFiles> {
     return {
       value: [
         ["file.txt", 3000],
@@ -143,15 +143,15 @@ export class AdapterTemplate extends AbstractAdapter {
     };
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     return { value: 42, error: null };
   }
 
-  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     return { value: true, error: null };
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     return { value: true, error: null };
   }
 }
