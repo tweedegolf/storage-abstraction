@@ -376,7 +376,7 @@ Also implemented as getter:
 
 ```typescript
 const storage = new Storage(config);
-console.log(storage.bucket);
+console.log(storage.bucketName);
 ```
 
 ### setSelectedBucket
@@ -387,7 +387,7 @@ setSelectedBucket(null | string): void
 
 Sets the name of the bucket that will be stored in the local state of the Adapter instance. This overrides the value that you may have provided with the config upon instantiation. You can also clear this value by passing `null` as argument.
 
-If you use this method to select a bucket you don't have to provide a bucket name when you call
+If you use this method to select a bucket you don't have to provide a bucket name when you call any of these methods:
 
 - `clearBucket`
 - `deleteBucket`
@@ -403,7 +403,7 @@ Also implemented as setter:
 
 ```typescript
 const storage = new Storage(config);
-storage.bucket = "the-buck-2";
+storage.bucketName = "the-buck-2";
 ```
 
 ### getConfiguration
@@ -989,15 +989,31 @@ For more information about configuration URLs please read [this section](#config
 
 ### Adapter class
 
-You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method.
+It is recommended that your adapter class extends `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it implements the complete introspective API. `getServiceClient` returns an `any` value and `getConfig` returns a generic `AdapterConfig` object; you may want to override these methods to make them return your adapter specific types.
 
-@TODO: explain that all API functions that use the selected bucket in case no bucket name has been provided perform some checks that apply to all adapters before they call the cloud specific function that handles the rest.
+Note that all API methods that have and optional `bucketName` arg are implemented as overloaded methods:
 
-One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
+- `clearBucket`
+- `deleteBucket`
+- `bucketExists`
+- `getFileAsURL`
+- `getFileAsStream`
+- `fileExists`
+- `removeFile`
+- `listFiles`
+- `sizeof`
 
-The abstract stub methods need to be implemented and the other `IAdapter` methods need to be overruled the adapter subclasses. Note that your adapter should not implement the methods `getAdapter` and `switchAdapter`; these are part of the Storage API.
+The implementation of these methods in the AbstractAdapter handles the overloading part and performs some general checks that apply to all adapters. Then they call the cloud specific protected 'tandem' function that handles the adapter specific logic. The tandem function has the same name with an underscore prefix.
 
-You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. You'll find some configuration parse functions in `./src/util.ts` so you can easily import these in your own class if necessary.
+For instance: the implementation of `clearBucket` in AbstractAdapter checks for a `bucketName` arg and if it is not provided it looks if there is a selected bucket set. It also checks for configuration errors. Then it calls `_clearBucket` which should be implemented in your adapter code to handle your cloud storage specific logic. This saves you a lot of hassle and code in your adapter module.
+
+One other thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single method.
+
+If you look at `addFile` you see that just like the overloaded methods mentioned above, the implementation handles some generic logic and then calls `_addFile` in your adapter code.
+
+The abstract stub methods need to be implemented and the other `IAdapter` methods can be overridden in the your adapter class if necessary. Note that your adapter should not implement the methods `getAdapter` and `switchAdapter`; these are part of the Storage API.
+
+You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. You'll find some configuration parse functions in the separate file `./src/util.ts` so you can easily import these in your own class if these are useful for you.
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 

@@ -57,7 +57,7 @@ export class AdapterTemplate extends AbstractAdapter {
   async _getFileAsStream(
     bucketName: string,
     fileName: string,
-    options?: StreamOptions
+    options: StreamOptions
   ): Promise<ResultObjectStream> {
     // Return a stream that you've created somehow in your adapter or that you pipe
     // directly from your cloud storage.
@@ -68,7 +68,7 @@ export class AdapterTemplate extends AbstractAdapter {
   async _getFileAsURL(
     bucketName: string,
     fileName: string,
-    options?: Options
+    options: Options
   ): Promise<ResultObject> {
     // Return a public url to the file. Note that you might need extra right to
     // be able to create a public url. In the options object you can pass extra
@@ -85,9 +85,6 @@ export class AdapterTemplate extends AbstractAdapter {
   // 1. addFileFromPath
   // 2. addFileFromBuffer
   // 3. addFileFromStream
-  async _addFile(params: FilePathParams): Promise<ResultObject>;
-  async _addFile(params: FileBufferParams): Promise<ResultObject>;
-  async _addFile(params: FileStreamParams): Promise<ResultObject>;
   async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -106,22 +103,22 @@ export class AdapterTemplate extends AbstractAdapter {
     return await this.addFile(params);
   }
 
-  async createBucket(name: string): Promise<ResultObject> {
+  async createBucket(bucketName: string): Promise<ResultObject> {
     // Usually your cloud service will check if a valid bucket name has been provided.
     // However, in general `null`, `undefined` and empty strings are not allowed (nor desirable)
     // so you may want to perform this check locally using the validateName function in ./src/util.ts
-    const error = validateName(name);
+    const error = validateName(bucketName);
     if (error !== null) {
       return { value: null, error };
     }
     return { value: "ok", error: null };
   }
 
-  async _clearBucket(name: string): Promise<ResultObject> {
+  async _clearBucket(bucketName: string): Promise<ResultObject> {
     return { value: "ok", error: null };
   }
 
-  async _deleteBucket(name: string): Promise<ResultObject> {
+  async _deleteBucket(bucketName: string): Promise<ResultObject> {
     return { value: "ok", error: null };
   }
 

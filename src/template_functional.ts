@@ -24,6 +24,8 @@ const getType = (): string => "string";
 const getConfig = (): AdapterConfig => ({}) as AdapterConfig;
 const getConfigError = (): string | null => null;
 const getServiceClient = (): any => "instance of your 3-rd party service client"; // eslint-disable-line
+const getSelectedBucket = (): string => "the-buck";
+const setSelectedBucket = (bucketName: string): void => {};
 
 const createBucket = async (name: string): Promise<ResultObject> => {
   // Usually your cloud service will check if a valid bucket name has been provided.
@@ -70,27 +72,50 @@ const addFile = async (
   error: null,
 });
 
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or options
+ * arg3: options
+ */
 const getFileAsURL = async (
-  bucketName: string,
-  fileName: string,
-  options?: Options
+  arg1: string,
+  arg2?: string | Options,
+  arg3?: Options
 ): Promise<ResultObject> => {
   return { value: "https://public.url", error: null };
 };
 
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or options
+ * arg3: options
+ */
 const getFileAsStream = async (
-  bucketName: string,
-  fileName: string,
-  options?: StreamOptions
+  arg1: string,
+  arg2?: string | StreamOptions,
+  arg3?: StreamOptions
 ): Promise<ResultObjectStream> => {
   return { value: fs.createReadStream(""), error: null };
 };
 
-const removeFile = async (bucketName: string, fileName: string): Promise<ResultObject> => {
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or options
+ * arg3: options
+ */
+const removeFile = async (
+  arg1: string,
+  arg2?: string | boolean,
+  arg3?: boolean
+): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };
 
-const listFiles = async (bucketName: string, numFiles?: number): Promise<ResultObjectFiles> => {
+/**
+ * arg1: bucketName or numFiles or undefined
+ * arg2: numFiles or undefined
+ */
+const listFiles = async (arg1?: string | number, arg2?: number): Promise<ResultObjectFiles> => {
   return {
     value: [
       ["file.txt", 4000],
@@ -100,15 +125,23 @@ const listFiles = async (bucketName: string, numFiles?: number): Promise<ResultO
   };
 };
 
-const sizeOf = async (bucketName: string, fileName: string): Promise<ResultObjectNumber> => {
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or undefined
+ */
+const sizeOf = async (arg1: string, arg2?: string): Promise<ResultObjectNumber> => {
   return { value: 42, error: null };
 };
 
-const bucketExists = async (name: string): Promise<ResultObjectBoolean> => {
+const bucketExists = async (bucketName?: string): Promise<ResultObjectBoolean> => {
   return { value: true, error: null };
 };
 
-const fileExists = async (bucketName: string, fileName: string): Promise<ResultObjectBoolean> => {
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or undefined
+ */
+const fileExists = async (arg1: string, arg2?: string): Promise<ResultObjectBoolean> => {
   return { value: true, error: null };
 };
 
@@ -128,6 +161,16 @@ const adapter: IAdapter = {
   getServiceClient,
   get serviceClient() {
     return getServiceClient();
+  },
+  getSelectedBucket,
+  get bucketName() {
+    return getSelectedBucket();
+  },
+  setSelectedBucket(bucketName: string): void {
+    this.bucketName = bucketName;
+  },
+  set(bucketName: string): void {
+    setSelectedBucket(bucketName);
   },
   createBucket,
   clearBucket,
