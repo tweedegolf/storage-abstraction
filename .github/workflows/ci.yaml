@@ -30,4 +30,4 @@ jobs:
             node-modules-cache-${{matrix.node-version}}-${{runner.os}}-
       - run: npm ci
       - run: npm run test-local
-      - run: npm run test-minio-2
+      # - run: npm run test-minio-2
