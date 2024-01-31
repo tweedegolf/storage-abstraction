@@ -159,10 +159,6 @@ export class AdapterMinio extends AbstractAdapter {
       await this._client.removeBucket(name);
       return { value: "ok", error: null };
     } catch (e) {
-      console.log(e.message);
-      if (e.message === "NoSuchBucket") {
-        return { value: "bucket not found", error: null };
-      }
       return { value: null, error: e.message };
     }
   }

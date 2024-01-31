@@ -157,12 +157,12 @@ Besides the mandatory key `type` one or more keys may be mandatory or optional d
 The general format of configuration urls is:
 
 ```typescript
-const u = "protocol://part1:part2@bucketName:port/path/to/object?region=auto&option2=value2...";
+const u = "protocol://username:password@host:port/path/to/object?region=auto&option2=value2...";
 ```
 
-For most storage services `part1` and `part2` are the credentials, such as key id and secret or username and password.
+For most storage services `username` and `password` are the credentials, such as key id and secret but this is not mandatory; you may use these values for other purposes.
 
-The url always start with a protocol that defines the type of storage:
+The protocol part of the url defines the type of storage:
 
 - `local://` &rarr; local storage
 - `minio://` &rarr; MinIO
@@ -173,6 +173,7 @@ The url always start with a protocol that defines the type of storage:
 
 These values match the values in the enum `StorageType` shown above.
 
+<!--
 ```typescript
 // example with extra Azure option "maxTries"
 const c = "azure://account_name:account_key@bucket_name?maxTries=10";
@@ -184,6 +185,138 @@ const c1 = {
   accountKey: "account_key",
   bucketName: "bucket_name",
   maxTries: 10,
+};
+```
+// -->
+
+The url parser generates a generic object with generic keys that resembles the standard javascript [URL object](https://developer.mozilla.org/en-US/docs/Web/API/URL). This object will be converted to the adapter specific AdapterConfig format in the constructor of the adapter. When converted the `searchParams` object will be flattened into the config object, for example:
+
+```typescript
+// port and bucket
+const u = "s3://key:secret@the-buck/path/to/object?region=auto&option2=value2";
+
+// output parser
+const p = {
+  protocol: "s3",
+  username: "key",
+  password: "secret",
+  host: "the-buck",
+  port: null,
+  path: "path/to/object",
+  searchParams: {
+    region: "auto",
+    option2: "value2",
+  },
+};
+
+// AdapterConfigAmazonS3
+const c = {
+  type: "s3",
+  accessKeyId: "key",
+  secretAccessKey: "secret",
+  bucketName: "the-buck",
+  region: "auto",
+  option2: "value2",
+};
+```
+
+The components of the url represent config parameters and because not all adapters require the same and/or the same number of parameters,not all components of the url are mandatory. When you leave certain components out, it may result in an invalid url according to the [official specification](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) but the parser will parse them anyway.
+
+```typescript
+// port and bucket
+const u = "s3://part1:part2@bucket:9000/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "part1",
+  part2: "part2",
+  host: "bucket",
+  port: "9000",
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
+
+// no bucket but with @
+const u = "s3://part1:part2@:9000/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "part1",
+  password: "part2",
+  host: null,
+  port: "9000",
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
+
+// no bucket
+const u = "s3://part1:part2:9000/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "part1",
+  password: "part2",
+  host: null,
+  port: "9000",
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
+
+// no credentials, note: @ is mandatory in order to be able to parse the bucket name
+const u = "s3://@bucket/path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: null,
+  password: null,
+  host: "bucket",
+  port: null,
+  path: "path/to/object",
+  searchParams: { region: "auto", option2: "value2" },
+};
+
+// no credentials, no bucket
+const u = "s3:///path/to/object?region=auto&option2=value2";
+const p = {
+  protocol: "s3",
+  username: "/path/to/object",
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: { region: "auto", option2: "value2" },
+};
+
+// no credentials, no bucket, no extra options (query string)
+const u = "s3:///path/to/object";
+const p = {
+  protocol: "s3",
+  username: "/path/to/object",
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: null,
+};
+
+// only protocol
+const u = "s3://";
+const p = {
+  protocol: "s3",
+  username: null,
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: null,
+};
+
+// absolutely bare
+const u = "s3";
+const p = {
+  protocol: "s3",
+  username: null,
+  password: null,
+  host: null,
+  port: null,
+  path: null,
+  searchParams: null,
 };
 ```
 
@@ -243,7 +376,7 @@ Also implemented as getter:
 
 ```typescript
 const storage = new Storage(config);
-console.log(storage.bucket);
+console.log(storage.bucketName);
 ```
 
 ### setSelectedBucket
@@ -254,7 +387,7 @@ setSelectedBucket(null | string): void
 
 Sets the name of the bucket that will be stored in the local state of the Adapter instance. This overrides the value that you may have provided with the config upon instantiation. You can also clear this value by passing `null` as argument.
 
-If you select a bucket you don't have to provide a bucket name when you call
+If you use this method to select a bucket you don't have to provide a bucket name when you call any of these methods:
 
 - `clearBucket`
 - `deleteBucket`
@@ -270,7 +403,7 @@ Also implemented as setter:
 
 ```typescript
 const storage = new Storage(config);
-storage.bucket = "the-buck-2";
+storage.bucketName = "the-buck-2";
 ```
 
 ### getConfiguration
@@ -361,10 +494,6 @@ In case the call yields an error, the `value` key will be `null` and the `error`
 listBuckets(): Promise<ResultObjectBuckets>
 ```
 
-Returns an array with the names of all buckets in the storage.
-
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
-
 return type:
 
 ```typescript
@@ -374,13 +503,15 @@ export type ResultObjectBuckets = {
 };
 ```
 
+Returns an array with the names of all buckets in the storage.
+
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+
 ### listFiles
 
 ```typescript
-listFiles(bucketName: string): Promise<ResultObjectFiles>;
+listFiles(bucketName?: string): Promise<ResultObjectFiles>;
 ```
-
-Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file.
 
 return type:
 
@@ -391,15 +522,15 @@ export type ResultObjectFiles = {
 };
 ```
 
-If the call succeeds the `value` key will hold an array of tuples.
+Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file. If the call succeeds the `value` key will hold an array of tuples.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 ### bucketExists
 
 ```typescript
-bucketExists(name: string): Promise<ResultObjectBoolean>;
+bucketExists(bucketName?: string): Promise<ResultObjectBoolean>;
 ```
-
-Check whether a bucket exists or not.
 
 return type:
 
@@ -410,15 +541,15 @@ export type ResultObjectBoolean = {
 };
 ```
 
-If the call succeeds the `value` key will hold a boolean value.
+Check whether a bucket exists or not. If the call succeeds the `value` key will hold a boolean value.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 ### fileExists
 
 ```typescript
-fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+fileExists(bucketName?: string, fileName: string): Promise<ResultObjectBoolean>;
 ```
-
-Check whether a file exists or not.
 
 return type:
 
@@ -429,19 +560,15 @@ export type ResultObjectBoolean = {
 };
 ```
 
-If the call succeeds the `value` key will hold a boolean value.
+Check whether a file exists or not. If the call succeeds the `value` key will hold a boolean value.
 
-### <a name='createbucket'></a>createBucket
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+### createBucket
 
 ```typescript
-createBucket(name: string, options?: object): Promise<ResultObject>;
+createBucket(bucketName: string, options?: object): Promise<ResultObject>;
 ```
-
-Creates a new bucket.
-
-You can provide extra storage-specific settings such as access rights using the `options` object.
-
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
 return type:
 
@@ -451,20 +578,20 @@ export interface ResultObject {
   error: string | null;
 }
 ```
+
+Creates a new bucket. You can provide extra storage-specific settings such as access rights using the `options` object.
 
 If the bucket was created successfully the `value` key will hold the string "ok".
 
-If the bucket exists or the creating the bucket fails for another reason the `error` key will hold the error message.
+If the bucket exists or if creating the bucket fails for another reason the `error` key will hold the error message.
 
-### <a name='clearbucket'></a>clearBucket
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket.
+
+### clearBucket
 
 ```typescript
-clearBucket(name: string): Promise<ResultObject>;
+clearBucket(bucketName?: string): Promise<ResultObject>;
 ```
-
-Removes all files in the bucket.
-
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
 return type:
 
@@ -475,17 +602,17 @@ export interface ResultObject {
 }
 ```
 
-If the call succeeds the `value` key will hold the string "ok".
+Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok".
 
-### <a name='deletebucket'></a>deleteBucket
-
-```typescript
-deleteBucket(name: string): Promise<ResultObject>;
-```
-
-Deletes the bucket and all files in it.
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
+
+### deleteBucket
+
+```typescript
+deleteBucket(bucketName?: string): Promise<ResultObject>;
+```
 
 return type:
 
@@ -496,7 +623,11 @@ export interface ResultObject {
 }
 ```
 
-If the call succeeds the `value` key will hold the string "ok".
+Deletes the bucket and all files in it. If the call succeeds the `value` key will hold the string "ok".
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
 ### addFile
 
@@ -512,9 +643,13 @@ There is no difference between using this method or one of the 3 specific method
 
 ```typescript
 addFileFromPath(params: FilePathParams): Promise<ResultObject>;
+```
 
+param type:
+
+```typescript
 export type FilePathParams = {
-  bucketName: string;
+  bucketName?: string;
   origPath: string;
   targetPath: string;
   options?: {
@@ -523,8 +658,6 @@ export type FilePathParams = {
 };
 ```
 
-Copies a file from a local path `origPath` to the provided path `targetPath` in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
-
 return type:
 
 ```typescript
@@ -533,6 +666,10 @@ export interface ResultObject {
   error: string | null;
 }
 ```
+
+Copies a file from a local path `origPath` to the provided path `targetPath` in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
@@ -540,21 +677,20 @@ If the call is successful `value` will hold the public url to the file (if the b
 
 ```typescript
 addFileFromBuffer(params: FileBufferParams): Promise<ResultObject>;
+```
 
+param type:
+
+```typescript
 export type FileBufferParams = {
-  bucketName: string;
+  bucketName?: string;
   buffer: Buffer;
   targetPath: string;
   options?: {
     [id: string]: any;
   };
 };
-
 ```
-
-Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
-
-This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 return type:
 
@@ -565,15 +701,25 @@ export interface ResultObject {
 }
 ```
 
+Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
+
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+
+This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 ### addFileFromStream
 
 ```typescript
 addFileFromStream(params: FileStreamParams): Promise<ResultObject>;
+```
 
+param type:
+
+```typescript
 export type FileStreamParams = {
-  bucketName: string;
+  bucketName?: string;
   stream: Readable;
   targetPath: string;
   options?: {
@@ -582,10 +728,6 @@ export type FileStreamParams = {
 };
 ```
 
-Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
-
-This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
-
 return type:
 
 ```typescript
@@ -595,12 +737,18 @@ export interface ResultObject {
 }
 ```
 
+Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+
+This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
 ### getFileAsURL
 
 ```typescript
-getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObjectStream>;
+getFileAsURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObjectStream>;
 ```
 
 param type:
@@ -611,8 +759,6 @@ export Options {
 }
 ```
 
-Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
-
 return type:
 
 ```typescript
@@ -622,10 +768,14 @@ export type ResultObject = {
 };
 ```
 
+Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
 ### getFileAsStream
 
 ```typescript
-getFileAsStream(bucketName: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+getFileAsStream(bucketName?: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
 ```
 
 param type:
@@ -637,7 +787,20 @@ export interface StreamOptions extends Options {
 }
 ```
 
-Returns a file in the storage as a readable stream. You can pass in extra options. If you use the keys `start` and/or `end` only the bytes between `start` and `end` of the file will be returned. Some examples:
+return type:
+
+```typescript
+export type ResultObjectStream = {
+  value: Readable | null;
+  error: string | null;
+};
+```
+
+Returns a file in the storage as a readable stream. You can pass in extra options. If you use the keys `start` and/or `end` only the bytes between `start` and `end` of the file will be returned.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+Some examples:
 
 ```typescript
 getFileAsReadable("bucket-name", "image.png"); // &rarr; reads whole file
@@ -653,22 +816,11 @@ getFileAsReadable("bucket-name", "image.png", { end: 1999 }); // &rarr; reads fi
 getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads file from byte 2000
 ```
 
-return type:
-
-```typescript
-export type ResultObjectStream = {
-  value: Readable | null;
-  error: string | null;
-};
-```
-
 ### removeFile
 
 ```typescript
-removeFile(bucketName: string, fileName: string, allVersions: boolean = false): Promise<ResultObject>;
+removeFile(bucketName?: string, fileName: string, allVersions: boolean = false): Promise<ResultObject>;
 ```
-
-Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 return type:
 
@@ -679,15 +831,17 @@ export interface ResultObject {
 }
 ```
 
+Removes a file from the bucket. Does not fail if the file doesn't exist.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
 If the call succeeds the `value` key will hold the string "ok".
 
 ### sizeOf
 
 ```typescript
-sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+sizeOf(bucketName?: string, fileName: string): Promise<ResultObjectNumber>;
 ```
-
-Returns the size of a file.
 
 return type:
 
@@ -697,6 +851,10 @@ export type ResultObjectNumber = {
   value: number | null;
 };
 ```
+
+Returns the size of a file.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 If the call succeeds the `value` key will hold the size of the file.
 
@@ -744,15 +902,15 @@ s2.addFile({
 
 ## Adding an adapter
 
-It is relatively easy to add an adapter for an unsupported cloud service. Note however that many cloud storage services are compatible with Amazon S3 so if that is the case, please check first if the Amazon S3 adapter does the job; it might work right away. Sometimes even if a storage service is S3 compatible you have to write a separate adapter. For instance: although MinIO is S3 compliant it was necessary to write a separate adapter for MinIO.
+It is relatively easy to add an adapter for an unsupported cloud service. Note however that many cloud storage services are compatible with Amazon S3 so if that is the case, please check first if the Amazon S3 adapter does the job; it might work right away. However, sometimes even if a storage service is S3 compatible you have to write a separate adapter. For instance: although MinIO is S3 compliant it was necessary to write a separate adapter for MinIO.
 
 If you want to add an adapter you can choose to make your adapter a class or a function; so if you don't like OOP you can implement your adapter using FP or any other coding style or programming paradigm you like.
 
-Your adapter might have additional dependencies such as a service client library like for instance aws-sdk as is used in the Amazon S3 adapter. Add these dependencies to the package.json file in the `./publish/YourAdapter` folder.
+Your adapter might have additional dependencies such as a service client library, like for instance the aws-sdk as is used in the Amazon S3 adapter. Add these dependencies to the package.json file in the `./publish/YourAdapter` folder.
 
-Please add your dependencies also to the package.json file in the root folder of the Storage Abstraction package in case you add some tests for your adapter. Your dependencies will not be added to the Storage Abstraction package because only the files in the publish folder are published to npm and there is a stripped version of the package.json file in the `./publish/Storage` folder.
+You may want to add your Adapter code to this package, in that case please add your dependencies to the package.json file in the root folder of the Storage Abstraction package as well. Your dependencies will not be added to the Storage Abstraction package when published to npm because only the files in the publish folder are published and there is a stripped version of the package.json file in the `./publish/Storage` folder.
 
-It would be very much appreciated if you could publish your adapter to npm and add your adapter to this README, see [this table](#adapters).
+You may also want to add some tests for your adapter and it would be very much appreciated if you could publish your adapter to npm and add your adapter to this README, see [this table](#adapters).
 
 Follow these steps:
 
@@ -761,7 +919,7 @@ Follow these steps:
 3. Write your adapter, make sure it implements all API methods
 4. Register your adapter in `./src/adapters.ts`
 5. Publish your adapter on npm.
-6. You may also want to add the newly supported cloud storage service to the keywords array in the package.json file of the Storage Abstraction storage.
+6. You may also want to add the newly supported cloud storage service to the keywords array in the package.json file of the Storage Abstraction storage (note: there 2 package.json file for this package, one in the root folder and another in the publish folder)
 
 ### Add your storage type
 
@@ -813,29 +971,49 @@ const a = new YourAdapter({
   key1: string,
   key2: string,
 
-}) // works, type is not mandatory
+}) // works because type is not mandatory
 ```
 
-Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL. Upon instantiation the Storage class checks if a protocol is present on the provided url.
+Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL. Upon instantiation the Storage class checks if a protocol is present on the provided URL.
 
 example:
 
 ```typescript
 // your configuration URL
-const u = "yourtype://key1=value1&key2=value2...";
+const u = "yourtype://user:pass@bucket_name?option1=value1&...";
 ```
 
-You can format the configuration URL completely as you like as long as your adapter has an appropriate function to parse it in an object. If your url is just a query string you don't need to write a parse function, you can either use the parse function of `AbstractAdapter` by extending this class or import the `parseUrl` or `parseQueryString` function from `./src/util.ts`.
+You can format the configuration URL completely as you like as long as your adapter has an appropriate function to parse it into the configuration object that your adapter expects. If your url follows the standard URL format you don't need to write a parse function, you can import the `parseUrl` function from `./src/util.ts`.
+
+For more information about configuration URLs please read [this section](#configuration-url)
 
 ### Adapter class
 
-You could choose to let your adapter class extend the class `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it only implements small parts of the API such as the `getType` method. Also it parses the configuration url into an object.
+It is recommended that your adapter class extends `AbstractStorage`. If you look at the [code](https://github.com/tweedegolf/storage-abstraction/blob/master/src/AbstractAdapter.ts) you can see that it implements the complete introspective API. `getServiceClient` returns an `any` value and `getConfig` returns a generic `AdapterConfig` object; you may want to override these methods to make them return your adapter specific types.
 
-One thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single overloaded method.
+Note that all API methods that have and optional `bucketName` arg are implemented as overloaded methods:
 
-The abstract stub methods need to be implemented and the other `IAdapter` methods need to be overruled the adapter subclasses. Note that your adapter should not implement the Storage methods `getAdapter` and `switchAdapter`
+- `clearBucket`
+- `deleteBucket`
+- `bucketExists`
+- `getFileAsURL`
+- `getFileAsStream`
+- `fileExists`
+- `removeFile`
+- `listFiles`
+- `sizeof`
 
-You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. You'll find some configuration parse functions in `./src/util.ts` so you can easily import these in your own class if necessary.
+The implementation of these methods in the AbstractAdapter handles the overloading part and performs some general checks that apply to all adapters. Then they call the cloud specific protected 'tandem' function that handles the adapter specific logic. The tandem function has the same name with an underscore prefix.
+
+For instance: the implementation of `clearBucket` in AbstractAdapter checks for a `bucketName` arg and if it is not provided it looks if there is a selected bucket set. It also checks for configuration errors. Then it calls `_clearBucket` which should be implemented in your adapter code to handle your cloud storage specific logic. This saves you a lot of hassle and code in your adapter module.
+
+One other thing to note is the way `addFileFromPath`, `addFileFromBuffer` and `addFileFromReadable` are implemented; these are all forwarded to the API function `addFile`. This function stores files in the storage using 3 different types of origin; a path, a buffer and a stream. Because these ways of storing have a lot in common they are grouped together in a single method.
+
+If you look at `addFile` you see that just like the overloaded methods mentioned above, the implementation handles some generic logic and then calls `_addFile` in your adapter code.
+
+The abstract stub methods need to be implemented and the other `IAdapter` methods can be overridden in the your adapter class if necessary. Note that your adapter should not implement the methods `getAdapter` and `switchAdapter`; these are part of the Storage API.
+
+You don't necessarily have to extend `AbstractAdapter` but if you choose not to your class should implement the `IAdapter` interface. You'll find some configuration parse functions in the separate file `./src/util.ts` so you can easily import these in your own class if these are useful for you.
 
 You can use this [template](https://github.com/tweedegolf/storage-abstraction/blob/master/src/template_class.ts) as a starting point for your adapter. The template contains a lot of additional documentation per method.
 

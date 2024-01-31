@@ -21,8 +21,8 @@ const types = [
 
 let index = 0;
 // console.log(process.argv);
-if (process.argv[3]) {
-  index = parseInt(process.argv[3], 10);
+if (process.argv[5]) {
+  index = parseInt(process.argv[5], 10);
 }
 const config = getConfig(types[index]);
 const type = (config as AdapterConfig).type || StorageType.LOCAL;
@@ -85,6 +85,11 @@ describe(`[testing ${type} storage]`, async () => {
     // });
   });
   let bucketExists: boolean;
+  it("(0) delete possible existing test buckets", async () => {
+    await storage.deleteBucket(newBucketName1);
+    await storage.deleteBucket(newBucketName2);
+  });
+
   it("(1) check if bucket exists", async () => {
     const { value, error } = await storage.bucketExists(bucketName);
     expect(value).not.toBeNull();
@@ -369,6 +374,9 @@ describe(`[testing ${type} storage]`, async () => {
 
   it("(27) create bucket", async () => {
     const { value, error } = await storage.createBucket(newBucketName2);
+    if (error) {
+      console.log(error);
+    }
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });

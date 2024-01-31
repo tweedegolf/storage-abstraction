@@ -4,7 +4,7 @@ export const adapterClasses = {
   s3: ["AdapterAmazonS3", "@tweedegolf/sab-adapter-amazon-s3"],
   gcs: ["AdapterGoogleCloud", "@tweedegolf/sab-adapter-google-cloud"],
   local: ["AdapterLocal", "@tweedegolf/sab-adapter-local"],
-  azure: ["AdapterAzureStorageBlob", "@tweedegolf/sab-adapter-azure-blob"],
+  azure: ["AdapterAzureBlob", "@tweedegolf/sab-adapter-azure-blob"],
   minio: ["AdapterMinio", "@tweedegolf/sab-adapter-minio"],
 };
 

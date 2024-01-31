@@ -366,7 +366,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { value: null, error };
     }
-    return this.fileExists(bucketName, fileName);
+    return this._fileExists(bucketName, fileName);
   }
 
   public async removeFile(

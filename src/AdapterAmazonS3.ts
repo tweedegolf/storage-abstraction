@@ -401,19 +401,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     try {
-      const input = {
-        Bucket: name,
-      };
-      const command = new HeadBucketCommand(input);
-      const response = await this._client.send(command);
-      if (response.$metadata.httpStatusCode === 200) {
-        return { value: null, error: "bucket exists" };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-
-    try {
       const input: CreateBucketCommandInput = {
         Bucket: name,
         ...options,
