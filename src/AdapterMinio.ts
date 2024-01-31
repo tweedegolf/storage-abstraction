@@ -1,299 +1,319 @@
-/*
-import * as Minio from "minio";
 import fs from "fs";
+import * as Minio from "minio";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { AdapterConfig, StorageType, ConfigMinioS3 } from "./types";
-import { parseUrl } from "./util";
-import { MakeBucketOpt } from "minio";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import {
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import { AdapterConfigMinio } from "./types/adapter_minio";
+import { parseUrl, validateName } from "./util";
 
-// WIP
 export class AdapterMinio extends AbstractAdapter {
-  protected type = StorageType.MINIO;
-  protected storage: Minio.Client;
-  protected config: ConfigMinioS3;
-  private bucketNames: string[] = [];
-  private region: string = "";
+  protected _type = StorageType.MINIO;
+  protected _client: Minio.Client;
+  protected _configError: string | null = null;
+  protected _config: AdapterConfigMinio;
 
-  constructor(config: string | AdapterConfig) {
-    super();
-    this.config = this.parseConfig(config as ConfigMinioS3);
-    if (typeof this.config.bucketName !== "undefined") {
-      const msg = this.validateName(this.config.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this.config.bucketName;
-    }
-    if (typeof (this.config as ConfigMinioS3).region !== "undefined") {
-      this.region = (this.config as ConfigMinioS3).region;
-    }
-    this.storage = new Minio.Client({
-      region: "auto",
-      endPoint: this.config.endPoint,
-      port: 9001,
-      useSSL: false,
-      accessKey: this.config.accessKeyId,
-      secretKey: this.config.secretAccessKey,
-    });
-  }
-
-  async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
-    }
-    if (this.bucketName) {
-      await this.createBucket(this.bucketName);
-      this.bucketNames.push(this.bucketName);
-    }
-    // no further initialization required
-    this.initialized = true;
-    return Promise.resolve(true);
-  }
-
-  private parseConfig(config: string | ConfigMinioS3): ConfigMinioS3 {
-    let cfg: ConfigMinioS3;
-    if (typeof config === "string") {
-      const {
-        type,
-        part1: accessKeyId,
-        part2: secretAccessKey,
-        part3: region,
-        bucketName,
-        queryString,
-      } = parseUrl(config);
-      cfg = {
-        type,
-        accessKeyId,
-        secretAccessKey,
-        region,
-        bucketName,
-        ...queryString,
-      };
+  constructor(config: string | AdapterConfigMinio) {
+    super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
     } else {
-      cfg = { ...config };
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const {
+          protocol: type,
+          username: accessKey,
+          password: secretKey,
+          host: bucketName,
+          searchParams,
+        } = value;
+        let endPoint: string;
+        if (searchParams !== null) {
+          ({ endPoint } = searchParams);
+          delete searchParams.endPoint;
+          this._config = { type, accessKey, secretKey, endPoint, ...searchParams };
+        } else {
+          this._config = { type, accessKey, secretKey, endPoint };
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
+      }
+      // console.log(this._config);
     }
 
-    if (cfg.skipCheck === true) {
-      return cfg;
+    if (!this.config.accessKey || !this.config.secretKey || !this.config.endPoint) {
+      this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
+    } else {
+      const useSSL = this.config.useSSL;
+      if (typeof useSSL === "undefined") {
+        this.config.useSSL = true;
+      }
+      if (typeof useSSL === "string") {
+        this.config.useSSL = useSSL === "true";
+      }
+      const port = this.config.port;
+      if (typeof port === "undefined") {
+        this.config.port = this.config.useSSL ? 443 : 80;
+      }
+      if (typeof port === "string") {
+        this.config.port = parseInt(port, 10);
+      }
+      const region = this.config.region;
+      if (typeof region !== "string") {
+        this.config.region = "auto";
+      }
+      // console.log(useSSL, port, region);
+      const c = {
+        endPoint: this.config.endPoint,
+        region: this.config.region,
+        port: this.config.port,
+        useSSL: this.config.useSSL,
+        accessKey: this.config.accessKey,
+        secretKey: this.config.secretKey,
+      };
+      // console.log(c);
+      try {
+        this._client = new Minio.Client(c);
+      } catch (e) {
+        this._configError = `[configError] ${e.message}`;
+      }
     }
-
-    if (!cfg.accessKeyId || !cfg.secretAccessKey) {
-      throw new Error(
-        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 's3'"
-      );
-    }
-
-    if (!cfg.region) {
-      throw new Error("You must specify a default region for storage type 's3'");
-    }
-
-    return cfg;
   }
 
-  async getFileAsReadable(
+  // protected, called by methods of public API via AbstractAdapter
+
+  protected async _getFileAsStream(
+    bucketName: string,
     fileName: string,
-    options: { start?: number; end?: number } = { start: 0 }
-  ): Promise<Readable> {
-    const params = {
-      Bucket: this.bucketName,
-      Key: fileName,
-      Range: `bytes=${options.start}-${options.end || ""}`,
-    };
-
-    return (await this.storage.getObject(this.bucketName, fileName)) as Readable;
-  }
-
-  async removeFile(fileName: string): Promise<string> {
-    await this.storage.removeObject(this.bucketName, fileName);
-    return "file removed";
-  }
-
-  // util members
-
-  async createBucket(name: string, options: object = {}): Promise<string> {
-    const msg = this.validateName(name);
-    if (msg !== null) {
-      return Promise.reject(msg);
+    options: StreamOptions
+  ): Promise<ResultObjectStream> {
+    const { start, end } = options;
+    let offset: number;
+    let length: number;
+    if (typeof start !== "undefined") {
+      offset = start;
+    } else {
+      offset = 0;
     }
-
-    if (this.bucketNames.findIndex((b) => b === name) !== -1) {
-      return;
+    if (typeof end !== "undefined") {
+      length = end - offset + 1;
     }
 
     try {
-      await this.storage.bucketExists(name);
-      this.bucketNames.push(name);
+      let stream: Readable;
+      if (typeof length !== "undefined") {
+        stream = await this._client.getPartialObject(bucketName, fileName, offset, length);
+      } else {
+        stream = await this._client.getPartialObject(bucketName, fileName, offset);
+      }
+      return { value: stream, error: null };
     } catch (e) {
-      if (e.code === "Forbidden") {
-        // BucketAlreadyExists
-        console.log(e);
-        const msg = [
-          "The requested bucket name is not available.",
-          "The bucket namespace is shared by all users of the system.",
-          "Please select a different name and try again.",
-        ];
-        return Promise.reject(msg.join(" "));
-      }
-      this.storage.makeBucket(name, this.config.region, options as MakeBucketOpt, () => {
-        this.bucketNames.push(name);
-      });
+      return { value: null, error: e.message };
     }
   }
 
-  async selectBucket(name: string | null): Promise<string> {
-    // add check if bucket exists!
-    if (!name) {
-      this.bucketName = "";
-      return `bucket '${name}' deselected`;
+  protected async _removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions: boolean
+  ): Promise<ResultObject> {
+    try {
+      await this._client.removeObject(bucketName, fileName);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-    await this.createBucket(name);
-    this.bucketName = name;
-    return `bucket '${name}' selected`;
   }
 
-  async clearBucket(name?: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const n = name || this.bucketName;
+  protected async _clearBucket(name: string): Promise<ResultObject> {
+    const { value: files, error } = await this.listFiles(name);
+    if (error !== null) {
+      return { value: null, error };
+    }
 
-      if (!n) {
-        throw new Error("no bucket selected");
-      }
-      const data = [];
-      const stream = this.storage.listObjects(n);
-      stream.on("data", function (obj) {
-        data.push(obj);
-      });
-
-      stream.on("end", function () {
-        this.storage.removeObjects(n, data, (e) => {
-          if (e) {
-            throw new Error(e);
-          } else {
-            return "bucket cleared";
-          }
-        });
-      });
-    });
+    try {
+      await this._client.removeObjects(
+        name,
+        files.map((t) => t[0])
+      );
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  async deleteBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-
-    if (n === "") {
-      throw new Error("no bucket selected");
-    }
+  protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this.clearBucket(name);
-      await this.storage.removeBucket(n);
-
-      if (n === this.bucketName) {
-        this.bucketName = "";
-      }
-
-      this.bucketNames = this.bucketNames.filter((b) => b !== n);
-
-      return "bucket deleted";
+      await this._client.removeBucket(name);
+      return { value: "ok", error: null };
     } catch (e) {
-      if (e.code === "NoSuchBucket") {
-        throw new Error("bucket not found");
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    try {
+      let fileData: Readable | Buffer;
+      if (typeof (params as FilePathParams).origPath !== "undefined") {
+        const f = (params as FilePathParams).origPath;
+        if (!fs.existsSync(f)) {
+          return { value: null, error: `File with given path: ${f}, was not found` };
+        }
+        fileData = fs.createReadStream(f);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        fileData = (params as FileBufferParams).buffer;
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        fileData = (params as FileStreamParams).stream;
       }
-      throw e;
+
+      const { bucketName, targetPath } = params;
+      const response = await this._client.putObject(
+        bucketName,
+        targetPath,
+        fileData,
+        params.options
+      );
+      return this.getFileAsURL(params.bucketName, params.targetPath, params.options);
+    } catch (e) {
+      return { value: null, error: e.message };
     }
   }
 
-  async listBuckets(): Promise<string[]> {
-    const buckets = await this.storage.listBuckets();
-    this.bucketNames = buckets.map((d) => d.name);
-    return this.bucketNames;
+  protected async _getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options: Options // e.g. { expiry: 3600 }
+  ): Promise<ResultObject> {
+    const expiry = options.expiry || 7 * 24 * 60 * 60;
+    try {
+      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
+      return { value: url, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
-  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
-  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
-  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
-  protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string,
-    options: object
-  ): Promise<string> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-    if (typeof options !== "object") {
-      options = {};
-    }
-    await this.createBucket(this.bucketName);
-
-    const params = {
-      ...options,
-      Bucket: this.bucketName,
-      Key: targetPath,
-      Body: arg,
-    };
-
-    if (typeof arg === "string") {
-      if (!fs.existsSync(arg)) {
-        throw new Error(`File with given path: ${arg}, was not found`);
+  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+    try {
+      const stream = this._client.listObjectsV2(bucketName, "", true);
+      const files: Array<[string, number]> = [];
+      const { error: streamError } = await new Promise<ResultObjectFiles>((resolve) => {
+        stream.on("data", function (obj) {
+          files.push([obj.name, obj.size]);
+        });
+        stream.on("end", function () {
+          resolve({ value: files, error: null });
+        });
+        stream.on("error", function (e) {
+          resolve({ value: null, error: e.message });
+        });
+      });
+      if (streamError !== null) {
+        return { value: null, error: streamError };
       }
-      params.Body = fs.createReadStream(arg);
+      return { value: files, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-
-    await this.storage.putObject(params);
-    if (this.region !== "") {
-      this.region = (
-        await this.storage.getBucketLocation({ Bucket: this.bucketName })
-      ).LocationConstraint;
-    }
-    return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
   }
 
-  async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    try {
+      const stats = await this._client.statObject(bucketName, fileName);
+      return { value: stats.size, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-
-    const params = {
-      Bucket: this.bucketName,
-      MaxKeys: maxFiles,
-    };
-
-    const { Contents } = await this.storage.listObjects(params);
-
-    if (!Contents) {
-      return [];
-    }
-
-    return Contents.map((o) => [o.Key, o.Size]) as [string, number][];
   }
 
-  async sizeOf(name: string): Promise<number> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    try {
+      const exists = await this._client.bucketExists(bucketName);
+      return { value: exists, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
-
-    const params = {
-      Bucket: this.bucketName,
-      Key: name,
-    };
-
-    return await this.storage.headObject(params).then((res) => res.ContentLength);
   }
 
-  async fileExists(name: string): Promise<boolean> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
+  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    try {
+      const stats = await this._client.statObject(bucketName, fileName);
+      return { value: stats !== null, error: null };
+    } catch (e) {
+      return { value: false, error: null };
+    }
+  }
+
+  // public
+
+  get config(): AdapterConfigMinio {
+    return this._config as AdapterConfigMinio;
+  }
+
+  public getConfig(): AdapterConfigMinio {
+    return this._config as AdapterConfigMinio;
+  }
+
+  get serviceClient(): Minio.Client {
+    return this._client as Minio.Client;
+  }
+
+  public getServiceClient(): Minio.Client {
+    return this._client as Minio.Client;
+  }
+
+  public async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
     }
 
-    const params = {
-      Bucket: this.bucketName,
-      Key: name,
-    };
+    try {
+      const buckets = await this._client.listBuckets();
+      return { value: buckets.map((b) => b.name), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
 
-    return await this.storage
-      .headObject(params)
-      .then(() => true)
-      .catch(() => false);
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    try {
+      const e = await this._client.bucketExists(name);
+      if (e) {
+        return { value: null, error: "bucket exists" };
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+
+    try {
+      const { region } = this._config;
+      await this._client.makeBucket(name, region, options as Minio.MakeBucketOpt);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 }
-
-*/

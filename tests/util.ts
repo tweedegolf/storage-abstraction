@@ -1,15 +1,14 @@
-import rimraf from "rimraf";
-import { Readable, Writable } from "stream";
+import { Readable, Stream, Writable } from "stream";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
  */
-export const copyFile = (
+export const saveFile = (
   readStream: Readable,
   writeStream: Writable,
   log: boolean = false
-): Promise<void> =>
-  new Promise((resolve, reject) => {
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
     readStream
       .pipe(writeStream)
       .on("error", (e) => {
@@ -33,26 +32,41 @@ export const copyFile = (
         resolve();
       });
   });
-
-export const parseMode = (s: number | string): string | number => {
-  // if mode is a number, parseMode assumes it is a decimal number
-  if (typeof s === "number") {
-    if (s < 0) {
-      throw new Error(
-        `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${s}`
-      );
-    }
-    return s;
-  }
-
-  // mode is a string
-
-  // e.g "0x755" (octal)
-  if (s.startsWith("0o")) {
-    return parseInt(s.substring(2), 8).toString(8);
-  }
-  // e.g '511' (decimal)
-  const i = parseInt(s, 10);
-  // quick fix for erroneously passed octal number as string (without 0o prefix)
-  return i > 511 ? 511 : i;
 };
+
+export async function waitABit(ms = 100): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // console.log(`just wait a bit (${millis}ms)`);
+      resolve();
+    }, ms);
+  });
+}
+
+export function streamToString(stream: Readable) {
+  const chunks: Array<Uint8Array> = [];
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    stream.on("error", (err) => reject(err));
+    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+  });
+}
+
+export async function timeout(millis: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      return resolve();
+    }, millis);
+  });
+}
+
+// credits: https://stackoverflow.com/questions/14269233/node-js-how-to-read-a-stream-into-a-buffer
+export async function stream2buffer(stream: Stream): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const _buf = Array<any>(); // eslint-disable-line
+
+    stream.on("data", (chunk) => _buf.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(_buf)));
+    stream.on("error", (err) => reject(`error converting stream - ${err}`));
+  });
+}

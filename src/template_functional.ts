@@ -1,70 +1,196 @@
-import fs, { ReadStream } from "fs";
-import { AdapterConfig, IStorage, JSON as TypeJSON } from "./types";
-import { Readable } from "stream";
+import fs from "fs";
+import { validateName } from "./util";
+import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
+import {
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import { FilePathParams, FileBufferParams, FileStreamParams } from "./types/add_file_params";
 
 /**
  * You can use this template as a starting point for your own functional adapter. You are
- * totally free in the way you setup your code as long as it exports function with the name
+ * totally free in the way you setup your code as long as it exports a function with the name
  * `createAdapter()` that returns an object that should match the IStorage interface.
  *
  * You can use some util functions that are used in the class AbstractAdapter because they
- * are imported from ./util.js where they are defined.
+ * are defined in a separate file ./src/util.ts
  */
 
-const init = (): Promise<boolean> => Promise.resolve(true);
 const getType = (): string => "string";
-const getConfiguration = (): AdapterConfig => ({} as AdapterConfig);
-const test = (): Promise<string> => Promise.resolve("ok");
-const createBucket = (name: string): Promise<string> => Promise.resolve("bucket created");
-const selectBucket = (name?: string | null): Promise<string> => Promise.resolve("bucket selected");
-const clearBucket = (name?: string): Promise<string> => Promise.resolve("bucket cleared");
-const deleteBucket = (name?: string): Promise<string> => Promise.resolve("bucket deleted");
-const listBuckets = (): Promise<string[]> => Promise.resolve(["string", "string"]);
-const getSelectedBucket = (): string => "string";
-const addFileFromPath = (origPath: string, targetPath: string, options?: object): Promise<void> =>
-  Promise.resolve();
-const addFileFromBuffer = (buffer: Buffer, targetPath: string, options?: object): Promise<void> =>
-  Promise.resolve();
-const addFileFromReadable = (
-  stream: Readable,
-  targetPath: string,
-  options?: object
-): Promise<void> => Promise.resolve();
-const getFileAsReadable = (
-  name: string,
-  options?: {
-    start?: number;
-    end?: number;
-  }
-): Promise<ReadStream> => Promise.resolve(fs.createReadStream(""));
-const removeFile = (name: string): Promise<string> => Promise.resolve("file removed");
-const listFiles = (numFiles?: number): Promise<[string, number][]> => Promise.resolve([["s", 0]]);
-const sizeOf = (name: string): Promise<number> => Promise.resolve(42);
-const fileExists = (name: string): Promise<boolean> => Promise.resolve(true);
+const getConfig = (): AdapterConfig => ({}) as AdapterConfig;
+const getConfigError = (): string | null => null;
+const getServiceClient = (): any => "instance of your 3-rd party service client"; // eslint-disable-line
+const getSelectedBucket = (): string => "the-buck";
+const setSelectedBucket = (bucketName: string): void => {};
 
-const adapter: IStorage = {
-  init,
+const createBucket = async (name: string): Promise<ResultObject> => {
+  // Usually your cloud service will check if a valid bucket name has been provided.
+  // However, in general `null`, `undefined` and empty strings are not allowed (nor desirable)
+  // so you may want to perform this check locally using the validateName function in ./src/util.ts
+  const error = validateName(name);
+  if (error !== null) {
+    return { value: null, error };
+  }
+  return { value: "ok", error: null };
+};
+
+const clearBucket = async (name: string): Promise<ResultObject> => {
+  return { value: "ok", error: null };
+};
+
+const deleteBucket = async (name: string): Promise<ResultObject> => {
+  return { value: "ok", error: null };
+};
+
+const listBuckets = async (): Promise<ResultObjectBuckets> => {
+  return { value: ["bucket1", "bucket2"], error: null };
+};
+
+const addFileFromPath = async (params: FilePathParams): Promise<ResultObject> => ({
+  value: "https://public.url",
+  error: null,
+});
+
+const addFileFromBuffer = async (params: FileBufferParams): Promise<ResultObject> => ({
+  value: "https://public.url",
+  error: null,
+});
+
+const addFileFromStream = async (params: FileStreamParams): Promise<ResultObject> => ({
+  value: "https://public.url",
+  error: null,
+});
+
+const addFile = async (
+  params: FileStreamParams | FileBufferParams | FileStreamParams
+): Promise<ResultObject> => ({
+  value: "https://public.url",
+  error: null,
+});
+
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or options
+ * arg3: options
+ */
+const getFileAsURL = async (
+  arg1: string,
+  arg2?: string | Options,
+  arg3?: Options
+): Promise<ResultObject> => {
+  return { value: "https://public.url", error: null };
+};
+
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or options
+ * arg3: options
+ */
+const getFileAsStream = async (
+  arg1: string,
+  arg2?: string | StreamOptions,
+  arg3?: StreamOptions
+): Promise<ResultObjectStream> => {
+  return { value: fs.createReadStream(""), error: null };
+};
+
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or options
+ * arg3: options
+ */
+const removeFile = async (
+  arg1: string,
+  arg2?: string | boolean,
+  arg3?: boolean
+): Promise<ResultObject> => {
+  return { value: "ok", error: null };
+};
+
+/**
+ * arg1: bucketName or numFiles or undefined
+ * arg2: numFiles or undefined
+ */
+const listFiles = async (arg1?: string | number, arg2?: number): Promise<ResultObjectFiles> => {
+  return {
+    value: [
+      ["file.txt", 4000],
+      ["img.jpg", 54000],
+    ],
+    error: null,
+  };
+};
+
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or undefined
+ */
+const sizeOf = async (arg1: string, arg2?: string): Promise<ResultObjectNumber> => {
+  return { value: 42, error: null };
+};
+
+const bucketExists = async (bucketName?: string): Promise<ResultObjectBoolean> => {
+  return { value: true, error: null };
+};
+
+/**
+ * arg1: bucketName or fileName
+ * arg2: fileName or undefined
+ */
+const fileExists = async (arg1: string, arg2?: string): Promise<ResultObjectBoolean> => {
+  return { value: true, error: null };
+};
+
+const adapter: IAdapter = {
   getType,
-  getConfiguration,
-  test,
+  get type() {
+    return this.getType();
+  },
+  getConfig,
+  get config() {
+    return getConfig();
+  },
+  getConfigError,
+  get configError() {
+    return getConfigError();
+  },
+  getServiceClient,
+  get serviceClient() {
+    return getServiceClient();
+  },
+  getSelectedBucket,
+  get bucketName() {
+    return getSelectedBucket();
+  },
+  setSelectedBucket(bucketName: string): void {
+    this.bucketName = bucketName;
+  },
+  set(bucketName: string): void {
+    setSelectedBucket(bucketName);
+  },
   createBucket,
-  selectBucket,
   clearBucket,
   deleteBucket,
   listBuckets,
-  getSelectedBucket,
+  addFile,
   addFileFromPath,
   addFileFromBuffer,
-  addFileFromReadable,
-  getFileAsReadable,
+  addFileFromStream,
+  getFileAsURL,
+  getFileAsStream,
   removeFile,
   listFiles,
   sizeOf,
   fileExists,
+  bucketExists,
 };
 
-const createAdapter = (config: AdapterConfig): IStorage => {
-  console.log("create adapter");
+const createAdapter = (config: AdapterConfig): IAdapter => {
+  console.log("create adapter", config);
   return adapter;
 };
 

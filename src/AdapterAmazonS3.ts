@@ -1,443 +1,423 @@
 import fs from "fs";
 import { Readable } from "stream";
-import { AbstractAdapter } from "./AbstractAdapter";
-import {
-  BucketLocationConstraint,
-  CreateBucketCommand,
-  CreateBucketCommandInput,
-  DeleteBucketCommand,
-  DeleteObjectCommand,
-  DeleteObjectsCommand,
-  GetBucketLocationCommand,
-  GetObjectCommand,
-  HeadBucketCommand,
-  HeadObjectCommand,
-  ListBucketsCommand,
-  // ListObjectVersionsCommand,
-  ListObjectsCommand,
-  PutObjectCommand,
-  S3Client,
-  S3ClientConfig
-} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { ConfigAmazonS3, AdapterConfig, StorageType, S3Compatible } from "./types";
-import { parseUrl } from "./util";
+import {
+  S3Client,
+  _Object,
+  ListObjectsCommand,
+  ObjectVersion,
+  ListObjectVersionsCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  HeadBucketCommand,
+  CreateBucketCommandInput,
+  CreateBucketCommand,
+  DeleteObjectsCommand,
+  DeleteBucketCommand,
+  ListBucketsCommand,
+  PutObjectCommand,
+  HeadObjectCommand,
+} from "@aws-sdk/client-s3";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, StorageType } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import {
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
+import { parseUrl, validateName } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
-  protected type = StorageType.S3;
-  private storage: S3Client;
-  private bucketNames: string[] = [];
-  private region: string = "";
-  private s3Compatible: S3Compatible = S3Compatible.Amazon;
-  protected config: ConfigAmazonS3;
+  protected _type = StorageType.S3;
+  protected _config: AdapterConfigAmazonS3;
+  protected _configError: string | null = null;
+  protected _client: S3Client;
 
-  constructor(config: string | AdapterConfig) {
-    super();
-    this.config = this.parseConfig(config as ConfigAmazonS3);
-    if (typeof this.config.bucketName !== "undefined" && this.config.bucketName !== "") {
-      const msg = this.validateName(this.config.bucketName);
-      if (msg !== null) {
-        throw new Error(msg);
-      }
-      this.bucketName = this.config.bucketName;
-    }
-
-    if (typeof (this.config as ConfigAmazonS3).region === "undefined") {
-      if (this.s3Compatible === S3Compatible.R2) {
-        this.config.region = "auto";
-        this.region = this.config.region;
-      } else if (this.s3Compatible === S3Compatible.Backblaze) {
-        let ep = this.config.endpoint;
-        ep = ep.substring(ep.indexOf("s3.") + 3);
-        this.config.region = ep.substring(0, ep.indexOf("."));
-        // console.log(this.config.region);
-        this.region = this.config.region;
-      }
+  constructor(config?: string | AdapterConfigAmazonS3) {
+    super(config);
+    if (typeof config !== "string") {
+      this._config = { ...config };
     } else {
-      this.region = (this.config as ConfigAmazonS3).region;
-    }
-
-    const s3Config: S3ClientConfig = {
-      region: this.region,
-      credentials: {
-        accessKeyId: this.config.accessKeyId,
-        secretAccessKey: this.config.secretAccessKey
+      const { value, error } = parseUrl(config);
+      if (error !== null) {
+        this._configError = `[configError] ${error}`;
+      } else {
+        const {
+          protocol: type,
+          username: accessKeyId,
+          password: secretAccessKey,
+          host: bucketName,
+          searchParams,
+        } = value;
+        if (searchParams !== null) {
+          this._config = { type, ...searchParams };
+        } else {
+          this._config = { type };
+        }
+        if (accessKeyId !== null) {
+          this._config.accessKeyId = accessKeyId;
+        }
+        if (secretAccessKey !== null) {
+          this._config.secretAccessKey = secretAccessKey;
+        }
+        if (bucketName !== null) {
+          this._config.bucketName = bucketName;
+        }
       }
-    };
-
-    if (typeof this.config.endpoint !== "undefined") {
-      s3Config.endpoint = this.config.endpoint;
-    }
-
-    this.storage = new S3Client(s3Config);
-  }
-
-  async init(): Promise<boolean> {
-    if (this.initialized) {
-      return Promise.resolve(true);
-    }
-    if (this.bucketName) {
-      await this.createBucket(this.bucketName)
-        .then((_data) => {
-          this.bucketNames.push(this.bucketName);
-        })
-        .catch((message: string) => {
-          return Promise.reject(message);
-        });
-    }
-    // no further initialization required
-    this.initialized = true;
-    return Promise.resolve(true);
-  }
-
-  private parseConfig(config: string | ConfigAmazonS3): ConfigAmazonS3 {
-    let cfg: ConfigAmazonS3;
-    if (typeof config === "string") {
-      const {
-        type,
-        part1: accessKeyId,
-        part2: secretAccessKey,
-        part3: region,
-        bucketName,
-        queryString
-      } = parseUrl(config);
-      cfg = {
-        type,
-        accessKeyId,
-        secretAccessKey,
-        region,
-        bucketName,
-        ...queryString
-      };
-    } else {
-      cfg = { ...config };
-    }
-
-    if (cfg.skipCheck === true) {
-      return cfg;
-    }
-
-    if (!cfg.accessKeyId || !cfg.secretAccessKey) {
-      throw new Error(
-        "You must specify a value for both 'applicationKeyId' and  'applicationKey' for storage type 's3'"
-      );
-    }
-
-    if (typeof cfg.endpoint !== "undefined") {
-      if (cfg.endpoint.indexOf("r2.cloudflarestorage.com") !== -1) {
-        this.s3Compatible = S3Compatible.R2;
-      } else if (cfg.endpoint.indexOf("backblazeb2.com") !== -1) {
-        this.s3Compatible = S3Compatible.Backblaze;
-      }
-    }
-    if (!cfg.region && this.s3Compatible === S3Compatible.Amazon) {
-      throw new Error("You must specify a default region for storage type 's3'");
-    }
-
-    return cfg;
-  }
-
-  async getFileAsReadable(
-    fileName: string,
-    options: { start?: number; end?: number } = { start: 0 }
-  ): Promise<Readable> {
-    const params = {
-      Bucket: this.bucketName,
-      Key: fileName,
-      Range: `bytes=${options.start}-${options.end || ""}`
-    };
-
-    const command = new GetObjectCommand(params);
-    const response = await this.storage.send(command);
-    return response.Body as Readable;
-  }
-
-  async removeFile(fileName: string): Promise<string> {
-    const input = {
-      Bucket: this.bucketName,
-      Key: fileName
-    };
-    const command = new DeleteObjectCommand(input);
-    const response = await this.storage.send(command);
-    // console.log(response);
-    return "file removed";
-  }
-
-  // util members
-
-  async createBucket(name: string, options: object = {}): Promise<string> {
-    // return Promise.reject("oops");
-    const msg = this.validateName(name);
-    if (msg !== null) {
-      return Promise.reject(msg);
-    }
-
-    if (this.bucketNames.findIndex((b) => b === name) !== -1) {
-      return "bucket exists";
+      // console.log(this._config);
     }
 
     try {
+      if (this.config.accessKeyId && this.config.secretAccessKey) {
+        const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
+        delete o.credentials;
+        delete o.accessKeyId;
+        delete o.secretAccessKey;
+        this._client = new S3Client({
+          credentials: {
+            accessKeyId: this.config.accessKeyId,
+            secretAccessKey: this.config.secretAccessKey,
+          },
+          ...o,
+        });
+      } else {
+        const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
+        delete o.accessKeyId;
+        delete o.secretAccessKey;
+        this._client = new S3Client(o);
+      }
+    } catch (e) {
+      this._configError = `[configError] ${e.message}`;
+    }
+    if (typeof this._config.bucketName !== "undefined") {
+      this._bucketName = this._config.bucketName;
+    }
+  }
+
+  private async getFiles(
+    name: string,
+    maxFiles: number = 10000
+  ): Promise<{ value: Array<_Object> | null; error: string | null }> {
+    try {
       const input = {
-        Bucket: name
+        Bucket: name,
+        MaxKeys: maxFiles,
+      };
+      const command = new ListObjectsCommand(input);
+      const { Contents } = await this._client.send(command);
+      // console.log("Contents", Contents);
+      return { value: Contents, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  private async getFileVersions(
+    name: string,
+    maxFiles: number = 10000
+  ): Promise<{ value: Array<ObjectVersion> | null; error: string | null }> {
+    try {
+      const input = {
+        Bucket: name,
+        MaxKeys: maxFiles,
+      };
+      const command = new ListObjectVersionsCommand(input);
+      const { Versions } = await this._client.send(command);
+      // console.log("Versions", Versions);
+      return { value: Versions, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  // protected, called by methods of public API via AbstractAdapter
+
+  protected async _getFileAsStream(
+    bucketName: string,
+    fileName: string,
+    options: StreamOptions
+  ): Promise<ResultObjectStream> {
+    const { start, end } = options;
+    let range = `bytes=${start}-${end}`;
+    if (typeof start === "undefined" && typeof end === "undefined") {
+      range = undefined;
+    } else if (typeof start === "undefined") {
+      range = `bytes=0-${end}`;
+    } else if (typeof end === "undefined") {
+      range = `bytes=${start}-`;
+    }
+
+    try {
+      const params = {
+        Bucket: bucketName,
+        Key: fileName,
+        Range: range,
+      };
+      const command = new GetObjectCommand(params);
+      const response = await this._client.send(command);
+      return { value: response.Body as Readable, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions: boolean
+  ): Promise<ResultObject> {
+    try {
+      const input = {
+        Bucket: bucketName,
+        Key: fileName,
+      };
+      const command = new DeleteObjectCommand(input);
+      const response = await this._client.send(command);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _clearBucket(name: string): Promise<ResultObject> {
+    let objects: Array<{ Key: string; VersionId?: string }>;
+
+    // first try to remove the versioned files
+    const { value, error } = await this.getFileVersions(name);
+    if (error === "no versions" || error === "ListObjectVersions not implemented") {
+      // if that fails remove non-versioned files
+      const { value, error } = await this.getFiles(name);
+      if (error === "no contents") {
+        return { value: null, error: "Could not remove files" };
+      } else if (error !== null) {
+        return { value: null, error };
+      } else if (typeof value !== "undefined") {
+        objects = value.map((value) => ({ Key: value.Key }));
+      }
+    } else if (error !== null) {
+      return { value: null, error };
+    } else if (typeof value !== "undefined") {
+      objects = value.map((value) => ({
+        Key: value.Key,
+        VersionId: value.VersionId,
+      }));
+    }
+
+    if (typeof objects !== "undefined") {
+      try {
+        const input = {
+          Bucket: name,
+          Delete: {
+            Objects: objects,
+            Quiet: false,
+          },
+        };
+        const command = new DeleteObjectsCommand(input);
+        await this._client.send(command);
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    }
+
+    return { value: "ok", error: null };
+  }
+
+  protected async _deleteBucket(name: string): Promise<ResultObject> {
+    try {
+      await this.clearBucket(name);
+      const input = {
+        Bucket: name,
+      };
+      const command = new DeleteBucketCommand(input);
+      const response = await this._client.send(command);
+      // console.log(response);
+      return { value: "ok", error: null };
+    } catch (e) {
+      if (e.message === "NoSuchBucket") {
+        return { value: "bucket not found", error: null };
+      }
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    try {
+      let fileData: Readable | Buffer;
+      if (typeof (params as FilePathParams).origPath !== "undefined") {
+        const f = (params as FilePathParams).origPath;
+        if (!fs.existsSync(f)) {
+          return {
+            value: null,
+            error: `File with given path: ${f}, was not found`,
+          };
+        }
+        fileData = fs.createReadStream(f);
+      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+        fileData = (params as FileBufferParams).buffer;
+      } else if (typeof (params as FileStreamParams).stream !== "undefined") {
+        fileData = (params as FileStreamParams).stream;
+      }
+
+      const input = {
+        Bucket: params.bucketName,
+        Key: params.targetPath,
+        Body: fileData,
+        options: { ...params.options },
+      };
+      const command = new PutObjectCommand(input);
+      const response = await this._client.send(command);
+      return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject> {
+    try {
+      const url = await getSignedUrl(
+        this._client,
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+        }),
+        options
+      );
+      return { value: url, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+    try {
+      const { value, error } = await this.getFiles(bucketName, numFiles);
+      if (error !== null) {
+        return { value: null, error };
+      }
+      if (typeof value === "undefined") {
+        return { value: [], error: null };
+      }
+      return { value: value.map((o) => [o.Key, o.Size]), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    try {
+      const input = {
+        Bucket: bucketName,
+        Key: fileName,
+      };
+      const command = new HeadObjectCommand(input);
+      const response = await this._client.send(command);
+      return { value: response.ContentLength, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    try {
+      const input = {
+        Bucket: bucketName,
       };
       const command = new HeadBucketCommand(input);
-      const response = await this.storage.send(command);
-      if (response.$metadata.httpStatusCode === 200) {
-        // console.log("response", response);
-        this.bucketNames.push(name);
-        this.bucketName = name;
-        return "bucket exists";
-      }
-    } catch (_e) {
-      // this error simply means that the bucket doesn't exist yet
-      // so it is safe to ignore it and continue
+      await this._client.send(command);
+      return { value: true, error: null };
+    } catch (e) {
+      return { value: false, error: null };
+    }
+  }
+
+  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    try {
+      const input = {
+        Bucket: bucketName,
+        Key: fileName,
+      };
+      const command = new HeadObjectCommand(input);
+      await this._client.send(command);
+      return { value: true, error: null };
+    } catch (e) {
+      return { value: false, error: null };
+    }
+  }
+
+  // public
+
+  get config(): AdapterConfigAmazonS3 {
+    return this._config as AdapterConfigAmazonS3;
+  }
+
+  getConfig(): AdapterConfigAmazonS3 {
+    return this._config as AdapterConfigAmazonS3;
+  }
+
+  get serviceClient(): S3Client {
+    return this._client as S3Client;
+  }
+
+  getServiceClient(): S3Client {
+    return this._client as S3Client;
+  }
+
+  public async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    try {
+      const input = {};
+      const command = new ListBucketsCommand(input);
+      const response = await this._client.send(command);
+      const bucketNames = response.Buckets?.map((b) => b?.Name);
+      return { value: bucketNames, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
+
+    const error = validateName(name);
+    if (error !== null) {
+      return { value: null, error };
     }
 
     try {
       const input: CreateBucketCommandInput = {
         Bucket: name,
-        ...options
+        ...options,
       };
-      // see issue: https://github.com/aws/aws-sdk-js/issues/3647
-      if (typeof this.config.region !== "undefined" && this.config.region !== "us-east-1") {
-        input.CreateBucketConfiguration = {
-          LocationConstraint: BucketLocationConstraint[this.config.region.replace("-", "_")]
-        };
-      }
-
       const command = new CreateBucketCommand(input);
-      const response = await this.storage.send(command);
+      const response = await this._client.send(command);
       // console.log("response", response);
       if (response.$metadata.httpStatusCode === 200) {
-        this.bucketNames.push(name);
-        this.bucketName = name;
-        return "bucket created";
+        return { value: "ok", error: null };
+      } else {
+        return {
+          value: null,
+          error: `Error http status code ${response.$metadata.httpStatusCode}`,
+        };
       }
     } catch (e) {
-      return Promise.reject(e.message);
+      return { value: null, error: e.message };
     }
-  }
-
-  async selectBucket(name: string | null): Promise<string> {
-    // add check if bucket exists!
-    if (!name) {
-      this.bucketName = "";
-      return `bucket '${name}' deselected`;
-    }
-    await this.createBucket(name);
-    this.bucketName = name;
-    return `bucket '${name}' selected`;
-  }
-
-  async clearBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-
-    if (!n) {
-      throw new Error("no bucket selected");
-    }
-
-    /*
-    const input1 = {
-      Bucket: n,
-      MaxKeys: 1000,
-    };
-    const command = new ListObjectVersionsCommand(input1);
-    const { Versions } = await this.storage.send(command);
-    // console.log("Versions", Versions);
-    if (typeof Versions === "undefined") {
-      return "bucket is empty";
-    }
-    const input2 = {
-      Bucket: n,
-      Delete: {
-        Objects: Versions.map((value) => ({
-          Key: value.Key,
-          VersionId: value.VersionId,
-        })),
-        Quiet: false,
-      },
-    };
-    const command2 = new DeleteObjectsCommand(input2);
-    const response = await this.storage.send(command2);
-    return "bucket cleared";
-    */
-
-    const input1 = {
-      Bucket: n,
-      MaxKeys: 1000
-    };
-    const command1 = new ListObjectsCommand(input1);
-    const response1 = await this.storage.send(command1);
-    const Contents = response1.Contents;
-
-    if (!Contents || Contents.length === 0) {
-      return;
-    }
-    // console.log(Contents);
-    const input2 = {
-      Bucket: n,
-      Delete: {
-        Objects: Contents.map((value) => ({ Key: value.Key })),
-        Quiet: false
-      }
-    };
-    const command2 = new DeleteObjectsCommand(input2);
-    const response = await this.storage.send(command2);
-    // console.log(response);
-    return "bucket cleared";
-  }
-
-  async deleteBucket(name?: string): Promise<string> {
-    const n = name || this.bucketName;
-    // console.log("deleteBucket", n);
-
-    if (n === "") {
-      throw new Error("deleteBucket: no bucket selected");
-    }
-    try {
-      const input = {
-        Bucket: n
-      };
-      const command = new DeleteBucketCommand(input);
-      const response = await this.storage.send(command);
-      // console.log(response);
-
-      if (n === this.bucketName) {
-        this.bucketName = "";
-      }
-      // console.log("selected bucket", this.bucketName);
-      this.bucketNames = this.bucketNames.filter((b) => b !== n);
-
-      return "bucket deleted";
-    } catch (e) {
-      if (e.code === "NoSuchBucket") {
-        throw new Error("bucket not found");
-      }
-      throw e;
-    }
-  }
-
-  async listBuckets(): Promise<string[]> {
-    const input = {};
-    const command = new ListBucketsCommand(input);
-    return this.storage
-      .send(command)
-      .then((response) => {
-        this.bucketNames = response.Buckets?.map((d) => d?.Name);
-        return this.bucketNames;
-      })
-      .catch((e) => {
-        console.log("[ERROR listBuckets]", e);
-        return [];
-      });
-  }
-
-  protected async store(buffer: Buffer, targetPath: string, options: object): Promise<string>;
-  protected async store(stream: Readable, targetPath: string, options: object): Promise<string>;
-  protected async store(origPath: string, targetPath: string, options: object): Promise<string>;
-  protected async store(
-    arg: string | Buffer | Readable,
-    targetPath: string,
-    options: object
-  ): Promise<string> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-    if (typeof options !== "object") {
-      options = {};
-    }
-    await this.createBucket(this.bucketName);
-
-    const input = {
-      ...options,
-      Bucket: this.bucketName,
-      Key: targetPath,
-      Body: arg
-    };
-
-    if (typeof arg === "string") {
-      if (!fs.existsSync(arg)) {
-        throw new Error(`File with given path: ${arg}, was not found`);
-      }
-      input.Body = fs.createReadStream(arg);
-    }
-
-    const command = new PutObjectCommand(input);
-    const response = await this.storage.send(command);
-
-    if (this.region !== "") {
-      const input = {
-        Bucket: this.bucketName
-      };
-      const command = new GetBucketLocationCommand(input);
-      const response = await this.storage.send(command);
-      this.region = response.LocationConstraint;
-    }
-    // return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${targetPath}`;
-    return await getSignedUrl(
-      this.storage,
-      new GetObjectCommand({ Bucket: this.bucketName, Key: targetPath })
-      // { expiresIn: 3600 }
-    );
-  }
-
-  async listFiles(maxFiles: number = 1000): Promise<[string, number][]> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-
-    const input = {
-      Bucket: this.bucketName,
-      MaxKeys: maxFiles
-    };
-    const command = new ListObjectsCommand(input);
-    const response = await this.storage.send(command);
-    const { Contents } = response;
-    if (!Contents) {
-      return [];
-    }
-    return Contents.map((o) => [o.Key, o.Size]) as [string, number][];
-  }
-
-  async sizeOf(name: string): Promise<number> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-
-    const input = {
-      Bucket: this.bucketName,
-      Key: name
-    };
-    const command = new HeadObjectCommand(input);
-    const response = await this.storage.send(command);
-    return response.ContentLength;
-  }
-
-  async fileExists(name: string): Promise<boolean> {
-    if (!this.bucketName) {
-      throw new Error("no bucket selected");
-    }
-
-    const input = {
-      Bucket: this.bucketName,
-      Key: name
-    };
-    const command = new HeadObjectCommand(input);
-    return this.storage
-      .send(command)
-      .then(() => {
-        return true;
-      })
-      .catch(() => {
-        return false;
-      });
-  }
-
-  async getFileAsURL(fileName: string): Promise<string> {
-    return await getSignedUrl(
-      this.storage,
-      new GetObjectCommand({ Bucket: this.bucketName, Key: fileName }),
-      { expiresIn: 3600 }
-    );
   }
 }

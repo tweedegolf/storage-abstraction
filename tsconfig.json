@@ -15,16 +15,15 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/*.ts"],
+  "include": ["src/*.ts", "src/types/*.ts", "src/indexes/*.ts"],
   // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",
-    "examples",
-    "tests",
+    "publish",
     "spec",
-    "dist",
-    "adapters",
     "src/template_class.ts",
-    "src/template_functional.ts"
+    "src/template_functional.ts",
+    "tests",
+    "tests_local"
   ]
 }

@@ -1,151 +1,233 @@
 import path from "path";
-import { Readable } from "stream";
-import { IStorage, AdapterConfig } from "./types";
+import {
+  IAdapter,
+  AdapterConfig,
+  Options,
+  StreamOptions,
+  StorageAdapterConfig,
+} from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import {
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectBuckets,
+  ResultObjectFiles,
+  ResultObjectNumber,
+  ResultObjectStream,
+} from "./types/result";
+import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters";
 
-//  add new storage adapters here
-const adapterClasses = {
-  b2: "AdapterBackblazeB2",
-  s3: "AdapterAmazonS3",
-  gcs: "AdapterGoogleCloudStorage",
-  local: "AdapterLocal",
-  azure: "AdapterAzureStorageBlob",
-};
+const availableAdapters: string = getAvailableAdapters();
 
-// or here for functional adapters
-const adapterFunctions = {
-  b2f: "AdapterBackblazeB2F",
-};
+export class Storage implements IAdapter {
+  private _adapter: IAdapter;
+  // public ready: Promise<void>;
 
-const availableAdapters: string = Object.keys(adapterClasses)
-  .concat(Object.keys(adapterFunctions))
-  .reduce((acc, val) => {
-    if (acc.findIndex((v) => v === val) === -1) {
-      acc.push(val);
-    }
-    return acc;
-  }, [])
-  .sort()
-  .join(", ");
-
-export class Storage implements IStorage {
-  private adapter: IStorage;
-
-  constructor(config: string | AdapterConfig) {
+  constructor(config: string | StorageAdapterConfig) {
+    // this.ready = this.switchAdapter(config);
     this.switchAdapter(config);
   }
 
-  public getType(): string {
-    return this.adapter.getType();
+  setSelectedBucket(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
   }
 
-  // public getOptions(): TypeJSON {
-  //   return this.adapter.getOptions();
-  // }
-
-  public getConfiguration(): AdapterConfig {
-    return this.adapter.getConfiguration();
+  getSelectedBucket(): string | null {
+    return this.adapter.bucketName;
   }
 
-  public switchAdapter(args: string | AdapterConfig): void {
-    // console.log(args);
+  set(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
+  }
+
+  get bucketName(): string | null {
+    return this.adapter.bucketName;
+  }
+
+  get adapter(): IAdapter {
+    return this._adapter;
+  }
+
+  public getAdapter(): IAdapter {
+    return this.adapter;
+  }
+
+  // public async switchAdapter(config: string | AdapterConfig): Promise<void> {
+  public switchAdapter(config: string | StorageAdapterConfig): void {
+    // console.log(config);
+    // at this point we are only interested in the type of the config
     let type: string;
-    if (typeof args === "string") {
-      type = args.substring(0, args.indexOf("://"));
+    if (typeof config === "string") {
+      if (config.indexOf("://") !== -1) {
+        type = config.substring(0, config.indexOf("://"));
+      } else {
+        // you can also pass a string that only contains the type, e.g. "gcs"
+        type = config;
+      }
     } else {
-      type = args.type;
+      type = config.type;
     }
     // console.log("type", type);
+    // console.log("adapterClasses", adapterClasses);
     // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
     if (!adapterClasses[type] && !adapterFunctions[type]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
     if (adapterClasses[type]) {
-      const name = adapterClasses[type];
-      const AdapterClass = require(path.join(__dirname, name))[name];
-      this.adapter = new AdapterClass(args);
+      const adapterName = adapterClasses[type][0];
+      const adapterPath = adapterClasses[type][1];
+      // const AdapterClass = require(path.join(__dirname, name));
+      let AdapterClass: any; // eslint-disable-line
+      try {
+        AdapterClass = require(adapterPath)[adapterName];
+        // console.log(`using remote adapter class ${adapterName}`);
+      } catch (e) {
+        // console.log(`using local adapter class ${adapterName}`);
+        // console.log(e.message);
+        try {
+          AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
+        } catch (e) {
+          throw new Error(e.message);
+        }
+      }
+      this._adapter = new AdapterClass(config);
+      // const AdapterClass = await import(`./${name}`);
+      // this.adapter = new AdapterClass[name](args);
     } else if (adapterFunctions[type]) {
-      const name = adapterFunctions[type];
-      const module = require(path.join(__dirname, name));
-      this.adapter = module.createAdapter(args);
+      const adapterName = adapterClasses[type][0];
+      const adapterPath = adapterClasses[type][1];
+      // const module = require(path.join(__dirname, name));
+      let module: any; // eslint-disable-line
+      try {
+        module = require(adapterPath);
+      } catch (e) {
+        module = require(require(path.join(__dirname, adapterPath)));
+      }
+      this._adapter = module.createAdapter(config);
     }
   }
 
   // all methods below are implementing IStorage
 
-  async init(): Promise<boolean> {
-    return this.adapter.init();
+  get type(): string {
+    return this.adapter.type;
   }
 
-  async test(): Promise<string> {
-    return this.adapter.test();
+  public getType(): string {
+    return this.adapter.type;
   }
 
-  async addFileFromBuffer(buffer: Buffer, targetPath: string, options?: object): Promise<string> {
-    return this.adapter.addFileFromBuffer(buffer, targetPath, options);
+  get config(): AdapterConfig {
+    return this.adapter.config;
   }
 
-  async addFileFromPath(origPath: string, targetPath: string, options?: object): Promise<string> {
-    return this.adapter.addFileFromPath(origPath, targetPath, options);
+  public getConfig(): AdapterConfig {
+    return this.adapter.config;
   }
 
-  async addFileFromReadable(
-    stream: Readable,
-    targetPath: string,
-    options?: object
-  ): Promise<string> {
-    return this.adapter.addFileFromReadable(stream, targetPath, options);
+  get configError(): string {
+    return this.adapter.configError;
   }
 
-  async createBucket(name?: string, options?: object): Promise<string> {
+  public getConfigError(): string {
+    return this.adapter.configError;
+  }
+  //eslint-disable-next-line
+  get serviceClient(): any {
+    return this.adapter.serviceClient;
+  }
+  //eslint-disable-next-line
+  public getServiceClient(): any {
+    return this.adapter.serviceClient;
+  }
+
+  public async addFile(
+    paramObject: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    return this.adapter.addFile(paramObject);
+  }
+
+  async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
+    return this.adapter.addFileFromPath(params);
+  }
+
+  async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
+    return this.adapter.addFileFromBuffer(params);
+  }
+
+  async addFileFromStream(params: FileStreamParams): Promise<ResultObject> {
+    return this.adapter.addFileFromStream(params);
+  }
+
+  async createBucket(name: string, options?: object): Promise<ResultObject> {
     return this.adapter.createBucket(name, options);
   }
 
-  async clearBucket(name?: string): Promise<string> {
+  async clearBucket(name: string): Promise<ResultObject> {
     return this.adapter.clearBucket(name);
   }
 
-  async deleteBucket(name?: string): Promise<string> {
+  async deleteBucket(name: string): Promise<ResultObject> {
     return this.adapter.deleteBucket(name);
   }
 
-  async listBuckets(): Promise<string[]> {
+  async listBuckets(): Promise<ResultObjectBuckets> {
     return this.adapter.listBuckets();
   }
 
-  public getSelectedBucket(): string {
-    return this.adapter.getSelectedBucket();
+  async getFileAsStream(
+    bucketName: string,
+    fileName: string,
+    options?: StreamOptions
+  ): Promise<ResultObjectStream>;
+  async getFileAsStream(fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+  async getFileAsStream(
+    arg1: string,
+    arg2?: StreamOptions | string,
+    arg3?: StreamOptions
+  ): Promise<ResultObjectStream> {
+    return this.adapter.getFileAsStream(arg1, arg2, arg3);
   }
 
-  async getFileAsReadable(
-    name: string,
-    options: { start?: number; end?: number } = {}
-  ): Promise<Readable> {
-    const { start = 0, end } = options;
-    // console.log(start, end, options);
-    return this.adapter.getFileAsReadable(name, { start, end });
+  async getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options
+  ): Promise<ResultObject>;
+  async getFileAsURL(fileName: string, options?: Options): Promise<ResultObject>;
+  async getFileAsURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
+    return this.adapter.getFileAsURL(arg1, arg2, arg3);
   }
 
-  async getFileAsURL(name: string): Promise<string> {
-    return this.adapter.getFileAsURL(name);
+  async removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions?: boolean
+  ): Promise<ResultObject>;
+  async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
+  async removeFile(
+    arg1: string,
+    arg2?: boolean | string,
+    arg3: boolean = false
+  ): Promise<ResultObject> {
+    return this.adapter.removeFile(arg1, arg2, arg3);
   }
 
-  async removeFile(fileName: string): Promise<string> {
-    return this.adapter.removeFile(fileName);
+  async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
+  async listFiles(numFiles?: number): Promise<ResultObjectFiles>;
+  async listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles> {
+    return this.adapter.listFiles(arg1, arg2);
   }
 
-  async listFiles(numFiles?: number): Promise<[string, number][]> {
-    return this.adapter.listFiles(numFiles);
+  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+    return this.adapter.sizeOf(bucketName, fileName);
   }
 
-  async selectBucket(name?: string): Promise<string> {
-    return this.adapter.selectBucket(name);
+  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    return this.adapter.bucketExists(bucketName);
   }
 
-  async sizeOf(name: string): Promise<number> {
-    return this.adapter.sizeOf(name);
-  }
-
-  async fileExists(name: string): Promise<boolean> {
-    return this.adapter.fileExists(name);
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+    return this.adapter.fileExists(bucketName, fileName);
   }
 }

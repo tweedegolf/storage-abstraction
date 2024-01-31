@@ -1,11 +1,12 @@
-import { BucketLocationConstraint } from "@aws-sdk/client-s3";
+import { URL } from "url";
+import { StorageType } from "./types/general";
+import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 
 /**
- * @param: url
- *
+ * @param {string} url
  * strips off the querystring of an url and returns it as an object
  */
-export const parseQuerystring = (url: string): { [id: string]: string } => {
+export const parseQueryString = (url: string): { [id: string]: string } => {
   let options = {};
   const questionMark = url.indexOf("?");
   if (questionMark !== -1) {
@@ -23,69 +24,154 @@ export const parseQuerystring = (url: string): { [id: string]: string } => {
 };
 
 /**
- * @param url
- * Parses a url string into fragments and parses the query string into a
+ * @param {string} url
+ * Parses a config url string into fragments and parses the query string into a
  * key-value object.
  */
-export const parseUrl = (
-  url: string
-): {
-  type: string;
-  part1: string;
-  part2: string;
-  part3: string;
-  bucketName: string;
-  queryString: { [key: string]: string };
-} => {
-  if (url === "" || typeof url === "undefined") {
-    throw new Error("please provide a configuration url");
+export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult => {
+  let parsed = null;
+  let searchParams = null;
+
+  if (isBlankString(url)) {
+    return {
+      value: null,
+      error: "please provide a configuration url",
+    };
   }
-  const type = url.substring(0, url.indexOf("://"));
-  let config = url.substring(url.indexOf("://") + 3);
+
+  try {
+    parsed = new URL(url);
+  } catch (e) {
+    return { value: null, error: e.message };
+  }
+
+  if (Object.keys(parsed.searchParams)) {
+    searchParams = {};
+    for (const [key, val] of parsed.searchParams) {
+      searchParams[key] = val;
+    }
+  }
+
+  return {
+    value: {
+      protocol: parsed.protocol || null,
+      username: parsed.username || null,
+      password: parsed.password || null,
+      host: parsed.host || null,
+      port: parsed.port || null,
+      path: parsed.path || null,
+      searchParams,
+    },
+    error: null,
+  };
+};
+
+/**
+ * @param {string} url
+ * Parses a config url string into fragments and parses the query string into a
+ * key-value object.
+ */
+export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
+  let protocol = null;
+  let username = null;
+  let password = null;
+  let port = null;
+  let path = null;
+  let host = null;
+  let searchParams = null;
+
+  if (isBlankString(url)) {
+    return {
+      value: null,
+      error: "please provide a configuration url",
+    };
+  }
+
+  const p = url.indexOf("://");
+  if (p === -1) {
+    return {
+      value: { protocol: url, username, password, host, port, path, searchParams },
+      error: null,
+    };
+  }
+  protocol = url.substring(0, p);
+  if (
+    checkType === true &&
+    Object.values(StorageType).includes(protocol as StorageType) === false
+  ) {
+    return { value: null, error: `"${protocol}" is not a valid storage type` };
+  }
+
+  let config = url.substring(p + 3);
   const at = config.indexOf("@");
   const questionMark = config.indexOf("?");
-  const colon = config.indexOf(":");
-  let part1 = "";
-  let part2 = "";
-  let part3 = "";
-  let bucketName = "";
 
   // parse options
-  const queryString: { [key: string]: string } = parseQuerystring(url);
   if (questionMark !== -1) {
+    searchParams = parseQueryString(url);
     config = config.substring(0, questionMark);
   }
-  // console.log("config", config);
 
-  // get bucket name and region
-  let bucketString = "";
+  // get host (bucket name)
   if (at !== -1) {
-    bucketString = config.substring(at + 1);
-    const slash = bucketString.indexOf("/");
-    if (slash !== -1) {
-      // Amazon S3 @region/bucket
-      bucketName = bucketString.substring(slash + 1);
-      part3 = bucketString.substring(0, slash);
-    } else {
-      bucketName = bucketString;
+    host = config.substring(at + 1);
+    // remove port
+    const colon = host.indexOf(":");
+    if (colon !== -1) {
+      port = host.substring(colon + 1);
+      host = host.substring(0, colon);
     }
-    // console.log(bucketName, bucketString, slash);
+    // console.log(colon, port);
+    if (questionMark !== -1) {
+      host = host.substring(0, questionMark);
+    }
+    if (isBlankString(host)) {
+      host = null;
+    }
     config = config.substring(0, at);
   }
 
   // get credentials
+  const colon = config.indexOf(":");
   if (colon !== -1) {
-    [part1, part2] = config.split(":");
-  } else {
-    part1 = config;
+    if (port === null) {
+      [username, password, port] = config.split(":");
+      if (typeof port === "undefined") {
+        port = null;
+      }
+    } else {
+      [username, password] = config.split(":");
+    }
+  } else if (config !== "") {
+    username = config;
   }
 
-  // console.log(type, part1, part2, region, bucketName, queryString);
-  return { type, part1, part2, part3, bucketName, queryString };
+  // remove path from port in case it hasn't been removed
+  if (port !== null) {
+    const slash = port.indexOf("/");
+    if (slash !== -1) {
+      path = port.substring(slash + 1);
+      port = port.substring(0, slash);
+    }
+  }
+
+  // remove path from bucketName in case it hasn't been removed
+  if (host !== null) {
+    const slash = host.indexOf("/");
+    if (slash !== -1) {
+      path = host.substring(slash + 1);
+      host = host.substring(0, slash);
+    }
+  }
+
+  return {
+    value: { protocol, username, password, host, port, path, searchParams },
+    error: null,
+  };
 };
 
 /**
- * @param s
+ * @param {string} s
  *
  * Parses a string that contains a radix prefix to a number
  *
@@ -103,88 +189,59 @@ export const parseIntFromString = (s: string): number => {
   return parseInt(s);
 };
 
-export const parseMode = (s: number | string): string | number => {
+export const parseMode = (mode: number | string): ResultObjectNumber => {
   // if mode is a number, parseMode assumes it is a decimal number
-  if (typeof s === "number") {
-    if (s < 0) {
-      throw new Error(
-        `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${s}`
-      );
+  if (typeof mode === "number") {
+    if (mode < 0) {
+      return {
+        value: null,
+        error: `The argument 'mode' must be a 32-bit unsigned integer or an octal string. Received ${mode}`,
+      };
     }
-    return s;
+    return { value: mode, error: null };
   }
 
   // mode is a string
 
-  // e.g "0x755" (octal)
-  if (s.startsWith("0o")) {
-    return parseInt(s.substring(2), 8).toString(8);
+  // e.g "0o755" (octal string)
+  if (mode.startsWith("0o")) {
+    return { value: parseInt(mode.substring(2), 8), error: null };
   }
   // e.g '511' (decimal)
-  const i = parseInt(s, 10);
+  const i = parseInt(mode, 10);
   // quick fix for erroneously passed octal number as string (without 0o prefix)
-  return i > 511 ? 511 : i;
+  return { value: i > 511 ? 511 : i, error: null };
 };
 
 /**
- * @param: url
- *
- * strips off the protocol of an url and returns it
- */
-export const getProtocol = (url: string): string => {
-  return;
-};
-
-/**
- * @param name
+ * @param {string} str
  *
  * Checks if the value of the name is not null or undefined
  */
+export const isBlankString = (str: string): boolean => {
+  return !str || /^\s*$/.test(str);
+};
+
+/**
+ * @param {string} name
+ *
+ * Checks if the value of the name is not null, undefined or an empty string
+ */
 export const validateName = (name: string): string => {
   if (name === null) {
-    // throw new Error("Can not use `null` as bucket name");
-    return "Can not use `null` as bucket name";
+    return "Bucket name can not be `null`";
   }
   if (name === "null") {
-    return 'Can not use "null" as bucket name';
+    return 'Please do not use the string "null" as bucket name';
+  }
+  if (typeof name === "undefined") {
+    return "Bucket name can not be `undefined`";
   }
   if (name === "undefined") {
-    return 'Can not use "undefined" as bucket name';
+    return 'Please do not use the string "undefined" as bucket name';
   }
-  if (name === "" || typeof name === "undefined") {
-    // throw new Error("Please provide a bucket name");
-    return "Please provide a bucket name";
-  }
-  if (name.indexOf(" ") !== -1) {
-    // throw new Error("Please provide a bucket name");
-    return "Please provide a valid bucket name";
+  if (isBlankString(name)) {
+    return "Bucket name can not be an empty string";
   }
   return null;
-};
-
-/*
-// not in use, keep for reference
-export const getGCSProjectIdAsync = async (config: string): Promise<string> => {
-  const data = await fs.promises.readFile(config).catch(e => {
-    throw e;
-  });
-  const json = JSON.parse(data.toString("utf-8"));
-  return json.project_id;
-};
-
-// not in use, keep for reference
-export const readFilePromise = (path: string): Promise<Buffer> =>
-  new Promise(function(resolve, reject) {
-    fs.readFile(path, function(err, data) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-*/
-
-export const BucketLocationConstraintAsString = (c: BucketLocationConstraint): string => {
-  return;
 };

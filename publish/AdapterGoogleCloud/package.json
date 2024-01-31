@@ -1,0 +1,30 @@
+{
+  "name": "@tweedegolf/sab-adapter-google-cloud",
+  "version": "1.0.3",
+  "description": "Provides an abstraction layer for interacting with Google Cloud storage service.",
+  "main": "dist/index/AdapterGoogleCloud.js",
+  "types": "dist/index/AdapterGoogleCloud.d.ts",
+  "homepage": "https://github.com/tweedegolf/storage-abstraction/",
+  "repository": "https://github.com/tweedegolf/storage-abstraction/",
+  "dependencies": {
+    "@google-cloud/storage": "^7.6.0"
+  },
+  "scripts": {},
+  "keywords": [
+    "google cloud",
+    "backblaze b2",
+    "amazon s3",
+    "storage",
+    "storage abstraction",
+    "cloud filesystem",
+    "cloudflare r2",
+    "cubbit",
+    "minio",
+    "azure"
+  ],
+  "author": "daniel@tweedegolf.nl",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
