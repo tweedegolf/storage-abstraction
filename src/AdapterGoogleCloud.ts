@@ -25,9 +25,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     super(config);
     if (typeof config !== "string") {
       this._config = { ...config };
-      if (typeof config.bucketName !== "undefined") {
-        this._bucketName = config.bucketName;
-      }
     } else {
       const { value, error } = parseUrl(config);
       if (error !== null) {
@@ -52,6 +49,10 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       this._client = new GoogleCloudStorage(this._config as object);
     } catch (e) {
       this._configError = `[configError] ${e.message}`;
+    }
+
+    if (typeof this.config.bucketName !== "undefined") {
+      this._bucketName = this.config.bucketName;
     }
   }
 

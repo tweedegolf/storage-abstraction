@@ -89,6 +89,10 @@ export class AdapterMinio extends AbstractAdapter {
         this._configError = `[configError] ${e.message}`;
       }
     }
+
+    if (typeof this.config.bucketName !== "undefined") {
+      this._bucketName = this.config.bucketName;
+    }
   }
 
   // protected, called by methods of public API via AbstractAdapter

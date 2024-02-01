@@ -67,6 +67,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         this._configError = `[configError] ${e.message}`;
       }
     }
+    if (typeof this.config.bucketName !== "undefined") {
+      this._bucketName = this.config.bucketName;
+    }
   }
 
   // util members

@@ -59,6 +59,9 @@ export class AdapterLocal extends AbstractAdapter {
       this._configError =
         "[configError] You must specify a value for 'directory' for storage type 'local'";
     }
+    if (typeof this.config.bucketName !== "undefined") {
+      this._bucketName = this.config.bucketName;
+    }
   }
 
   /**

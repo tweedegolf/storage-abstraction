@@ -94,8 +94,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     } catch (e) {
       this._configError = `[configError] ${e.message}`;
     }
-    if (typeof this._config.bucketName !== "undefined") {
-      this._bucketName = this._config.bucketName;
+
+    if (typeof this.config.bucketName !== "undefined") {
+      this._bucketName = this.config.bucketName;
     }
   }
 

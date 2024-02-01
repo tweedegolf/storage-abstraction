@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-local",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Provides an abstraction layer for interacting with local storage on your local machine or on your server.",
   "main": "dist/index/AdapterLocal.js",
   "types": "dist/index/AdapterLocal.d.ts",

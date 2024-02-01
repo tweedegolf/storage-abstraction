@@ -1,4 +1,8 @@
-1.0.7
+# 1.0.8
+
+- fix bug in selected bucket
+
+# 1.0.7
 
 - revert to v1 format of config URLs
 - re-implement storing the selected bucket in local state
