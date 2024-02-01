@@ -101,12 +101,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   private async getFiles(
-    name: string,
+    bucketName: string,
     maxFiles: number = 10000
   ): Promise<{ value: Array<_Object> | null; error: string | null }> {
     try {
       const input = {
-        Bucket: name,
+        Bucket: bucketName,
         MaxKeys: maxFiles,
       };
       const command = new ListObjectsCommand(input);
@@ -119,12 +119,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   private async getFileVersions(
-    name: string,
+    bucketName: string,
     maxFiles: number = 10000
   ): Promise<{ value: Array<ObjectVersion> | null; error: string | null }> {
     try {
       const input = {
-        Bucket: name,
+        Bucket: bucketName,
         MaxKeys: maxFiles,
       };
       const command = new ListObjectVersionsCommand(input);
@@ -185,14 +185,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name: string): Promise<ResultObject> {
+  protected async _clearBucket(bucketName: string): Promise<ResultObject> {
     let objects: Array<{ Key: string; VersionId?: string }>;
 
     // first try to remove the versioned files
-    const { value, error } = await this.getFileVersions(name);
+    const { value, error } = await this.getFileVersions(bucketName);
     if (error === "no versions" || error === "ListObjectVersions not implemented") {
       // if that fails remove non-versioned files
-      const { value, error } = await this.getFiles(name);
+      const { value, error } = await this.getFiles(bucketName);
       if (error === "no contents") {
         return { value: null, error: "Could not remove files" };
       } else if (error !== null) {
@@ -212,7 +212,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (typeof objects !== "undefined") {
       try {
         const input = {
-          Bucket: name,
+          Bucket: bucketName,
           Delete: {
             Objects: objects,
             Quiet: false,
@@ -229,19 +229,20 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     return { value: "ok", error: null };
   }
 
-  protected async _deleteBucket(name: string): Promise<ResultObject> {
+  protected async _deleteBucket(bucketName: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(name);
+      await this.clearBucket(bucketName);
       const input = {
-        Bucket: name,
+        Bucket: bucketName,
       };
       const command = new DeleteBucketCommand(input);
       const response = await this._client.send(command);
       // console.log(response);
       return { value: "ok", error: null };
     } catch (e) {
+      // error message Cubbit
       if (e.message === "NoSuchBucket") {
-        return { value: "bucket not found", error: null };
+        return { value: null, error: `The specified bucket does not exist: ${bucketName}` };
       }
       return { value: null, error: e.message };
     }
@@ -391,24 +392,27 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
+  public async createBucket(bucketName: string, options: Options = {}): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
 
-    const error = validateName(name);
+    const error = validateName(bucketName);
     if (error !== null) {
       return { value: null, error };
     }
 
     try {
       const input: CreateBucketCommandInput = {
-        Bucket: name,
+        Bucket: bucketName,
         ...options,
       };
       const command = new CreateBucketCommand(input);
       const response = await this._client.send(command);
-      // console.log("response", response);
+      // console.log(response.Location, response.Location.indexOf(bucketName));
+      /*
+      console.log(response);
+      // not sure if this is necessary
       if (response.$metadata.httpStatusCode === 200) {
         return { value: "ok", error: null };
       } else {
@@ -417,6 +421,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           error: `Error http status code ${response.$metadata.httpStatusCode}`,
         };
       }
+      */
+      return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
