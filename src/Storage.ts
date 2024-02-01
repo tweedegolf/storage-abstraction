@@ -28,30 +28,6 @@ export class Storage implements IAdapter {
     this.switchAdapter(config);
   }
 
-  setSelectedBucket(bucketName: string | null) {
-    this.adapter.bucketName = bucketName;
-  }
-
-  getSelectedBucket(): string | null {
-    return this.adapter.bucketName;
-  }
-
-  set(bucketName: string | null) {
-    this.adapter.bucketName = bucketName;
-  }
-
-  get bucketName(): string | null {
-    return this.adapter.bucketName;
-  }
-
-  get adapter(): IAdapter {
-    return this._adapter;
-  }
-
-  public getAdapter(): IAdapter {
-    return this.adapter;
-  }
-
   // public async switchAdapter(config: string | AdapterConfig): Promise<void> {
   public switchAdapter(config: string | StorageAdapterConfig): void {
     // console.log(config);
@@ -107,7 +83,31 @@ export class Storage implements IAdapter {
     }
   }
 
-  // all methods below are implementing IStorage
+  // introspective adapter API
+
+  setSelectedBucket(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
+  }
+
+  getSelectedBucket(): string | null {
+    return this.adapter.bucketName;
+  }
+
+  set(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
+  }
+
+  get bucketName(): string | null {
+    return this.adapter.bucketName;
+  }
+
+  get adapter(): IAdapter {
+    return this._adapter;
+  }
+
+  public getAdapter(): IAdapter {
+    return this.adapter;
+  }
 
   get type(): string {
     return this.adapter.type;
@@ -141,6 +141,8 @@ export class Storage implements IAdapter {
     return this.adapter.serviceClient;
   }
 
+  // public adapter API
+
   public async addFile(
     paramObject: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -159,16 +161,16 @@ export class Storage implements IAdapter {
     return this.adapter.addFileFromStream(params);
   }
 
-  async createBucket(name: string, options?: object): Promise<ResultObject> {
-    return this.adapter.createBucket(name, options);
+  async createBucket(bucketName: string, options?: object): Promise<ResultObject> {
+    return this.adapter.createBucket(bucketName, options);
   }
 
-  async clearBucket(name: string): Promise<ResultObject> {
-    return this.adapter.clearBucket(name);
+  async clearBucket(bucketName?: string): Promise<ResultObject> {
+    return this.adapter.clearBucket(bucketName);
   }
 
-  async deleteBucket(name: string): Promise<ResultObject> {
-    return this.adapter.deleteBucket(name);
+  async deleteBucket(bucketName?: string): Promise<ResultObject> {
+    return this.adapter.deleteBucket(bucketName);
   }
 
   async listBuckets(): Promise<ResultObjectBuckets> {
@@ -219,15 +221,19 @@ export class Storage implements IAdapter {
     return this.adapter.listFiles(arg1, arg2);
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
-    return this.adapter.sizeOf(bucketName, fileName);
+  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+  async sizeOf(fileName: string): Promise<ResultObjectNumber>;
+  async sizeOf(arg1: string, arg2?: string): Promise<ResultObjectNumber> {
+    return this.adapter.sizeOf(arg1, arg2);
   }
 
-  async bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  async bucketExists(bucketName?: string): Promise<ResultObjectBoolean> {
     return this.adapter.bucketExists(bucketName);
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    return this.adapter.fileExists(bucketName, fileName);
+  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+  async fileExists(fileName: string): Promise<ResultObjectBoolean>;
+  async fileExists(arg1: string, arg2?: string): Promise<ResultObjectBoolean> {
+    return this.adapter.fileExists(arg1, arg2);
   }
 }

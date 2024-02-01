@@ -1,3 +1,7 @@
+# 2.1.1
+
+- fix issue with optional `bucketName` argument
+
 # 2.1.0
 
 - reverted to v1 of the configuration URLs (with some improvements)

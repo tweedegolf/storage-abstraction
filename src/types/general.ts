@@ -78,7 +78,7 @@ export interface IAdapter {
 
   getSelectedBucket(): null | string;
 
-  setSelectedBucket(name: null | string): void;
+  setSelectedBucket(bucketName: null | string): void;
 
   bucketName: null | string;
 
@@ -91,27 +91,27 @@ export interface IAdapter {
   // getOptions(): JSON;
 
   /**
-   * @param name name of the bucket to create, returns "ok" once the bucket has been created but
+   * @param bucketName name of the bucket to create, returns "ok" once the bucket has been created but
    * also when the bucket already exists.
    * @param options: additional options for creating a bucket such as access rights
    * @returns string or error
    */
-  createBucket(name: string, options?: Options): Promise<ResultObject>;
+  createBucket(bucketName: string, options?: Options): Promise<ResultObject>;
 
   /**
-   * @param name: deletes all file in the bucket.
+   * @param bucketName: deletes all file in the bucket.
    */
-  clearBucket(name?: string): Promise<ResultObject>;
+  clearBucket(bucketName?: string): Promise<ResultObject>;
 
   /**
    * deletes the bucket with the provided name
-   * @param {string} name name of the bucket
+   * @param {string} bucketName name of the bucket
    * @returns {Promise<ResultObject>} a promise that always resolves in a ResultObject:
    * ```typescript
    * { error: null | string, value: null | string }
    * ```
    */
-  deleteBucket(name?: string): Promise<ResultObject>;
+  deleteBucket(bucketName?: string): Promise<ResultObject>;
 
   /**
    * @returns an array of the names of the buckets in this storage
@@ -176,7 +176,7 @@ export interface IAdapter {
 
   /**
    * @param bucketName name of the bucket where the file is stored
-   * @param name name of the file to be returned as a readable stream
+   * @param fileName name of the file to be returned as a readable stream
    * @param start? the byte of the file where the stream starts (default: 0)
    * @param end? the byte in the file where the stream ends (default: last byte of file)
    */
