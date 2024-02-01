@@ -1,4 +1,4 @@
-# 1.0.4
+# 1.0.5
 
 - fix bug in selected bucket
 
