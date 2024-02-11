@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-amazon-s3",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Provides an abstraction layer for interacting with Amazon S3 and S3 compatible cloud services.",
   "main": "dist/index/AdapterAmazonS3.js",
   "types": "dist/index/AdapterAmazonS3.d.ts",

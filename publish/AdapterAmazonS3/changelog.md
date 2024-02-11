@@ -1,3 +1,7 @@
+# 1.0.13
+
+- improved error logging
+
 # 1.0.12
 
 - fix bug in selected bucket
