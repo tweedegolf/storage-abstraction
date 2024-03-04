@@ -1,3 +1,8 @@
+# 2.1.2
+
+- updated dependencies
+- fixed test scripts
+
 # 2.1.1
 
 - fix issue with optional `bucketName` argument

@@ -1,3 +1,8 @@
+# 1.0.14
+
+- fix for issue #60
+- updated @aws-sdk to 3.525.0
+
 # 1.0.13
 
 - improved error logging

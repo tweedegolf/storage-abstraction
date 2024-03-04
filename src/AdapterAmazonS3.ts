@@ -272,7 +272,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         Bucket: params.bucketName,
         Key: params.targetPath,
         Body: fileData,
-        options: { ...params.options },
+        ...params.options,
       };
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
