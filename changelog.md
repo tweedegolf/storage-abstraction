@@ -2,6 +2,7 @@
 
 - updated dependencies
 - fixed test scripts
+- fix for type error in @types/glob
 
 # 2.1.1
 

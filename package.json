@@ -61,10 +61,11 @@
     "testBucketName": "ts-node ./tests_local/testBucketName.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
+    "fix-glob": "ts-node ./fixes/glob/copy.ts",
     "copy": "npm run tsc && ts-node copy.ts",
     "prepublishOnly": "",
     "toc": "markdown-toc -i README.md",
-    "prepare": "npm run toc && npm run copy"
+    "prepare": "npm run toc && npm run fix-glob && npm run copy"
   },
   "keywords": [
     "storage",
