@@ -1,3 +1,7 @@
+# 1.0.6
+
+- updated @google-cloud/storage to 7.9.0
+
 # 1.0.5
 
 - fix bug in selected bucket

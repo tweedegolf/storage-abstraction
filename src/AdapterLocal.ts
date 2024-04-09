@@ -45,8 +45,8 @@ export class AdapterLocal extends AbstractAdapter {
       // console.log(this._config);
     }
 
-    if (typeof this._config.mode !== "undefined") {
-      const { value, error } = parseMode(this._config.mode);
+    if (typeof this.config.mode !== "undefined") {
+      const { value, error } = parseMode(this.config.mode);
       if (error !== null) {
         this._configError = `[configError] ${error}`;
       } else {
@@ -55,7 +55,7 @@ export class AdapterLocal extends AbstractAdapter {
     } else {
       this._config.mode = 0o777;
     }
-    if (typeof this._config.directory !== "string") {
+    if (typeof this.config.directory !== "string") {
       this._configError =
         "[configError] You must specify a value for 'directory' for storage type 'local'";
     }

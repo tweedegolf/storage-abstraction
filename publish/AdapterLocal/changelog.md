@@ -1,3 +1,8 @@
+# 1.0.6
+
+- small cosmetic code changes (no change in functionality)
+- updated glob to 10.3.12
+
 # 1.0.5
 
 - fix bug in selected bucket
