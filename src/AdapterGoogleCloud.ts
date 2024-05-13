@@ -58,7 +58,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
-  protected async _getFileAsURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject> {
+  protected async _getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       if(options.signed) {
