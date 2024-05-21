@@ -61,16 +61,16 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   protected async _getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
-      if(options.signed) {
+      if(options.isPublicFile && !options.forceSignedUrl) {
+        return { value: file.publicUrl(), error: null };
+      } else {
         return {
           value: await file.getSignedUrl({
             action: 'read',
-            expires: options.expiresIn || 1000 * 60 * 60 * 24,
+            expires: options.expiresOn || 86400,
           })[0],
           error: null
         }
-      } else {
-        return { value: file.publicUrl(), error: null };
       }
     } catch (e) {
       return { value: null, error: e.message };
