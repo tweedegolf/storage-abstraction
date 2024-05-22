@@ -210,6 +210,9 @@ export class AdapterLocal extends AbstractAdapter {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       await fs.promises.access(p);
+      if(options.withoutDirectory) {
+        return { value: path.join(bucketName, fileName), error: null };
+      }
       return { value: p, error: null };
     } catch (e) {
       return { value: null, error: e.message };
