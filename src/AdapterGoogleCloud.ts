@@ -57,8 +57,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   // protected, called by methods of public API via AbstractAdapter
-
-  protected async _getFileAsURL(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected async _getFileAsURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       return { value: file.publicUrl(), error: null };
@@ -123,7 +122,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
         readStream = fs.createReadStream(f);
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
