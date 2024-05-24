@@ -1,3 +1,7 @@
+# 1.0.6
+
+- add support for signed urls (credits: https://github.com/tesirm99)
+
 # 1.0.5
 
 - fix bug in selected bucket

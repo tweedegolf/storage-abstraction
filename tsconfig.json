@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "lib": ["es2016"],
+    "target": "es2021",
+    "lib": [
+      "es2021"
+    ],
     // "types": ["reflect-metadata"],
     "outDir": "publish/dist",
     "module": "commonjs",
@@ -15,7 +17,11 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/*.ts", "src/types/*.ts", "src/indexes/*.ts"],
+  "include": [
+    "src/*.ts",
+    "src/types/*.ts",
+    "src/indexes/*.ts"
+  ],
   // "include": ["src/index.ts"],
   "exclude": [
     "node_modules",

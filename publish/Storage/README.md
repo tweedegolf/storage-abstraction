@@ -768,7 +768,9 @@ export type ResultObject = {
 };
 ```
 
-Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+Returns the public url of the file if the bucket is publicly accessible and the authorized user has sufficient rights.
+
+Return the signed url of the file if you provide the cloud service specific options.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 

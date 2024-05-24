@@ -1,3 +1,7 @@
+# 1.0.10
+
+- update minio npm package to 8.0.0
+
 # 1.0.9
 
 - fix bug in selected bucket

@@ -1,3 +1,7 @@
+# 1.0.7
+
+- add support for urls (paths) without containing directory (credits: https://github.com/tesirm99)
+
 # 1.0.6
 
 - small cosmetic code changes (no change in functionality)

@@ -296,6 +296,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         }),
         options
       );
+      const url2 = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
+      console.log("URL2", url2);
       return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e.message };

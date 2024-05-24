@@ -172,14 +172,22 @@ export class AdapterMinio extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       let fileData: Readable | Buffer;
+      let size: number;
       if (typeof (params as FilePathParams).origPath !== "undefined") {
         const f = (params as FilePathParams).origPath;
         if (!fs.existsSync(f)) {
           return { value: null, error: `File with given path: ${f}, was not found` };
         }
+        try {
+          let stats = await fs.promises.stat(f);
+          size = stats.size;
+        } catch (e) {
+          return { value: null, error: `Cannot access file ${f} Error: ${e}` };
+        }
         fileData = fs.createReadStream(f);
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         fileData = (params as FileBufferParams).buffer;
+        size = fileData.buffer.byteLength;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         fileData = (params as FileStreamParams).stream;
       }
@@ -189,6 +197,7 @@ export class AdapterMinio extends AbstractAdapter {
         bucketName,
         targetPath,
         fileData,
+        size,
         params.options
       );
       return this.getFileAsURL(params.bucketName, params.targetPath, params.options);

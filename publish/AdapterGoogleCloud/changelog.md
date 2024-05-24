@@ -1,3 +1,8 @@
+# 1.0.7
+
+- updated @google-cloud/storage to 7.11.1
+- add support for signed urls (credits: https://github.com/tesirm99)
+
 # 1.0.6
 
 - updated @google-cloud/storage to 7.9.0

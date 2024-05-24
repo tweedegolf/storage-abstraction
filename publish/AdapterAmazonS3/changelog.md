@@ -1,3 +1,6 @@
+# 1.0.16
+
+- updated @aws-sdk to 3.582.0
 # 1.0.15
 
 - updated @aws-sdk to 3.550.0
