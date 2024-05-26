@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or any of the supported cloud storage services.",
   "src": "src/Storage.js",
   "main": "dist/index/Storage.js",
