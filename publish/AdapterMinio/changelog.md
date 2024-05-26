@@ -1,6 +1,7 @@
 # 1.0.10
 
 - update minio npm package to 8.0.0
+- add support for optional key `useSignedUrl` in options object `getFileAsUrl`
 
 # 1.0.9
 

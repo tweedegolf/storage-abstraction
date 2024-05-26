@@ -179,7 +179,7 @@ export class AdapterMinio extends AbstractAdapter {
           return { value: null, error: `File with given path: ${f}, was not found` };
         }
         try {
-          let stats = await fs.promises.stat(f);
+          const stats = await fs.promises.stat(f);
           size = stats.size;
         } catch (e) {
           return { value: null, error: `Cannot access file ${f} Error: ${e}` };
@@ -212,8 +212,18 @@ export class AdapterMinio extends AbstractAdapter {
     options: Options // e.g. { expiry: 3600 }
   ): Promise<ResultObject> {
     const expiry = options.expiry || 7 * 24 * 60 * 60;
+    let url = "";
     try {
-      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
+      if (options.useSignedUrl) {
+        url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
+      } else {
+        url = `https://${this.config.endPoint}/`;
+        if (this.config.port) {
+          url += `:${this.config.port}`;
+        }
+        url += `/${bucketName}/${fileName}`;
+      }
+
       return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e.message };

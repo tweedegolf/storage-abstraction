@@ -1,7 +1,7 @@
 # 1.0.7
 
 - updated @google-cloud/storage to 7.11.1
-- add support for signed urls (credits: https://github.com/tesirm99)
+- add support for optional key `useSignedUrl` in options object `getFileAsUrl`
 
 # 1.0.6
 

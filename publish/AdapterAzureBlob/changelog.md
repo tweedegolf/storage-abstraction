@@ -1,6 +1,6 @@
 # 1.0.6
 
-- add support for signed urls (credits: https://github.com/tesirm99)
+- add support for optional key `useSignedUrl` in options object `getFileAsUrl`
 
 # 1.0.5
 

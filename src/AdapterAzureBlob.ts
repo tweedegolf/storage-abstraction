@@ -186,10 +186,10 @@ export class AdapterAzureBlob extends AbstractAdapter {
           expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
         };
         let url: string;
-        if (options.isPublicFile && !options.forceSignedUrl) {
-          url = file.url;
-        } else {
+        if (options.useSignedUrl) {
           url = await file.generateSasUrl(sasOptions);
+        } else {
+          url = file.url;
         }
         return { value: url, error: null };
       } catch (e) {
@@ -262,7 +262,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
         readStream = fs.createReadStream(f);
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => { }; // _read is required but you can noop it
+        readStream._read = (): void => {}; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {

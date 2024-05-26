@@ -328,6 +328,8 @@ If you provide a bucket name it will be stored in the state of the Storage insta
 storage.addFile("path/to/your/file"); // the file was automatically added to the selected bucket
 ```
 
+Note that if the bucket does not exist it will not be created automatically for you when you create a Storage instance! This was the case in earlier versions but as of version 2.0.0 you have to create the bucket yourself using `createBucket`.
+
 ## Adapters
 
 The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the cloud storage by translating generic API methods calls to storage specific calls. The adapters are not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
@@ -771,6 +773,30 @@ export type ResultObject = {
 Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+If you want a signed url to the file you can pass add a key `useSignedUrl` to the options object:
+
+```typescript
+const signedUrl = getFileAsURL("bucketName", "fileName", { useSignedUrl: true });
+```
+
+Note that this doesn't work for the backblaze and the local adapter.
+
+For the local adapter you can use the key `withoutDirectory`:
+
+```typescript
+const s = new Storage({
+  type: StorageType.LOCAL,
+  directory: "./your_working_dir/sub_dir",
+  bucketName: "bucketName",
+});
+
+const url1 = getFileAsURL("bucketName", "fileName.jpg");
+// your_working_dir/sub_dir/bucketName/fileName.jpg
+
+const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true });
+// bucketName/fileName.jpg
+```
 
 ### getFileAsStream
 

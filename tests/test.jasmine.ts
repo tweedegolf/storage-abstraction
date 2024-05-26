@@ -50,7 +50,7 @@ function streamToString(stream: Readable) {
   });
 }
 
-describe(`[testing ${type} storage]`, async () => {
+describe(`[testing ${type} storage]`, () => {
   beforeAll(async () => {
     // create a temporary working directory
     if (type !== StorageType.LOCAL) {

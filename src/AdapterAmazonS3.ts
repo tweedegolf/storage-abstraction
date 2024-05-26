@@ -288,16 +288,19 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     options: Options // e.g. { expiresIn: 3600 }
   ): Promise<ResultObject> {
     try {
-      const url = await getSignedUrl(
-        this._client,
-        new GetObjectCommand({
-          Bucket: bucketName,
-          Key: fileName,
-        }),
-        options
-      );
-      const url2 = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
-      console.log("URL2", url2);
+      let url = "";
+      if (options.useSignedUrl) {
+        url = await getSignedUrl(
+          this._client,
+          new GetObjectCommand({
+            Bucket: bucketName,
+            Key: fileName,
+          }),
+          options
+        );
+      } else {
+        url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
+      }
       return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e.message };

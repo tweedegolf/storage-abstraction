@@ -119,7 +119,7 @@ export class AdapterLocal extends AbstractAdapter {
         return { value: dest, error: null };
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => { }; // _read is required but you can noop it
+        readStream._read = (): void => {}; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
@@ -212,7 +212,7 @@ export class AdapterLocal extends AbstractAdapter {
       try {
         await fs.promises.access(p);
       } catch (e) {
-        return { value: null, error: e }
+        return { value: null, error: e };
       }
       if (options.withoutDirectory) {
         return { value: path.join(bucketName, fileName), error: null };
