@@ -66,10 +66,10 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       const file = this._client.bucket(bucketName).file(fileName);
       if (options.useSignedUrl) {
         return {
-          value: await file.getSignedUrl({
+          value: (await file.getSignedUrl({
             action: "read",
             expires: options.expiresOn || 86400,
-          })[0],
+          }))[0],
           error: null,
         };
       } else {

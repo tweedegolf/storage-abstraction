@@ -1,3 +1,7 @@
+# [Unreleased]
+
+- fixed gcs signed url generation
+
 # 2.1.3
 
 - updated dependencies
