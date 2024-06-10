@@ -1,6 +1,11 @@
-# [Unreleased]
+# 2.1.5
 
-- fixed gcs signed url generation
+- updated Google Cloud adapter to 1.0.8
+
+# 2.1.4
+
+- updated dependencies
+- remarkable dependency autolinker set to "^4.0.0"
 
 # 2.1.3
 

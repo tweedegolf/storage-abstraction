@@ -1,3 +1,7 @@
+# 1.0.8
+
+- fixed gcs signed url generation
+
 # 1.0.7
 
 - updated @google-cloud/storage to 7.11.1
