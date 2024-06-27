@@ -1,3 +1,7 @@
+# 1.0.7
+
+- add support for optional config option `blobDomain`
+
 # 1.0.6
 
 - add support for optional key `useSignedUrl` in options object `getFileAsUrl`

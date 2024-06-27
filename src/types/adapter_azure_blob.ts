@@ -5,4 +5,5 @@ export interface AdapterConfigAzureBlob extends AdapterConfig {
   connectionString?: string;
   accountKey?: string;
   sasToken?: string;
+  blobDomain?: string;
 }

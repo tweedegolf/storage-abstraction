@@ -59,6 +59,7 @@ export interface AdapterConfigAzure extends AdapterConfig {
   connectionString?: string;
   accountKey?: string;
   sasToken?: string;
+  blobDomain?: string;
 }
 ```
 
@@ -79,6 +80,14 @@ const s = new Storage({
   accountKey: "your-account-key",
   bucketName: "the-buck"
   maxTries: 3
+});
+
+const s = new Storage({
+  type: StorageType.AZURE,
+  accountName: "your-account-name",
+  sasToken: "your-sas-token",
+  blobDomain: "your-blob-domain", // Defaults to blob.core.windows.net
+  bucketName: "the-buck"
 });
 ```
 

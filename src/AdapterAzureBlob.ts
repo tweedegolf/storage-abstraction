@@ -80,7 +80,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       }
       try {
         this._client = new BlobServiceClient(
-          `https://${this.config.accountName as string}.blob.core.windows.net`,
+          `https://${this.config.accountName as string}${this._getBlobDomain()}`,
           this.sharedKeyCredential,
           this.config.options as object
         );
@@ -91,7 +91,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       // option 2: sasToken
       try {
         this._client = new BlobServiceClient(
-          `https://${this.config.accountName}.blob.core.windows.net?${this.config.sasToken}`,
+          `https://${this.config.accountName}${this._getBlobDomain()}?${this.config.sasToken}`,
           new AnonymousCredential(),
           this.config.options as object
         );
@@ -109,7 +109,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       // option 4: password less
       try {
         this._client = new BlobServiceClient(
-          `https://${this.config.accountName as string}.blob.core.windows.net`,
+          `https://${this.config.accountName as string}${this._getBlobDomain()}`,
           new DefaultAzureCredential(),
           this.config.options as object
         );
@@ -327,6 +327,17 @@ export class AdapterAzureBlob extends AbstractAdapter {
     } catch (e) {
       return { value: null, error: e.message };
     }
+  }
+
+  private _getBlobDomain(): string {
+    let blobDomain = ".blob.core.windows.net";
+    if (typeof this.config.blobDomain !== "undefined") {
+      blobDomain = this.config.blobDomain;
+      if (!blobDomain.startsWith(".")) {
+        blobDomain = "." + blobDomain;
+      }
+    }
+    return blobDomain;
   }
 
   // public
