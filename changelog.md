@@ -1,3 +1,7 @@
+# 2.1.6
+
+- updated Google AzureBlob adapter to 1.0.7
+
 # 2.1.5
 
 - updated Google Cloud adapter to 1.0.8
