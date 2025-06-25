@@ -7,7 +7,7 @@
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {
-    "minio": "^8.0.0"
+    "minio": "^8.0.5"
   },
   "scripts": {},
   "keywords": [

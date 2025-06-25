@@ -31,5 +31,5 @@
     "src/template_functional.ts",
     "tests",
     "tests_local"
-  ]
+  ],
 }
