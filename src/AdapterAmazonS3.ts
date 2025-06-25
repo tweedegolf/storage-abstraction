@@ -17,6 +17,8 @@ import {
   ListBucketsCommand,
   PutObjectCommand,
   HeadObjectCommand,
+  GetObjectAttributesCommand,
+  GetObjectAttributesRequest,
 } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
@@ -364,6 +366,30 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   // public
+
+  public async getFileInfo(bucketName: string, fileName: string): Promise<ResultObject> {
+    try {
+      const input: GetObjectAttributesRequest = {
+        Bucket: bucketName, // required
+        Key: fileName, // required
+        // VersionId: "STRING_VALUE",
+        // MaxParts: Number("int"),
+        // PartNumberMarker: "STRING_VALUE",
+        // SSECustomerAlgorithm: "STRING_VALUE",
+        // SSECustomerKey: "STRING_VALUE",
+        // SSECustomerKeyMD5: "STRING_VALUE",
+        // RequestPayer: "requester",
+        // ExpectedBucketOwner: "STRING_VALUE",
+        ObjectAttributes: ["ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"],
+      };
+      const command = new GetObjectAttributesCommand(input);
+      const response = await this._client.send(command);
+      console.log(response);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
 
   get config(): AdapterConfigAmazonS3 {
     return this._config as AdapterConfigAmazonS3;

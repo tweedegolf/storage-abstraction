@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
+import { AdapterAmazonS3 } from "../src/AdapterAmazonS3";
 import { IAdapter, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
 import { saveFile, timeout } from "./util";
@@ -211,22 +212,31 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
   }
 }
 
+async function getFileInfo() {
+  const info = await (storage.getAdapter() as AdapterAmazonS3).getFileInfo(
+    newBucketName2,
+    "image1-path.jpg"
+  );
+}
+
 async function run() {
   await init();
 
   // const r = await storage.serviceClient.config.region();
   // console.log(r);
 
-  const buckets = await listBuckets();
-  if (buckets !== null && buckets.length > 0) {
-    await deleteAllBuckets(buckets, storage);
-  }
+  // const buckets = await listBuckets();
+  // if (buckets !== null && buckets.length > 0) {
+  //   await deleteAllBuckets(buckets, storage);
+  // }
 
   // await bucketExists();
-  // await createBucket();
+  await createBucket();
   // await listBuckets();
 
-  // await addFileFromPath();
+  await addFileFromPath();
+  // await getFileInfo();
+
   // await addFileFromBuffer();
   // await addFileFromStream();
   // await addFileFromPath();
