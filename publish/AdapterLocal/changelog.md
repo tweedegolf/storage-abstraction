@@ -1,3 +1,8 @@
+# 1.0.8
+
+- update glob to 11.0.3
+- update rimraf to 6.0.1
+
 # 1.0.7
 
 - add support for urls (paths) without containing directory (credits: https://github.com/tesirm99)

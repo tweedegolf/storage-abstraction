@@ -14,11 +14,11 @@
     "@google-cloud/storage": "^7.16.0",
     "@nichoth/backblaze-b2": "^1.7.1",
     "minio": "^8.0.5",
-    "rimraf": "^5.0.5"
+    "glob": "^11.0.3",
+    "rimraf": "^6.0.1"
   },
   "devDependencies": {
     "@types/jasmine": "^5.1.8",
-    "@types/glob": "^8.1.0",
     "@types/minimatch": "^5.1.2",
     "@types/node": "^24.0.3",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
@@ -59,11 +59,10 @@
     "testBucketName": "ts-node ./tests_local/testBucketName.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
-    "fix-glob": "ts-node ./fixes/glob/copy.ts",
     "copy": "npm run tsc && ts-node copy.ts",
     "prepublishOnly": "",
     "toc": "markdown-toc -i README.md",
-    "prepare": "npm run toc && npm run fix-glob && npm run copy"
+    "prepare": "npm run toc && npm run copy"
   },
   "keywords": [
     "storage",
