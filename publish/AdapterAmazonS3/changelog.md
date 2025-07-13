@@ -1,3 +1,8 @@
+# 1.0.18
+
+- update @aws-sdk to 3.832.0
+- add check: if the cloud service is not Amazon but another S3 compatible cloud service and the key `useSignedUrl` in the options object of `getFileAsUrl` is not set to `true`, a presigned url will be returned. See issue #72. 
+
 # 1.0.17
 
 - add support for optional key `useSignedUrl` in options object `getFileAsUrl`

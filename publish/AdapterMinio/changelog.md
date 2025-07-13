@@ -1,3 +1,7 @@
+# 1.0.11
+
+- update minio npm package to 8.0.5
+
 # 1.0.10
 
 - update minio npm package to 8.0.0

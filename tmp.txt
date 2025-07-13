@@ -1,3 +1,0 @@
-Yes you are right, this is a flaw. But unfortunately there isn't a quick fix. Cloudflare only supports public buckets if you add a custom domain to your bucket. You could enable and use the Public Development URL but that is not meant to be used for production.
-
-I will add a note to the documentation of the Amazon adapter that if you call `getFileAsUrl` return the Amazon specific public url.

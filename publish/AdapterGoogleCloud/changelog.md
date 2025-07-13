@@ -1,3 +1,7 @@
+# 1.0.9
+
+- update dependencies
+
 # 1.0.8
 
 - fixed gcs signed url generation
