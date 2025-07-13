@@ -39,6 +39,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   protected _config: AdapterConfigAmazonS3;
   protected _configError: string | null = null;
   protected _client: S3Client;
+  protected _isAmazonS3: boolean;
 
   constructor(config?: string | AdapterConfigAmazonS3) {
     super(config);
@@ -100,6 +101,18 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     if (typeof this.config.bucketName !== "undefined") {
       this._bucketName = this.config.bucketName;
     }
+  }
+
+  private async _checkIfAmazonS3(): Promise<boolean> {
+    if(typeof this._isAmazonS3 === "undefined") {
+      if(this._client.config.endpoint) {
+        const endpoint = await this._client.config.endpoint();
+        this._isAmazonS3 = endpoint.hostname.indexOf("amazonaws") !== -1;
+      } else {
+        this._isAmazonS3 = true
+      }
+    }
+    return this._isAmazonS3;
   }
 
   private async getFiles(
@@ -289,9 +302,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     options: Options // e.g. { expiresIn: 3600 }
   ): Promise<ResultObject> {
+    await this._checkIfAmazonS3();
     try {
       let url = "";
-      if (options.useSignedUrl) {
+      if (options.useSignedUrl || this._isAmazonS3 === false) {
         url = await getSignedUrl(
           this._client,
           new GetObjectCommand({

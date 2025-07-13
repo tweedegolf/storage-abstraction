@@ -88,7 +88,9 @@ async function addFileFromPath() {
   const r = await storage.addFileFromPath({
     bucketName: newBucketName2,
     origPath: "./tests/data/image1.jpg",
-    targetPath: "image1-path.jpg",
+    targetPath: "image1-path.jpg"
+    // options: {GrantRead: "true"}
+    // options: {useSignedUrl: "true"}
   });
   console.log(colorLog("addFileFromPath"), r);
 }
@@ -225,10 +227,10 @@ async function run() {
   // const r = await storage.serviceClient.config.region();
   // console.log(r);
 
-  // const buckets = await listBuckets();
-  // if (buckets !== null && buckets.length > 0) {
-  //   await deleteAllBuckets(buckets, storage);
-  // }
+  const buckets = await listBuckets();
+  if (buckets !== null && buckets.length > 0) {
+    await deleteAllBuckets(buckets, storage);
+  }
 
   // await bucketExists();
   await createBucket();
@@ -263,6 +265,7 @@ async function run() {
   // await listBuckets();
 
   // await cleanup();
+
 }
 
 run();

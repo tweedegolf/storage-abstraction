@@ -181,12 +181,12 @@ export class AdapterAzureBlob extends AbstractAdapter {
       }
 
       try {
-        const sasOptions: BlobGenerateSasUrlOptions = {
-          permissions: options.permissions || BlobSASPermissions.parse("r"),
-          expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
-        };
         let url: string;
         if (options.useSignedUrl) {
+          const sasOptions: BlobGenerateSasUrlOptions = {
+            permissions: options.permissions || BlobSASPermissions.parse("r"),
+            expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
+          };
           url = await file.generateSasUrl(sasOptions);
         } else {
           url = file.url;
