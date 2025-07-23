@@ -123,6 +123,12 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
+  protected async _bucketIsPublic(
+    bucketName?: string,
+  ): Promise<ResultObjectBoolean> {
+    return Promise.resolve({ value: true, error: null });
+  }
+
   protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -136,7 +142,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
         readStream = fs.createReadStream(f);
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
@@ -281,6 +287,9 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
     try {
       await this._client.createBucket(name, options);
+      if (options.public === true) {
+        await this._client.bucket(name, options).makePublic();
+      }
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };

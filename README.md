@@ -780,7 +780,7 @@ If you want a signed url to the file you can pass add a key `useSignedUrl` to th
 const signedUrl = getFileAsURL("bucketName", "fileName", { useSignedUrl: true });
 ```
 
-Note that this doesn't work for the backblaze and the local adapter.
+Note that this doesn't work for the Backblaze and the local adapter.
 
 For the local adapter you can use the key `withoutDirectory`:
 

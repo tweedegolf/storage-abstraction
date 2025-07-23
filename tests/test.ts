@@ -65,7 +65,7 @@ async function bucketExists() {
 }
 
 async function createBucket() {
-  const r = await storage.createBucket(newBucketName2);
+  const r = await storage.createBucket(newBucketName2, {public: true});
   console.log(colorLog("createBucket"), r);
 }
 
@@ -88,9 +88,9 @@ async function addFileFromPath() {
   const r = await storage.addFileFromPath({
     bucketName: newBucketName2,
     origPath: "./tests/data/image1.jpg",
-    targetPath: "image1-path.jpg"
+    targetPath: "image1-path.jpg",
     // options: {GrantRead: "true"}
-    // options: {useSignedUrl: "true"}
+    options: {useSignedUrl: "false"}
   });
   console.log(colorLog("addFileFromPath"), r);
 }

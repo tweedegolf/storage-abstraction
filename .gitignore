@@ -2,6 +2,7 @@
 .idea
 .vscode
 gcs.json
+gcs1.json
 minio
 node_modules
 publish/**/src

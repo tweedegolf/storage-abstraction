@@ -19,6 +19,12 @@ import {
   HeadObjectCommand,
   GetObjectAttributesCommand,
   GetObjectAttributesRequest,
+  waitUntilBucketExists,
+  PutBucketPolicyCommand,
+  PutPublicAccessBlockCommand,
+  GetBucketPolicyStatusCommand,
+  GetPublicAccessBlockCommand,
+  GetBucketAclCommand,
 } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
@@ -104,8 +110,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   private async _checkIfAmazonS3(): Promise<boolean> {
-    if(typeof this._isAmazonS3 === "undefined") {
-      if(this._client.config.endpoint) {
+    if (typeof this._isAmazonS3 === "undefined") {
+      if (this._client.config.endpoint) {
         const endpoint = await this._client.config.endpoint();
         this._isAmazonS3 = endpoint.hostname.indexOf("amazonaws") !== -1;
       } else {
@@ -263,6 +269,60 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
+  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+    try {
+      // 1. Check bucket policy status
+      const policyStatusResponse = await this._client.send(
+        new GetBucketPolicyStatusCommand({ Bucket: bucketName })
+      );
+      const isPolicyPublic = policyStatusResponse.PolicyStatus?.IsPublic || false;
+
+      // 2. Check public access block settings
+      const pabResponse = await this._client.send(
+        new GetPublicAccessBlockCommand({ Bucket: bucketName })
+      );
+      const pabConfig = pabResponse.PublicAccessBlockConfiguration || {};
+      const blocksPublicPolicy = pabConfig.BlockPublicPolicy ?? true; // default true if undefined
+
+      // 3. Check bucket ACL for public grants
+      const aclResponse = await this._client.send(new GetBucketAclCommand({ Bucket: bucketName }));
+      const publicGrantUris = [
+        "http://acs.amazonaws.com/groups/global/AllUsers",
+        "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
+      ];
+      const hasPublicAcl = aclResponse.Grants.some((grant) =>
+        grant.Grantee.URI && publicGrantUris.includes(grant.Grantee.URI) &&
+        (grant.Permission === "READ" || grant.Permission === "WRITE")
+      );
+
+      // Bucket is effectively public if:
+      // - Policy allows public
+      // - BlockPublicPolicy is disabled (false)
+      // - OR ACL grants public permissions
+      const isBucketPublic = (isPolicyPublic && !blocksPublicPolicy) || hasPublicAcl;
+      return { value: isBucketPublic, error: null };
+    } catch (e) {
+      if (e.name === "NoSuchPublicAccessBlockConfiguration") {
+        // No Public Access Block means no restrictions by default, check policy and ACL anyway
+        return { value: true, error: null }; // potential public, or run further checks
+      }
+      if (e.name === "NoSuchBucketPolicy") {
+        // No bucket policy means no public policy, but could still have public ACL
+        const aclResponse = await this._client.send(new GetBucketAclCommand({ Bucket: bucketName }));
+        const publicGrantUris = [
+          "http://acs.amazonaws.com/groups/global/AllUsers",
+          "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
+        ];
+        const hasPublicAcl = aclResponse.Grants.some((grant) =>
+          grant.Grantee.URI && publicGrantUris.includes(grant.Grantee.URI) &&
+          (grant.Permission === "READ" || grant.Permission === "WRITE")
+        );
+        return { value: hasPublicAcl, error: null };
+      }
+      return { value: null, error: e.message };
+    }
+  }
+
   protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -305,7 +365,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     await this._checkIfAmazonS3();
     try {
       let url = "";
-      if (options.useSignedUrl || this._isAmazonS3 === false) {
+      if (options.useSignedUrl === true || this._isAmazonS3 === false) {
         url = await getSignedUrl(
           this._client,
           new GetObjectCommand({
@@ -453,7 +513,38 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         ...options,
       };
       const command = new CreateBucketCommand(input);
-      const response = await this._client.send(command);
+      await this._client.send(command);
+      await waitUntilBucketExists({ client: this._client, maxWaitTime: 120 }, { Bucket: bucketName });
+      if (options.public === true) {
+        await this._client.send(
+          new PutPublicAccessBlockCommand({
+            Bucket: bucketName,
+            PublicAccessBlockConfiguration: {
+              BlockPublicAcls: false,
+              IgnorePublicAcls: false,
+              BlockPublicPolicy: false,       // DISABLE BlockPublicPolicy
+              RestrictPublicBuckets: false,
+            },
+          })
+        );
+        const publicReadPolicy = {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Sid: "AllowPublicRead",
+              Effect: "Allow",
+              Principal: "*",
+              Action: ["s3:GetObject"],
+              Resource: [`arn:aws:s3:::${bucketName}/*`]
+            }
+          ]
+        };
+        await this._client.send(new PutBucketPolicyCommand({
+          Bucket: bucketName,
+          Policy: JSON.stringify(publicReadPolicy)
+        }));
+      }
+      // const response = await this._client.send(command);
       // console.log(response.Location, response.Location.indexOf(bucketName));
       /*
       console.log(response);

@@ -16,7 +16,7 @@ export abstract class AbstractAdapter implements IAdapter {
   protected _bucketName: string = null;
   protected _client: any = null; // eslint-disable-line
 
-  constructor(config: string | AdapterConfig) {}
+  constructor(config: string | AdapterConfig) { }
 
   get type(): string {
     return this._type;
@@ -80,30 +80,79 @@ export abstract class AbstractAdapter implements IAdapter {
     return await this.addFile(params);
   }
 
-  protected _getFileAndBucket(
+  // protected _getFileAndBucket(
+  //   arg1: string,
+  //   arg2?: string
+  // ): { bucketName: string; fileName: string; error: string } {
+  //   let bucketName: string = null;
+  //   let fileName: string = null;
+  //   if (typeof arg2 === "string") {
+  //     bucketName = arg1;
+  //     fileName = arg2;
+  //   } else if (typeof arg2 === "undefined") {
+  //     fileName = arg1;
+  //     if (this._bucketName === null) {
+  //       return {
+  //         bucketName,
+  //         fileName,
+  //         error: "no bucket selected",
+  //       };
+  //     }
+  //     bucketName = this._bucketName;
+  //   }
+  //   return {
+  //     bucketName,
+  //     fileName,
+  //     error: null,
+  //   };
+  // }
+
+  /**
+   * 
+   * @param arg1 can be bucketName or fileName
+   * @param arg2 can be undefined, fileName or options
+   * @param arg3 can be undefined or options
+   * @returns 
+   */
+  protected _getFileAndBucketAndOptions(
     arg1: string,
-    arg2?: string
-  ): { bucketName: string; fileName: string; error: string } {
+    arg2?: string | object | boolean,
+    arg3?: object | boolean,
+  ): { bucketName: string; fileName: string; options: object | boolean, error: string } {
     let bucketName: string = null;
     let fileName: string = null;
-    if (typeof arg2 === "string") {
-      bucketName = arg1;
-      fileName = arg2;
-    } else if (typeof arg2 === "undefined") {
-      fileName = arg1;
-      if (this._bucketName === null) {
-        return {
-          bucketName,
-          fileName,
-          error: "no bucket selected",
-        };
+    let options: object | boolean = null;
+    let error = null;
+    if (typeof arg1 === "string") {
+      if (typeof arg2 === "string") {
+        bucketName = arg1;
+        fileName = arg2;
+        if (typeof arg3 === "object") {
+          options = arg3;
+        } else if (typeof arg3 === "boolean") {
+          options = arg3;
+        }
+      } else if (typeof arg2 === "undefined" || typeof arg2 === "object") {
+        bucketName = this._bucketName;
+        if (bucketName === null) {
+          error = "no bucket selected";
+        } else {
+          fileName = arg1;
+          if (typeof arg2 === "object") {
+            options = arg2;
+          } else if (typeof arg2 === "boolean") {
+            options = arg2;
+          }
+        }
+      } else {
+        error = "please provide valid arguments"
       }
-      bucketName = this._bucketName;
     }
     return {
       bucketName,
       fileName,
-      error: null,
+      options,
+      error,
     };
   }
 
@@ -114,6 +163,8 @@ export abstract class AbstractAdapter implements IAdapter {
   protected abstract _deleteBucket(name: string): Promise<ResultObject>;
 
   protected abstract _bucketExists(name: string): Promise<ResultObjectBoolean>;
+
+  protected abstract _bucketIsPublic(name: string): Promise<ResultObjectBoolean>;
 
   protected abstract _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles>;
 
@@ -135,6 +186,18 @@ export abstract class AbstractAdapter implements IAdapter {
   ): Promise<ResultObjectStream>;
 
   protected abstract _getFileAsURL(
+    bucketName: string,
+    fileName: string,
+    options: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject>;
+
+  protected abstract _getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject>;
+
+  protected abstract _getPresignedURL(
     bucketName: string,
     fileName: string,
     options: Options // e.g. { expiresIn: 3600 }
@@ -192,14 +255,24 @@ export abstract class AbstractAdapter implements IAdapter {
     }
     if (typeof name === "undefined") {
       if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
+        return { value: null, error: "no bucket selected" };
       }
       name = this._bucketName;
     }
     return this._bucketExists(name);
+  }
+
+  public async bucketIsPublic(name?: string): Promise<ResultObjectBoolean> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+    if (typeof name === "undefined") {
+      if (this._bucketName === null) {
+        return { value: null, error: "no bucket selected" };
+      }
+      name = this._bucketName;
+    }
+    return this._bucketIsPublic(name);
   }
 
   public async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
@@ -214,10 +287,7 @@ export abstract class AbstractAdapter implements IAdapter {
 
     if (typeof arg1 === "number") {
       if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
+        return { value: null, error: "no bucket selected" };
       }
       bucketName = this._bucketName;
       numFiles = arg1;
@@ -228,10 +298,7 @@ export abstract class AbstractAdapter implements IAdapter {
       }
     } else {
       if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
+        return { value: null, error: "no bucket selected" };
       }
       bucketName = this._bucketName;
     }
@@ -244,19 +311,12 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this._configError !== null) {
       return { value: null, error: this.configError };
     }
-
-    if (typeof params.bucketName === "undefined") {
-      if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
-      }
-      params.bucketName = this._bucketName;
+    const { bucketName, fileName: _fn, options, error } = this._getFileAndBucketAndOptions(params.bucketName, params.options);
+    if (error !== null) {
+      return { error, value: null };
     }
-    if (typeof params.options !== "object") {
-      params.options = {};
-    }
+    params.bucketName = bucketName;
+    params.options = options === null ? {} : options as object;
     return this._addFile(params);
   }
 
@@ -277,32 +337,17 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this.configError !== null) {
       return { error: this.configError, value: null };
     }
-
-    let bucketName: string;
-    let fileName: string;
-    let options: StreamOptions = {};
-    if (typeof arg1 === "string" && typeof arg2 === "string") {
-      bucketName = arg1;
-      fileName = arg2;
-      if (typeof arg3 !== "undefined") {
-        options = arg3;
-      }
-    } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
-      if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
-      }
-      bucketName = this._bucketName;
-      fileName = arg1;
-      if (typeof arg2 !== "undefined") {
-        options = arg2;
-      }
+    const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(arg1, arg2, arg3);
+    if (error !== null) {
+      return { error, value: null };
     }
-    return this._getFileAsStream(bucketName, fileName, options);
+    return this._getFileAsStream(bucketName, fileName, options as StreamOptions);
   }
 
+  /**
+   * 
+   * @deprecated: please use getPublicURL or getPresignedURL
+   */
   public async getFileAsURL(
     bucketName: string,
     fileName: string,
@@ -317,30 +362,35 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this._configError !== null) {
       return { value: null, error: this.configError };
     }
-
-    let bucketName: string;
-    let fileName: string;
-    let options: Options = {};
-    if (typeof arg1 === "string" && typeof arg2 === "string") {
-      bucketName = arg1;
-      fileName = arg2;
-      if (typeof arg3 !== "undefined") {
-        options = arg3;
-      }
-    } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
-      if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "no bucket selected",
-        };
-      }
-      bucketName = this._bucketName;
-      fileName = arg1;
-      if (typeof arg2 !== "undefined") {
-        options = arg2;
-      }
+    const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(arg1, arg2, arg3);
+    if (error !== null) {
+      return { error, value: null };
     }
-    return this._getFileAsURL(bucketName, fileName, options);
+    return this._getFileAsURL(bucketName, fileName, options as Options);
+  }
+
+  public async getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject> {
+    const { bucketName: bn, fileName: fn, options: opt, error } = this._getFileAndBucketAndOptions(bucketName, fileName, options);
+    if (error !== null) {
+      return { error, value: null };
+    }
+    return this._getPublicURL(bn, fn, opt as Options);
+  }
+
+  public async getPresignedURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options // e.g. { expiresIn: 3600 }
+  ): Promise<ResultObject> {
+    const { bucketName: bn, fileName: fn, options: opt, error } = this._getFileAndBucketAndOptions(bucketName, fileName, options);
+    if (error !== null) {
+      return { error, value: null };
+    }
+    return this._getPresignedURL(bn, fn, opt as Options);
   }
 
   public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
@@ -349,7 +399,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-    const { bucketName, fileName, error } = this._getFileAndBucket(arg1, arg2);
+    const { bucketName, fileName, options: _o, error } = this._getFileAndBucketAndOptions(arg1, arg2);
     if (error !== null) {
       return { value: null, error };
     }
@@ -362,7 +412,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-    const { bucketName, fileName, error } = this._getFileAndBucket(arg1, arg2);
+    const { bucketName, fileName, options: _o, error } = this._getFileAndBucketAndOptions(arg1, arg2);
     if (error !== null) {
       return { value: null, error };
     }
@@ -383,30 +433,10 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-
-    let bucketName: string;
-    let fileName: string;
-    let allVersions: boolean = false;
-
-    if (typeof arg1 === "string" && typeof arg2 === "string") {
-      bucketName = arg1;
-      fileName = arg2;
-      if (typeof arg3 === "boolean") {
-        allVersions = arg3;
-      }
-    } else if (typeof arg1 === "string" && typeof arg2 !== "string") {
-      if (this._bucketName === null) {
-        return {
-          value: null,
-          error: "No bucket selected",
-        };
-      }
-      bucketName = this._bucketName;
-      fileName = arg1;
-      if (typeof arg2 === "boolean") {
-        allVersions = arg2;
-      }
+    const { bucketName, fileName, options: allVersions, error } = this._getFileAndBucketAndOptions(arg1, arg2, arg3);
+    if (error !== null) {
+      return { error, value: null };
     }
-    return this._removeFile(bucketName, fileName, allVersions);
+    return this._removeFile(bucketName, fileName, allVersions as boolean);
   }
 }
