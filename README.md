@@ -694,7 +694,7 @@ The key `bucketName` is optional; if you don't pass a value the selected bucket 
 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned. 
 
-[!WARNING] 
+> [!WARNING] 
 
 In a future version the return type of this function will change to:
 
@@ -744,7 +744,7 @@ If the call is successful `value` will hold the public url to the file (if the b
 
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
-[!WARNING] 
+> [!WARNING] 
 
 In a future version the return type of this function will change to:
 
@@ -794,7 +794,7 @@ If the call is successful `value` will hold the public url to the file (if the b
 
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
-[!WARNING] 
+> [!WARNING] 
 
 In a future version the return type of this function will change to:
 
@@ -862,7 +862,7 @@ const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true
 // bucketName/fileName.jpg
 ```
 
-[!WARNING] 
+> [!WARNING] 
 
 This method is deprecated: please use `getPublicURL` or `getPresignedURL`.
 
