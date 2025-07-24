@@ -795,15 +795,14 @@ If the call is successful `value` will hold the public url to the file (if the b
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
 > [!WARNING] 
-
-In a future version the return type of this function will change to:
-
-```typescript
-export interface ResultObjectBoolean {
-  value: boolean | null;
-  error: string | null;
-}
-```
+> In a future version the return type of this function will change to:
+>
+> ```typescript
+> export interface ResultObjectBoolean {
+>   value: boolean | null;
+>   error: string | null;
+> }
+> ```
 
 You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
 
