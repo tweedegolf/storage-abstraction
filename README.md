@@ -863,8 +863,7 @@ const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true
 ```
 
 > [!WARNING] 
-
-This method is deprecated: please use `getPublicURL` or `getPresignedURL`.
+> This method is deprecated: please use `getPublicURL` or `getPresignedURL`.
 
 ### getPublicURL
 
