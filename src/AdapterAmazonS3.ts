@@ -109,7 +109,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  private async _checkIfAmazonS3(): Promise<boolean> {
+  private async checkIfAmazonS3(): Promise<boolean> {
     if (typeof this._isAmazonS3 === "undefined") {
       if (this._client.config.endpoint) {
         const endpoint = await this._client.config.endpoint();
@@ -158,53 +158,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   // protected, called by methods of public API via AbstractAdapter
-
-  protected async _getFileAsStream(
-    bucketName: string,
-    fileName: string,
-    options: StreamOptions
-  ): Promise<ResultObjectStream> {
-    const { start, end } = options;
-    let range = `bytes=${start}-${end}`;
-    if (typeof start === "undefined" && typeof end === "undefined") {
-      range = undefined;
-    } else if (typeof start === "undefined") {
-      range = `bytes=0-${end}`;
-    } else if (typeof end === "undefined") {
-      range = `bytes=${start}-`;
-    }
-
-    try {
-      const params = {
-        Bucket: bucketName,
-        Key: fileName,
-        Range: range,
-      };
-      const command = new GetObjectCommand(params);
-      const response = await this._client.send(command);
-      return { value: response.Body as Readable, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions: boolean
-  ): Promise<ResultObject> {
-    try {
-      const input = {
-        Bucket: bucketName,
-        Key: fileName,
-      };
-      const command = new DeleteObjectCommand(input);
-      const response = await this._client.send(command);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
 
   protected async _clearBucket(bucketName: string): Promise<ResultObject> {
     let objects: Array<{ Key: string; VersionId?: string }>;
@@ -266,6 +219,19 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return { value: null, error: `The specified bucket does not exist: ${bucketName}` };
       }
       return { value: null, error: e.message };
+    }
+  }
+
+  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+    try {
+      const input = {
+        Bucket: bucketName,
+      };
+      const command = new HeadBucketCommand(input);
+      await this._client.send(command);
+      return { value: true, error: null };
+    } catch (e) {
+      return { value: false, error: null };
     }
   }
 
@@ -351,7 +317,57 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       };
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
-      return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
+      if (params.options.usePresignedURL === true) {
+        return this.getPresignedURL(params.bucketName, params.targetPath, params.options)
+      }
+      return this.getPublicURL(params.bucketName, params.targetPath, params.options)
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _getFileAsStream(
+    bucketName: string,
+    fileName: string,
+    options: StreamOptions
+  ): Promise<ResultObjectStream> {
+    const { start, end } = options;
+    let range = `bytes=${start}-${end}`;
+    if (typeof start === "undefined" && typeof end === "undefined") {
+      range = undefined;
+    } else if (typeof start === "undefined") {
+      range = `bytes=0-${end}`;
+    } else if (typeof end === "undefined") {
+      range = `bytes=${start}-`;
+    }
+
+    try {
+      const params = {
+        Bucket: bucketName,
+        Key: fileName,
+        Range: range,
+      };
+      const command = new GetObjectCommand(params);
+      const response = await this._client.send(command);
+      return { value: response.Body as Readable, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _removeFile(
+    bucketName: string,
+    fileName: string,
+    allVersions: boolean
+  ): Promise<ResultObject> {
+    try {
+      const input = {
+        Bucket: bucketName,
+        Key: fileName,
+      };
+      const command = new DeleteObjectCommand(input);
+      const response = await this._client.send(command);
+      return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -365,7 +381,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     options: Options // e.g. { expiresIn: 3600 }
   ): Promise<ResultObject> {
-    await this._checkIfAmazonS3();
+    await this.checkIfAmazonS3();
     try {
       let url = "";
       if (options.useSignedUrl === true || this._isAmazonS3 === false) {
@@ -428,19 +444,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: response.ContentLength, error: null };
     } catch (e) {
       return { value: null, error: e.message };
-    }
-  }
-
-  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
-    try {
-      const input = {
-        Bucket: bucketName,
-      };
-      const command = new HeadBucketCommand(input);
-      await this._client.send(command);
-      return { value: true, error: null };
-    } catch (e) {
-      return { value: false, error: null };
     }
   }
 

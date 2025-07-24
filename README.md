@@ -528,6 +528,24 @@ Returns a list of all files in the bucket; for each file a tuple is returned: th
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
+### bucketIsPublic
+
+```typescript
+bucketIsPublic(bucketName?: string): Promise<ResultObjectBoolean>;
+```
+
+return type:
+
+```typescript
+export type ResultObjectBoolean = {
+  error: string | null;
+  value: boolean | null;
+};
+```
+Check if the bucket is publicly accessible.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
 ### bucketExists
 
 ```typescript
@@ -656,6 +674,7 @@ export type FilePathParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
+    useSignedURL?: boolean;
   };
 };
 ```
@@ -673,7 +692,20 @@ Copies a file from a local path `origPath` to the provided path `targetPath` in 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned. 
+
+[!WARNING] 
+
+In a future version the return type of this function will change to:
+
+```typescript
+export interface ResultObjectBoolean {
+  value: boolean | null;
+  error: string | null;
+}
+```
+
+You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
 
 ### addFileFromBuffer
 
@@ -690,6 +722,7 @@ export type FileBufferParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
+    useSignedURL?: boolean;
   };
 };
 ```
@@ -707,9 +740,22 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned.
 
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
+
+[!WARNING] 
+
+In a future version the return type of this function will change to:
+
+```typescript
+export interface ResultObjectBoolean {
+  value: boolean | null;
+  error: string | null;
+}
+```
+
+You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
 
 ### addFileFromStream
 
@@ -726,6 +772,7 @@ export type FileStreamParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
+    useSignedURL?: boolean;
   };
 };
 ```
@@ -743,14 +790,130 @@ Allows you to stream a file directly to the storage. The value for `targetPath` 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned.
 
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
-### getFileAsURL
+[!WARNING] 
+
+In a future version the return type of this function will change to:
 
 ```typescript
-getFileAsURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObjectStream>;
+export interface ResultObjectBoolean {
+  value: boolean | null;
+  error: string | null;
+}
+```
+
+You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
+
+### getFileAsURL (deprecated)
+
+```typescript
+/**
+ * @deprecated: use getPublicURL or getPresignedURL
+ */
+getFileAsURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObject>;
+```
+
+param type:
+
+```typescript
+export Options {
+  [id: string]: any; // eslint-disable-line
+  withoutDirectory?: boolean // only for the local adapter
+}
+```
+
+return type:
+
+```typescript
+export type ResultObject = {
+  value: string | null;
+  error: string | null;
+};
+```
+
+Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+If you want a presigned url to the file you can pass add a key `useSignedUrl` to the options object:
+
+```typescript
+const signedUrl = getFileAsURL("bucketName", "fileName", { useSignedUrl: true });
+```
+
+Note that the local adapter can't return a presigned url.
+
+For the local adapter you can use the key `withoutDirectory` in the options object:
+
+```typescript
+const s = new Storage({
+  type: StorageType.LOCAL,
+  directory: "./your_working_dir/sub_dir",
+  bucketName: "bucketName",
+});
+
+const url1 = getFileAsURL("bucketName", "fileName.jpg");
+// your_working_dir/sub_dir/bucketName/fileName.jpg
+
+const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true });
+// bucketName/fileName.jpg
+```
+
+[!WARNING] 
+
+This method is deprecated: please use `getPublicURL` or `getPresignedURL`.
+
+### getPublicURL
+
+```typescript
+getPublicURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObject>;
+```
+
+param type:
+
+```typescript
+export Options {
+  [id: string]: any; // eslint-disable-line
+  withoutDirectory?: boolean // only for the local adapter
+}
+```
+
+return type:
+
+```typescript
+export type ResultObject = {
+  value: string | null;
+  error: string | null;
+};
+```
+
+Returns the public url of the file. Returns an error if the bucket is not public.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+For the local adapter you can use the key `withoutDirectory` in the options object:
+
+```typescript
+const s = new Storage({
+  type: StorageType.LOCAL,
+  directory: "./your_working_dir/sub_dir",
+  bucketName: "bucketName",
+});
+
+const url1 = getFileAsURL("bucketName", "fileName.jpg");
+// your_working_dir/sub_dir/bucketName/fileName.jpg
+
+const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true });
+// bucketName/fileName.jpg
+```
+
+### getPresignedURL
+
+```typescript
+getPresignedURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObject>;
 ```
 
 param type:
@@ -770,33 +933,11 @@ export type ResultObject = {
 };
 ```
 
-Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
+Returns a presigned url of the file. 
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If you want a signed url to the file you can pass add a key `useSignedUrl` to the options object:
-
-```typescript
-const signedUrl = getFileAsURL("bucketName", "fileName", { useSignedUrl: true });
-```
-
-Note that this doesn't work for the Backblaze and the local adapter.
-
-For the local adapter you can use the key `withoutDirectory`:
-
-```typescript
-const s = new Storage({
-  type: StorageType.LOCAL,
-  directory: "./your_working_dir/sub_dir",
-  bucketName: "bucketName",
-});
-
-const url1 = getFileAsURL("bucketName", "fileName.jpg");
-// your_working_dir/sub_dir/bucketName/fileName.jpg
-
-const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true });
-// bucketName/fileName.jpg
-```
+Because the local adapter does not support presigned urls, this method behaves excactly the same as `getPublicURL`, see previous section.
 
 ### getFileAsStream
 
