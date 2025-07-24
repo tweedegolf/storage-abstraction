@@ -1,6 +1,11 @@
-# 2.1.7
+# 2.2.0
 
 - updated dependencies of adapters
+- deprecated `getFileAsURL`
+- added `getPublicURL` and `getPresignedURL`
+- added `bucketIsPublic`
+- added extra key to the options object of all `addFile` functions:  `useSignedURL` (boolean) &rarr; returns the presigned url instead of the public url when set to `true`
+- added extra key to the options object of `createBucket`:  `public` (boolean) &rarr; creates a public bucket when set to `true`
 
 # 2.1.6
 
