@@ -285,6 +285,7 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: this.configError };
     }
     const { bucketName, fileName: _fn, options, error } = this._getFileAndBucketAndOptions(params.bucketName, params.options);
+    console.log(bucketName, _fn, options)
     if (error !== null) {
       return { error, value: null };
     }

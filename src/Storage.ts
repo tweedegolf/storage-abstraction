@@ -201,6 +201,26 @@ export class Storage implements IAdapter {
     return this.adapter.getFileAsURL(arg1, arg2, arg3);
   }
 
+  async getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options
+  ): Promise<ResultObject>;
+  async getPublicURL(fileName: string, options?: Options): Promise<ResultObject>;
+  async getPublicURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
+    return this.adapter.getPublicURL(arg1, arg2, arg3);
+  }
+
+  async getPresignedURL(
+    bucketName: string,
+    fileName: string,
+    options?: Options
+  ): Promise<ResultObject>;
+  async getPresignedURL(fileName: string, options?: Options): Promise<ResultObject>;
+  async getPresignedURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
+    return this.adapter.getPresignedURL(arg1, arg2, arg3);
+  }
+
   async removeFile(
     bucketName: string,
     fileName: string,
@@ -229,6 +249,10 @@ export class Storage implements IAdapter {
 
   async bucketExists(bucketName?: string): Promise<ResultObjectBoolean> {
     return this.adapter.bucketExists(bucketName);
+  }
+
+  async bucketIsPublic(bucketName?: string): Promise<ResultObjectBoolean> {
+    return this.adapter.bucketIsPublic(bucketName);
   }
 
   async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;

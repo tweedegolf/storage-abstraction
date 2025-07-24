@@ -65,8 +65,12 @@ async function bucketExists() {
 }
 
 async function createBucket() {
-  const r = await storage.createBucket(newBucketName2, {public: true});
+  const r = await storage.createBucket(newBucketName1);
   console.log(colorLog("createBucket"), r);
+}
+async function createPublicBucket() {
+  const r = await storage.createBucket(newBucketName2, { public: true });
+  console.log(colorLog("createPublicBucket"), r);
 }
 
 async function clearBucket() {
@@ -84,13 +88,14 @@ async function listFiles() {
   console.log(colorLog("listFiles"), r);
 }
 
-async function addFileFromPath() {
+async function addFileFromPath(bucketName: string) {
   const r = await storage.addFileFromPath({
-    bucketName: newBucketName2,
+    // bucketName: typeof bucketName === "undefined" ? newBucketName2 : bucketName,
+    bucketName,
     origPath: "./tests/data/image1.jpg",
     targetPath: "image1-path.jpg",
     // options: {GrantRead: "true"}
-    options: {useSignedUrl: "false"}
+    options: { useSignedUrl: "false" }
   });
   console.log(colorLog("addFileFromPath"), r);
 }
@@ -224,6 +229,8 @@ async function getFileInfo() {
 async function run() {
   await init();
 
+  let r;
+
   // const r = await storage.serviceClient.config.region();
   // console.log(r);
 
@@ -233,10 +240,23 @@ async function run() {
   }
 
   // await bucketExists();
-  await createBucket();
+  r = await storage.createBucket("aap888");
+  console.log(r);
+  r = await storage.bucketIsPublic("aap888");
+  console.log(r);
+  await addFileFromPath("aap888")
+  r = await storage.getPublicURL("aap888", "image1-path.jpg");
+  console.log(r);
+
+
+  // r = await storage.createBucket("aap8882", { public: true });
+  // console.log(r);
+  // r = await storage.bucketIsPublic("aap8882");
+  // console.log(r);
+
   // await listBuckets();
 
-  await addFileFromPath();
+  // await addFileFromPath();
   // await getFileInfo();
 
   // await addFileFromBuffer();

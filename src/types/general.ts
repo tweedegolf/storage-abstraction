@@ -209,7 +209,7 @@ export interface IAdapter {
    */
   getPublicURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
   getPublicURL(fileName: string, options?: Options): Promise<ResultObject>;
-  // getPublicURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+  getPublicURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
@@ -218,7 +218,7 @@ export interface IAdapter {
    */
   getPresignedURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
   getPresignedURL(fileName: string, options?: Options): Promise<ResultObject>;
-  // getPresignedURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+  getPresignedURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
 
   /**
    * @param {string} bucketName name of the bucket where the file is stored

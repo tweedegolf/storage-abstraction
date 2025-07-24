@@ -384,7 +384,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     await this.checkIfAmazonS3();
     try {
       let url = "";
-      if (options.useSignedUrl === true || this._isAmazonS3 === false) {
+      if (options.useSignedUrl === true) {
         url = await getSignedUrl(
           this._client,
           new GetObjectCommand({
@@ -393,6 +393,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           }),
           options
         );
+      } else if (this._isAmazonS3 === false) {
+        return { value: null, error: "Sorry, can not create a public url for non-amazon S3 compatible cloud storage." };
       } else {
         url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
       }
@@ -407,7 +409,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    const result = await this._bucketIsPublic(bucketName);
+    if (result.error !== null) {
+      return Promise.resolve({ value: null, error: result.error });
+    } else if (result.value === false) {
+      return Promise.resolve({ value: null, error: `Bucket "${bucketName}" is not public!` });
+    } else {
+      return Promise.resolve({ value: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`, error: null });
+    }
   }
 
   protected async _getPresignedURL(
@@ -415,7 +424,19 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    try {
+      const url = await getSignedUrl(
+        this._client,
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+        }),
+        options
+      );
+      return Promise.resolve({ value: url, error: null });
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
