@@ -27,7 +27,7 @@ const getType = (): string => "string";
 
 const getConfigError = (): string => "string";
 
-const getServiceClient = (): any => {}; // eslint-disable-line
+const getServiceClient = (): any => { }; // eslint-disable-line
 
 const createBucket = async (name: string, options?: Options): Promise<ResultObject> => {
   const error = validateName(name);
@@ -75,6 +75,9 @@ const getFileAsStream = async (
   return { value: fs.createReadStream(""), error: null };
 };
 
+/**
+ * @deprecated: use getPublicURL or getPresignedURL
+ */
 const getFileAsURL = async (
   arg1: string,
   arg2: Options | string,
@@ -82,6 +85,22 @@ const getFileAsURL = async (
 ): Promise<ResultObject> => {
   return { value: "url", error: null };
 };
+
+const getPublicURL = async (
+  arg1: string,
+  arg2: Options | string,
+  arg3?: Options
+): Promise<ResultObject> => {
+  return Promise.resolve({ value: "url", error: null });
+}
+
+const getPresignedURL = async (
+  arg1: string,
+  arg2: Options | string,
+  arg3?: Options
+): Promise<ResultObject> => {
+  return Promise.resolve({ value: "url", error: null });
+}
 
 const removeFile = async (
   arg1: string,
@@ -107,6 +126,10 @@ const bucketExists = async (bucketName: string): Promise<ResultObjectBoolean> =>
   return { value: true, error: null };
 };
 
+const bucketIsPublic = async (bucketName?: string): Promise<ResultObjectBoolean> => {
+  return { value: true, error: null };
+};
+
 const adapter: IAdapter = {
   get type() {
     return getType();
@@ -123,8 +146,8 @@ const adapter: IAdapter = {
   get bucketName() {
     return getServiceClient();
   },
-  set(bucketName: string): void {},
-  setSelectedBucket(bucketName: string): void {},
+  set(bucketName: string): void { },
+  setSelectedBucket(bucketName: string): void { },
   getSelectedBucket(): string {
     return "bucketName";
   },
@@ -142,10 +165,13 @@ const adapter: IAdapter = {
   addFileFromStream,
   getFileAsStream,
   getFileAsURL,
+  getPublicURL,
+  getPresignedURL,
   removeFile,
   listFiles,
   sizeOf,
   bucketExists,
+  bucketIsPublic,
   fileExists,
 };
 

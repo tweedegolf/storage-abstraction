@@ -119,7 +119,7 @@ export class AdapterLocal extends AbstractAdapter {
         return { value: dest, error: null };
       } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
@@ -202,6 +202,9 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
+  /**
+   * @deprecated: use getPublicURL or getPresignedURL
+   */
   protected async _getFileAsURL(
     bucketName: string,
     fileName: string,
@@ -221,6 +224,22 @@ export class AdapterLocal extends AbstractAdapter {
     } catch (e) {
       return { value: null, error: e.message };
     }
+  }
+
+  protected async _getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
+    return Promise.resolve({ value: "", error: null });
+  }
+
+  protected async _getPresignedURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
+    return Promise.resolve({ value: "", error: null });
   }
 
   protected async _removeFile(
@@ -261,6 +280,12 @@ export class AdapterLocal extends AbstractAdapter {
       // error only means that the directory does not exist
       return { value: false, error: null };
     }
+  }
+
+  protected async _bucketIsPublic(
+    bucketName?: string,
+  ): Promise<ResultObjectBoolean> {
+    return Promise.resolve({ value: true, error: null });
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {

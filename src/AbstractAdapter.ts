@@ -80,33 +80,6 @@ export abstract class AbstractAdapter implements IAdapter {
     return await this.addFile(params);
   }
 
-  // protected _getFileAndBucket(
-  //   arg1: string,
-  //   arg2?: string
-  // ): { bucketName: string; fileName: string; error: string } {
-  //   let bucketName: string = null;
-  //   let fileName: string = null;
-  //   if (typeof arg2 === "string") {
-  //     bucketName = arg1;
-  //     fileName = arg2;
-  //   } else if (typeof arg2 === "undefined") {
-  //     fileName = arg1;
-  //     if (this._bucketName === null) {
-  //       return {
-  //         bucketName,
-  //         fileName,
-  //         error: "no bucket selected",
-  //       };
-  //     }
-  //     bucketName = this._bucketName;
-  //   }
-  //   return {
-  //     bucketName,
-  //     fileName,
-  //     error: null,
-  //   };
-  // }
-
   /**
    * 
    * @param arg1 can be bucketName or fileName
@@ -341,7 +314,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { error, value: null };
     }
-    return this._getFileAsStream(bucketName, fileName, options as StreamOptions);
+    return this._getFileAsStream(bucketName, fileName, options === null ? {} : options as StreamOptions);
   }
 
   /**
@@ -366,31 +339,35 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { error, value: null };
     }
-    return this._getFileAsURL(bucketName, fileName, options as Options);
+    return this._getFileAsURL(bucketName, fileName, options === null ? {} : options as Options);
   }
 
   public async getPublicURL(
     bucketName: string,
     fileName: string,
     options?: Options // e.g. { expiresIn: 3600 }
-  ): Promise<ResultObject> {
-    const { bucketName: bn, fileName: fn, options: opt, error } = this._getFileAndBucketAndOptions(bucketName, fileName, options);
+  ): Promise<ResultObject>;
+  public async getPublicURL(fileName: string, options?: Options): Promise<ResultObject>;
+  public async getPublicURL(arg1: string, arg2?: string | Options, arg3?: Options): Promise<ResultObject> {
+    const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(arg1, arg2, arg3);
     if (error !== null) {
       return { error, value: null };
     }
-    return this._getPublicURL(bn, fn, opt as Options);
+    return this._getPublicURL(bucketName, fileName, options === null ? {} : options as Options);
   }
 
   public async getPresignedURL(
     bucketName: string,
     fileName: string,
     options?: Options // e.g. { expiresIn: 3600 }
-  ): Promise<ResultObject> {
-    const { bucketName: bn, fileName: fn, options: opt, error } = this._getFileAndBucketAndOptions(bucketName, fileName, options);
+  ): Promise<ResultObject>;
+  public async getPresignedURL(fileName: string, options?: Options): Promise<ResultObject>;
+  public async getPresignedURL(arg1: string, arg2?: string | Options, arg3?: Options): Promise<ResultObject> {
+    const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(arg1, arg2, arg3);
     if (error !== null) {
       return { error, value: null };
     }
-    return this._getPresignedURL(bn, fn, opt as Options);
+    return this._getPresignedURL(bucketName, fileName, options === null ? {} : options as Options);
   }
 
   public async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
@@ -437,6 +414,6 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { error, value: null };
     }
-    return this._removeFile(bucketName, fileName, allVersions as boolean);
+    return this._removeFile(bucketName, fileName, allVersions === null ? false : allVersions as boolean);
   }
 }

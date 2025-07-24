@@ -296,6 +296,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
+  /**
+   * @deprecated: use getPublicURL or getPresignedURL
+   */
   protected async _getFileAsURL(
     bucketName: string,
     fileName: string,
@@ -308,6 +311,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     const url = `${this._client.downloadUrl}/file/${bucketName}/${fileName}`;
     return { value: url, error: null };
+  }
+
+  protected async _getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
+    return Promise.resolve({ value: "", error: null });
+  }
+
+  protected async _getPresignedURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
+    return Promise.resolve({ value: "", error: null });
   }
 
   protected async _removeFile(
@@ -462,6 +481,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     } else {
       return { value: null, error: data.error };
     }
+  }
+
+  protected async _bucketIsPublic(
+    bucketName?: string,
+  ): Promise<ResultObjectBoolean> {
+    return Promise.resolve({ value: true, error: null });
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {

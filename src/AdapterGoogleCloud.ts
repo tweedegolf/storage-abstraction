@@ -57,6 +57,10 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   // protected, called by methods of public API via AbstractAdapter
+
+  /**
+   * @deprecated: use getPublicURL or getPresignedURL
+   */
   protected async _getFileAsURL(
     bucketName: string,
     fileName: string,
@@ -78,6 +82,22 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     } catch (e) {
       return { value: null, error: e.message };
     }
+  }
+
+  protected async _getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
+    return Promise.resolve({ value: "", error: null });
+  }
+
+  protected async _getPresignedURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
+    return Promise.resolve({ value: "", error: null });
   }
 
   protected async _getFileAsStream(

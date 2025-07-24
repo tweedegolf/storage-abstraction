@@ -193,12 +193,32 @@ export interface IAdapter {
   ): Promise<ResultObjectStream>;
 
   /**
+   * @deprecated: use getPublicURL or getPresignedURL
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
+   * @param options
    */
   getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
   getFileAsURL(fileName: string, options?: Options): Promise<ResultObject>;
   getFileAsURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+
+  /**
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
+   * @param options
+   */
+  getPublicURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
+  getPublicURL(fileName: string, options?: Options): Promise<ResultObject>;
+  // getPublicURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+
+  /**
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
+   * @param options
+   */
+  getPresignedURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
+  getPresignedURL(fileName: string, options?: Options): Promise<ResultObject>;
+  // getPresignedURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
 
   /**
    * @param {string} bucketName name of the bucket where the file is stored
@@ -232,6 +252,12 @@ export interface IAdapter {
    * @returns boolean
    */
   bucketExists(bucketName?: string): Promise<ResultObjectBoolean>;
+
+  /**
+   * @param bucketName name of the bucket
+   * @returns boolean
+   */
+  bucketIsPublic(bucketName?: string): Promise<ResultObjectBoolean>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
