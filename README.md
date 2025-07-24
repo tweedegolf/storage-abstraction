@@ -695,7 +695,7 @@ The key `bucketName` is optional; if you don't pass a value the selected bucket 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned. 
 
 > [!WARNING] 
-> In a future version the return type of this function will change to:
+> In a future version this function will no longer return a url anymore. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
 > 
 > ```typescript
 > export interface ResultObjectBoolean {
@@ -703,8 +703,6 @@ If the call is successful `value` will hold the public url to the file (if the b
 >   error: string | null;
 > }
 > ```
-
-You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
 
 ### addFileFromBuffer
 
@@ -744,7 +742,7 @@ If the call is successful `value` will hold the public url to the file (if the b
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 > [!WARNING] 
-> In a future version the return type of this function will change to:
+> In a future version this function will no longer return a url anymore. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
 > 
 > ```typescript
 > export interface ResultObjectBoolean {
@@ -752,8 +750,6 @@ This method is particularly handy when you want to move uploaded files directly 
 >   error: string | null;
 > }
 > ```
-
-You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
 
 ### addFileFromStream
 
@@ -793,16 +789,14 @@ If the call is successful `value` will hold the public url to the file (if the b
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
 > [!WARNING] 
-> In a future version the return type of this function will change to:
->
+> In a future version this function will no longer return a url anymore. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
+> 
 > ```typescript
 > export interface ResultObjectBoolean {
 >   value: boolean | null;
 >   error: string | null;
 > }
 > ```
-
-You can use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket.
 
 ### getFileAsURL (deprecated)
 
