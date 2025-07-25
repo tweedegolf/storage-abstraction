@@ -6,12 +6,9 @@ import { AdapterAmazonS3 } from "../src/AdapterAmazonS3";
 import { IAdapter, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
 import { saveFile, timeout } from "./util";
-
-const newBucketName1 = "bucket-test-sab-1";
-const newBucketName2 = "bucket-test-sab-2";
+import { log } from "console";
 
 let storage: Storage;
-let bucketName: string;
 
 function colorLog(s: string): string {
   return `\x1b[96m [${s}]\x1b[0m`;
@@ -35,17 +32,20 @@ if (process.argv[2]) {
   index = parseInt(process.argv[2], 10);
 }
 
-async function init() {
+async function init(bucketName?: string): Promise<string> {
   // select the type of storage you want to test or pass it on the command line
   storage = new Storage(getConfig(types[index]));
-  bucketName = storage.config.bucketName || newBucketName1;
+  bucketName = storage.config.bucketName || bucketName || "sab-test-bucket";
   console.log(colorLog("init"), storage.config);
 
   await fs.promises.stat(path.join(process.cwd(), "tests", "test_directory")).catch(async (e) => {
     await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
   });
+
+  return Promise.resolve(bucketName);
 }
 
+// cleanup test data from the Local Adapter
 async function cleanup() {
   const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
   await rimraf(p, {
@@ -59,38 +59,53 @@ async function listBuckets(): Promise<Array<string> | null> {
   return r.value;
 }
 
-async function bucketExists() {
+async function bucketExists(bucketName?: string) {
   const r = await storage.bucketExists(bucketName);
   console.log(colorLog("bucketExists"), r);
 }
 
-async function createBucket() {
-  const r = await storage.createBucket(newBucketName1);
+async function bucketIsPublic(bucketName?: string) {
+  const r = await storage.bucketExists(bucketName);
+  console.log(colorLog("bucketIsPublic"), r);
+}
+
+async function createBucket(bucketName?: string) {
+  const r = await storage.createBucket(bucketName);
   console.log(colorLog("createBucket"), r);
 }
-async function createPublicBucket() {
-  const r = await storage.createBucket(newBucketName2, { public: true });
+async function createPublicBucket(bucketName?: string) {
+  const r = await storage.createBucket(bucketName, { public: true });
   console.log(colorLog("createPublicBucket"), r);
 }
 
-async function clearBucket() {
-  const r = await storage.clearBucket(newBucketName2);
+function getSelectedBucket(): string | null {
+  const r = storage.getSelectedBucket();
+  console.log(colorLog("getSelectedBucket"), r);
+  return r;
+}
+
+function setSelectedBucket(b: string | null) {
+  const r = storage.setSelectedBucket(b);
+  console.log(colorLog("setSelectedBucket"), r);
+}
+
+async function clearBucket(bucketName?: string) {
+  const r = await storage.clearBucket(bucketName);
   console.log(colorLog("clearBucket"), r);
 }
 
-async function deleteBucket() {
-  const r = await storage.deleteBucket(newBucketName2);
+async function deleteBucket(bucketName?: string) {
+  const r = await storage.deleteBucket(bucketName);
   console.log(colorLog("deleteBucket"), r);
 }
 
-async function listFiles() {
-  const r = await storage.listFiles(newBucketName2);
+async function listFiles(bucketName?: string) {
+  const r = typeof bucketName !== "string" ? await storage.listFiles() : await storage.listFiles(bucketName);
   console.log(colorLog("listFiles"), r);
 }
 
-async function addFileFromPath(bucketName: string) {
+async function addFileFromPath(bucketName?: string) {
   const r = await storage.addFileFromPath({
-    // bucketName: typeof bucketName === "undefined" ? newBucketName2 : bucketName,
     bucketName,
     origPath: "./tests/data/image1.jpg",
     targetPath: "image1-path.jpg",
@@ -100,28 +115,31 @@ async function addFileFromPath(bucketName: string) {
   console.log(colorLog("addFileFromPath"), r);
 }
 
-async function addFileFromBuffer() {
+async function addFileFromBuffer(bucketName?: string) {
   const buffer = await fs.promises.readFile("./tests/data/image1.jpg");
   const r = await storage.addFileFromBuffer({
-    bucketName: newBucketName2,
+    bucketName,
     buffer,
     targetPath: "image1-buffer.jpg",
   });
-  console.log(colorLog("addFileFromPath"), r);
+  console.log(colorLog("addFileFromBuffer"), r);
 }
 
-async function addFileFromStream() {
+async function addFileFromStream(bucketName?: string) {
   const stream = fs.createReadStream("./tests/data/image1.jpg");
   const r = await storage.addFileFromStream({
-    bucketName: newBucketName2,
+    bucketName,
     stream,
     targetPath: "image1-stream.jpg",
   });
-  console.log(colorLog("addFileFromPath"), r);
+  console.log(colorLog("addFileFromStream"), r);
 }
 
-async function getFileAsStream() {
-  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg");
+async function getFileAsStream(bucketName?: string) {
+  const { value, error } = typeof bucketName === "undefined" ?
+    await storage.getFileAsStream("image1-path.jpg") :
+    await storage.getFileAsStream(bucketName, "image1-path.jpg");
+
   console.log(colorLog("getFileAsStream"), error);
   if (value !== null) {
     const filePath = path.join(
@@ -135,11 +153,11 @@ async function getFileAsStream() {
   }
 }
 
-async function getFileAsStreamPartial() {
-  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg", {
-    start: 0,
-    end: 2000,
-  });
+async function getFileAsStreamPartial(bucketName?: string) {
+  const { value, error } = typeof bucketName === "undefined" ?
+    await storage.getFileAsStream("image1-path.jpg", { start: 0, end: 2000, }) :
+    await storage.getFileAsStream(bucketName, "image1-path.jpg", { start: 0, end: 2000, });
+
   console.log(colorLog("getFileAsStream"), error);
   if (value !== null) {
     const filePath = path.join(
@@ -153,10 +171,11 @@ async function getFileAsStreamPartial() {
   }
 }
 
-async function getFileAsStreamPartial2() {
-  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg", {
-    end: 2000,
-  });
+async function getFileAsStreamPartial2(bucketName?: string) {
+  const { value, error } = typeof bucketName === "undefined" ?
+    await storage.getFileAsStream("image1-path.jpg", { end: 2000, }) :
+    await storage.getFileAsStream(bucketName, "image1-path.jpg", { end: 2000, });
+
   console.log(colorLog("getFileAsStream"), error);
   if (value !== null) {
     const filePath = path.join(
@@ -169,10 +188,11 @@ async function getFileAsStreamPartial2() {
     await saveFile(value, writeStream);
   }
 }
-async function getFileAsStreamPartial3() {
-  const { value, error } = await storage.getFileAsStream(newBucketName2, "image1-path.jpg", {
-    start: 2000,
-  });
+async function getFileAsStreamPartial3(bucketName?: string) {
+  const { value, error } = typeof bucketName === "undefined" ?
+    await storage.getFileAsStream("image1-path.jpg", { start: 2000, }) :
+    await storage.getFileAsStream(bucketName, "image1-path.jpg", { start: 2000, });
+
   console.log(colorLog("getFileAsStream"), error);
   if (value !== null) {
     const filePath = path.join(
@@ -186,18 +206,18 @@ async function getFileAsStreamPartial3() {
   }
 }
 
-async function fileExists() {
-  const r = await storage.fileExists(newBucketName2, "image1-path.jpg");
+async function fileExists(bucketName?: string) {
+  const r = typeof bucketName === "undefined" ? await storage.fileExists("image1-path.jpg") : await storage.fileExists(bucketName, "image1-path.jpg");
   console.log(colorLog("fileExists"), r);
 }
 
-async function sizeOf() {
-  const r = await storage.sizeOf(newBucketName2, "image1-path.jpg");
+async function sizeOf(bucketName?: string) {
+  const r = typeof bucketName === "undefined" ? await storage.sizeOf("image1-path.jpg") : await storage.sizeOf(bucketName, "image1-path.jpg");
   console.log(colorLog("sizeOf"), r);
 }
 
-async function removeFile() {
-  const r = await storage.removeFile(newBucketName2, "image1-path.jpg");
+async function removeFile(bucketName?: string) {
+  const r = typeof bucketName === "undefined" ? await storage.removeFile("image1-path.jpg") : await storage.removeFile(bucketName, "image1-path.jpg");
   console.log(colorLog("removeFile"), r);
 }
 
@@ -219,9 +239,9 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
   }
 }
 
-async function getFileInfo() {
+async function getFileInfo(bucketName: string) {
   const info = await (storage.getAdapter() as AdapterAmazonS3).getFileInfo(
-    newBucketName2,
+    bucketName,
     "image1-path.jpg"
   );
 }
@@ -239,14 +259,16 @@ async function run() {
     await deleteAllBuckets(buckets, storage);
   }
 
-  // await bucketExists();
-  r = await storage.createBucket("aap888");
-  console.log(r);
-  r = await storage.bucketIsPublic("aap888");
-  console.log(r);
-  await addFileFromPath("aap888")
-  r = await storage.getPublicURL("aap888", "image1-path.jpg");
-  console.log(r);
+  getSelectedBucket();
+  await createBucket();
+  setSelectedBucket(null);
+  await bucketExists();
+  await bucketIsPublic();
+  await addFileFromPath();
+  // r = await storage.getPublicURL("aap888", "image1-path.jpg");
+  // console.log(r);
+  // r = await storage.getPresignedURL("aap888", "image1-path.jpg");
+  // console.log(r);
 
 
   // r = await storage.createBucket("aap8882", { public: true });

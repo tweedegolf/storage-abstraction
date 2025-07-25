@@ -82,8 +82,6 @@ export interface IAdapter {
 
   bucketName: null | string;
 
-  set(bucketName: null | string): void;
-
   /**
    * Returns an object that contains both the options passed with the configuration and the
    * default options of the storage type if not overruled by the options you passed in.
@@ -92,11 +90,11 @@ export interface IAdapter {
 
   /**
    * @param bucketName name of the bucket to create, returns "ok" once the bucket has been created but
-   * also when the bucket already exists.
+   * yields an error if bucket already exists.
    * @param options: additional options for creating a bucket such as access rights
    * @returns string or error
    */
-  createBucket(bucketName: string, options?: Options): Promise<ResultObject>;
+  createBucket(bucketName?: string, options?: Options): Promise<ResultObject>;
 
   /**
    * @param bucketName: deletes all file in the bucket.

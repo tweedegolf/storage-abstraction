@@ -93,7 +93,7 @@ export class Storage implements IAdapter {
     return this.adapter.bucketName;
   }
 
-  set(bucketName: string | null) {
+  set bucketName(bucketName: string | null) {
     this.adapter.bucketName = bucketName;
   }
 
@@ -161,7 +161,7 @@ export class Storage implements IAdapter {
     return this.adapter.addFileFromStream(params);
   }
 
-  async createBucket(bucketName: string, options?: object): Promise<ResultObject> {
+  async createBucket(bucketName?: string, options?: object): Promise<ResultObject> {
     return this.adapter.createBucket(bucketName, options);
   }
 

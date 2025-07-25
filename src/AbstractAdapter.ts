@@ -8,6 +8,7 @@ import {
   ResultObjectNumber,
   ResultObjectStream,
 } from "./types/result";
+import { validateName } from "./util";
 
 export abstract class AbstractAdapter implements IAdapter {
   protected _type = "abstract-adapter";
@@ -60,7 +61,7 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._bucketName;
   }
 
-  set(bucketName: string | null) {
+  set bucketName(bucketName: string | null) {
     this._bucketName = bucketName;
   }
 
@@ -88,7 +89,7 @@ export abstract class AbstractAdapter implements IAdapter {
    * @returns 
    */
   protected _getFileAndBucketAndOptions(
-    arg1: string,
+    arg1?: string,
     arg2?: string | object | boolean,
     arg3?: object | boolean,
   ): { bucketName: string; fileName: string; options: object | boolean, error: string } {
@@ -96,7 +97,12 @@ export abstract class AbstractAdapter implements IAdapter {
     let fileName: string = null;
     let options: object | boolean = null;
     let error = null;
-    if (typeof arg1 === "string") {
+    if (typeof arg1 !== "string") {
+      bucketName = this._bucketName;
+      if (bucketName === null) {
+        error = "no bucket selected";
+      }
+    } else if (typeof arg1 === "string") {
       if (typeof arg2 === "string") {
         bucketName = arg1;
         fileName = arg2;
@@ -105,7 +111,7 @@ export abstract class AbstractAdapter implements IAdapter {
         } else if (typeof arg3 === "boolean") {
           options = arg3;
         }
-      } else if (typeof arg2 === "undefined" || typeof arg2 === "object") {
+      } else if (typeof arg2 !== "string") {
         bucketName = this._bucketName;
         if (bucketName === null) {
           error = "no bucket selected";
@@ -117,9 +123,9 @@ export abstract class AbstractAdapter implements IAdapter {
             options = arg2;
           }
         }
-      } else {
-        error = "please provide valid arguments"
       }
+    } else {
+      error = "please provide valid arguments"
     }
     return {
       bucketName,
@@ -130,6 +136,10 @@ export abstract class AbstractAdapter implements IAdapter {
   }
 
   // protected stubs
+
+  protected abstract _listBuckets(): Promise<ResultObjectBuckets>;
+
+  protected abstract _createBucket(name: string, options: Options): Promise<ResultObject>;
 
   protected abstract _clearBucket(name: string): Promise<ResultObject>;
 
@@ -182,13 +192,36 @@ export abstract class AbstractAdapter implements IAdapter {
     allVersions: boolean
   ): Promise<ResultObject>;
 
-  // public stubs
-
-  abstract listBuckets(): Promise<ResultObjectBuckets>;
-
-  abstract createBucket(name: string, options?: Options): Promise<ResultObject>;
-
   // public
+  public async listBuckets(): Promise<ResultObjectBuckets> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+    return this._listBuckets();
+  }
+
+  public async createBucket(bucketName: string, options?: Options): Promise<ResultObject>;
+  public async createBucket(options?: Options): Promise<ResultObject>;
+  public async createBucket(arg1?: string | Options, arg2?: Options): Promise<ResultObject> {
+    if (this._configError !== null) {
+      return { value: null, error: this.configError };
+    }
+    if (typeof arg1 === "undefined") {
+      if (this._bucketName === null) {
+        return {
+          value: null,
+          error: "no bucket selected",
+        };
+      }
+      arg1 = this._bucketName;
+    } else {
+      const error = validateName(arg1 as string);
+      if (error !== null) {
+        return { value: null, error };
+      }
+    }
+    return this._createBucket(arg1 as string, arg2 || {});
+  }
 
   public async clearBucket(name?: string): Promise<ResultObject> {
     if (this._configError !== null) {
@@ -284,10 +317,10 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this._configError !== null) {
       return { value: null, error: this.configError };
     }
-    const { bucketName, fileName: _fn, options, error } = this._getFileAndBucketAndOptions(params.bucketName, params.options);
-    console.log(bucketName, _fn, options)
+    const { bucketName, fileName: _fn, options, error } = this._getFileAndBucketAndOptions(params.bucketName, params.targetPath, params.options);
+    // console.log(bucketName, _fn, options)
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error };
     }
     params.bucketName = bucketName;
     params.options = options === null ? {} : options as object;

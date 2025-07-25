@@ -38,7 +38,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
-import { parseUrl, validateName } from "./util";
+import { parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
@@ -157,7 +157,77 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  // protected, called by methods of public API via AbstractAdapter
+  // protected methods, called by public methods of the API via AbstractAdapter
+
+  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+    try {
+      const input = {};
+      const command = new ListBucketsCommand(input);
+      const response = await this._client.send(command);
+      const bucketNames = response.Buckets?.map((b) => b?.Name);
+      return { value: bucketNames, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _createBucket(bucketName: string, options: Options = {}): Promise<ResultObject> {
+    try {
+      const input: CreateBucketCommandInput = {
+        Bucket: bucketName,
+        ...options,
+      };
+      const command = new CreateBucketCommand(input);
+      await this._client.send(command);
+      await waitUntilBucketExists({ client: this._client, maxWaitTime: 120 }, { Bucket: bucketName });
+      if (options.public === true) {
+        await this._client.send(
+          new PutPublicAccessBlockCommand({
+            Bucket: bucketName,
+            PublicAccessBlockConfiguration: {
+              BlockPublicAcls: false,
+              IgnorePublicAcls: false,
+              BlockPublicPolicy: false,       // DISABLE BlockPublicPolicy
+              RestrictPublicBuckets: false,
+            },
+          })
+        );
+        const publicReadPolicy = {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Sid: "AllowPublicRead",
+              Effect: "Allow",
+              Principal: "*",
+              Action: ["s3:GetObject"],
+              Resource: [`arn:aws:s3:::${bucketName}/*`]
+            }
+          ]
+        };
+        await this._client.send(new PutBucketPolicyCommand({
+          Bucket: bucketName,
+          Policy: JSON.stringify(publicReadPolicy)
+        }));
+      }
+      // const response = await this._client.send(command);
+      // console.log(response.Location, response.Location.indexOf(bucketName));
+      /*
+      console.log(response);
+      // not sure if this is necessary
+      if (response.$metadata.httpStatusCode === 200) {
+        return { value: "ok", error: null };
+      } else {
+        return {
+          value: null,
+          error: `Error http status code ${response.$metadata.httpStatusCode}`,
+        };
+      }
+      */
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
 
   protected async _clearBucket(bucketName: string): Promise<ResultObject> {
     let objects: Array<{ Key: string; VersionId?: string }>;
@@ -318,9 +388,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
       if (params.options.usePresignedURL === true) {
-        return this.getPresignedURL(params.bucketName, params.targetPath, params.options)
+        return this._getPresignedURL(params.bucketName, params.targetPath, params.options)
       }
-      return this.getPublicURL(params.bucketName, params.targetPath, params.options)
+      // return this._getPublicURL(params.bucketName, params.targetPath, params.options)
+      return this._getFileAsURL(params.bucketName, params.targetPath, params.options)
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -394,7 +465,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           options
         );
       } else if (this._isAmazonS3 === false) {
-        return { value: null, error: "Sorry, can not create a public url for non-amazon S3 compatible cloud storage." };
+        return { value: null, error: "Sorry, can only create a public url Amazon S3." };
       } else {
         url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
       }
@@ -522,88 +593,5 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   getServiceClient(): S3Client {
     return this._client as S3Client;
-  }
-
-  public async listBuckets(): Promise<ResultObjectBuckets> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const input = {};
-      const command = new ListBucketsCommand(input);
-      const response = await this._client.send(command);
-      const bucketNames = response.Buckets?.map((b) => b?.Name);
-      return { value: bucketNames, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async createBucket(bucketName: string, options: Options = {}): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    const error = validateName(bucketName);
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    try {
-      const input: CreateBucketCommandInput = {
-        Bucket: bucketName,
-        ...options,
-      };
-      const command = new CreateBucketCommand(input);
-      await this._client.send(command);
-      await waitUntilBucketExists({ client: this._client, maxWaitTime: 120 }, { Bucket: bucketName });
-      if (options.public === true) {
-        await this._client.send(
-          new PutPublicAccessBlockCommand({
-            Bucket: bucketName,
-            PublicAccessBlockConfiguration: {
-              BlockPublicAcls: false,
-              IgnorePublicAcls: false,
-              BlockPublicPolicy: false,       // DISABLE BlockPublicPolicy
-              RestrictPublicBuckets: false,
-            },
-          })
-        );
-        const publicReadPolicy = {
-          Version: "2012-10-17",
-          Statement: [
-            {
-              Sid: "AllowPublicRead",
-              Effect: "Allow",
-              Principal: "*",
-              Action: ["s3:GetObject"],
-              Resource: [`arn:aws:s3:::${bucketName}/*`]
-            }
-          ]
-        };
-        await this._client.send(new PutBucketPolicyCommand({
-          Bucket: bucketName,
-          Policy: JSON.stringify(publicReadPolicy)
-        }));
-      }
-      // const response = await this._client.send(command);
-      // console.log(response.Location, response.Location.indexOf(bucketName));
-      /*
-      console.log(response);
-      // not sure if this is necessary
-      if (response.$metadata.httpStatusCode === 200) {
-        return { value: "ok", error: null };
-      } else {
-        return {
-          value: null,
-          error: `Error http status code ${response.$metadata.httpStatusCode}`,
-        };
-      }
-      */
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
   }
 }
