@@ -18,7 +18,6 @@ export enum StorageType {
   AZURE = "azure", // Azure Storage Blob
   MINIO = "minio",
 }
-
 export interface AdapterConfig {
   bucketName?: string;
   [id: string]: any; // eslint-disable-line
@@ -31,9 +30,19 @@ export interface Options {
   [id: string]: any; // eslint-disable-line
 }
 
+/**
+ * @param start the byte of the file where the stream starts(default: 0)
+ * @param end the byte in the file where the stream ends(default: last byte of file) 
+ */
 export interface StreamOptions extends Options {
   start?: number;
   end?: number;
+}
+
+export interface IStorage extends IAdapter {
+  switchAdapter(config: string | StorageAdapterConfig): void
+  getAdapter(): IAdapter
+  get adapter(): IAdapter
 }
 
 export interface IAdapter {
@@ -76,6 +85,9 @@ export interface IAdapter {
 
   configError: null | string;
 
+  /**
+   * @returns the name of the selected bucket or `null` if no bucket is selected
+   */
   getSelectedBucket(): null | string;
 
   setSelectedBucket(bucketName: null | string): void;
@@ -92,12 +104,15 @@ export interface IAdapter {
    * @param bucketName name of the bucket to create, returns "ok" once the bucket has been created but
    * yields an error if bucket already exists.
    * @param options: additional options for creating a bucket such as access rights
-   * @returns string or error
+   * @returns "ok" or error
    */
-  createBucket(bucketName?: string, options?: Options): Promise<ResultObject>;
+  createBucket(...args:
+    [bucketName?: string, options?: Options] |
+    [options?: Options]
+  ): Promise<ResultObject>;
 
   /**
-   * @param bucketName: deletes all file in the bucket.
+   * @param bucketName: deletes all files in the bucket.
    */
   clearBucket(bucketName?: string): Promise<ResultObject>;
 
@@ -175,19 +190,10 @@ export interface IAdapter {
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file to be returned as a readable stream
-   * @param start? the byte of the file where the stream starts (default: 0)
-   * @param end? the byte in the file where the stream ends (default: last byte of file)
    */
-  getFileAsStream(
-    bucketName: string,
-    fileName: string,
-    options?: StreamOptions
-  ): Promise<ResultObjectStream>;
-  getFileAsStream(fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
-  getFileAsStream(
-    arg1: string,
-    arg2?: StreamOptions | string,
-    arg3?: StreamOptions
+  getFileAsStream(...args:
+    [bucketName: string, fileName: string, options?: StreamOptions] |
+    [fileName: string, options?: StreamOptions]
   ): Promise<ResultObjectStream>;
 
   /**
@@ -196,54 +202,63 @@ export interface IAdapter {
    * @param fileName name of the file
    * @param options
    */
-  getFileAsURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
-  getFileAsURL(fileName: string, options?: Options): Promise<ResultObject>;
-  getFileAsURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+  getFileAsURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]
+  ): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
    * @param options
    */
-  getPublicURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
-  getPublicURL(fileName: string, options?: Options): Promise<ResultObject>;
-  getPublicURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+  getPublicURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]
+  ): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
    * @param options
    */
-  getPresignedURL(bucketName: string, fileName: string, options?: Options): Promise<ResultObject>;
-  getPresignedURL(fileName: string, options?: Options): Promise<ResultObject>;
-  getPresignedURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject>;
+  getPresignedURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]
+  ): Promise<ResultObject>;
 
   /**
-   * @param {string} bucketName name of the bucket where the file is stored
-   * @param {string} fileName name of the file to be removed
-   * @param {boolean} [allVersions = true] in case there are more versions of this file you can choose to remove
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file to be removed
+   * @param allVersions in case there are more versions of this file you can choose to remove
    * all of them in one go or delete only the latest version (only if applicable such as with Backblaze B2 and S3
    * when you've enabled versioning)
    */
-  removeFile(bucketName: string, fileName: string, allVersions?: boolean): Promise<ResultObject>;
-  removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
-  removeFile(arg1: string, arg2?: boolean | string, arg3?: boolean): Promise<ResultObject>;
+  removeFile(...args:
+    [bucketName: string, fileName: string, allVersions?: boolean] |
+    [fileName: string, allVersions?: boolean]
+  ): Promise<ResultObject>;
 
   /**
-   * @param bucketName name of the bucket
-   * @param numFiles optional, only works for S3 compatible storages: the maximal number of files to retrieve
+   * @param bucketName
+   * @param numFiles 
    * @returns an array of tuples containing the file path and the file size of all files in the bucket.
    */
-  listFiles(numFiles?: number): Promise<ResultObjectFiles>;
-  listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
-  listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles>;
+  listFiles(...args:
+    [bucketName: string, numFiles?: number] |
+    [bucketName?: string] |
+    [numFiles?: number]
+  ): Promise<ResultObjectFiles>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
    * @returns the size of the file in bytes
    */
-  sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+  sizeOf(...args:
+    [bucketName: string, fileName: string] |
+    [fileName: string]
+  ): Promise<ResultObjectNumber>;
 
   /**
    * @param bucketName name of the bucket
@@ -260,6 +275,10 @@ export interface IAdapter {
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
+   * @returns boolean
    */
-  fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+  fileExists(...args:
+    [bucketName: string, fileName: string] |
+    [fileName: string]
+  ): Promise<ResultObjectBoolean>;
 }

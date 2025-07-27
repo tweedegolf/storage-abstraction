@@ -19,6 +19,9 @@ import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapte
 
 const availableAdapters: string = getAvailableAdapters();
 
+/**
+ * @implements {IAdapter}
+ */
 export class Storage implements IAdapter {
   private _adapter: IAdapter;
   // public ready: Promise<void>;
@@ -143,9 +146,7 @@ export class Storage implements IAdapter {
 
   // public adapter API
 
-  public async addFile(
-    paramObject: FilePathParams | FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
+  public async addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject> {
     return this.adapter.addFile(paramObject);
   }
 
@@ -161,8 +162,11 @@ export class Storage implements IAdapter {
     return this.adapter.addFileFromStream(params);
   }
 
-  async createBucket(bucketName?: string, options?: object): Promise<ResultObject> {
-    return this.adapter.createBucket(bucketName, options);
+  async createBucket(...args:
+    [bucketName?: string, options?: Options] |
+    [options?: Options]
+  ): Promise<ResultObject> {
+    return this.adapter.createBucket(...args);
   }
 
   async clearBucket(bucketName?: string): Promise<ResultObject> {
@@ -177,74 +181,50 @@ export class Storage implements IAdapter {
     return this.adapter.listBuckets();
   }
 
-  async getFileAsStream(
-    bucketName: string,
-    fileName: string,
-    options?: StreamOptions
-  ): Promise<ResultObjectStream>;
-  async getFileAsStream(fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
-  async getFileAsStream(
-    arg1: string,
-    arg2?: StreamOptions | string,
-    arg3?: StreamOptions
+  async getFileAsStream(...args:
+    [bucketName: string, fileName: string, options?: StreamOptions] |
+    [fileName: string, options?: StreamOptions]
   ): Promise<ResultObjectStream> {
-    return this.adapter.getFileAsStream(arg1, arg2, arg3);
+    return this.adapter.getFileAsStream(...args);
   }
 
-  async getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options?: Options
-  ): Promise<ResultObject>;
-  async getFileAsURL(fileName: string, options?: Options): Promise<ResultObject>;
-  async getFileAsURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
-    return this.adapter.getFileAsURL(arg1, arg2, arg3);
+  async getFileAsURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]): Promise<ResultObject> {
+    return this.adapter.getFileAsURL(...args);
   }
 
-  async getPublicURL(
-    bucketName: string,
-    fileName: string,
-    options?: Options
-  ): Promise<ResultObject>;
-  async getPublicURL(fileName: string, options?: Options): Promise<ResultObject>;
-  async getPublicURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
-    return this.adapter.getPublicURL(arg1, arg2, arg3);
+  async getPublicURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]): Promise<ResultObject> {
+    return this.adapter.getPublicURL(...args);
+  }
+  async getPresignedURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]): Promise<ResultObject> {
+    return this.adapter.getPresignedURL(...args);
   }
 
-  async getPresignedURL(
-    bucketName: string,
-    fileName: string,
-    options?: Options
-  ): Promise<ResultObject>;
-  async getPresignedURL(fileName: string, options?: Options): Promise<ResultObject>;
-  async getPresignedURL(arg1: string, arg2?: Options | string, arg3?: Options): Promise<ResultObject> {
-    return this.adapter.getPresignedURL(arg1, arg2, arg3);
-  }
-
-  async removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions?: boolean
-  ): Promise<ResultObject>;
-  async removeFile(fileName: string, allVersions?: boolean): Promise<ResultObject>;
-  async removeFile(
-    arg1: string,
-    arg2?: boolean | string,
-    arg3: boolean = false
+  async removeFile(...args:
+    [bucketName: string, fileName: string, allVersions?: boolean] |
+    [fileName: string, allVersions?: boolean]
   ): Promise<ResultObject> {
-    return this.adapter.removeFile(arg1, arg2, arg3);
+    return this.adapter.removeFile(...args);
   }
 
-  async listFiles(bucketName: string, numFiles?: number): Promise<ResultObjectFiles>;
-  async listFiles(numFiles?: number): Promise<ResultObjectFiles>;
-  async listFiles(arg1?: number | string, arg2?: number): Promise<ResultObjectFiles> {
-    return this.adapter.listFiles(arg1, arg2);
+  async listFiles(...args:
+    [bucketName: string, numFiles?: number] |
+    [numFiles?: number] |
+    [bucketName?: string]
+  ): Promise<ResultObjectFiles> {
+    return this.adapter.listFiles(...args);
   }
 
-  async sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
-  async sizeOf(fileName: string): Promise<ResultObjectNumber>;
-  async sizeOf(arg1: string, arg2?: string): Promise<ResultObjectNumber> {
-    return this.adapter.sizeOf(arg1, arg2);
+  async sizeOf(...args:
+    [bucketName: string, fileName: string] |
+    [fileName: string]
+  ): Promise<ResultObjectNumber> {
+    return this.adapter.sizeOf(...args);
   }
 
   async bucketExists(bucketName?: string): Promise<ResultObjectBoolean> {
@@ -255,9 +235,10 @@ export class Storage implements IAdapter {
     return this.adapter.bucketIsPublic(bucketName);
   }
 
-  async fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
-  async fileExists(fileName: string): Promise<ResultObjectBoolean>;
-  async fileExists(arg1: string, arg2?: string): Promise<ResultObjectBoolean> {
-    return this.adapter.fileExists(arg1, arg2);
+  async fileExists(...args:
+    [bucketName: string, fileName: string] |
+    [fileName: string]
+  ): Promise<ResultObjectBoolean> {
+    return this.adapter.fileExists(...args);
   }
 }

@@ -101,6 +101,34 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   // protected, called by methods of public API via AbstractAdapter
+  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+    try {
+      const dirents = await fs.promises.readdir(this._config.directory, { withFileTypes: true });
+      const files = dirents
+        .filter((dirent) => dirent.isFile() === false)
+        .map((dirent) => dirent.name);
+      // const stats = await Promise.all(
+      //   files.map((f) => fs.promises.stat(path.join(this._config.directory, f)))
+      // );
+      return { value: files, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+    try {
+      const p = path.join(this._config.directory, name);
+      const created = await this.createDirectory(p);
+      if (created) {
+        return { value: "ok", error: null };
+      } else {
+        return { value: null, error: `Could not create bucket ${p}` };
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
 
   protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
@@ -305,47 +333,5 @@ export class AdapterLocal extends AbstractAdapter {
 
   getConfig(): AdapterConfigLocal {
     return this.config;
-  }
-
-  public async listBuckets(): Promise<ResultObjectBuckets> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const dirents = await fs.promises.readdir(this._config.directory, { withFileTypes: true });
-      const files = dirents
-        .filter((dirent) => dirent.isFile() === false)
-        .map((dirent) => dirent.name);
-      // const stats = await Promise.all(
-      //   files.map((f) => fs.promises.stat(path.join(this._config.directory, f)))
-      // );
-      return { value: files, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async createBucket(name: string, options?: Options): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    const error = validateName(name);
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    try {
-      const p = path.join(this._config.directory, name);
-      const created = await this.createDirectory(p);
-      if (created) {
-        return { value: "ok", error: null };
-      } else {
-        return { value: null, error: `Could not create bucket ${p}` };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
   }
 }

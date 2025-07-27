@@ -100,7 +100,7 @@ async function deleteBucket(bucketName?: string) {
 }
 
 async function listFiles(bucketName?: string) {
-  const r = typeof bucketName !== "string" ? await storage.listFiles() : await storage.listFiles(bucketName);
+  const r = typeof bucketName !== "string" ? await storage.listFiles() : await storage.listFiles(bucketName, 10000);
   console.log(colorLog("listFiles"), r);
 }
 
@@ -207,6 +207,7 @@ async function getFileAsStreamPartial3(bucketName?: string) {
 }
 
 async function fileExists(bucketName?: string) {
+  await storage.getAdapter().fileExists("image1-path.jpg")
   const r = typeof bucketName === "undefined" ? await storage.fileExists("image1-path.jpg") : await storage.fileExists(bucketName, "image1-path.jpg");
   console.log(colorLog("fileExists"), r);
 }
@@ -259,12 +260,13 @@ async function run() {
     await deleteAllBuckets(buckets, storage);
   }
 
-  getSelectedBucket();
+  const b = getSelectedBucket();
   await createBucket();
-  setSelectedBucket(null);
+  setSelectedBucket(b);
   await bucketExists();
   await bucketIsPublic();
   await addFileFromPath();
+  await listFiles(b as string);
   // r = await storage.getPublicURL("aap888", "image1-path.jpg");
   // console.log(r);
   // r = await storage.getPresignedURL("aap888", "image1-path.jpg");

@@ -97,6 +97,34 @@ export class AdapterMinio extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
+  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+    try {
+      const buckets = await this._client.listBuckets();
+      return { value: buckets.map((b) => b.name), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+    try {
+      const e = await this._client.bucketExists(name);
+      if (e) {
+        return { value: null, error: "bucket exists" };
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+
+    try {
+      const { region } = this._config;
+      await this._client.makeBucket(name, region, options as Minio.MakeBucketOpt);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
   protected async _getFileAsStream(
     bucketName: string,
     fileName: string,
@@ -322,46 +350,5 @@ export class AdapterMinio extends AbstractAdapter {
 
   public getServiceClient(): Minio.Client {
     return this._client as Minio.Client;
-  }
-
-  public async listBuckets(): Promise<ResultObjectBuckets> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    try {
-      const buckets = await this._client.listBuckets();
-      return { value: buckets.map((b) => b.name), error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    const error = validateName(name);
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    try {
-      const e = await this._client.bucketExists(name);
-      if (e) {
-        return { value: null, error: "bucket exists" };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-
-    try {
-      const { region } = this._config;
-      await this._client.makeBucket(name, region, options as Minio.MakeBucketOpt);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
   }
 }

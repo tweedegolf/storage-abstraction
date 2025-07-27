@@ -124,6 +124,30 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
+  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+    // let i = 0;
+    try {
+      const bucketNames = [];
+      // let i = 0;
+      for await (const container of this._client.listContainers()) {
+        // console.log(`${i++} ${container.name}`);
+        bucketNames.push(container.name);
+      }
+      return { value: bucketNames, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+    try {
+      const res = await this._client.createContainer(name, options);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
   protected async _getFileAsStream(
     bucketName: string,
     fileName: string,
@@ -381,41 +405,5 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   getServiceClient(): BlobServiceClient {
     return this._client as BlobServiceClient;
-  }
-
-  public async listBuckets(): Promise<ResultObjectBuckets> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-    // let i = 0;
-    try {
-      const bucketNames = [];
-      // let i = 0;
-      for await (const container of this._client.listContainers()) {
-        // console.log(`${i++} ${container.name}`);
-        bucketNames.push(container.name);
-      }
-      return { value: bucketNames, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  public async createBucket(name: string, options?: Options): Promise<ResultObject> {
-    if (this.configError !== null) {
-      return { value: null, error: this.configError };
-    }
-
-    const error = validateName(name);
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    try {
-      const res = await this._client.createContainer(name, options);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
   }
 }

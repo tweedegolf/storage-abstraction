@@ -187,6 +187,45 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
+  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    const data = await this.getBuckets();
+    if (data.error === null) {
+      const { value: buckets } = data;
+      return {
+        value: buckets.map((b) => {
+          return b.name;
+        }),
+        error: null,
+      };
+    } else {
+      return { value: null, error: data.error };
+    }
+  }
+
+  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+    const { error } = await this.authorize();
+    if (typeof options.bucketType === "undefined") {
+      options.bucketType = "allPrivate";
+    }
+
+    try {
+      const { data } = await this._client.createBucket({
+        ...options,
+        bucketName: name,
+      });
+      const { bucketType: _type } = data;
+      // console.log(_type);
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.response.data.message };
+    }
+  }
+
   protected async _addFile(
     params: FilePathParams | FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
@@ -514,53 +553,5 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   getServiceClient(): B2 {
     return this._client as B2;
-  }
-
-  public async listBuckets(): Promise<ResultObjectBuckets> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    const data = await this.getBuckets();
-    if (data.error === null) {
-      const { value: buckets } = data;
-      return {
-        value: buckets.map((b) => {
-          return b.name;
-        }),
-        error: null,
-      };
-    } else {
-      return { value: null, error: data.error };
-    }
-  }
-
-  public async createBucket(name: string, options: Options = {}): Promise<ResultObject> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { value: null, error };
-    }
-
-    const msg = validateName(name);
-    if (msg !== null) {
-      return { value: null, error: msg };
-    }
-
-    if (typeof options.bucketType === "undefined") {
-      options.bucketType = "allPrivate";
-    }
-
-    try {
-      const { data } = await this._client.createBucket({
-        ...options,
-        bucketName: name,
-      });
-      const { bucketType: _type } = data;
-      // console.log(_type);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.response.data.message };
-    }
   }
 }

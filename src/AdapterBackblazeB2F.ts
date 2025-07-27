@@ -29,7 +29,7 @@ const getConfigError = (): string => "string";
 
 const getServiceClient = (): any => { }; // eslint-disable-line
 
-const createBucket = async (name: string, options?: Options): Promise<ResultObject> => {
+const createBucket = async (name: string, options: Options = {}): Promise<ResultObject> => {
   const error = validateName(name);
   if (error !== null) {
     return { value: null, error };
@@ -146,7 +146,7 @@ const adapter: IAdapter = {
   get bucketName() {
     return getServiceClient();
   },
-  set(bucketName: string): void { },
+  set bucketName(bucketName: string) { },
   setSelectedBucket(bucketName: string): void { },
   getSelectedBucket(): string {
     return "bucketName";
