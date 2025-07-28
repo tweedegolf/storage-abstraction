@@ -212,7 +212,7 @@ export abstract class AbstractAdapter implements IAdapter {
     const [arg1, arg2] = args;
     let bucketName: string;
 
-    if (typeof arg1 === "undefined") {
+    if (typeof arg1 !== "string") {
       if (this._bucketName === null) {
         return {
           value: null,
@@ -221,6 +221,7 @@ export abstract class AbstractAdapter implements IAdapter {
       }
       bucketName = this._bucketName;
     } else {
+      bucketName = arg1 as string;
       const error = validateName(bucketName as string);
       if (error !== null) {
         return { value: null, error };

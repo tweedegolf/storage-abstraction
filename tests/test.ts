@@ -3,7 +3,7 @@ import path from "path";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
 import { AdapterAmazonS3 } from "../src/AdapterAmazonS3";
-import { IAdapter, StorageType } from "../src/types/general";
+import { IAdapter, Options, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
 import { saveFile, timeout } from "./util";
 import { log } from "console";
@@ -69,8 +69,8 @@ async function bucketIsPublic(bucketName?: string) {
   console.log(colorLog("bucketIsPublic"), r);
 }
 
-async function createBucket(bucketName?: string) {
-  const r = await storage.createBucket(bucketName);
+async function createBucket(bucketName?: string, options?: Options) {
+  const r = await storage.createBucket(bucketName, options);
   console.log(colorLog("createBucket"), r);
 }
 async function createPublicBucket(bucketName?: string) {
@@ -256,22 +256,23 @@ async function run() {
   // console.log(r);
 
   const buckets = await listBuckets();
-  if (buckets !== null && buckets.length > 0) {
-    await deleteAllBuckets(buckets, storage);
-  }
+  // if (buckets !== null && buckets.length > 0) {
+  //   await deleteAllBuckets(buckets, storage);
+  // }
 
-  const b = getSelectedBucket();
-  await createBucket();
-  setSelectedBucket(b);
+  // const b = getSelectedBucket();
+  await createBucket("aap888", { access: "blob" });
+  // setSelectedBucket(b);
+  setSelectedBucket("aap888");
   // await deleteBucket();
   // await bucketExists();
-  // await bucketIsPublic();
+  await bucketIsPublic();
   await addFileFromPath();
-  // await listFiles(b as string);
-  // r = await storage.getPublicURL("aap888", "image1-path.jpg");
-  // console.log(r);
-  // r = await storage.getPresignedURL("aap888", "image1-path.jpg");
-  // console.log(r);
+  await listFiles();
+  r = await storage.getPublicURL("aap888", "image1-path.jpg");
+  console.log(r);
+  r = await storage.getPresignedURL("aap888", "image1-path.jpg");
+  console.log(r);
 
 
   // r = await storage.createBucket("aap8882", { public: true });

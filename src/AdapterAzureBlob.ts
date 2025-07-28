@@ -232,7 +232,26 @@ export class AdapterAzureBlob extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    try {
+      const result = await this._bucketIsPublic(bucketName);
+      if (result.error !== null) {
+        return Promise.resolve({ value: null, error: result.error });
+      } else if (result.value === false) {
+        return Promise.resolve({ value: null, error: `Bucket "${bucketName}" is not public!` });
+      } else {
+        const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
+        const exists = await file.exists();
+        if (!exists) {
+          return {
+            value: null,
+            error: `File ${fileName} could not be found in bucket ${bucketName}`,
+          };
+        }
+        return Promise.resolve({ value: file.url, error: null });
+      }
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   protected async _getPresignedURL(
@@ -240,7 +259,24 @@ export class AdapterAzureBlob extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    try {
+      const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
+      const exists = await file.exists();
+      if (!exists) {
+        return {
+          value: null,
+          error: `File ${fileName} could not be found in bucket ${bucketName}`,
+        };
+      }
+      const sasOptions: BlobGenerateSasUrlOptions = {
+        permissions: options.permissions || BlobSASPermissions.parse("r"),
+        expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
+      };
+      const url = await file.generateSasUrl(sasOptions);
+      return Promise.resolve({ value: url, error: null });
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   protected async _clearBucket(name: string): Promise<ResultObject> {
@@ -319,6 +355,9 @@ export class AdapterAzureBlob extends AbstractAdapter {
       if (writeStream.errorCode) {
         return { value: null, error: writeStream.errorCode };
       } else {
+        if (params.options.usePresignedURL === true) {
+          return this._getPresignedURL(params.bucketName, params.targetPath, params.options)
+        }
         return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
       }
     } catch (e) {
@@ -350,6 +389,18 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
+  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+    try {
+      const containerClient = this._client.getContainerClient(bucketName);
+      const response = await containerClient.getAccessPolicy();
+      const accessLevel = response.blobPublicAccess; // "container", "blob", or undefined/null ("none")
+      const value = accessLevel === "container" || accessLevel === "blob";
+      return Promise.resolve({ value, error: null });
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
   protected async _bucketExists(name: string): Promise<ResultObjectBoolean> {
     try {
       const cont = this._client.getContainerClient(name);
@@ -360,18 +411,9 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(
-    bucketName?: string,
-  ): Promise<ResultObjectBoolean> {
-    return Promise.resolve({ value: true, error: null });
-  }
-
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
-      const exists = await this._client
-        .getContainerClient(bucketName)
-        .getBlobClient(fileName)
-        .exists();
+      const exists = await this._client.getContainerClient(bucketName).getBlobClient(fileName).exists();
       return { value: exists, error: null };
     } catch (e) {
       return { value: null, error: e.message };
