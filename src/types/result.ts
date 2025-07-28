@@ -13,9 +13,12 @@ export type ParseUrlResult = {
   };
 };
 
+/**
+ * Generic return type
+ */
 export interface ResultObject {
-  error: string | null;
   value: string | null;
+  error: string | null;
 }
 
 export type ResultObjectNumber = {

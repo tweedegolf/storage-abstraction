@@ -92,7 +92,15 @@ export class Storage implements IAdapter {
     this.adapter.bucketName = bucketName;
   }
 
+  set selectedBucket(bucketName: string | null) {
+    this.adapter.bucketName = bucketName;
+  }
+
   getSelectedBucket(): string | null {
+    return this.adapter.bucketName;
+  }
+
+  get selectedBucket(): string | null {
     return this.adapter.bucketName;
   }
 

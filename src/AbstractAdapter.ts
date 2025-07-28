@@ -61,6 +61,14 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._bucketName;
   }
 
+  set selectedBucket(bucketName: string | null) {
+    this._bucketName = bucketName;
+  }
+
+  get selectedBucket(): string | null {
+    return this._bucketName;
+  }
+
   set bucketName(bucketName: string | null) {
     this._bucketName = bucketName;
   }
@@ -165,19 +173,19 @@ export abstract class AbstractAdapter implements IAdapter {
   protected abstract _getFileAsURL(
     bucketName: string,
     fileName: string,
-    options: Options // e.g. { expiresIn: 3600 }
+    options: Options
   ): Promise<ResultObject>;
 
   protected abstract _getPublicURL(
     bucketName: string,
     fileName: string,
-    options: Options // e.g. { expiresIn: 3600 }
+    options: Options
   ): Promise<ResultObject>;
 
   protected abstract _getPresignedURL(
     bucketName: string,
     fileName: string,
-    options: Options // e.g. { expiresIn: 3600 }
+    options: Options
   ): Promise<ResultObject>;
 
   protected abstract _removeFile(

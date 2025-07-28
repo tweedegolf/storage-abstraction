@@ -590,7 +590,7 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 ### createBucket
 
 ```typescript
-createBucket(bucketName: string, options?: object): Promise<ResultObject>;
+createBucket(bucketName?: string, options?: object): Promise<ResultObject>;
 ```
 
 return type:
@@ -607,6 +607,8 @@ Creates a new bucket. You can provide extra storage-specific settings such as ac
 If the bucket was created successfully the `value` key will hold the string "ok".
 
 If the bucket exists or if creating the bucket fails for another reason the `error` key will hold the error message.
+
+The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket.
 
@@ -857,6 +859,9 @@ const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true
 ```
 
 > [!WARNING] 
+> This method can return urls for Amazon S3 but *not* for S3 compatible cloud services like R2.
+
+> [!WARNING] 
 > This method is deprecated: please use `getPublicURL` or `getPresignedURL`.
 
 ### getPublicURL
@@ -896,12 +901,15 @@ const s = new Storage({
   bucketName: "bucketName",
 });
 
-const url1 = getFileAsURL("bucketName", "fileName.jpg");
+const url1 = getPublicURL("bucketName", "fileName.jpg");
 // your_working_dir/sub_dir/bucketName/fileName.jpg
 
-const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true });
+const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true });
 // bucketName/fileName.jpg
 ```
+
+> [!WARNING] 
+> This method can return urls for Amazon S3 but *not* for S3 compatible cloud services like R2.
 
 ### getPresignedURL
 

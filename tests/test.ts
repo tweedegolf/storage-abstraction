@@ -263,10 +263,11 @@ async function run() {
   const b = getSelectedBucket();
   await createBucket();
   setSelectedBucket(b);
-  await bucketExists();
-  await bucketIsPublic();
+  // await deleteBucket();
+  // await bucketExists();
+  // await bucketIsPublic();
   await addFileFromPath();
-  await listFiles(b as string);
+  // await listFiles(b as string);
   // r = await storage.getPublicURL("aap888", "image1-path.jpg");
   // console.log(r);
   // r = await storage.getPresignedURL("aap888", "image1-path.jpg");

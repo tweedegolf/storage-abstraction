@@ -39,27 +39,28 @@ export interface StreamOptions extends Options {
   end?: number;
 }
 
-export interface IStorage extends IAdapter {
-  switchAdapter(config: string | StorageAdapterConfig): void
-  getAdapter(): IAdapter
-  get adapter(): IAdapter
-}
-
 export interface IAdapter {
+  /**
+   * @returns The instance of the service client that connects to the cloud service under the hood. For instance the adapter for Amazon returns the S3Client of the AWS SDK v3.
+   */
   getServiceClient(): any; // eslint-disable-line
 
-  serviceClient: any; // eslint-disable-line
+  /**
+   * `getServiceClient` implemented as getter
+   * The instance of the service client that connects to the cloud service under the hood. For instance the adapter for Amazon returns the S3Client of the AWS SDK v3.
+   */
+  get serviceClient(): any; // eslint-disable-line
 
   /**
-   * Returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
+   * @returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
    */
   getType(): string;
 
   /**
-   * Same as `getType` but implemented as getter
-   * @returns adapter type, e.g. 'gcs', 'b2', 'local' etc.
+   * `getType` implemented as getter
+   * The adapter type, e.g. 'gcs', 'b2', 'local' etc.
    */
-  type: string;
+  get type(): string;
 
   /**
    * Returns configuration settings that you've provided when instantiating as an object.
@@ -76,35 +77,68 @@ export interface IAdapter {
   getConfig(): AdapterConfig;
 
   /**
-   * Same as `getConfiguration` but implemented as getter
-   * @returns adapter configuration as object
+   * `getConfiguration` implemented as getter
+   * The adapter configuration as object
    */
-  config: AdapterConfig;
-
-  getConfigError(): null | string;
-
-  configError: null | string;
+  get config(): AdapterConfig;
 
   /**
-   * @returns the name of the selected bucket or `null` if no bucket is selected
+   * @returns the error message from the configuration parser or `null`. 
    */
-  getSelectedBucket(): null | string;
-
-  setSelectedBucket(bucketName: null | string): void;
-
-  bucketName: null | string;
+  getConfigError(): string | null;
 
   /**
-   * Returns an object that contains both the options passed with the configuration and the
-   * default options of the storage type if not overruled by the options you passed in.
+   * `getConfigError` implemented as getter
+   * The error message from the configuration parser or `null`. 
    */
-  // getOptions(): JSON;
+  get configError(): string | null;
 
   /**
-   * @param bucketName name of the bucket to create, returns "ok" once the bucket has been created but
-   * yields an error if bucket already exists.
-   * @param options: additional options for creating a bucket such as access rights
-   * @returns "ok" or error
+   * @returns The name of the selected bucket or `null` if no bucket is selected.
+   */
+  getSelectedBucket(): string | null;
+
+  /**
+   * `getSelectedBucket` implemented as getter
+   * The name of the selected bucket or `null` if no bucket is selected.
+   */
+  get selectedBucket(): string | null;
+
+  /**
+   * Stores the name of a bucket. The name of the bucket will be accessible using `getSelectedBucket` or the getter `selectedBucket`. By setting a selected bucket you can omit the `bucketName` parameter in all methods that otherwise require this parameter
+   * @param bucketName the name of the bucket, if you pass `null` the currently selected bucket will be deselected
+   */
+  setSelectedBucket(bucketName: string | null): void;
+
+  /**
+   * Stores the name of a bucket. The name of the bucket will be accessible using `getSelectedBucket` or the getter `selectedBucket`. By setting a selected bucket you can omit the `bucketName` parameter in all methods that otherwise require this parameter
+   * @param bucketName the name of the bucket, if you pass `null` the currently selected bucket will be deselected
+  */
+  set selectedBucket(bucketName: string | null);
+
+  /**
+   * short version of `getSelectedBucket`
+   * The name of the selected bucket or `null` if no bucket is selected.
+   */
+  get bucketName(): string | null;
+
+  /**
+   * @description short version of `setSelectedBucket`
+   * @description Stores the name of a bucket. The name of the bucket will be accessible using `getSelectedBucket` or the getter `selectedBucket`. By setting a selected bucket you can omit the `bucketName` parameter in all methods that otherwise require this parameter
+   * @param name the name of the bucket, if you pass `null` the currently selected bucket will be deselected
+   */
+  set bucketName(name: null | string)
+
+  /**
+   * @promise CreateBucketPromise
+   * @fulfill {ResultObject} `{value: "ok"}` or `{error: "the generated error message"}`
+   */
+
+  /**
+   * @description creates new bucket
+   * @param bucketName name of the bucket to create, returns "ok" once the bucket has been created but yields an error if bucket already exists.
+   * @param options additional options for creating a bucket such as access rights
+   * @resolves `{value: "ok"}` or `{error: "the generated error message"}`
    */
   createBucket(...args:
     [bucketName?: string, options?: Options] |
@@ -117,7 +151,7 @@ export interface IAdapter {
   clearBucket(bucketName?: string): Promise<ResultObject>;
 
   /**
-   * deletes the bucket with the provided name
+   * Deletes the bucket with the provided name. If no bucket name is provided, the selected bucket will be deleted.
    * @param {string} bucketName name of the bucket
    * @returns {Promise<ResultObject>} a promise that always resolves in a ResultObject:
    * ```typescript
@@ -220,7 +254,7 @@ export interface IAdapter {
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
-   * @param options
+   * @param options e.g. { expiresIn: 3600 }
    */
   getPresignedURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
