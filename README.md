@@ -590,7 +590,7 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 ### createBucket
 
 ```typescript
-createBucket(bucketName?: string, options?: object): Promise<ResultObject>;
+createBucket(bucketName?: string, options?: {public: boolean, [anykey]: any}): Promise<ResultObject>;
 ```
 
 return type:
@@ -602,7 +602,9 @@ export interface ResultObject {
 }
 ```
 
-Creates a new bucket. You can provide extra storage-specific settings such as access rights using the `options` object.
+Creates a new bucket. You can provide extra storage-specific settings such as access rights using the `options` object. 
+
+If you want to create a public bucket add a key `public` to the options object and set its value to `true`.
 
 If the bucket was created successfully the `value` key will hold the string "ok".
 
@@ -610,7 +612,7 @@ If the bucket exists or if creating the bucket fails for another reason the `err
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket.
+> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket. Additionally you may not have the rights to create a public bucket.
 
 ### clearBucket
 
@@ -908,8 +910,10 @@ const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true
 // bucketName/fileName.jpg
 ```
 
-> [!WARNING] 
-> This method can return urls for Amazon S3 but *not* for S3 compatible cloud services like R2.
+> [!NOTE]
+> Although Cloudflare R2 is S3 compatible, this method does cannot return a public url. R2 only supports public buckets if you add a custom domain to your bucket and if you connect a custom domain to your bucket you can simply construct the url of the bucket in your own code.
+> You could enable and use the Public Development URL but that is not meant to be used for production. See the documentation.
+> Alternately, you could use a pre-signed url instead of a public url
 
 ### getPresignedURL
 

@@ -13,3 +13,6 @@ publish/**/dist/**/*.js.map
 publish/**/dist/**/*.d.ts
 tests_local
 tests/test_directory
+__azurite**
+Azurite*
+__blobstorage__

@@ -63,6 +63,8 @@ export interface AdapterConfigAzure extends AdapterConfig {
 }
 ```
 
+You can omit the protocol of `blobDomain`. If you set `blobDomain` to `localhost` or `127.0.0.1` http is assumed, if you set it to any other value https is assumed. Sometimes you may want to explicitly set the protocol for instance if you are testing with a secure connection to Azurite.
+
 ## Examples
 
 Examples with configuration object:
@@ -89,6 +91,11 @@ const s = new Storage({
   blobDomain: "your-blob-domain", // Defaults to blob.core.windows.net
   bucketName: "the-buck"
 });
+
+const s = new Storage({
+  type: StorageType.AZURE,
+  connectionString: "DefaultEndpointsProtocol=http;AccountName=test;AccountKey=test;BlobEndpoint=http://127.0.0.1:10000/test"
+});
 ```
 
 Same examples with configuration url:
@@ -101,9 +108,9 @@ const s = new Storage("azure://your-account-name:your-account-key@the-buck?maxTr
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
 
-## Microsoft Azure Blob Storage
+## Login to Microsoft Azure Blob Storage
 
-There are multiple ways to login to Azure Blob Storage. Microsoft recommends to use passwordless authorization, for this you need to provide a value for `accountName` which is the name of your storage account. Then you can either login using the Azure CLI command `az login` or by setting the following environment variables:
+There are multiple ways to login to Azure Blob Storage. Microsoft recommends to use passwordless (Microsoft Entra) authorization, for this you need to provide a value for `accountName` which is the name of your storage account. Then you can either login using the Azure CLI command `az login` or by setting the following environment variables:
 
 ```shell
 AZURE_TENANT_ID
@@ -112,7 +119,7 @@ AZURE_CLIENT_SECRET
 
 ```
 
-You can find these values in the Azure Portal
+You can find these values in the Azure Portal, see the [documentation](https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/authentication/local-development-environment-developer-account?tabs=azure-portal%2Csign-in-azure-powershell) on Microsoft website.
 
 Alternately you can login by:
 
@@ -120,11 +127,28 @@ Alternately you can login by:
 - providing a value for both `accountName` and `accountKey`
 - providing a value for both `accountName` and `sasToken`
 
-Note that if you don't use the `accountKey` for authorization and you add files to a bucket you will get this error message:
+Note that if you don use a `sasToken` for authorization you are not authorized to use `bucketIsPublic` and if you add files to a bucket you will get this error message:
 
 `'Can only generate the SAS when the client is initialized with a shared key credential'`
 
 This does not mean that the file hasn't been uploaded, it simply means that no public url can been generated for this file.
+
+## Azurite
+
+You can your code with Azurite. I would recommend using the commandline version. The VS Code plugin versions has some flaws in my experience. 
+
+```typescript
+// connect to Azurite using the builtin account
+const config = {
+  type: StorageType.AZURE,
+  bucketName: "test",
+  accountName: "devstoreaccount1",
+  accountKey: "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==",
+  blobDomain: "127.0.0.1:10000",
+}
+```
+> [!NOTE]
+> Azurite does not support passwordless login
 
 ## Standalone
 

@@ -20,7 +20,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
-import { parseUrl, validateName } from "./util";
+import { parseUrl } from "./util";
 
 export class AdapterAzureBlob extends AbstractAdapter {
   protected _type = StorageType.AZURE;
@@ -60,7 +60,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
           this._config.bucketName = bucketName;
         }
       }
-      // console.log(this._config);
     }
 
     if (!this.config.accountName && !this.config.connectionString) {
@@ -69,7 +68,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       return;
     }
     if (typeof this.config.accountKey !== "undefined") {
-      // option 1: accountKey
+      // option 1: accountName + accountKey
       try {
         this.sharedKeyCredential = new StorageSharedKeyCredential(
           this.config.accountName as string,
@@ -80,7 +79,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       }
       try {
         this._client = new BlobServiceClient(
-          `https://${this.config.accountName as string}${this._getBlobDomain()}`,
+          this.getBlobEndpoint(),
           this.sharedKeyCredential,
           this.config.options as object
         );
@@ -88,10 +87,10 @@ export class AdapterAzureBlob extends AbstractAdapter {
         this._configError = `[configError] ${e.message}`;
       }
     } else if (typeof this.config.sasToken !== "undefined") {
-      // option 2: sasToken
+      // option 2: accountName + sasToken
       try {
         this._client = new BlobServiceClient(
-          `https://${this.config.accountName}${this._getBlobDomain()}?${this.config.sasToken}`,
+          `${this.getBlobEndpoint()}?${this.config.sasToken}`,
           new AnonymousCredential(),
           this.config.options as object
         );
@@ -106,10 +105,11 @@ export class AdapterAzureBlob extends AbstractAdapter {
         this._configError = `[configError] ${e.message}`;
       }
     } else {
-      // option 4: password less
+      // option 4: passwordless / Microsoft Entra
+      // see: https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/authentication/local-development-environment-developer-account?tabs=azure-portal%2Csign-in-azure-powershell
       try {
         this._client = new BlobServiceClient(
-          `https://${this.config.accountName as string}${this._getBlobDomain()}`,
+          this.getBlobEndpoint(),
           new DefaultAzureCredential(),
           this.config.options as object
         );
@@ -120,6 +120,28 @@ export class AdapterAzureBlob extends AbstractAdapter {
     if (typeof this.config.bucketName !== "undefined") {
       this._bucketName = this.config.bucketName;
     }
+  }
+
+  private getBlobEndpoint(): string {
+    let endpoint = "";
+    let protocol = "";
+    if (typeof this.config.blobDomain !== "undefined") {
+      let blobDomain = this.config.blobDomain;
+      if (blobDomain.indexOf("http") === 0) {
+        protocol = blobDomain.substring(0, blobDomain.indexOf("://") + 3);
+      }
+      blobDomain = blobDomain.replace(/^(https?:\/\/)/i, '');
+      // for local testing with Azurite
+      if (blobDomain.indexOf("127.0.0.1") === 0 || blobDomain.indexOf("localhost") === 0) {
+        endpoint = `${protocol === "" ? "http://" : protocol}${blobDomain}/${this.config.accountName}`;
+      } else {
+        endpoint = `${protocol === "" ? "https://" : protocol}${this.config.accountName}.${blobDomain}`;
+      }
+    } else {
+      endpoint = `https://${this.config.accountName}.blob.core.windows.net`
+    }
+    console.log(endpoint);
+    return endpoint;
   }
 
   // protected, called by methods of public API via AbstractAdapter
@@ -141,6 +163,9 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
     try {
+      if (options.public === true && typeof options.access === "undefined") {
+        options.access = "blob";
+      }
       const res = await this._client.createContainer(name, options);
       return { value: "ok", error: null };
     } catch (e) {
@@ -420,16 +445,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  private _getBlobDomain(): string {
-    let blobDomain = ".blob.core.windows.net";
-    if (typeof this.config.blobDomain !== "undefined") {
-      blobDomain = this.config.blobDomain;
-      if (!blobDomain.startsWith(".")) {
-        blobDomain = "." + blobDomain;
-      }
-    }
-    return blobDomain;
-  }
 
   // public
 

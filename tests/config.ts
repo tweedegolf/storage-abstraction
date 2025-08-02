@@ -64,12 +64,54 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
       applicationKey: process.env.B2_APPLICATION_KEY,
     };
   } else if (t === StorageType.AZURE) {
-    config = {
-      type: StorageType.AZURE,
-      bucketName: process.env.BUCKET_NAME,
-      accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
-      accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
-    };
+    const test: number = 6;
+    if (test === 1) {
+      // azurite local
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        accountName: process.env.AZURITE_ACCOUNT_NAME,
+        accountKey: process.env.AZURITE_ACCOUNT_KEY,
+        blobDomain: process.env.AZURITE_BLOB_ENDPOINT
+      };
+    } else if (test === 2) {
+      // account name and key
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+        accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
+      };
+    } else if (test === 3) {
+      // sas token
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+        sasToken: process.env.AZURE_STORAGE_SAS_TOKEN,
+      };
+    } else if (test === 4) {
+      // passwordless
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+      };
+    } else if (test === 5) {
+      // connection string azurite
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`
+      };
+    } else if (test === 6) {
+      // connection string azure
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING
+      };
+    }
   } else if (t === StorageType.MINIO) {
     config = {
       type: StorageType.MINIO,

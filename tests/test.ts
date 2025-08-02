@@ -65,7 +65,7 @@ async function bucketExists(bucketName?: string) {
 }
 
 async function bucketIsPublic(bucketName?: string) {
-  const r = await storage.bucketExists(bucketName);
+  const r = await storage.bucketIsPublic(bucketName);
   console.log(colorLog("bucketIsPublic"), r);
 }
 
@@ -86,7 +86,7 @@ function getSelectedBucket(): string | null {
 
 function setSelectedBucket(b: string | null) {
   const r = storage.setSelectedBucket(b);
-  console.log(colorLog("setSelectedBucket"), r);
+  console.log(colorLog("setSelectedBucket"), b);
 }
 
 async function clearBucket(bucketName?: string) {
@@ -260,20 +260,23 @@ async function run() {
   //   await deleteAllBuckets(buckets, storage);
   // }
 
+  // console.log(storage.configError);
   // const b = getSelectedBucket();
-  await createBucket("aap888", { access: "blob" });
+  await createBucket("aap889", { public: true });
   // setSelectedBucket(b);
-  setSelectedBucket("aap888");
+  setSelectedBucket("aap889");
   // await deleteBucket();
   // await bucketExists();
-  await bucketIsPublic();
-  await addFileFromPath();
+  await bucketIsPublic("aap889");
+  // await bucketIsPublic("aap889");
+  await addFileFromBuffer();
   await listFiles();
-  r = await storage.getPublicURL("aap888", "image1-path.jpg");
+  // r = await storage.getPublicURL("aap880", "image1-path.jpg");
+  r = await storage.getPublicURL("aap889", "image1-path.jpg");
   console.log(r);
-  r = await storage.getPresignedURL("aap888", "image1-path.jpg");
+  r = await storage.getPresignedURL("aap889", "image1-path.jpg");
   console.log(r);
-
+  // await getFileAsStream();
 
   // r = await storage.createBucket("aap8882", { public: true });
   // console.log(r);
