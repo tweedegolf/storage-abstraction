@@ -604,7 +604,14 @@ export interface ResultObject {
 
 Creates a new bucket. You can provide extra storage-specific settings such as access rights using the `options` object. 
 
-If you want to create a public bucket add a key `public` to the options object and set its value to `true`.
+If you want to create a public bucket add a key `public` to the options object and set its value to `true`. 
+
+>[!NOTE]
+> Setting `public` to true equals `access='blob'` in Azure Blob Storage; if you want to set your bucket to another access level you add it to the options object: 
+> ```typescript
+> // set custom access level
+> createBucket("test", {access: "container"});
+>```
 
 If the bucket was created successfully the `value` key will hold the string "ok".
 
@@ -612,7 +619,8 @@ If the bucket exists or if creating the bucket fails for another reason the `err
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket. Additionally you may not have the rights to create a public bucket.
+> [!NOTE] 
+> dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket. Additionally you may not have the rights to create a public bucket.
 
 ### clearBucket
 
