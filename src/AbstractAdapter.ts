@@ -95,40 +95,31 @@ export abstract class AbstractAdapter implements IAdapter {
     [options: boolean | Options | StreamOptions]
   ): { bucketName: string; fileName: string; options: object | boolean, error: string } {
     const [arg1, arg2, arg3] = args;
+    // console.log(arg1, arg2, arg3);
     let bucketName: string = null;
     let fileName: string = null;
     let options: object | boolean = null;
     let error = null;
+
     if (typeof arg1 !== "string") {
       bucketName = this._bucketName;
       if (bucketName === null) {
         error = "no bucket selected";
       }
-    } else if (typeof arg1 === "string") {
-      if (typeof arg2 === "string") {
-        bucketName = arg1;
-        fileName = arg2;
-        if (typeof arg3 === "object") {
-          options = arg3;
-        } else if (typeof arg3 === "boolean") {
-          options = arg3;
-        }
-      } else if (typeof arg2 !== "string") {
-        bucketName = this._bucketName;
-        if (bucketName === null) {
-          error = "no bucket selected";
-        } else {
-          fileName = arg1;
-          if (typeof arg2 === "object") {
-            options = arg2;
-          } else if (typeof arg2 === "boolean") {
-            options = arg2;
-          }
-        }
-      }
     } else {
-      error = "please provide valid arguments"
+      bucketName = arg1;
     }
+
+    if (typeof arg2 === "string") {
+      fileName = arg2;
+    } else {
+      error = "please provide a filename";
+    }
+
+    if (typeof arg3 === "object" || typeof arg3 === "boolean") {
+      options = arg3;
+    }
+
     return {
       bucketName,
       fileName,
@@ -326,7 +317,6 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: this.configError };
     }
     const { bucketName, fileName: _fn, options, error } = this._getFileAndBucketAndOptions(params.bucketName, params.targetPath, params.options);
-    // console.log(bucketName, _fn, options)
     if (error !== null) {
       return { value: null, error };
     }

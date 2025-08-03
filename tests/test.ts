@@ -121,6 +121,9 @@ async function addFileFromBuffer(bucketName?: string) {
     bucketName,
     buffer,
     targetPath: "image1-buffer.jpg",
+    options: {
+      ACL: "public-read"
+    }
   });
   console.log(colorLog("addFileFromBuffer"), r);
 }
@@ -256,25 +259,25 @@ async function run() {
   // console.log(r);
 
   const buckets = await listBuckets();
-  // if (buckets !== null && buckets.length > 0) {
-  //   await deleteAllBuckets(buckets, storage);
-  // }
+  if (buckets !== null && buckets.length > 0) {
+    await deleteAllBuckets(buckets, storage);
+  }
 
   // console.log(storage.configError);
   // const b = getSelectedBucket();
-  await createBucket("aap889", { public: true });
+  await createBucket("aap890", { public: true });
   // setSelectedBucket(b);
-  setSelectedBucket("aap889");
+  setSelectedBucket("aap890");
   // await deleteBucket();
   // await bucketExists();
-  await bucketIsPublic("aap889");
+  await bucketIsPublic("aap890");
   // await bucketIsPublic("aap889");
   await addFileFromBuffer();
   await listFiles();
   // r = await storage.getPublicURL("aap880", "image1-path.jpg");
-  r = await storage.getPublicURL("aap889", "image1-path.jpg");
+  r = await storage.getPublicURL("aap890", "image1-path.jpg");
   console.log(r);
-  r = await storage.getPresignedURL("aap889", "image1-path.jpg");
+  r = await storage.getPresignedURL("aap890", "image1-path.jpg");
   console.log(r);
   // await getFileAsStream();
 

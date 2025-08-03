@@ -613,6 +613,22 @@ If you want to create a public bucket add a key `public` to the options object a
 > createBucket("test", {access: "container"});
 >```
 
+>[!NOTE]
+> You cannot create a public bucket if you use the AmazonS3 adapter with Cloudflare R2; please use the Cloudflare Console to make your bucket public.
+
+>[!NOTE]
+> If you use the AmazonS3 adapter with Cubbit you can create a public bucket but if you want the files stored in the bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object of `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream` as well:
+>```typescript
+> addFileFromPath({
+>   bucketName: "test";
+>   origPath: "path/to/your/file.ext;
+>   targetPath: "new-name.ext;
+>   options: {
+>     ACL: "public-read"
+>   }
+>});
+```
+
 If the bucket was created successfully the `value` key will hold the string "ok".
 
 If the bucket exists or if creating the bucket fails for another reason the `error` key will hold the error message.
@@ -886,6 +902,7 @@ param type:
 export Options {
   [id: string]: any; // eslint-disable-line
   withoutDirectory?: boolean // only for the local adapter
+  guess?: boolean // only for the AmazonS3 adapter
 }
 ```
 

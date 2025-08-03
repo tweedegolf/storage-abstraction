@@ -18,6 +18,14 @@ export enum StorageType {
   AZURE = "azure", // Azure Storage Blob
   MINIO = "minio",
 }
+
+export enum S3Type {
+  AWS = "Amazon",
+  BACKBLAZE = "Backblaze",
+  CUBBIT = "Cubbit",
+  CLOUDFLARE = "Cloudflare",
+}
+
 export interface AdapterConfig {
   bucketName?: string;
   [id: string]: any; // eslint-disable-line
