@@ -614,15 +614,15 @@ If you want to create a public bucket add a key `public` to the options object a
 >```
 
 >[!NOTE]
-> You cannot create a public bucket if you use the AmazonS3 adapter with Cloudflare R2; please use the Cloudflare Console to make your bucket public.
+> You cannot create a public bucket if you use the AmazonS3 adapter with Backblaze or Cloudflare R2; please use the web console of these services to make your bucket public.
 
 >[!NOTE]
 > If you use the AmazonS3 adapter with Cubbit you can create a public bucket but if you want the files stored in the bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object of `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream` as well:
 >```typescript
 > addFileFromPath({
->   bucketName: "test";
->   origPath: "path/to/your/file.ext;
->   targetPath: "new-name.ext;
+>   bucketName: "test",
+>   origPath: "path/to/your/file.ext,
+>   targetPath: "new-name.ext,
 >   options: {
 >     ACL: "public-read"
 >   }
@@ -706,6 +706,7 @@ export type FilePathParams = {
   options?: {
     [id: string]: any;
     useSignedURL?: boolean;
+    ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
 ```
@@ -724,6 +725,9 @@ Copies a file from a local path `origPath` to the provided path `targetPath` in 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned. 
+
+>[!NOTE]
+> If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
 > [!WARNING] 
 > In a future version this function will no longer return a url. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
@@ -751,6 +755,7 @@ export type FileBufferParams = {
   options?: {
     [id: string]: any;
     useSignedURL?: boolean;
+    ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
 ```
@@ -771,6 +776,9 @@ The key `bucketName` is optional; if you don't pass a value the selected bucket 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned.
 
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
+
+>[!NOTE]
+> If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
 > [!WARNING] 
 > In a future version this function will no longer return a url. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
@@ -798,6 +806,7 @@ export type FileStreamParams = {
   options?: {
     [id: string]: any;
     useSignedURL?: boolean;
+    ACL?: string // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
 ```
@@ -818,6 +827,10 @@ The key `bucketName` is optional; if you don't pass a value the selected bucket 
 If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned.
 
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
+
+
+>[!NOTE]
+> If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
 > [!WARNING] 
 > In a future version this function will no longer return a url. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
@@ -901,8 +914,8 @@ param type:
 ```typescript
 export Options {
   [id: string]: any; // eslint-disable-line
+  noCheck?: boolean
   withoutDirectory?: boolean // only for the local adapter
-  guess?: boolean // only for the AmazonS3 adapter
 }
 ```
 
@@ -915,9 +928,19 @@ export type ResultObject = {
 };
 ```
 
-Returns the public url of the file. Returns an error if the bucket is not public.
+Returns the public url of the file. Returns an error if the bucket is not public. 
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is public. Using this the method will always return a url. The bypass was put in place because there is no way to check if a bucket is public when you use Cubbit of Backblaze with the Amazon S3 SDK; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url will return an error message.
+
+The Amazon S3 SDK doesn't have a method to retrieve a public url, instead the url is composed of known data using a cloud service specific template:
+- Amazon: `https://${bucket_name}.s3.${region}.amazon.com/${file_name}`
+- Backblaze: `https://${bucket_name}.s3.${region}.backblazeb2.com/${file_name}`
+- Cloudflare: N/A, see below
+- Cubbit: `https://${bucket_name}.s3.cubbit.eu/${file_name}`
+
+Although Cloudflare R2 is S3 compatible, this method cannot return a public url when you use R2 cloud storage. R2 only supports public buckets if you add a custom domain to your bucket, see [the documentation](https://developers.cloudflare.com/r2/buckets/public-buckets/#managed-public-buckets-through-r2dev) on the Cloudflare site. You can add a custom domain to your bucket in the Cloudflare Console and after that you can simply construct the url of the bucket in your own code. You could enable and use the Public Development URL but that is not meant to be used for production. Alternately, you could use a pre-signed url instead of a public url.
 
 For the local adapter you can use the key `withoutDirectory` in the options object:
 
@@ -934,11 +957,6 @@ const url1 = getPublicURL("bucketName", "fileName.jpg");
 const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true });
 // bucketName/fileName.jpg
 ```
-
-> [!NOTE]
-> Although Cloudflare R2 is S3 compatible, this method does cannot return a public url. R2 only supports public buckets if you add a custom domain to your bucket and if you connect a custom domain to your bucket you can simply construct the url of the bucket in your own code.
-> You could enable and use the Public Development URL but that is not meant to be used for production. See the documentation.
-> Alternately, you could use a pre-signed url instead of a public url
 
 ### getPresignedURL
 

@@ -112,6 +112,13 @@ export abstract class AbstractAdapter implements IAdapter {
 
     if (typeof arg2 === "string") {
       fileName = arg2;
+    } else if (typeof arg2 === "object" || typeof arg2 === "boolean") {
+      bucketName = this._bucketName;
+      if (bucketName === null) {
+        error = "no bucket selected";
+      }
+      fileName = arg1 as string;
+      options = arg2;
     } else {
       error = "please provide a filename";
     }

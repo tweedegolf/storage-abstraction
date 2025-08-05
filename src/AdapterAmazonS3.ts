@@ -27,6 +27,7 @@ import {
   GetBucketAclCommand,
   PutBucketAclCommand,
   ObjectCannedACL,
+  OutputLocationFilterSensitiveLog,
 } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType, S3Type } from "./types/general";
@@ -124,7 +125,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         this._config.region = "eu";
       }
     }
-    console.log(this._config.endpoint, this._s3Type);
+    // console.log(this._config.endpoint, this._s3Type);
   }
 
 
@@ -238,6 +239,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           );
         } else if (this._s3Type === S3Type.CLOUDFLARE) {
           okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Cloudflare Console`;
+        } else if (this._s3Type === S3Type.BACKBLAZE) {
+          okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Backblaze Web Console`;
         }
       }
       // const response = await this._client.send(command);
@@ -521,18 +524,34 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     options: Options
   ): Promise<ResultObject> {
     if (this._s3Type === S3Type.CLOUDFLARE) {
-      return { value: null, error: "Please use the Cloudflare Control to get the public URL." };
-    } else if (this._s3Type === S3Type.CUBBIT) {
-      return { value: null, error: "Please use the Cubbit Control to get the public URL." };
+      return { value: null, error: "Please use the Cloudflare web console to get the public URL." };
     }
 
-    const result = await this._bucketIsPublic(bucketName);
-    if (result.error !== null) {
-      return Promise.resolve({ value: null, error: result.error });
-    } else if (result.value === false) {
-      return Promise.resolve({ value: null, error: `Bucket "${bucketName}" is not public!` });
-    } else {
-      return Promise.resolve({ value: `https://${bucketName}.s3.${this.config.region}.${this.config.endpoint.replace(/^(s3)/, "")}/${fileName}`, error: null });
+    if (this._s3Type === S3Type.AWS) {
+      let response = { value: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`, error: null };
+      if (options.noCheck !== true) {
+        const result = await this._bucketIsPublic(bucketName);
+        if (result.error !== null) {
+          response = { value: null, error: result.error };
+        } else if (result.value === false) {
+          response = { value: null, error: `Bucket "${bucketName}" is not public!` };
+        }
+      }
+      return response;
+    }
+
+    if (this._s3Type === S3Type.CUBBIT) {
+      if (options.noCheck === true) {
+        return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
+      }
+      return { value: null, error: "Please use the Cubbit web console to get the public URL." };
+    }
+
+    if (this._s3Type === S3Type.BACKBLAZE) {
+      if (options.noCheck === true) {
+        return { value: `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`, error: null };
+      }
+      return { value: null, error: "Please use the Backblaze web console to get the public URL." };
     }
   }
 
@@ -550,7 +569,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         }),
         options
       );
-      return Promise.resolve({ value: url, error: null });
+      return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }

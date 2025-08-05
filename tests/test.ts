@@ -121,9 +121,9 @@ async function addFileFromBuffer(bucketName?: string) {
     bucketName,
     buffer,
     targetPath: "image1-buffer.jpg",
-    options: {
-      ACL: "public-read"
-    }
+    // options: {
+    //   ACL: "public-read"
+    // }
   });
   console.log(colorLog("addFileFromBuffer"), r);
 }
@@ -258,27 +258,33 @@ async function run() {
   // const r = await storage.serviceClient.config.region();
   // console.log(r);
 
-  const buckets = await listBuckets();
-  if (buckets !== null && buckets.length > 0) {
-    await deleteAllBuckets(buckets, storage);
-  }
+  // const buckets = await listBuckets();
+  // if (buckets !== null && buckets.length > 0) {
+  //   await deleteAllBuckets(buckets, storage);
+  // }
 
   // console.log(storage.configError);
   // const b = getSelectedBucket();
-  await createBucket("aap890", { public: true });
+  // await createBucket("aap890", { public: true });
+  // await createBucket("aap891", { public: true });
   // setSelectedBucket(b);
-  setSelectedBucket("aap890");
+  // setSelectedBucket("aap891");
   // await deleteBucket();
   // await bucketExists();
-  await bucketIsPublic("aap890");
+  // await bucketIsPublic("aap890");
   // await bucketIsPublic("aap889");
-  await addFileFromBuffer();
-  await listFiles();
+  // await addFileFromPath();
+  // await addFileFromBuffer();
+  // await listFiles();
   // r = await storage.getPublicURL("aap880", "image1-path.jpg");
-  r = await storage.getPublicURL("aap890", "image1-path.jpg");
+  // r = await storage.getPublicURL("aap890", "image1-buffer.jpg");
+  // console.log(r);
+  r = await storage.getPublicURL("aap891", "image1-path.jpg", { noCheck: true });
   console.log(r);
-  r = await storage.getPresignedURL("aap890", "image1-path.jpg");
+  r = await storage.getPublicURL("aap891", "image1-buffer.jpg", { noCheck: true });
   console.log(r);
+  // r = await storage.getPresignedURL("aap890", "image1-buffer.jpg");
+  // console.log(r);
   // await getFileAsStream();
 
   // r = await storage.createBucket("aap8882", { public: true });

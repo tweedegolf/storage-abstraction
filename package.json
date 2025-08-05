@@ -45,6 +45,7 @@
     "test-minio": "npm run test-jasmine 5",
     "test-minio-2": "MINIO_ENDPOINT='play.min.io' MINIO_USE_SSL='true' MINIO_PORT='9000' MINIO_REGION='us-east-1' MINIO_ACCESS_KEY='Q3AM3UQ867SPQQA43P2F' MINIO_SECRET_KEY='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG' npm run test-jasmine 5",
     "test": "ts-node ./tests/test.ts",
+    "test2": "ts-node ./tests/test2.ts",
     "test-urls": "ts-node ./tests/test_urls.ts",
     "test-mode": "ts-node ./tests_local/test-mode.ts",
     "testB2": "ts-node ./tests_local/testB2.ts",
