@@ -237,10 +237,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
               ACL: "public-read", // or "public-read-write"
             })
           );
-        } else if (this._s3Type === S3Type.CLOUDFLARE) {
-          okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Cloudflare Console`;
-        } else if (this._s3Type === S3Type.BACKBLAZE) {
-          okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Backblaze Web Console`;
+        } else if (this._s3Type === S3Type.CLOUDFLARE || this._s3Type === S3Type.BACKBLAZE) {
+          okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._s3Type} web console`;
         }
       }
       // const response = await this._client.send(command);

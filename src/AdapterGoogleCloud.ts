@@ -13,7 +13,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
-import { parseUrl, validateName } from "./util";
+import { parseUrl } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
   protected _type = StorageType.GCS;
@@ -120,7 +120,21 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    try {
+      if (options.noCheck !== true) {
+        const { value, error } = await this._bucketIsPublic(bucketName);
+        if (error !== null) {
+          return { value: null, error };
+        } else if (value === false) {
+          return { value: null, error: `Bucket "${bucketName}" is not public!` };
+        }
+      }
+      const bucket = this._client.bucket(bucketName, options);
+      const file = bucket.file(fileName);
+      return { value: file.publicUrl(), error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   protected async _getPresignedURL(
@@ -128,7 +142,16 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    try {
+      const file = this._client.bucket(bucketName).file(fileName);
+      const url = (await file.getSignedUrl({
+        action: "read",
+        expires: options.expiresOn || 86400,
+      }))[0];
+      return { value: url, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   protected async _getFileAsStream(
@@ -174,10 +197,22 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(
-    bucketName?: string,
-  ): Promise<ResultObjectBoolean> {
-    return Promise.resolve({ value: true, error: null });
+  protected async _bucketIsPublic(bucketName?: string,): Promise<ResultObjectBoolean> {
+    try {
+      const bucket = this._client.bucket(bucketName);
+      const [policy] = await bucket.iam.getPolicy({ requestedPolicyVersion: 3 });
+      let isPublic = false;
+      for (let i = 0; i < policy.bindings.length; i++) {
+        const element = policy.bindings[i];
+        if (element.role === "roles/storage.legacyBucketReader" && element.members.includes("allUsers")) {
+          isPublic = true;
+          break;
+        }
+      }
+      return { value: isPublic, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
   }
 
   protected async _addFile(

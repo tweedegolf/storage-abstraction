@@ -258,22 +258,23 @@ export class AdapterAzureBlob extends AbstractAdapter {
     options: Options
   ): Promise<ResultObject> {
     try {
-      const result = await this._bucketIsPublic(bucketName);
-      if (result.error !== null) {
-        return Promise.resolve({ value: null, error: result.error });
-      } else if (result.value === false) {
-        return Promise.resolve({ value: null, error: `Bucket "${bucketName}" is not public!` });
-      } else {
-        const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
-        const exists = await file.exists();
-        if (!exists) {
-          return {
-            value: null,
-            error: `File ${fileName} could not be found in bucket ${bucketName}`,
-          };
+      if (options.noCheck !== true) {
+        const result = await this._bucketIsPublic(bucketName);
+        if (result.error !== null) {
+          return { value: null, error: result.error };
+        } else if (result.value === false) {
+          return { value: null, error: `Bucket "${bucketName}" is not public!` };
         }
-        return Promise.resolve({ value: file.url, error: null });
       }
+      const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
+      const exists = await file.exists();
+      if (!exists) {
+        return {
+          value: null,
+          error: `File ${fileName} could not be found in bucket ${bucketName}`,
+        };
+      }
+      return { value: file.url, error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }

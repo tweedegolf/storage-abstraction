@@ -629,7 +629,7 @@ If you want to create a public bucket add a key `public` to the options object a
 >});
 ```
 
-If the bucket was created successfully the `value` key will hold the string "ok".
+If the bucket was created successfully the `value` key will hold the string "ok". If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold "Bucket {bucket_name} created successfully but you can only make this bucket public using the web console".
 
 If the bucket exists or if creating the bucket fails for another reason the `error` key will hold the error message.
 
@@ -932,7 +932,7 @@ Returns the public url of the file. Returns an error if the bucket is not public
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is public. Using this the method will always return a url. The bypass was put in place because there is no way to check if a bucket is public when you use Cubbit of Backblaze with the Amazon S3 SDK; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url will return an error message.
+With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is actually public. Using this the method will always return a url. The bypass was put in place because there is no way to check if a bucket is public when you use Cubbit of Backblaze with the Amazon S3 SDK; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url returned will be unreachable.
 
 The Amazon S3 SDK doesn't have a method to retrieve a public url, instead the url is composed of known data using a cloud service specific template:
 - Amazon: `https://${bucket_name}.s3.${region}.amazon.com/${file_name}`

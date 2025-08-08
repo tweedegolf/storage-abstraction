@@ -51,6 +51,7 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
 }
 
 async function run() {
+  const bucket = "aap892";
   let r: any;
 
   storage = new Storage(getConfig(types[index]));
@@ -60,25 +61,22 @@ async function run() {
     await deleteAllBuckets(r.value, storage);
   }
 
-  r = await storage.createBucket("aap891");
-  console.log(r);
+  r = await storage.createBucket(bucket, { public: true });
+  console.log(colorLog("createBucket"), r);
 
-  storage.setSelectedBucket("aap891")
+  storage.setSelectedBucket(bucket)
 
   r = await storage.addFileFromPath({
     origPath: "./tests/data/image1.jpg",
     targetPath: "image1-path.jpg",
-    options: {
-      ACL: "public-read"
-    }
+    // options: {
+    //   ACL: "public-read"
+    // }
   });
-  console.log(r);
+  console.log(colorLog("addFileFromPath"), r);
 
-  r = await storage.getPublicURL("image1-path.jpg", { noCheck: true });
-  console.log(r);
-
-  // r = await storage.getPublicURL("image1-buffer.jpg", { noCheck: true });
-  // console.log(r);
+  r = await storage.getPublicURL("image1-path.jpg", { noCheck: false });
+  console.log(colorLog("getPublicURL"), r);
 }
 
 run();
