@@ -142,11 +142,16 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
+    let expires = options.expiresOn;
+    if (typeof expires !== "number") {
+      const exp = new Date();
+      expires = exp.setFullYear(exp.getFullYear() + 1).valueOf()
+    }
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       const url = (await file.getSignedUrl({
         action: "read",
-        expires: options.expiresOn || 86400,
+        expires,
       }))[0];
       return { value: url, error: null };
     } catch (e) {
@@ -243,8 +248,13 @@ export class AdapterGoogleCloud extends AbstractAdapter {
           .on("error", (e: Error) => {
             resolve({ value: null, error: e.message });
           })
-          .on("finish", () => {
-            resolve({ value: file.publicUrl(), error: null });
+          .on("finish", async () => {
+            if (params.options.usePresignedURL === true || params.options.useSignedURL === true) {
+              const r = await this._getPresignedURL(params.bucketName, params.targetPath, params.options);
+              resolve(r);
+            } else {
+              resolve({ value: file.publicUrl(), error: null });
+            }
           });
         writeStream.on("error", (e: Error) => {
           resolve({ value: null, error: e.message });

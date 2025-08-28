@@ -20,7 +20,7 @@ import {
   ResultObjectFileB2,
   ResultObjectFilesB2,
 } from "./types/adapter_backblaze_b2";
-import { parseUrl, validateName } from "./util";
+import { parseUrl } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _type = StorageType.B2;

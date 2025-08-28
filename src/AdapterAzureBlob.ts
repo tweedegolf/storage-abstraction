@@ -381,7 +381,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       if (writeStream.errorCode) {
         return { value: null, error: writeStream.errorCode };
       } else {
-        if (params.options.usePresignedURL === true) {
+        if (params.options.usePresignedURL === true || params.options.useSignedURL === true) {
           return this._getPresignedURL(params.bucketName, params.targetPath, params.options)
         }
         return this._getFileAsURL(params.bucketName, params.targetPath, params.options);

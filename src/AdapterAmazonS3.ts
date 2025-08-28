@@ -429,7 +429,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       };
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
-      if (params.options.usePresignedURL === true) {
+      if (params.options.usePresignedURL === true || params.options.useSignedURL === true) {
         return this._getPresignedURL(params.bucketName, params.targetPath, params.options)
       }
       // return this._getPublicURL(params.bucketName, params.targetPath, params.options)

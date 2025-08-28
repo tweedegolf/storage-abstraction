@@ -705,7 +705,7 @@ export type FilePathParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    useSignedURL?: boolean;
+    usePresignedURL?: boolean;
     ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
@@ -724,7 +724,7 @@ Copies a file from a local path `origPath` to the provided path `targetPath` in 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned. 
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `usePresignedURL` and set it to `true` a presigned URL will be returned. 
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
@@ -754,7 +754,7 @@ export type FileBufferParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    useSignedURL?: boolean;
+    usePresignedURL?: boolean;
     ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
@@ -773,12 +773,15 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned.
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `usePresignedURL` and set it to `true` a presigned URL will be returned.
 
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+
+>[!NOTE]
+> At the moment both `usePresignedURL` and `useSignedURL` are supported; future version may drop support for the latter.
 
 > [!WARNING] 
 > In a future version this function will no longer return a url. Please use `getPublicURL` or `getPresignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
@@ -805,7 +808,7 @@ export type FileStreamParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    useSignedURL?: boolean;
+    usePresignedURL?: boolean;
     ACL?: string // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
@@ -824,7 +827,7 @@ Allows you to stream a file directly to the storage. The value for `targetPath` 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` and set it to `true` a presigned URL will be returned.
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `usePresignedURL` and set it to `true` a presigned URL will be returned.
 
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 

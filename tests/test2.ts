@@ -56,27 +56,31 @@ async function run() {
 
   storage = new Storage(getConfig(types[index]));
 
-  r = await storage.listBuckets();
-  if (r.value !== null && r.value.length > 0) {
-    await deleteAllBuckets(r.value, storage);
-  }
+  // r = await storage.listBuckets();
+  // if (r.value !== null && r.value.length > 0) {
+  //   await deleteAllBuckets(r.value, storage);
+  // }
 
-  r = await storage.createBucket(bucket, { public: true });
-  console.log(colorLog("createBucket"), r);
+  // r = await storage.createBucket(bucket, { public: true });
+  // console.log(colorLog("createBucket"), r);
 
   storage.setSelectedBucket(bucket)
 
   r = await storage.addFileFromPath({
     origPath: "./tests/data/image1.jpg",
     targetPath: "image1-path.jpg",
-    // options: {
-    //   ACL: "public-read"
-    // }
+    options: {
+      // ACL: "public-read"
+      usePresignedURL: true,
+    }
   });
   console.log(colorLog("addFileFromPath"), r);
 
   r = await storage.getPublicURL("image1-path.jpg", { noCheck: false });
   console.log(colorLog("getPublicURL"), r);
+
+  r = await storage.getPresignedURL("image1-path.jpg", { noCheck: false });
+  console.log(colorLog("getPresignedURL"), r);
 }
 
 run();
