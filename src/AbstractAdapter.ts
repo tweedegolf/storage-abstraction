@@ -180,7 +180,7 @@ export abstract class AbstractAdapter implements IAdapter {
     options: Options
   ): Promise<ResultObject>;
 
-  protected abstract _getPresignedURL(
+  protected abstract _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -347,7 +347,7 @@ export abstract class AbstractAdapter implements IAdapter {
   }
 
   /**
-   * @deprecated: please use getPublicURL or getPresignedURL
+   * @deprecated: please use getPublicURL or getSignedURL
    */
   public async getFileAsURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
@@ -374,7 +374,7 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._getPublicURL(bucketName, fileName, options === null ? {} : options as Options);
   }
 
-  public async getPresignedURL(...args:
+  public async getSignedURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
     [fileName: string, options?: Options]
   ): Promise<ResultObject> {
@@ -382,7 +382,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { error, value: null };
     }
-    return this._getPresignedURL(bucketName, fileName, options === null ? {} : options as Options);
+    return this._getSignedURL(bucketName, fileName, options === null ? {} : options as Options);
   }
 
   public async sizeOf(...args:

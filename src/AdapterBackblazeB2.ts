@@ -254,6 +254,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     let { options } = params;
     if (typeof options === "undefined") {
       options = {};
+    } else if (options.public === true) {
+      options.bucketType = "allPublic"
     }
 
     try {
@@ -278,6 +280,19 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         ...options,
       });
       // console.log(_data);
+      if (options.signedURL === true || options.useSignedURL === true) {
+        const r = await this._client.getDownloadAuthorization({
+          bucketId,
+          fileNamePrefix: targetPath,
+          validDurationInSeconds: options.expires || 604800
+        });
+        const { data: { authorizationToken: token } } = r;
+        console.log(token);
+        return {
+          value: `${this._client.downloadUrl}/file/${bucketName}/${targetPath}?Authorization=${token}`,
+          error: null,
+        };
+      }
       return {
         value: `${this._client.downloadUrl}/file/${bucketName}/${targetPath}`,
         error: null,
@@ -336,7 +351,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   /**
-   * @deprecated: use getPublicURL or getPresignedURL
+   * @deprecated: use getPublicURL or getSignedURL
    */
   protected async _getFileAsURL(
     bucketName: string,
@@ -360,7 +375,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     return Promise.resolve({ value: "", error: null });
   }
 
-  protected async _getPresignedURL(
+  protected async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options

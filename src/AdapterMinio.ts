@@ -235,7 +235,7 @@ export class AdapterMinio extends AbstractAdapter {
   }
 
   /**
-   * @deprecated: use getPublicURL or getPresignedURL
+   * @deprecated: use getPublicURL or getSignedURL
    */
   protected async _getFileAsURL(
     bucketName: string,
@@ -269,7 +269,7 @@ export class AdapterMinio extends AbstractAdapter {
     return Promise.resolve({ value: "", error: null });
   }
 
-  protected async _getPresignedURL(
+  protected async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options

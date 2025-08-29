@@ -51,18 +51,18 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
 }
 
 async function run() {
-  const bucket = "aap892";
+  const bucket = "aap893";
   let r: any;
 
   storage = new Storage(getConfig(types[index]));
 
-  // r = await storage.listBuckets();
-  // if (r.value !== null && r.value.length > 0) {
-  //   await deleteAllBuckets(r.value, storage);
-  // }
+  r = await storage.listBuckets();
+  if (r.value !== null && r.value.length > 0) {
+    await deleteAllBuckets(r.value, storage);
+  }
 
-  // r = await storage.createBucket(bucket, { public: true });
-  // console.log(colorLog("createBucket"), r);
+  r = await storage.createBucket(bucket, { public: true });
+  console.log(colorLog("createBucket"), r);
 
   storage.setSelectedBucket(bucket)
 
@@ -71,7 +71,7 @@ async function run() {
     targetPath: "image1-path.jpg",
     options: {
       // ACL: "public-read"
-      usePresignedURL: true,
+      useSignedURL: true,
     }
   });
   console.log(colorLog("addFileFromPath"), r);
@@ -79,7 +79,7 @@ async function run() {
   r = await storage.getPublicURL("image1-path.jpg", { noCheck: false });
   console.log(colorLog("getPublicURL"), r);
 
-  r = await storage.getPresignedURL("image1-path.jpg", { noCheck: false });
+  r = await storage.getSignedURL("image1-path.jpg", { noCheck: false });
   console.log(colorLog("getPresignedURL"), r);
 }
 

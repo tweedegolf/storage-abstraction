@@ -239,7 +239,7 @@ export interface IAdapter {
   ): Promise<ResultObjectStream>;
 
   /**
-   * @deprecated: use getPublicURL or getPresignedURL
+   * @deprecated: use getPublicURL or getSignedURL
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file
    * @param options
@@ -264,7 +264,7 @@ export interface IAdapter {
    * @param fileName name of the file
    * @param options e.g. { expiresIn: 3600 }
    */
-  getPresignedURL(...args:
+  getSignedURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
     [fileName: string, options?: Options]
   ): Promise<ResultObject>;

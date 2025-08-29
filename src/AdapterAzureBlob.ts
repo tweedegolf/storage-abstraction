@@ -214,7 +214,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
   }
 
   /**
-   * @deprecated: use getPublicURL or getPresignedURL
+   * @deprecated: use getPublicURL or getSignedURL
    */
   protected async _getFileAsURL(
     bucketName: string,
@@ -280,7 +280,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedURL(
+  protected async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -381,8 +381,8 @@ export class AdapterAzureBlob extends AbstractAdapter {
       if (writeStream.errorCode) {
         return { value: null, error: writeStream.errorCode };
       } else {
-        if (params.options.usePresignedURL === true || params.options.useSignedURL === true) {
-          return this._getPresignedURL(params.bucketName, params.targetPath, params.options)
+        if (params.options.signedURL === true || params.options.useSignedURL === true) {
+          return this._getSignedURL(params.bucketName, params.targetPath, params.options)
         }
         return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
       }

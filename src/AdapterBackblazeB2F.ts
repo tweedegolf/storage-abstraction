@@ -76,7 +76,7 @@ const getFileAsStream = async (
 };
 
 /**
- * @deprecated: use getPublicURL or getPresignedURL
+ * @deprecated: use getPublicURL or getSignedURL
  */
 const getFileAsURL = async (
   arg1: string,
@@ -94,7 +94,7 @@ const getPublicURL = async (
   return Promise.resolve({ value: "url", error: null });
 }
 
-const getPresignedURL = async (
+const getSignedURL = async (
   arg1: string,
   arg2: Options | string,
   arg3?: Options
@@ -166,7 +166,7 @@ const adapter: IAdapter = {
   getFileAsStream,
   getFileAsURL,
   getPublicURL,
-  getPresignedURL,
+  getSignedURL,
   removeFile,
   listFiles,
   sizeOf,

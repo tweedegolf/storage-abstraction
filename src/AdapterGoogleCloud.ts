@@ -90,7 +90,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   /**
-   * @deprecated: use getPublicURL or getPresignedURL
+   * @deprecated: use getPublicURL or getSignedURL
    */
   protected async _getFileAsURL(
     bucketName: string,
@@ -137,7 +137,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedURL(
+  protected async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -145,7 +145,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     let expires = options.expiresOn;
     if (typeof expires !== "number") {
       const exp = new Date();
-      expires = exp.setFullYear(exp.getFullYear() + 1).valueOf()
+      expires = exp.setUTCDate(exp.getUTCDate() + 7).valueOf()
     }
     try {
       const file = this._client.bucket(bucketName).file(fileName);
@@ -249,8 +249,8 @@ export class AdapterGoogleCloud extends AbstractAdapter {
             resolve({ value: null, error: e.message });
           })
           .on("finish", async () => {
-            if (params.options.usePresignedURL === true || params.options.useSignedURL === true) {
-              const r = await this._getPresignedURL(params.bucketName, params.targetPath, params.options);
+            if (params.options.signedURL === true || params.options.useSignedURL === true) {
+              const r = await this._getSignedURL(params.bucketName, params.targetPath, params.options);
               resolve(r);
             } else {
               resolve({ value: file.publicUrl(), error: null });
