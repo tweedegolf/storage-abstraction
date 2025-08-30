@@ -14,6 +14,7 @@ import {
 } from "./types/result";
 import {
   AdapterConfigBackblazeB2,
+  BackblazeB2Bucket,
   FileB2,
   ResultObjectBucketB2,
   ResultObjectBucketsB2,
@@ -84,21 +85,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // console.log(_data.allowed.capabilities);
       this.authorized = true;
       return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  private async getBuckets(): Promise<ResultObjectBucketsB2> {
-    try {
-      const { data } = await this._client.listBuckets();
-      const value = data.buckets.map(({ bucketId, bucketName }) => {
-        return {
-          id: bucketId,
-          name: bucketName,
-        };
-      });
-      return { value, error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -193,24 +179,21 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: null, error };
     }
 
-    const data = await this.getBuckets();
-    if (data.error === null) {
-      const { value: buckets } = data;
-      return {
-        value: buckets.map((b) => {
-          return b.name;
-        }),
-        error: null,
-      };
-    } else {
-      return { value: null, error: data.error };
+    try {
+      const { data } = await this._client.listBuckets();
+      const value = data.buckets.map(({ bucketName }) => bucketName);
+      return { value, error: null };
+    } catch (e) {
+      return { value: null, error: e };
     }
   }
 
   protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
     const { error } = await this.authorize();
-    if (typeof options.bucketType === "undefined") {
+    if (options.public !== true && typeof options.bucketType === "undefined") {
       options.bucketType = "allPrivate";
+    } else {
+      options.bucketType = "allPublic"
     }
 
     try {
@@ -254,8 +237,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     let { options } = params;
     if (typeof options === "undefined") {
       options = {};
-    } else if (options.public === true) {
-      options.bucketType = "allPublic"
     }
 
     try {
@@ -281,22 +262,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
       // console.log(_data);
       if (options.signedURL === true || options.useSignedURL === true) {
-        const r = await this._client.getDownloadAuthorization({
-          bucketId,
-          fileNamePrefix: targetPath,
-          validDurationInSeconds: options.expires || 604800
-        });
-        const { data: { authorizationToken: token } } = r;
-        console.log(token);
-        return {
-          value: `${this._client.downloadUrl}/file/${bucketName}/${targetPath}?Authorization=${token}`,
-          error: null,
-        };
+        return this._getSignedURL(bucketName, targetPath, options);
       }
-      return {
-        value: `${this._client.downloadUrl}/file/${bucketName}/${targetPath}`,
-        error: null,
-      };
+      return this._getPublicURL(bucketName, targetPath, options);
     } catch (e) {
       // console.log(e.toJSON());
       return { value: null, error: e.message };
@@ -372,7 +340,19 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    if (options.noCheck !== true) {
+      const { value, error } = await this._bucketIsPublic(bucketName);
+      if (error !== null) {
+        return { value: null, error };
+      } else if (value === false) {
+        return { value: null, error: `Bucket "${bucketName}" is not public!` };
+      }
+    }
+
+    return {
+      value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}`,
+      error: null,
+    };
   }
 
   protected async _getSignedURL(
@@ -380,7 +360,36 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    try {
+      const data = await this.getBucket(bucketName);
+      if (data.error !== null) {
+        return { value: null, error: data.error };
+      }
+      const {
+        value: { id: bucketId },
+      } = data;
+
+      if (typeof options.expiresIn !== "number") {
+        options.expiresIn = 604800
+      }
+
+      const r = await this._client.getDownloadAuthorization({
+        bucketId,
+        fileNamePrefix: fileName,
+        validDurationInSeconds: options.expiresIn
+      });
+      const { data: { authorizationToken: token } } = r;
+
+      return {
+        value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}?Authorization=${token}`,
+        error: null,
+      };
+    } catch (e) {
+      return {
+        value: null,
+        error: e,
+      };
+    }
   }
 
   protected async _removeFile(
@@ -540,7 +549,22 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected async _bucketIsPublic(
     bucketName?: string,
   ): Promise<ResultObjectBoolean> {
-    return Promise.resolve({ value: true, error: null });
+    const { error } = await this.authorize();
+    if (error !== null) {
+      return { value: null, error };
+    }
+
+    try {
+      const { data } = await this._client.listBuckets();
+      const index = data.buckets.findIndex((bucket: BackblazeB2Bucket) => bucket.bucketName === bucketName);
+      if (index === -1) {
+        return { value: null, error: `Could not find the bucket "${bucketName}"` }
+      }
+      const bucket: BackblazeB2Bucket = data.buckets[index];
+      return { value: bucket.bucketType === "allPublic", error: null };
+    } catch (e) {
+      return { value: null, error: e };
+    }
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {

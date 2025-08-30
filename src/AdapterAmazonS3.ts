@@ -27,7 +27,6 @@ import {
   GetBucketAclCommand,
   PutBucketAclCommand,
   ObjectCannedACL,
-  OutputLocationFilterSensitiveLog,
 } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType, S3Type } from "./types/general";
@@ -496,7 +495,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       let url = "";
-      if (options.useSignedUrl === true || (this._s3Type !== S3Type.AWS && this._s3Type !== S3Type.CUBBIT)) {
+      if (options.signedUrl === true || options.useSignedUrl === true || (this._s3Type !== S3Type.AWS && this._s3Type !== S3Type.CUBBIT)) {
+        if (typeof options.expiresIn !== "number") {
+          options.expiresIn = 604800
+        }
         url = await getSignedUrl(
           this._client,
           new GetObjectCommand({

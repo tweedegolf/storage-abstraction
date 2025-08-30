@@ -129,6 +129,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
           return { value: null, error: `Bucket "${bucketName}" is not public!` };
         }
       }
+
       const bucket = this._client.bucket(bucketName, options);
       const file = bucket.file(fileName);
       return { value: file.publicUrl(), error: null };
@@ -142,7 +143,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    let expires = options.expiresOn;
+    let expires = options.expiresIn;
     if (typeof expires !== "number") {
       const exp = new Date();
       expires = exp.setUTCDate(exp.getUTCDate() + 7).valueOf()

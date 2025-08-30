@@ -962,7 +962,7 @@ const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true
 
 ```typescript
 getSignedURL(bucketName?: string, fileName: string, options?: {
-  expires: number // number of seconds the url is valid, default to a week (604800)
+  expiresIn: number // number of seconds the url is valid, default to a week (604800)
 }): Promise<ResultObject>;
 ```
 

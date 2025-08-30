@@ -20,11 +20,11 @@ export type BackblazeAxiosResponse = {
 };
 
 export type BackblazeB2Bucket = {
-  accountId: "string";
-  bucketId: "string";
-  bucketInfo: "object";
-  bucketName: "string";
-  bucketType: "string";
+  accountId: string;
+  bucketId: string;
+  bucketInfo: object;
+  bucketName: string;
+  bucketType: string;
   corsRules: string[];
   lifecycleRules: string[];
   options: string[];

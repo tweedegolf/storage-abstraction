@@ -51,7 +51,7 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
 }
 
 async function run() {
-  const bucket = "aap893";
+  const bucket = "aap894";
   let r: any;
 
   storage = new Storage(getConfig(types[index]));
@@ -64,23 +64,26 @@ async function run() {
   r = await storage.createBucket(bucket, { public: true });
   console.log(colorLog("createBucket"), r);
 
-  storage.setSelectedBucket(bucket)
+  // storage.setSelectedBucket(bucket)
 
-  r = await storage.addFileFromPath({
-    origPath: "./tests/data/image1.jpg",
-    targetPath: "image1-path.jpg",
-    options: {
-      // ACL: "public-read"
-      useSignedURL: true,
-    }
-  });
-  console.log(colorLog("addFileFromPath"), r);
+  // r = await storage.addFileFromPath({
+  //   origPath: "./tests/data/image1.jpg",
+  //   targetPath: "image1-path.jpg",
+  //   options: {
+  //     // ACL: "public-read"
+  //     useSignedURL: true,
+  //   }
+  // });
+  // console.log(colorLog("addFileFromPath"), r);
 
-  r = await storage.getPublicURL("image1-path.jpg", { noCheck: false });
-  console.log(colorLog("getPublicURL"), r);
+  // r = await storage.getPublicURL("image1-path.jpg", { noCheck: false });
+  // console.log(colorLog("getPublicURL"), r);
 
-  r = await storage.getSignedURL("image1-path.jpg", { noCheck: false });
-  console.log(colorLog("getPresignedURL"), r);
+  // r = await storage.getSignedURL("image1-path.jpg", { noCheck: false });
+  // console.log(colorLog("getPresignedURL"), r);
+
+  r = await storage.bucketIsPublic("aap894");
+  console.log(colorLog("bucketIsPublic"), r);
 }
 
 run();
