@@ -221,34 +221,10 @@ export class AdapterAzureBlob extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    try {
-      const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
-      const exists = await file.exists();
-
-      if (!exists) {
-        return {
-          value: null,
-          error: `File ${fileName} could not be found in bucket ${bucketName}`,
-        };
-      }
-
-      try {
-        let url: string;
-        if (options.useSignedUrl) {
-          const sasOptions: BlobGenerateSasUrlOptions = {
-            permissions: options.permissions || BlobSASPermissions.parse("r"),
-            expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
-          };
-          url = await file.generateSasUrl(sasOptions);
-        } else {
-          url = file.url;
-        }
-        return { value: url, error: null };
-      } catch (e) {
-        return { value: null, error: e.message };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
+    if (options.signedURL === true || options.useSignedURL === true) {
+      return this._getSignedURL(bucketName, fileName, options)
+    } else {
+      return this._getPublicURL(bucketName, fileName, options)
     }
   }
 
@@ -299,7 +275,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
         expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
       };
       const url = await file.generateSasUrl(sasOptions);
-      return Promise.resolve({ value: url, error: null });
+      return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -384,7 +360,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
         if (params.options.signedURL === true || params.options.useSignedURL === true) {
           return this._getSignedURL(params.bucketName, params.targetPath, params.options)
         }
-        return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
+        return this._getPublicURL(params.bucketName, params.targetPath, { ...params.options, noCheck: true });
       }
     } catch (e) {
       return { value: null, error: e.message };
@@ -421,7 +397,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       const response = await containerClient.getAccessPolicy();
       const accessLevel = response.blobPublicAccess; // "container", "blob", or undefined/null ("none")
       const value = accessLevel === "container" || accessLevel === "blob";
-      return Promise.resolve({ value, error: null });
+      return { value, error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }

@@ -238,6 +238,14 @@ export class AdapterLocal extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
+    return this._getPublicURL(bucketName, fileName, options);
+  }
+
+  protected async _getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       try {
@@ -254,20 +262,12 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
-  }
-
   protected async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    return this._getPublicURL(bucketName, fileName, options);
   }
 
   protected async _removeFile(
@@ -313,7 +313,7 @@ export class AdapterLocal extends AbstractAdapter {
   protected async _bucketIsPublic(
     bucketName?: string,
   ): Promise<ResultObjectBoolean> {
-    return Promise.resolve({ value: true, error: null });
+    return { value: true, error: null };
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {

@@ -13,7 +13,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigMinio } from "./types/adapter_minio";
-import { parseUrl, validateName } from "./util";
+import { parseUrl } from "./util";
 
 export class AdapterMinio extends AbstractAdapter {
   protected _type = StorageType.MINIO;
@@ -119,6 +119,21 @@ export class AdapterMinio extends AbstractAdapter {
     try {
       const { region } = this._config;
       await this._client.makeBucket(name, region, options as Minio.MakeBucketOpt);
+      if (options.public === true) {
+        const publicReadPolicy = {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: { AWS: ["*"] },
+              Action: ["s3:GetObject"],
+              Resource: [`arn:aws:s3:::${name}/*`]
+            }
+          ]
+        };
+        // Set the bucket policy to public read
+        await this._client.setBucketPolicy(name, JSON.stringify(publicReadPolicy));
+      }
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -220,15 +235,18 @@ export class AdapterMinio extends AbstractAdapter {
         fileData = (params as FileStreamParams).stream;
       }
 
-      const { bucketName, targetPath } = params;
-      const response = await this._client.putObject(
+      const { bucketName, targetPath, options } = params;
+      await this._client.putObject(
         bucketName,
         targetPath,
         fileData,
         size,
-        params.options
+        options
       );
-      return this.getFileAsURL(params.bucketName, params.targetPath, params.options);
+      if (options.signedURL === true || options.useSignedURL === true) {
+        return this._getSignedURL(bucketName, targetPath, options);
+      }
+      return this.getPublicURL(params.bucketName, params.targetPath, { ...options, noCheck: true });
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -242,22 +260,10 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options // e.g. { expiry: 3600 }
   ): Promise<ResultObject> {
-    const expiry = options.expiry || 7 * 24 * 60 * 60;
-    let url = "";
-    try {
-      if (options.useSignedUrl) {
-        url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
-      } else {
-        url = `https://${this.config.endPoint}/`;
-        if (this.config.port) {
-          url += `:${this.config.port}`;
-        }
-        url += `/${bucketName}/${fileName}`;
-      }
-
-      return { value: url, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    if (options.signedUrl === true || options.useSignedURL === true) {
+      return this._getSignedURL(bucketName, fileName, options);
+    } else {
+      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
   }
 
@@ -266,7 +272,20 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    if (options.noCheck !== true) {
+      const { value, error } = await this._bucketIsPublic(bucketName);
+      if (error !== null) {
+        return { value: null, error };
+      } else if (value === false) {
+        return { value: null, error: `Bucket "${bucketName}" is not public!` };
+      }
+    }
+    let url = `https://${this.config.endPoint}`;
+    if (this.config.port) {
+      url += `:${this.config.port}`;
+    }
+    url += `/${bucketName}/${fileName}`;
+    return { value: url, error: null };
   }
 
   protected async _getSignedURL(
@@ -274,7 +293,16 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    return Promise.resolve({ value: "", error: null });
+    let expiry = 7 * 24 * 60 * 60;
+    if (typeof options.expiresIn === "number") {
+      expiry = options.expiresIn;
+    }
+    try {
+      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
+      return { value: url, error: null };
+    } catch (e) {
+      return { value: null, error: e };
+    }
   }
 
   protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
@@ -320,9 +348,27 @@ export class AdapterMinio extends AbstractAdapter {
   }
 
   protected async _bucketIsPublic(
-    bucketName?: string,
+    bucketName: string,
   ): Promise<ResultObjectBoolean> {
-    return Promise.resolve({ value: true, error: null });
+    try {
+      const policy = await this._client.getBucketPolicy(bucketName);
+      const p = JSON.parse(policy);
+      let isPublic = false;
+      // console.log('Bucket policy:', policy);
+      for (let i = 0; i < p.Statement.length; i++) {
+        const s = p.Statement[i];
+        if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {
+          isPublic = true;
+          break;
+        }
+      }
+      return { value: isPublic, error: null };
+    } catch (e) {
+      if (e.code === 'NoSuchBucketPolicy') {
+        return { value: false, error: null }
+      }
+      return { value: null, error: e }
+    }
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {

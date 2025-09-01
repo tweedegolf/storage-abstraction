@@ -367,11 +367,12 @@ export abstract class AbstractAdapter implements IAdapter {
     [bucketName: string, fileName: string, options?: Options] |
     [fileName: string, options?: Options]
   ): Promise<ResultObject> {
-    const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(...args);
+    const { bucketName, fileName, options: opt, error } = this._getFileAndBucketAndOptions(...args);
     if (error !== null) {
       return { error, value: null };
     }
-    return this._getPublicURL(bucketName, fileName, options === null ? {} : options as Options);
+    const options = opt === null ? {} : opt as Options
+    return this._getPublicURL(bucketName, fileName, options);
   }
 
   public async getSignedURL(...args:

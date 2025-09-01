@@ -429,10 +429,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
       if (params.options.signedURL === true || params.options.useSignedURL === true) {
-        return this._getSignedURL(params.bucketName, params.targetPath, params.options)
+        return this._getSignedURL(params.bucketName, params.targetPath, params.options);
       }
       // return this._getPublicURL(params.bucketName, params.targetPath, params.options)
-      return this._getFileAsURL(params.bucketName, params.targetPath, params.options)
+      return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -493,28 +493,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     options: Options // e.g. { expiresIn: 3600 }
   ): Promise<ResultObject> {
-    try {
-      let url = "";
-      if (options.signedUrl === true || options.useSignedUrl === true || (this._s3Type !== S3Type.AWS && this._s3Type !== S3Type.CUBBIT)) {
-        if (typeof options.expiresIn !== "number") {
-          options.expiresIn = 604800
-        }
-        url = await getSignedUrl(
-          this._client,
-          new GetObjectCommand({
-            Bucket: bucketName,
-            Key: fileName,
-          }),
-          options
-        );
-      } else if (this._s3Type === S3Type.AWS) {
-        url = `https://${bucketName}.s3.${this.config.region}.amazon.com/${fileName}`;
-      } else if (this._s3Type === S3Type.CUBBIT) {
-        url = `https://${bucketName}.s3.cubbit.eu/${fileName}`;
-      }
-      return { value: url, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    if (options.signedUrl === true || options.useSignedUrl === true || (this._s3Type !== S3Type.AWS && this._s3Type !== S3Type.CUBBIT)) {
+      return this._getSignedURL(bucketName, fileName, options);
+    } else {
+      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
   }
 
@@ -561,6 +543,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     options: Options
   ): Promise<ResultObject> {
     try {
+      if (typeof options.expiresIn !== "number") {
+        options.expiresIn = 604800
+      }
       const url = await getSignedUrl(
         this._client,
         new GetObjectCommand({

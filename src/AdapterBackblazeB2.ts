@@ -264,7 +264,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       if (options.signedURL === true || options.useSignedURL === true) {
         return this._getSignedURL(bucketName, targetPath, options);
       }
-      return this._getPublicURL(bucketName, targetPath, options);
+      return this._getPublicURL(bucketName, targetPath, { ...options, noCheck: true });
     } catch (e) {
       // console.log(e.toJSON());
       return { value: null, error: e.message };
@@ -326,13 +326,11 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    const { error } = await this.authorize();
-    if (error !== null) {
-      return { value: null, error };
+    if (options.signedUrl === true || options.useSignedURL === true) {
+      return this._getSignedURL(bucketName, fileName, options);
+    } else {
+      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
-
-    const url = `${this._client.downloadUrl}/file/${bucketName}/${fileName}`;
-    return { value: url, error: null };
   }
 
   protected async _getPublicURL(
@@ -348,7 +346,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         return { value: null, error: `Bucket "${bucketName}" is not public!` };
       }
     }
-
     return {
       value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}`,
       error: null,

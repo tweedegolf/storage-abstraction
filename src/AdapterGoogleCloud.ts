@@ -97,21 +97,10 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    try {
-      const file = this._client.bucket(bucketName).file(fileName);
-      if (options.useSignedUrl) {
-        return {
-          value: (await file.getSignedUrl({
-            action: "read",
-            expires: options.expiresOn || 86400,
-          }))[0],
-          error: null,
-        };
-      } else {
-        return { value: file.publicUrl(), error: null };
-      }
-    } catch (e) {
-      return { value: null, error: e.message };
+    if (options.signedUrl === true || options.useSignedURL === true) {
+      return this._getSignedURL(bucketName, fileName, options);
+    } else {
+      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
   }
 
