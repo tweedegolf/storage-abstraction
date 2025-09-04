@@ -256,6 +256,7 @@ export class AdapterLocal extends AbstractAdapter {
       if (options.withoutDirectory) {
         return { value: path.join(bucketName, fileName), error: null };
       }
+      // public url is actually just a local path
       return { value: p, error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -267,6 +268,7 @@ export class AdapterLocal extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
+    // signed urls are not available for the local adapter, return the public url
     return this._getPublicURL(bucketName, fileName, options);
   }
 
@@ -311,8 +313,9 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   protected async _bucketIsPublic(
-    bucketName?: string,
+    bucketName: string,
   ): Promise<ResultObjectBoolean> {
+    // always true
     return { value: true, error: null };
   }
 

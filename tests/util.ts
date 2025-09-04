@@ -34,12 +34,12 @@ export const saveFile = (
   });
 };
 
-export async function waitABit(ms = 100): Promise<void> {
+export async function waitABit(millis = 100): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      // console.log(`just wait a bit (${millis}ms)`);
+      console.log(`just wait a bit (${millis}ms)`);
       resolve();
-    }, ms);
+    }, millis);
   });
 }
 

@@ -338,9 +338,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     if (this._s3Type === S3Type.CLOUDFLARE) {
-      return { value: null, error: "Cloudflare does not support checking if a bucket is public, please use the Cloudflare Control" };
+      return { value: null, error: "Cloudflare does not support checking if a bucket is public, please use the Cloudflare web console" };
     } else if (this._s3Type === S3Type.CUBBIT) {
-      return { value: null, error: "Cloudflare does not support checking if a bucket is public, please use the Cubbit Control" };
+      return { value: null, error: "Cubbit does not support checking if a bucket is public, please use the Cubbit web console" };
     }
 
     try {
@@ -493,7 +493,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     options: Options // e.g. { expiresIn: 3600 }
   ): Promise<ResultObject> {
-    if (options.signedUrl === true || options.useSignedUrl === true || (this._s3Type !== S3Type.AWS && this._s3Type !== S3Type.CUBBIT)) {
+    if (options.signedUrl === true || options.useSignedUrl === true || this._s3Type === S3Type.CLOUDFLARE) {
       return this._getSignedURL(bucketName, fileName, options);
     } else {
       return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
@@ -526,14 +526,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (options.noCheck === true) {
         return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
       }
-      return { value: null, error: "Please use the Cubbit web console to get the public URL." };
+      return { value: null, error: `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}` };
     }
 
     if (this._s3Type === S3Type.BACKBLAZE) {
       if (options.noCheck === true) {
         return { value: `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`, error: null };
       }
-      return { value: null, error: "Please use the Backblaze web console to get the public URL." };
+      return { value: null, error: `Cannot check if bucket ${bucketName} is public. Use the Backblaze web console to check this or pass {noCheck: true}` };
     }
   }
 

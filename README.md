@@ -549,6 +549,9 @@ Check if the bucket is publicly accessible.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
+>[!NOTE]
+> Both Cloudflare R2 and Cubbit do not provide a way to check if a bucket is public. You have to check this in the respective web consoles.
+
 ### bucketExists
 
 ```typescript
@@ -621,13 +624,13 @@ If you want to create a public bucket add a key `public` to the options object a
 >```typescript
 > addFileFromPath({
 >   bucketName: "test",
->   origPath: "path/to/your/file.ext,
->   targetPath: "new-name.ext,
+>   origPath: "path/to/your/file.ext",
+>   targetPath: "new-name.ext",
 >   options: {
 >     ACL: "public-read"
 >   }
 >});
-```
+>```
 
 If the bucket was created successfully the `value` key will hold the string "ok". If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold "Bucket {bucket_name} created successfully but you can only make this bucket public using the web console".
 
@@ -824,7 +827,7 @@ Allows you to stream a file directly to the storage. The value for `targetPath` 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` or just `signedURL` and set it to `true` a presigned URL will be returned.
+If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` or just `signedURL` and set it to `true` a signed URL will be returned.
 
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
@@ -873,13 +876,13 @@ Returns the public url of the file (if the bucket is publicly accessible and the
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If you want a presigned url to the file you can pass add a key `useSignedUrl` to the options object:
+If you want a signed url to the file you can pass add a key `useSignedUrl` to the options object:
 
 ```typescript
 const signedUrl = getFileAsURL("bucketName", "fileName", { useSignedUrl: true });
 ```
 
-Note that the local adapter can't return a presigned url.
+Note that the local adapter can't return a signed url.
 
 For the local adapter you can use the key `withoutDirectory` in the options object:
 
@@ -898,7 +901,7 @@ const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true
 ```
 
 > [!WARNING] 
-> This method can return urls for Amazon S3 but *not* for S3 compatible cloud services like R2.
+> This method cannot return public urls for Cloudflare R2. You have to use the Cloudflare R2 web console to create public url. Therefor this method always return the signed url if you use the Amazon S3 adapter to access Cloudflare R2.
 
 > [!WARNING] 
 > This method is deprecated: please use `getPublicURL` or `getSignedURL`.
@@ -983,11 +986,11 @@ export type ResultObject = {
 };
 ```
 
-Returns a presigned url of the file. 
+Returns a signed url of the file. 
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-Because the local adapter does not support presigned urls, this method behaves excactly the same as `getPublicURL`, see previous section.
+Because the local adapter does not support signed urls, this method behaves exactly the same as `getPublicURL` when using the local adapter, see previous section.
 
 ### getFileAsStream
 
