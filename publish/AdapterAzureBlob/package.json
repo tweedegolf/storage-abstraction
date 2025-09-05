@@ -7,8 +7,8 @@
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {
-    "@azure/storage-blob": "^12.27.0",
-    "@azure/identity": "^4.10.1"
+    "@azure/storage-blob": "^12.28.0",
+    "@azure/identity": "^4.11.1"
   },
   "scripts": {},
   "keywords": [

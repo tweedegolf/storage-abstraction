@@ -16,3 +16,4 @@ tests/test_directory
 __azurite**
 Azurite*
 __blobstorage__
+__queuestorage__

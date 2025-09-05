@@ -70,7 +70,7 @@ async function bucketIsPublic(bucketName?: string) {
 
 async function createBucket(bucketName?: string, options?: Options) {
   const r = await storage.createBucket(bucketName, options);
-  console.log(colorLog("createBucket"), r);
+  console.log(colorLog("createBucket"), r, options);
 }
 
 function getSelectedBucket(): string | null {
@@ -108,7 +108,7 @@ async function addFileFromPath(targetPath: string, options: Options, bucketName?
     // options: {GrantRead: "true"}
     // options: { useSignedUrl: "false" }
   });
-  console.log(colorLog("addFileFromPath"), r);
+  console.log(colorLog("addFileFromPath"), r, options);
 }
 
 async function addFileFromBuffer(targetPath: string, options: Options, bucketName?: string) {
@@ -122,7 +122,7 @@ async function addFileFromBuffer(targetPath: string, options: Options, bucketNam
     //   ACL: "public-read"
     // }
   });
-  console.log(colorLog("addFileFromBuffer"), r);
+  console.log(colorLog("addFileFromBuffer"), r, options);
 }
 
 async function addFileFromStream(targetPath: string, options: Options, bucketName?: string) {
@@ -133,7 +133,7 @@ async function addFileFromStream(targetPath: string, options: Options, bucketNam
     targetPath,
     options,
   });
-  console.log(colorLog("addFileFromStream"), r);
+  console.log(colorLog("addFileFromStream"), r, options);
 }
 
 async function getFileAsStream(fileName: string, bucketName?: string) {
