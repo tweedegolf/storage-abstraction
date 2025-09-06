@@ -337,10 +337,22 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
-    if (this._s3Type === S3Type.CLOUDFLARE) {
-      return { value: null, error: "Cloudflare does not support checking if a bucket is public, please use the Cloudflare web console" };
-    } else if (this._s3Type === S3Type.CUBBIT) {
-      return { value: null, error: "Cubbit does not support checking if a bucket is public, please use the Cubbit web console" };
+    if (this._s3Type === S3Type.CLOUDFLARE || this._s3Type === S3Type.CUBBIT) {
+      return { value: null, error: `${this._s3Type} does not support checking if a bucket is public, please use the ${this._s3Type} web console` };
+    } else if (this._s3Type === S3Type.BACKBLAZE) {
+      try {
+        const aclResult = await this._client.send(new GetBucketAclCommand({ Bucket: bucketName }));
+        // If one of the grants is for AllUsers with 'READ', it's public
+        const isPublic = aclResult.Grants.some(
+          grant =>
+            grant.Grantee.Type === "Group" &&
+            grant.Grantee.URI === "http://acs.amazonaws.com/groups/global/AllUsers" &&
+            grant.Permission === "READ"
+        );
+        return { value: isPublic, error: null }
+      } catch (e) {
+        return { value: null, error: e }
+      }
     }
 
     try {
@@ -509,8 +521,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: "Please use the Cloudflare web console to get the public URL." };
     }
 
-    if (this._s3Type === S3Type.AWS) {
-      let response = { value: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`, error: null };
+    if (this._s3Type === S3Type.AWS || this._s3Type === S3Type.BACKBLAZE) {
+      let response = this._s3Type === S3Type.AWS ?
+        { value: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`, error: null } :
+        { value: `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`, error: null };
+
       if (options.noCheck !== true) {
         const result = await this._bucketIsPublic(bucketName);
         if (result.error !== null) {
@@ -527,13 +542,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
       }
       return { value: null, error: `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}` };
-    }
-
-    if (this._s3Type === S3Type.BACKBLAZE) {
-      if (options.noCheck === true) {
-        return { value: `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`, error: null };
-      }
-      return { value: null, error: `Cannot check if bucket ${bucketName} is public. Use the Backblaze web console to check this or pass {noCheck: true}` };
     }
   }
 

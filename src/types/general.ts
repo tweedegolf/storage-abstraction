@@ -21,9 +21,9 @@ export enum StorageType {
 
 export enum S3Type {
   AWS = "Amazon",
-  BACKBLAZE = "Backblaze",
+  BACKBLAZE = "Backblaze S3",
   CUBBIT = "Cubbit",
-  CLOUDFLARE = "Cloudflare",
+  CLOUDFLARE = "Cloudflare R2",
 }
 
 export interface AdapterConfig {

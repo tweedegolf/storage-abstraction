@@ -5,13 +5,10 @@ import { Storage } from "../src/Storage";
 import { AdapterAmazonS3 } from "../src/AdapterAmazonS3";
 import { IAdapter, Options, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
-import { saveFile, timeout, waitABit } from "./util";
+import { colorLog, saveFile, timeout, waitABit } from "./util";
+import { fileTypeFromBuffer } from 'file-type';
 
 let storage: Storage;
-
-function colorLog(s: string): string {
-  return `\x1b[96m [${s}]\x1b[0m`;
-}
 
 const types = [
   StorageType.LOCAL, // 0
@@ -236,29 +233,57 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
       // console.log(`\tfiles: ${files}`);
       await storage.deleteBucket(b);
     } catch (e) {
-      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e.message);
+      console.log(colorLog("removeAllBuckets", "91m"), b, e.message);
     }
   }
 }
 
 async function getPublicURL(fileName: string, options: Options, bucketName?: string) {
-  const r = typeof bucketName === "undefined" ? await storage.getPublicURL(
-    fileName,
-    options,
-  ) : await storage.getPublicURL(
-    bucketName,
-    fileName,
-    options,
-  );
-  console.log(colorLog("getPublicURL"), r);
+  const r = typeof bucketName === "undefined" ?
+    await storage.getPublicURL(fileName, options,) :
+    await storage.getPublicURL(bucketName, fileName, options,);
+  console.log(colorLog("getPublicURL"), r, options);
   if (index !== 0) {
     if (r.value !== null) {
-      fetch(new Request(r.value))
-        .then((response) => {
-          if (!response.ok) {
-            console.log(`HTTP error! Status: ${response.status}`);
-          }
-        })
+      const response = await fetch(new Request(r.value));
+      if (!response.ok) {
+        console.log(colorLog("getPublicURL", "91m"), `HTTP status: ${response.status}`);
+      } else {
+        console.log(colorLog("getPublicURL"), "public url is valid!");
+      }
+    }
+  }
+}
+
+async function getSignedURL(fileName: string, options: Options, bucketName?: string, dest?: string) {
+  const r = typeof bucketName === "undefined" ?
+    await storage.getSignedURL(fileName, options,) :
+    await storage.getSignedURL(bucketName, fileName, options,);
+  console.log(colorLog("getSignedURL"), r, options);
+  if (index !== 0) {
+    if (r.value !== null) {
+      await waitABit(1000);
+      const response = await fetch(new Request(r.value))
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const fileType = await fileTypeFromBuffer(buffer);
+      if (!response.ok) {
+        console.log(colorLog("getSignedURL", "91m"), `HTTP status: ${response.status}`);
+        const outputFile = `${dest}.${fileType?.ext}`;
+        const filePath = path.join(
+          process.cwd(),
+          "tests",
+          "test_directory",
+          outputFile
+        );
+        fs.createWriteStream(filePath).write(buffer);
+      } else {
+        if (fileType?.ext !== "jpg") {
+          console.log(colorLog("getSignedURL", "91m"), "not an image, probably an error message");
+        } else {
+          console.log(colorLog("getSignedURL"), "signed url is valid!");
+        }
+      }
     }
   }
 }
@@ -275,14 +300,12 @@ async function run() {
   const b1 = "aap892";
   const b2 = "aap893";
 
-  let r;
-
-  const buckets = await listBuckets();
-  if (index !== 5) {
-    if (buckets !== null && buckets.length > 0) {
-      await deleteAllBuckets(buckets, storage);
-    }
-  }
+  // const buckets = await listBuckets();
+  // if (index !== 5) {
+  //   if (buckets !== null && buckets.length > 0) {
+  //     await deleteAllBuckets(buckets, storage);
+  //   }
+  // }
 
   // if (index === 4) {
   //   await waitABit(10000);
@@ -291,20 +314,26 @@ async function run() {
   // console.log(storage.configError);
   const b = getSelectedBucket();
 
-  await createBucket(b1, { public: true });
+  // await createBucket(b1, { public: true });
   await bucketIsPublic(b1);
   setSelectedBucket(b1)
   await addFileFromPath('file1.jpg', {});
   await listFiles();
-  await getPublicURL('file1.jpg', { noCheck: true });
+  await getPublicURL('file1.jpg', { noCheck: false });
+  await getSignedURL('file1.jpg', {});
 
-  await createBucket(b2, { public: false });
+  // await createBucket(b2, { public: true });
   await bucketIsPublic(b2);
   setSelectedBucket(b2)
+
+  // to make a file publicly accessible in Cubbit you need to set ACL per file
   const options = index === 6 ? { ACL: "public-read" } : {};
-  await addFileFromPath('file1.jpg', options);
+
+  await addFileFromPath('file2.jpg', options);
   await listFiles();
-  await getPublicURL('file1.jpg', { noCheck: true });
+  await getPublicURL('file2.jpg', { noCheck: false });
+  await getSignedURL('file2.jpg', { expiresIn: 1 }, b2, "expired");
+  await getSignedURL('file2.jpg', {}, b2, "valid");
 
   // await deleteBucket();
   // await bucketExists();
@@ -314,21 +343,7 @@ async function run() {
   // setSelectedBucket(b);
   // await addFileFromBuffer();
   // await listFiles();
-  // r = await storage.getPublicURL("aap880", "image1-path.jpg");
-  // r = await storage.getPublicURL("aap890", "image1-buffer.jpg");
-  // console.log(r);
-  // r = await storage.getPublicURL("aap891", "image1-path.jpg", { noCheck: true });
-  // console.log(r);
-  // r = await storage.getPublicURL("aap891", "image1-buffer.jpg", { noCheck: true });
-  // console.log(r);
-  // r = await storage.getPresignedURL("aap890", "image1-buffer.jpg");
-  // console.log(r);
   // await getFileAsStream();
-
-  // r = await storage.createBucket("aap8882", { public: true });
-  // console.log(r);
-  // r = await storage.bucketIsPublic("aap8882");
-  // console.log(r);
 
   // await listBuckets();
 
@@ -367,3 +382,7 @@ async function run() {
 }
 
 run();
+function fromBuffer(buffer: Buffer<ArrayBuffer>) {
+  throw new Error("Function not implemented.");
+}
+
