@@ -132,11 +132,13 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    let expires = options.expiresIn;
-    if (typeof expires !== "number") {
-      const exp = new Date();
-      expires = exp.setUTCDate(exp.getUTCDate() + 7).valueOf()
+    const exp = new Date();
+    if (typeof options.expiresIn !== "number") {
+      exp.setUTCDate(exp.getUTCDate() + 7);
+    } else {
+      exp.setSeconds(exp.getSeconds() + options.expiresIn);
     }
+    const expires = exp.valueOf();
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       const url = (await file.getSignedUrl({

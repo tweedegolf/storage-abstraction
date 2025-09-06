@@ -257,26 +257,18 @@ async function getPublicURL(fileName: string, options: Options, bucketName?: str
 
 async function getSignedURL(fileName: string, options: Options, bucketName?: string, dest?: string) {
   const r = typeof bucketName === "undefined" ?
-    await storage.getSignedURL(fileName, options,) :
-    await storage.getSignedURL(bucketName, fileName, options,);
+    await storage.getSignedURL(fileName, options) :
+    await storage.getSignedURL(bucketName, fileName, options);
   console.log(colorLog("getSignedURL"), r, options);
   if (index !== 0) {
     if (r.value !== null) {
       await waitABit(1000);
-      const response = await fetch(new Request(r.value))
+      const response = await fetch(new Request(r.value));
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const fileType = await fileTypeFromBuffer(buffer);
       if (!response.ok) {
         console.log(colorLog("getSignedURL", "91m"), `HTTP status: ${response.status}`);
-        const outputFile = `${dest}.${fileType?.ext}`;
-        const filePath = path.join(
-          process.cwd(),
-          "tests",
-          "test_directory",
-          outputFile
-        );
-        fs.createWriteStream(filePath).write(buffer);
       } else {
         if (fileType?.ext !== "jpg") {
           console.log(colorLog("getSignedURL", "91m"), "not an image, probably an error message");
@@ -284,6 +276,14 @@ async function getSignedURL(fileName: string, options: Options, bucketName?: str
           console.log(colorLog("getSignedURL"), "signed url is valid!");
         }
       }
+      const outputFile = `${dest}.${fileType?.ext}`;
+      const filePath = path.join(
+        process.cwd(),
+        "tests",
+        "test_directory",
+        outputFile
+      );
+      fs.createWriteStream(filePath).write(buffer);
     }
   }
 }
@@ -300,12 +300,17 @@ async function run() {
   const b1 = "aap892";
   const b2 = "aap893";
 
-  // const buckets = await listBuckets();
-  // if (index !== 5) {
-  //   if (buckets !== null && buckets.length > 0) {
-  //     await deleteAllBuckets(buckets, storage);
-  //   }
-  // }
+  const buckets = await listBuckets();
+  /**
+   * Don't delete buckets at Minio, Backblaze S3 and Cubbit
+   * - Minio: because there exist a zillion buckets in the public test environment
+   * - Backblaze S3 and Cubbit: because you can only make a bucket public using the web console
+   */
+  if (index !== 5 && index !== 7 && index !== 8) {
+    if (buckets !== null && buckets.length > 0) {
+      await deleteAllBuckets(buckets, storage);
+    }
+  }
 
   // if (index === 4) {
   //   await waitABit(10000);
@@ -314,15 +319,15 @@ async function run() {
   // console.log(storage.configError);
   const b = getSelectedBucket();
 
-  // await createBucket(b1, { public: true });
+  await createBucket(b1, { public: false });
   await bucketIsPublic(b1);
   setSelectedBucket(b1)
   await addFileFromPath('file1.jpg', {});
   await listFiles();
-  await getPublicURL('file1.jpg', { noCheck: false });
+  await getPublicURL('file1.jpg', { noCheck: true });
   await getSignedURL('file1.jpg', {});
 
-  // await createBucket(b2, { public: true });
+  await createBucket(b2, { public: true });
   await bucketIsPublic(b2);
   setSelectedBucket(b2)
 
@@ -331,7 +336,7 @@ async function run() {
 
   await addFileFromPath('file2.jpg', options);
   await listFiles();
-  await getPublicURL('file2.jpg', { noCheck: false });
+  await getPublicURL('file2.jpg', { noCheck: true });
   await getSignedURL('file2.jpg', { expiresIn: 1 }, b2, "expired");
   await getSignedURL('file2.jpg', {}, b2, "valid");
 

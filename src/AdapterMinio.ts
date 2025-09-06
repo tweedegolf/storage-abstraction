@@ -293,12 +293,9 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    let expiry = 7 * 24 * 60 * 60;
-    if (typeof options.expiresIn === "number") {
-      expiry = options.expiresIn;
-    }
+    const expires = options.expiresIn; // defaults to one week if 0, undefined or not a number
     try {
-      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiry, options);
+      const url = await this._client.presignedUrl("GET", bucketName, fileName, expires);
       return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e };

@@ -192,6 +192,19 @@ const r = await a.listBuckets();
 console.log(r);
 ```
 
+## S3 Compatible Cloud Services
+
+Not all S3 compatible cloud services support all Amazon S3 features. Therefor some API methods of the Amazon S3 adapter have limitations when used to access S3 compatible services:
+
+| API method | Service  | Remarks |
+| ---| ---| ---|
+|  `createBucket` | Cloudflare R2| Use web console to make bucket public|
+|   | Backblaze|Use web console to make bucket public|
+|  `bucketIsPublic` | Cloudflare R2|N/A|
+|   | Cubbit|N/A|
+|  `getPublicURL` | Cloudflare R2|N/A|
+|   | Cubbit|Only with options `{noCheck: true}`|
+
 ## API
 
 For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.

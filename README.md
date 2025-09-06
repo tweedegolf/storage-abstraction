@@ -631,6 +631,8 @@ If you want to create a public bucket add a key `public` to the options object a
 >   }
 >});
 >```
+> Note that adding `{ACL: "public-read"}` or `{ACL: "public-read-write"}` also makes files in a private bucket publicly accessible!
+
 
 If the bucket was created successfully the `value` key will hold the string "ok". If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold "Bucket {bucket_name} created successfully but you can only make this bucket public using the web console".
 
@@ -965,7 +967,7 @@ const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true
 
 ```typescript
 getSignedURL(bucketName?: string, fileName: string, options?: {
-  expiresIn: number // number of seconds the url is valid, default to a week (604800)
+  expiresIn: number // number of seconds the url is valid, defaults to a week (604800)
 }): Promise<ResultObject>;
 ```
 

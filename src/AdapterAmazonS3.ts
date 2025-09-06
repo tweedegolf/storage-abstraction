@@ -552,7 +552,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       if (typeof options.expiresIn !== "number") {
-        options.expiresIn = 604800
+        options.expiresIn = 604800 // one week: 7*24*60*60
       }
       const url = await getSignedUrl(
         this._client,

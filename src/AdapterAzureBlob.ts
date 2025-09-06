@@ -270,9 +270,16 @@ export class AdapterAzureBlob extends AbstractAdapter {
           error: `File ${fileName} could not be found in bucket ${bucketName}`,
         };
       }
+      const exp = new Date();
+      if (typeof options.expiresIn !== "number") {
+        exp.setUTCDate(exp.getUTCDate() + 7);
+      } else {
+        exp.setSeconds(exp.getSeconds() + options.expiresIn);
+      }
+      // console.log(exp)
       const sasOptions: BlobGenerateSasUrlOptions = {
         permissions: options.permissions || BlobSASPermissions.parse("r"),
-        expiresOn: options.expiresOn || new Date(new Date().valueOf() + 86400),
+        expiresOn: exp,
       };
       const url = await file.generateSasUrl(sasOptions);
       return { value: url, error: null };
