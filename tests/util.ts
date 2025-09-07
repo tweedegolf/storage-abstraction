@@ -1,4 +1,5 @@
 import { Readable, Stream, Writable } from "stream";
+import { ResultObject, ResultObjectBoolean, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "../src/types/result";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
@@ -37,7 +38,7 @@ export const saveFile = (
 export async function waitABit(millis = 100): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      console.log(colorLog("just wait a bit"), `${millis}ms`);
+      console.log(colorLog("waitABit", "35m"), `${millis}ms`);
       resolve();
     }, millis);
   });
@@ -73,4 +74,20 @@ export async function stream2buffer(stream: Stream): Promise<Buffer> {
 
 export function colorLog(s: string, c: string = "96m"): string {
   return `\x1b[${c}[${s}]\x1b[0m`;
+}
+
+export type ResultObjectType =
+  ResultObject |
+  ResultObjectBoolean |
+  ResultObjectNumber |
+  ResultObjectStream |
+  ResultObjectFiles;
+
+
+export function logResult(label: string, result: ResultObjectType, msg?: string): string {
+  if (result.error !== null) {
+    return `\x1b[91m[${label}]\x1b[0m ${result.error}`;
+  } else {
+    return `\x1b[96m[${label}]\x1b[0m ${msg || result.value}`;
+  }
 }

@@ -5,7 +5,7 @@ import { Storage } from "../src/Storage";
 import { AdapterAmazonS3 } from "../src/AdapterAmazonS3";
 import { IAdapter, Options, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
-import { colorLog, saveFile, timeout, waitABit } from "./util";
+import { colorLog, logResult, saveFile, timeout, waitABit } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 
 let storage: Storage;
@@ -122,28 +122,24 @@ async function addFileFromBuffer(targetPath: string, options: Options, bucketNam
 }
 
 async function addFileFromStream(targetPath: string, options: Options, bucketName?: string) {
-  const stream = fs.createReadStream("./tests/data/image1.jpg");
+  const stream = fs.createReadStream("./tests/data/image11.jpg");
   const r = await storage.addFileFromStream({
     bucketName,
     stream,
     targetPath,
     options,
   });
-  console.log(colorLog("addFileFromStream"), r, options);
+  console.log(logResult("addFileFromStream", r), options);
 }
 
 async function getFileAsStream(fileName: string, destName: string, options?: Options, bucketName?: string) {
-  const { value, error } = typeof bucketName === "undefined" ?
+  const r = typeof bucketName === "undefined" ?
     await storage.getFileAsStream(fileName, options) :
     await storage.getFileAsStream(bucketName, fileName, options);
 
-  if (error !== null) {
-    console.log(colorLog("getFileAsStream", "91m"), error);
-  } else {
-    console.log(colorLog("getFileAsStream"), "ok");
-  }
+  console.log(logResult("getFileAsStream", r, "ok"));
 
-  if (value !== null) {
+  if (r.value !== null) {
     const filePath = path.join(
       process.cwd(),
       "tests",
@@ -151,27 +147,28 @@ async function getFileAsStream(fileName: string, destName: string, options?: Opt
       `${destName}-${storage.getType()}.jpg`
     );
     const writeStream = fs.createWriteStream(filePath);
-    await saveFile(value, writeStream);
+    await saveFile(r.value, writeStream);
   }
 }
 
 async function fileExists(fileName: string, bucketName?: string) {
   await storage.getAdapter().fileExists(fileName);
   const r = typeof bucketName === "undefined" ? await storage.fileExists(fileName) : await storage.fileExists(bucketName, fileName);
-  console.log(colorLog("fileExists"), r);
+  console.log(logResult("fileExists", r));
 }
 
 async function sizeOf(fileName: string, bucketName?: string) {
   const r = typeof bucketName === "undefined" ? await storage.sizeOf(fileName) : await storage.sizeOf(bucketName, fileName);
-  console.log(colorLog("sizeOf"), r);
+  console.log(logResult("sizeOf", r));
 }
 
 async function removeFile(fileName: string, bucketName?: string) {
   const r = typeof bucketName === "undefined" ? await storage.removeFile(fileName) : await storage.removeFile(bucketName, fileName);
-  console.log(colorLog("removeFile"), r);
+  console.log(logResult("removeFile", r));
 }
 
 async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: number = 500) {
+  console.log(colorLog("deleteAllBuckets"));
   for (let i = 0; i < list.length; i++) {
     const b = list[i];
     console.log(colorLog("remove bucket"), b);
@@ -193,15 +190,13 @@ async function getPublicURL(fileName: string, options: Options, bucketName?: str
   const r = typeof bucketName === "undefined" ?
     await storage.getPublicURL(fileName, options) :
     await storage.getPublicURL(bucketName, fileName, options);
-  console.log(colorLog("getPublicURL"), r, options);
-  if (index !== 0) {
-    if (r.value !== null) {
-      const response = await fetch(new Request(r.value));
-      if (!response.ok) {
-        console.log(colorLog("getPublicURL", "91m"), `HTTP status: ${response.status}`);
-      } else {
-        console.log(colorLog("getPublicURL"), "public url is valid!");
-      }
+  console.log(logResult("getPublicURL", r), options);
+  if (r.value !== null && index !== 0) {
+    const response = await fetch(new Request(r.value));
+    if (!response.ok) {
+      console.log(colorLog("checkPublicURL", "91m"), `HTTP status: ${response.status}`);
+    } else {
+      console.log(colorLog("checkPublicURL", "35m"), "public url is valid!");
     }
   }
 }
@@ -210,7 +205,7 @@ async function getSignedURL(fileName: string, dest: string, options: Options, bu
   const r = typeof bucketName === "undefined" ?
     await storage.getSignedURL(fileName, options) :
     await storage.getSignedURL(bucketName, fileName, options);
-  console.log(colorLog("getSignedURL"), r, options);
+  console.log(logResult("getSignedURL", r), options);
   if (index !== 0) {
     if (r.value !== null) {
       await waitABit(1000);
@@ -219,12 +214,12 @@ async function getSignedURL(fileName: string, dest: string, options: Options, bu
       const buffer = Buffer.from(arrayBuffer);
       const fileType = await fileTypeFromBuffer(buffer);
       if (!response.ok) {
-        console.log(colorLog("getSignedURL", "91m"), `HTTP status: ${response.status}`);
+        console.log(colorLog("checkSignedURL", "91m"), `HTTP status: ${response.status}`);
       } else {
         if (fileType?.ext !== "jpg") {
-          console.log(colorLog("getSignedURL", "91m"), "not an image, probably an error message");
+          console.log(colorLog("checkSignedURL", "91m"), "not an image, probably an error message");
         } else {
-          console.log(colorLog("getSignedURL"), "signed url is valid!");
+          console.log(colorLog("checkSignedURL", "35m"), "signed url is valid!");
         }
       }
       const outputFile = `${dest}.${fileType?.ext}`;
@@ -310,10 +305,10 @@ async function run() {
   await addFileFromStream("file-from-stream.jpg", {});
   await listFiles();
 
-  // await getFileAsStream("file-from-stream.jpg", "full");
-  // await getFileAsStream("file-from-stream.jpg", "partial1", { start: 0, end: 2000 });
-  // await getFileAsStream("file-from-stream.jpg", "partial2", { end: 2000 });
-  // await getFileAsStream("file-from-stream.jpg", "partial3", { start: 2000 });
+  await getFileAsStream("file-from-stream.jpg", "full");
+  await getFileAsStream("file-from-stream.jpg", "partial1", { start: 0, end: 2000 });
+  await getFileAsStream("file-from-stream.jpg", "partial2", { end: 2000 });
+  await getFileAsStream("file-from-stream.jpg", "partial3", { start: 2000 });
 
   // process.exit();
 
