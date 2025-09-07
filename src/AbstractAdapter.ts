@@ -95,44 +95,56 @@ export abstract class AbstractAdapter implements IAdapter {
     [options: boolean | Options | StreamOptions]
   ): { bucketName: string; fileName: string; options: object | boolean, error: string } {
     const [arg1, arg2, arg3] = args;
-    // console.log(arg1, arg2, arg3);
+    // console.log("_getFileAndBucketAndOptions", arg1, arg2, arg3);
     let bucketName: string = null;
     let fileName: string = null;
-    let options: object | boolean = null;
+    let options: object | boolean = {};
     let error = null;
 
-    if (typeof arg1 !== "string") {
-      bucketName = this._bucketName;
-      if (bucketName === null) {
-        error = "no bucket selected";
-      }
-    } else {
+    if (typeof arg1 !== "string" && typeof arg2 !== "string") {
+      return { bucketName, fileName, options, error: "Please provide a filename" };
+    }
+
+    if (typeof arg1 === "string" && typeof arg2 === "string") {
       bucketName = arg1;
+      fileName = arg2;
+      if (typeof arg3 === "object" || typeof arg3 === "boolean") {
+        options = arg3;
+      }
+      return { bucketName, fileName, options, error };
     }
 
-    if (typeof arg2 === "string") {
-      fileName = arg2;
-    } else if (typeof arg2 === "object" || typeof arg2 === "boolean") {
+    if (typeof arg1 !== "string" && typeof arg2 === "string") {
       bucketName = this._bucketName;
       if (bucketName === null) {
-        error = "no bucket selected";
+        return { bucketName, fileName, options, error: "Please provide or select a bucket" };
       }
-      fileName = arg1 as string;
-      options = arg2;
-    } else {
-      error = "please provide a filename";
+      fileName = arg2;
+      if (typeof arg3 === "object" || typeof arg3 === "boolean") {
+        options = arg3;
+      }
+      return { bucketName, fileName, options, error };
     }
 
-    if (typeof arg3 === "object" || typeof arg3 === "boolean") {
-      options = arg3;
+    if (typeof arg1 === "string" && typeof arg2 !== "string") {
+      bucketName = this._bucketName;
+      if (bucketName === null) {
+        return { bucketName, fileName, options, error: "Please provide or select a bucket" };
+      }
+      fileName = arg1;
+      if (typeof arg2 === "object" || typeof arg2 === "boolean") {
+        options = arg2;
+      }
+      return { bucketName, fileName, options, error };
     }
 
-    return {
-      bucketName,
-      fileName,
-      options,
-      error,
-    };
+    if (bucketName === null) {
+      return { bucketName, fileName, options, error: "Please provide or select a bucket" };
+    }
+
+    if (fileName === null) {
+      return { bucketName, fileName, options, error: "Please provide a filename" };
+    }
   }
 
   // protected stubs
@@ -340,6 +352,8 @@ export abstract class AbstractAdapter implements IAdapter {
       return { error: this.configError, value: null };
     }
     const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(...args);
+    // console.log(bucketName, fileName, options, error);
+
     if (error !== null) {
       return { error, value: null };
     }

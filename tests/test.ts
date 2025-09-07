@@ -41,7 +41,6 @@ async function init(bucketName?: string): Promise<string> {
   return Promise.resolve(bucketName);
 }
 
-// cleanup test data from the Local Adapter
 async function cleanup() {
   const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
   await rimraf(p, {
@@ -133,71 +132,23 @@ async function addFileFromStream(targetPath: string, options: Options, bucketNam
   console.log(colorLog("addFileFromStream"), r, options);
 }
 
-async function getFileAsStream(fileName: string, bucketName?: string) {
+async function getFileAsStream(fileName: string, destName: string, options?: Options, bucketName?: string) {
   const { value, error } = typeof bucketName === "undefined" ?
-    await storage.getFileAsStream(fileName) :
-    await storage.getFileAsStream(bucketName, fileName);
+    await storage.getFileAsStream(fileName, options) :
+    await storage.getFileAsStream(bucketName, fileName, options);
 
-  console.log(colorLog("getFileAsStream"), error);
-  if (value !== null) {
-    const filePath = path.join(
-      process.cwd(),
-      "tests",
-      "test_directory",
-      `test-${storage.getType()}-full.jpg`
-    );
-    const writeStream = fs.createWriteStream(filePath);
-    await saveFile(value, writeStream);
+  if (error !== null) {
+    console.log(colorLog("getFileAsStream", "91m"), error);
+  } else {
+    console.log(colorLog("getFileAsStream"), "ok");
   }
-}
 
-async function getFileAsStreamPartial(fileName: string, bucketName?: string) {
-  const { value, error } = typeof bucketName === "undefined" ?
-    await storage.getFileAsStream(fileName, { start: 0, end: 2000, }) :
-    await storage.getFileAsStream(bucketName, fileName, { start: 0, end: 2000, });
-
-  console.log(colorLog("getFileAsStream"), error);
   if (value !== null) {
     const filePath = path.join(
       process.cwd(),
       "tests",
       "test_directory",
-      `test-${storage.getType()}-partial.jpg`
-    );
-    const writeStream = fs.createWriteStream(filePath);
-    await saveFile(value, writeStream);
-  }
-}
-
-async function getFileAsStreamPartial2(fileName: string, bucketName?: string) {
-  const { value, error } = typeof bucketName === "undefined" ?
-    await storage.getFileAsStream(fileName, { end: 2000, }) :
-    await storage.getFileAsStream(bucketName, fileName, { end: 2000, });
-
-  console.log(colorLog("getFileAsStream"), error);
-  if (value !== null) {
-    const filePath = path.join(
-      process.cwd(),
-      "tests",
-      "test_directory",
-      `test-${storage.getType()}-partial2.jpg`
-    );
-    const writeStream = fs.createWriteStream(filePath);
-    await saveFile(value, writeStream);
-  }
-}
-async function getFileAsStreamPartial3(fileName: string, bucketName?: string) {
-  const { value, error } = typeof bucketName === "undefined" ?
-    await storage.getFileAsStream(fileName, { start: 2000, }) :
-    await storage.getFileAsStream(bucketName, fileName, { start: 2000, });
-
-  console.log(colorLog("getFileAsStream"), error);
-  if (value !== null) {
-    const filePath = path.join(
-      process.cwd(),
-      "tests",
-      "test_directory",
-      `test-${storage.getType()}-partial3.jpg`
+      `${destName}-${storage.getType()}.jpg`
     );
     const writeStream = fs.createWriteStream(filePath);
     await saveFile(value, writeStream);
@@ -240,8 +191,8 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
 
 async function getPublicURL(fileName: string, options: Options, bucketName?: string) {
   const r = typeof bucketName === "undefined" ?
-    await storage.getPublicURL(fileName, options,) :
-    await storage.getPublicURL(bucketName, fileName, options,);
+    await storage.getPublicURL(fileName, options) :
+    await storage.getPublicURL(bucketName, fileName, options);
   console.log(colorLog("getPublicURL"), r, options);
   if (index !== 0) {
     if (r.value !== null) {
@@ -255,7 +206,7 @@ async function getPublicURL(fileName: string, options: Options, bucketName?: str
   }
 }
 
-async function getSignedURL(fileName: string, options: Options, bucketName?: string, dest?: string) {
+async function getSignedURL(fileName: string, dest: string, options: Options, bucketName?: string) {
   const r = typeof bucketName === "undefined" ?
     await storage.getSignedURL(fileName, options) :
     await storage.getSignedURL(bucketName, fileName, options);
@@ -296,9 +247,13 @@ async function getFileInfo(fileName: string, bucketName: string) {
 }
 
 async function run() {
-  await init();
   const b1 = "aap892";
   const b2 = "aap893";
+
+  await cleanup();
+  await init();
+  getSelectedBucket();
+  // console.log(storage.configError);
 
   const buckets = await listBuckets();
   /**
@@ -310,14 +265,15 @@ async function run() {
     if (buckets !== null && buckets.length > 0) {
       await deleteAllBuckets(buckets, storage);
     }
+  } else {
+    // only delete the private bucket
+    storage.deleteBucket(b1);
   }
 
   // if (index === 4) {
   //   await waitABit(10000);
   // }
 
-  // console.log(storage.configError);
-  const b = getSelectedBucket();
 
   await createBucket(b1, { public: false });
   await bucketIsPublic(b1);
@@ -325,47 +281,39 @@ async function run() {
   await addFileFromPath('file1.jpg', {});
   await listFiles();
   await getPublicURL('file1.jpg', { noCheck: true });
-  await getSignedURL('file1.jpg', {});
+  await getPublicURL('file1.jpg', { noCheck: false });
+  await getSignedURL("file1.jpg", "file1", {});
 
   await createBucket(b2, { public: true });
   await bucketIsPublic(b2);
   setSelectedBucket(b2)
 
-  // to make a file publicly accessible in Cubbit you need to set ACL per file
+  /**
+   * To make a file publicly accessible in Cubbit you need to set ACL per file.
+   * Note that this also makes files in a private bucket publicly accessible!
+   */
   const options = index === 6 ? { ACL: "public-read" } : {};
 
   await addFileFromPath('file2.jpg', options);
   await listFiles();
   await getPublicURL('file2.jpg', { noCheck: true });
-  await getSignedURL('file2.jpg', { expiresIn: 1 }, b2, "expired");
-  await getSignedURL('file2.jpg', {}, b2, "valid");
+  await getSignedURL('file2.jpg', "expired", { expiresIn: 1 });
+  await getSignedURL('file2.jpg', "valid", {});
 
-  // await deleteBucket();
-  // await bucketExists();
-  // await deleteBucket("aap891");
-  // await bucketExists("aap891");
 
-  // setSelectedBucket(b);
-  // await addFileFromBuffer();
-  // await listFiles();
-  // await getFileAsStream();
+  setSelectedBucket(b1)
+  await deleteBucket();
+  await bucketExists();
 
-  // await listBuckets();
+  setSelectedBucket(b2);
+  await addFileFromBuffer("file-from-buffer.jpg", {});
+  await addFileFromStream("file-from-stream.jpg", {});
+  await listFiles();
 
-  // await addFileFromPath();
-  // await getFileInfo();
-
-  // await addFileFromBuffer();
-  // await addFileFromStream();
-  // await addFileFromPath();
-  // await addFileFromBuffer();
-  // await addFileFromStream();
-  // await listFiles();
-
-  // await getFileAsStream();
-  // await getFileAsStreamPartial();
-  // await getFileAsStreamPartial2();
-  // await getFileAsStreamPartial3();
+  // await getFileAsStream("file-from-stream.jpg", "full");
+  // await getFileAsStream("file-from-stream.jpg", "partial1", { start: 0, end: 2000 });
+  // await getFileAsStream("file-from-stream.jpg", "partial2", { end: 2000 });
+  // await getFileAsStream("file-from-stream.jpg", "partial3", { start: 2000 });
 
   // process.exit();
 
@@ -387,7 +335,4 @@ async function run() {
 }
 
 run();
-function fromBuffer(buffer: Buffer<ArrayBuffer>) {
-  throw new Error("Function not implemented.");
-}
 
