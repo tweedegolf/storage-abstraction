@@ -36,15 +36,6 @@ export const saveFile = (
   });
 };
 
-export async function waitABit(millis = 100): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log(colorLog("waitABit", "35m"), `${millis}ms`);
-      resolve();
-    }, millis);
-  });
-}
-
 export function streamToString(stream: Readable) {
   const chunks: Array<Uint8Array> = [];
   return new Promise((resolve, reject) => {
@@ -73,8 +64,15 @@ export async function stream2buffer(stream: Stream): Promise<Buffer> {
   });
 }
 
-export function colorLog(s: string, c: string = "96m"): string {
-  return `\x1b[${c}[${s}]\x1b[0m`;
+export enum Color {
+  MESSAGE = "96m",
+  ERROR = "91m",
+  TEST = "35m",
+  OK = "32m",
+}
+
+export function colorLog(label: string, color: Color, ...msg: any[]): void {
+  console.log(`\x1b[${color}[${label}]\x1b[0m`, ...msg);
 }
 
 export type ResultObjectType =
@@ -84,7 +82,6 @@ export type ResultObjectType =
   ResultObjectStream |
   ResultObjectBuckets |
   ResultObjectFiles;
-
 
 export function logResult(label: string, result: ResultObjectType, msg?: string, options?: Options): void {
   if (result.error !== null) {

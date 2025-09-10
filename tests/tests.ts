@@ -2,9 +2,9 @@ import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
-import { IAdapter, Options, StorageType } from "../src/types/general";
+import { IAdapter, Options, S3Type, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
-import { colorLog, logResult, saveFile, timeout, waitABit } from "./util";
+import { Color, colorLog, logResult, saveFile } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
 
@@ -19,7 +19,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     type = _type;
     storage = new Storage(getConfig(type));
     bucketName = storage.config.bucketName || bucketName || "sab-test-bucket";
-    console.log(colorLog("init"), storage.config);
+    colorLog("init", Color.MESSAGE, storage.config);
 
     await fs.promises.stat(path.join(process.cwd(), "tests", "test_directory")).catch(async (e) => {
         await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
@@ -37,7 +37,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
      * - Backblaze S3 and Cubbit: because you can only make a bucket public using the web console
     */
     const buckets = r.value;
-    if (type !== StorageType.MINIO && type !== "S3-Cloudflare-R2" && type !== "S3-Backblaze-B2") {
+    if (type !== StorageType.MINIO && type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
         if (buckets !== null && buckets.length > 0) {
             const r = await deleteAllBuckets(buckets, storage);
             if (r.error !== null) {
@@ -64,25 +64,12 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
 }
 
 export async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: number = 500): Promise<ResultObject> {
-    console.log(colorLog("init::deleteAllBuckets"), list);
+    colorLog("init::deleteAllBuckets", Color.MESSAGE, list);
     for (let i = 0; i < list.length; i++) {
         const b = list[i];
-        // let r = await storage.clearBucket(b);
-        // logResult("init::clearBucket", r, b);
-        // if (r.error) {
-        //     // we can't clear the snapshots bucket!
-        //     if (type !== StorageType.B2 && b.indexOf("b2-snapshots") !== -1) {
-        //         return { value: null, error: r.error };
-        //     }
-        // }
-        // if (delay) {
-        //     await timeout(delay);
-        // }
-        // const files = await storage.listFiles();
-        // console.log(`\tfiles: ${files}`);
         const r = await storage.deleteBucket(b);
         if (type === StorageType.B2 && b.indexOf("b2-snapshots") !== -1) {
-            console.log(colorLog("init::deleteBucket"), "Can't delete the snapshots bucket on B2, but that's okay!")
+            colorLog("init::deleteBucket", Color.OK, "Can't delete the snapshots bucket on B2, but that's okay!");
         } else {
             logResult("init::deleteBucket", r, b);
             if (r.error) {
@@ -97,6 +84,15 @@ export async function cleanup() {
     const p = path.normalize(path.join(process.cwd(), "tests", "test_directory"));
     await rimraf(p, {
         preserveRoot: false,
+    });
+}
+
+export async function waitABit(millis = 100): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            colorLog("waitABit", Color.MESSAGE, `${millis}ms`);
+            resolve();
+        }, millis);
     });
 }
 
@@ -123,13 +119,21 @@ export async function createBucket(bucketName?: string, options?: Options) {
 
 export function getSelectedBucket(): string | null {
     const r = storage.getSelectedBucket();
-    console.log(colorLog("getSelectedBucket"), r);
+    if (r === null) {
+        colorLog("getSelectedBucket", Color.MESSAGE, "no bucket selected");
+    } else {
+        colorLog("getSelectedBucket", Color.MESSAGE, r);
+    }
     return r;
 }
 
 export function setSelectedBucket(b: string | null) {
     const r = storage.setSelectedBucket(b);
-    console.log(colorLog("setSelectedBucket"), b);
+    if (b === null) {
+        colorLog("setSelectedBucket", Color.MESSAGE, "no bucket selected");
+    } else {
+        colorLog("setSelectedBucket", Color.MESSAGE, b);
+    }
 }
 
 export async function clearBucket(bucketName?: string) {
@@ -188,9 +192,7 @@ export async function getFileAsStream(fileName: string, destName: string, option
     const r = typeof bucketName === "undefined" ?
         await storage.getFileAsStream(fileName, options) :
         await storage.getFileAsStream(bucketName, fileName, options);
-
     logResult("getFileAsStream", r, "ok");
-
     if (r.value !== null) {
         const filePath = path.join(
             process.cwd(),
@@ -219,7 +221,6 @@ export async function removeFile(fileName: string, bucketName?: string) {
     logResult("removeFile", r);
 }
 
-
 export async function getPublicURL(fileName: string, options: Options, bucketName?: string) {
     const r = typeof bucketName === "undefined" ?
         await storage.getPublicURL(fileName, options) :
@@ -228,9 +229,9 @@ export async function getPublicURL(fileName: string, options: Options, bucketNam
     if (r.value !== null && type !== StorageType.LOCAL) {
         const response = await fetch(new Request(r.value));
         if (!response.ok) {
-            console.log(colorLog("checkPublicURL", "91m"), `HTTP status: ${response.status}`);
+            colorLog("checkPublicURL", Color.ERROR, `HTTP status: ${response.status}`, options);
         } else {
-            console.log(colorLog("checkPublicURL", "35m"), "public url is valid!");
+            colorLog("checkPublicURL", Color.OK, "public url is valid!", options);
         }
     }
 }
@@ -248,12 +249,12 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
             const buffer = Buffer.from(arrayBuffer);
             const fileType = await fileTypeFromBuffer(buffer);
             if (!response.ok) {
-                console.log(colorLog("checkSignedURL", "91m"), `HTTP status: ${response.status}`);
+                colorLog("checkSignedURL", Color.ERROR, `HTTP status: ${response.status}`, options);
             } else {
                 if (fileType?.ext !== "jpg") {
-                    console.log(colorLog("checkSignedURL", "91m"), "not an image, probably an error message");
+                    colorLog("checkSignedURL", Color.ERROR, "not an image, probably an error message", options);
                 } else {
-                    console.log(colorLog("checkSignedURL", "35m"), "signed url is valid!");
+                    colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
                 }
             }
             const outputFile = `${dest}.${fileType?.ext}`;
