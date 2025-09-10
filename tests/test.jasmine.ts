@@ -417,7 +417,12 @@ describe(`[testing ${type} storage]`, () => {
     // S3 doesn't allow you to delete a non-empty bucket
     // if (storage.getType() !== StorageType.S3) {
     // }
+    // const { value: v, error: e } = await storage.clearBucket(newBucketName1);
+    // console.log(v, e)
+    // const { value: v2, error: e2 } = await storage.listFiles(newBucketName1);
+    // console.log(v2, e2)
     const { value, error } = await storage.deleteBucket(newBucketName1);
+    console.log(value, error)
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });

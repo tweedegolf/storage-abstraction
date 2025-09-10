@@ -306,7 +306,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   protected async _deleteBucket(bucketName: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(bucketName);
+      const { value, error } = await this.clearBucket(bucketName);
       const input = {
         Bucket: bucketName,
       };

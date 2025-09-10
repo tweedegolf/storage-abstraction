@@ -1,5 +1,6 @@
 import { Readable, Stream, Writable } from "stream";
-import { ResultObject, ResultObjectBoolean, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "../src/types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "../src/types/result";
+import { Options } from "../src/types/general";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
@@ -81,13 +82,14 @@ export type ResultObjectType =
   ResultObjectBoolean |
   ResultObjectNumber |
   ResultObjectStream |
+  ResultObjectBuckets |
   ResultObjectFiles;
 
 
-export function logResult(label: string, result: ResultObjectType, msg?: string): string {
+export function logResult(label: string, result: ResultObjectType, msg?: string, options?: Options): void {
   if (result.error !== null) {
-    return `\x1b[91m[${label}]\x1b[0m ${result.error}`;
+    console.log(`\x1b[91m[${label}]\x1b[0m ${result.error}`, msg || "");
   } else {
-    return `\x1b[96m[${label}]\x1b[0m ${msg || result.value}`;
+    console.log(`\x1b[96m[${label}]\x1b[0m`, msg || result.value, options || "");
   }
 }
