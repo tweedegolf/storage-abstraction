@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, { stat } from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
@@ -14,12 +14,40 @@ let storage: Storage;
 export const privateBucket = "aap892";
 export const publicBucket = "aap893";
 
+export type TestFile = {
+    name: string,
+    path: string,
+    size: number,
+    ext: string,
+};
+const testFileNames = ["image1.jpg", "image2.jpg", "input.txt", "with space.jpg"];
+const testFiles: { [id: string]: TestFile } = {};
+
+export async function getTestFile(name: string, ...pathToFile: string[]): Promise<TestFile> {
+    if (typeof testFiles[name] !== "undefined") {
+        return testFiles[name];
+    }
+    const p = path.join(...pathToFile, name);
+    const stats = await fs.promises.stat(p);
+    testFiles[name] = {
+        name,
+        path: p,
+        size: stats.size,
+        ext: path.extname(p),
+    }
+    return testFiles[name];
+}
+
 export async function init(_type: string, bucketName?: string): Promise<string> {
+    colorLog("init", Color.TEST);
     await cleanup();
     type = _type;
     storage = new Storage(getConfig(type));
-    bucketName = storage.config.bucketName || bucketName || "sab-test-bucket";
-    colorLog("init", Color.MESSAGE, storage.config);
+    bucketName = storage.config.bucketName || bucketName || privateBucket;
+    colorLog("init::type", Color.MESSAGE, storage.getType());
+    colorLog("init::config", Color.MESSAGE, storage.getConfig());
+    // colorLog("init::serviceClient", Color.MESSAGE, storage.getServiceClient());
+    colorLog("init::selectedBucket", Color.MESSAGE, storage.getSelectedBucket());
 
     await fs.promises.stat(path.join(process.cwd(), "tests", "test_directory")).catch(async (e) => {
         await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
@@ -59,7 +87,6 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     // if (type === StorageType.AZURE) {
     //     await waitABit(10000);
     // }
-
     return Promise.resolve(bucketName);
 }
 
@@ -67,6 +94,17 @@ export async function deleteAllBuckets(list: Array<string>, storage: IAdapter, d
     colorLog("init::deleteAllBuckets", Color.MESSAGE, list);
     for (let i = 0; i < list.length; i++) {
         const b = list[i];
+        /*
+        // It is not possible to delete the snapshots bucket on Backblaze!
+        if (type === StorageType.B2 && b.indexOf("b2-snapshots") !== -1) {
+            continue;
+            }
+            const r = await storage.deleteBucket(b);
+            logResult("init::deleteBucket", r, b);
+            if (r.error) {
+                return { value: null, error: r.error };
+            }
+        */
         const r = await storage.deleteBucket(b);
         if (type === StorageType.B2 && b.indexOf("b2-snapshots") !== -1) {
             colorLog("init::deleteBucket", Color.OK, "Can't delete the snapshots bucket on B2, but that's okay!");
@@ -114,7 +152,7 @@ export async function bucketIsPublic(bucketName?: string) {
 
 export async function createBucket(bucketName?: string, options?: Options) {
     const r = await storage.createBucket(bucketName, options);
-    logResult("createBucket", r), options;
+    logResult("createBucket", r, r.value as string, options);
 }
 
 export function getSelectedBucket(): string | null {
@@ -143,7 +181,7 @@ export async function clearBucket(bucketName?: string) {
 
 export async function deleteBucket(bucketName?: string) {
     const r = await storage.deleteBucket(bucketName);
-    logResult("deleteBucket", r);
+    logResult("deleteBucket", r, bucketName);
 }
 
 export async function listFiles(bucketName?: string) {
@@ -151,10 +189,10 @@ export async function listFiles(bucketName?: string) {
     logResult("listFiles", r);
 }
 
-export async function addFileFromPath(targetPath: string, options: Options, bucketName?: string) {
+export async function addFileFromPath(origPath: string, targetPath: string, options: Options, bucketName?: string) {
     const r = await storage.addFileFromPath({
         bucketName,
-        origPath: "./tests/data/image1.jpg",
+        origPath,
         targetPath,
         options,
         // options: {GrantRead: "true"}
@@ -163,8 +201,8 @@ export async function addFileFromPath(targetPath: string, options: Options, buck
     logResult("addFileFromPath", r), options;
 }
 
-export async function addFileFromBuffer(targetPath: string, options: Options, bucketName?: string) {
-    const buffer = await fs.promises.readFile("./tests/data/image1.jpg");
+export async function addFileFromBuffer(origPath: string, targetPath: string, options: Options, bucketName?: string) {
+    const buffer = await fs.promises.readFile(origPath);
     const r = await storage.addFileFromBuffer({
         bucketName,
         buffer,
@@ -177,8 +215,8 @@ export async function addFileFromBuffer(targetPath: string, options: Options, bu
     logResult("addFileFromBuffer", r), options;
 }
 
-export async function addFileFromStream(targetPath: string, options: Options, bucketName?: string) {
-    const stream = fs.createReadStream("./tests/data/image1.jpg");
+export async function addFileFromStream(origPath: string, targetPath: string, options: Options, bucketName?: string) {
+    const stream = fs.createReadStream(origPath);
     const r = await storage.addFileFromStream({
         bucketName,
         stream,
@@ -198,7 +236,7 @@ export async function getFileAsStream(fileName: string, destName: string, option
             process.cwd(),
             "tests",
             "test_directory",
-            `${destName}-${storage.getType()}.jpg`
+            destName
         );
         const writeStream = fs.createWriteStream(filePath);
         await saveFile(r.value, writeStream);
@@ -221,7 +259,7 @@ export async function removeFile(fileName: string, bucketName?: string) {
     logResult("removeFile", r);
 }
 
-export async function getPublicURL(fileName: string, options: Options, bucketName?: string) {
+export async function getPublicURL(fileName: string, options: Options = {}, bucketName?: string) {
     const r = typeof bucketName === "undefined" ?
         await storage.getPublicURL(fileName, options) :
         await storage.getPublicURL(bucketName, fileName, options);
@@ -241,9 +279,12 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
         await storage.getSignedURL(fileName, options) :
         await storage.getSignedURL(bucketName, fileName, options);
     logResult("getSignedURL", r), options;
+
     if (type !== StorageType.LOCAL) {
         if (r.value !== null) {
-            await waitABit(1000);
+            if (options.waitUntilExpired === true) {
+                await waitABit((options.expiresIn * 1000) + 700); // milliseconds
+            }
             const response = await fetch(new Request(r.value));
             const arrayBuffer = await response.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
@@ -268,6 +309,12 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
         }
     }
 }
+
+export async function getFileSize(p: string): Promise<number> {
+    const stats = await fs.promises.stat(p);
+    return stats.size;
+}
+
 
 // export async function getFileInfo(fileName: string, bucketName: string) {
 //     const info = await (storage.getAdapter() as AdapterAmazonS3).getFileInfo(

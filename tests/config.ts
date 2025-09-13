@@ -1,7 +1,7 @@
 import "jasmine";
 import path from "path";
 import dotenv from "dotenv";
-import { StorageAdapterConfig, StorageType } from "../src/types/general";
+import { S3Type, StorageAdapterConfig, StorageType } from "../src/types/general";
 
 export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapterConfig {
   dotenv.config();
@@ -30,7 +30,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
         foo: "bar"
       }
     };
-  } else if (t === "S3-Cloudflare-R2") {
+  } else if (t === S3Type.CLOUDFLARE) {
     config = {
       type: StorageType.S3,
       region: process.env.R2_REGION,
@@ -39,7 +39,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     };
-  } else if (t === "S3-Backblaze-B2") {
+  } else if (t === S3Type.BACKBLAZE) {
     config = {
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,
@@ -48,7 +48,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
       accessKeyId: process.env.B2_S3_ACCESS_KEY_ID,
       secretAccessKey: process.env.B2_S3_SECRET_ACCESS_KEY,
     };
-  } else if (t === "S3-Cubbit") {
+  } else if (t === S3Type.CUBBIT) {
     config = {
       type: StorageType.S3,
       bucketName: process.env.BUCKET_NAME,

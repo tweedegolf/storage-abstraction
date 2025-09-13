@@ -484,10 +484,25 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     allVersions: boolean
   ): Promise<ResultObject> {
+    let versionId = null;
+    // first try to remove the versioned files
+    const { value, error } = await this.getFileVersions(bucketName);
+    if (error !== null) {
+      if (error !== "no versions" && error !== "ListObjectVersions not implemented") {
+        return { value: null, error };
+      }
+    } else if (typeof value !== null) {
+      versionId = value.find((v) => v.Key === fileName).VersionId;
+    }
+    // console.log(versionId)
     try {
-      const input = {
+      const input = versionId === null ? {
         Bucket: bucketName,
         Key: fileName,
+      } : {
+        Bucket: bucketName,
+        Key: fileName,
+        VersionId: versionId
       };
       const command = new DeleteObjectCommand(input);
       const response = await this._client.send(command);
@@ -554,6 +569,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (typeof options.expiresIn !== "number") {
         options.expiresIn = 604800 // one week: 7*24*60*60
       }
+      // console.log(options.expiresIn);
       const url = await getSignedUrl(
         this._client,
         new GetObjectCommand({

@@ -269,6 +269,9 @@ export abstract class AbstractAdapter implements IAdapter {
       }
       name = this._bucketName;
     }
+    if (this.selectedBucket === name) {
+      this.selectedBucket = null;
+    }
     return this._deleteBucket(name);
   }
 

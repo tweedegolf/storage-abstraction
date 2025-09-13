@@ -1,5 +1,5 @@
 import { S3Type, StorageType } from "../src/types/general";
-import { cleanup, init, getSelectedBucket, listBuckets, deleteAllBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket } from "./tests";
+import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getTestFile, getFileSize, cleanup } from "./tests";
 import { Color, colorLog } from "./util";
 
 const types = [
@@ -21,16 +21,16 @@ if (process.argv[2]) {
   index = parseInt(process.argv[2], 10);
   type = types[index];
 }
+// console.log(index, type);
 
 async function testPrivateBucket() {
+  console.log("\n");
   colorLog("testPrivateBucket", Color.TEST);
-  await init(type);
-  getSelectedBucket();
   await createBucket(privateBucket, { public: false });
   await bucketIsPublic(privateBucket);
 
   setSelectedBucket(privateBucket);
-  await addFileFromPath('file1.jpg', {});
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   await listFiles();
   if (type === StorageType.B2 || type === S3Type.BACKBLAZE) {
     await listFiles("b2-snapshots-26f128630441");
@@ -38,12 +38,21 @@ async function testPrivateBucket() {
   await getPublicURL('file1.jpg', { noCheck: true });
   await getPublicURL('file1.jpg', { noCheck: false });
   await getSignedURL("file1.jpg", "file1", {});
+  await deleteBucket();
 }
 
 async function testPublicBucket() {
+  console.log("\n");
   colorLog("testPublicBucket", Color.TEST);
-  await init(types[index]);
-  await createBucket(publicBucket, { public: true });
+  if (type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
+    await createBucket(publicBucket, { public: true });
+  } else {
+    // if you test Cloudflare or Backblaze with the S3 adapter this public bucket should be setup before you run this test!
+    await createBucket(publicBucket, { public: true });
+    // trying to make a public bucket in Cloudflare and Backblaze should yield an warning
+    await createBucket("sab-test-public", { public: true });
+    await deleteBucket("sab-test-public");
+  }
   await bucketIsPublic(publicBucket);
   setSelectedBucket(publicBucket)
 
@@ -52,53 +61,125 @@ async function testPublicBucket() {
    * Note that this also makes files in a private bucket publicly accessible!
    */
   const options = type === S3Type.CUBBIT ? { ACL: "public-read" } : {};
-  await addFileFromPath('file2.jpg', options);
+  await addFileFromPath("./tests/data/image2.jpg", 'file2.jpg', options);
   await listFiles();
+  await getPublicURL('file2.jpg');
   await getPublicURL('file2.jpg', { noCheck: true });
-  await getSignedURL('file2.jpg', "expired", { expiresIn: 1 });
-  await getSignedURL('file2.jpg', "valid", {});
+  await getSignedURL('file2.jpg', "valid1", { expiresIn: 1 }); // expires after a second
+  await getSignedURL('file2.jpg', "expired", { expiresIn: 1, waitUntilExpired: true }); // check url after expiration
+  await getSignedURL('file2.jpg', "valid2", {});
+
+  if (type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
+    await deleteBucket();
+  }
 }
 
-// setSelectedBucket(privateBucket)
-// await deleteBucket();
-// await bucketExists();
+async function testDeleteBucket() {
+  console.log("\n");
+  colorLog("testDeleteBucket", Color.TEST);
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  getSelectedBucket();
+  await listBuckets();
+  await deleteBucket();
+  await bucketExists(privateBucket);
+  await listBuckets();
+  getSelectedBucket();
+}
 
-// setSelectedBucket(publicBucket);
-// await addFileFromBuffer("file-from-buffer.jpg", {});
-// await addFileFromStream("file-from-stream.jpg", {});
-// await listFiles();
+async function testAddFilesToBucket() {
+  console.log("\n");
+  colorLog("testAddFilesToBucket", Color.TEST);
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  await addFileFromPath("./tests/data/with space.jpg", "file-from-path.jpg", {});
+  await addFileFromBuffer("./tests/data/input.txt", "file-from-buffer.txt", {});
+  await addFileFromStream("./tests/data/image1.jpg", "file-from-stream.jpg", {});
+  await listFiles();
+  await deleteBucket();
+}
 
-// await getFileAsStream("file-from-stream.jpg", "full");
-// await getFileAsStream("file-from-stream.jpg", "partial1", { start: 0, end: 2000 });
-// await getFileAsStream("file-from-stream.jpg", "partial2", { end: 2000 });
-// await getFileAsStream("file-from-stream.jpg", "partial3", { start: 2000 });
+async function testDownloadFilesFromBucket() {
+  console.log("\n");
+  colorLog("testDownloadFilesFromBucket", Color.TEST);
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
+  const origSize = await getFileSize("./tests/data/image1.jpg");
 
-// await listFiles();
-// await deleteBucket();
+  await getFileAsStream("file1.jpg", "full.jpg");
+  const fullSize = await getFileSize("./tests/test_directory/full.jpg");
+  if (origSize === fullSize) {
+    colorLog("checkSize", Color.OK, origSize, fullSize);
+  } else {
+    colorLog("checkSize", Color.ERROR, origSize, fullSize);
+  }
 
-// process.exit();
+  await getFileAsStream("file1.jpg", "partial1.jpg", { start: 0, end: 2000 });
+  let partSize = await getFileSize("./tests/test_directory/partial1.jpg");
+  if (partSize === 2001) {
+    colorLog("checkSize", Color.OK, "size is ok");
+  } else {
+    colorLog("checkSize", Color.ERROR, "file not downloaded correctly");
+  }
 
-// await fileExists();
-// await sizeOf();
-// await removeFile();
-// await removeFile();
-// await removeFile();
-// await fileExists();
-// await clearBucket();
-// await listFiles();
-// await deleteBucket();
-// await listBuckets();
+  await getFileAsStream("file1.jpg", "partial2.jpg", { end: 2000 });
+  partSize = await getFileSize("./tests/test_directory/partial2.jpg");
+  if (partSize === 2001) {
+    colorLog("checkSize", Color.OK, "size is ok");
+  } else {
+    colorLog("checkSize", Color.ERROR, "file not downloaded correctly");
+  }
 
+  await getFileAsStream("file1.jpg", "partial3.jpg", { start: 2000 });
+  partSize = await getFileSize("./tests/test_directory/partial3.jpg");
+  if (partSize === origSize - 2000) {
+    colorLog("checkSize", Color.OK, "size is ok");
+  } else {
+    colorLog("checkSize", Color.ERROR, "file not downloaded correctly");
+  }
+
+  await deleteBucket();
+}
+
+async function testFilesInBucket() {
+  console.log("\n");
+  colorLog("testFilesInBucket", Color.TEST);
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
+
+  await fileExists("file1.jpg");
+  await sizeOf("file1.jpg");
+  await removeFile("file1.jpg");
+  await fileExists("file1.jpg");
+  await deleteBucket();
+}
+
+async function testClearBucket() {
+  console.log("\n");
+  colorLog("testClearBucket", Color.TEST);
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
+  await listFiles();
+  await clearBucket();
+  await listFiles();
+  await deleteBucket();
+}
 
 async function run() {
-  await testPrivateBucket();
-  console.log("\n");
+  await init(type);
   await testPublicBucket();
-  console.log("\n");
+  await testPrivateBucket();
+  await testDeleteBucket();
+  await testAddFilesToBucket();
+  await testDownloadFilesFromBucket();
+  await testFilesInBucket();
+  await testClearBucket();
 
-  if (type = StorageType.LOCAL) {
-    await cleanup();
-  }
+  // clean up
+  await cleanup();
 }
 
 run();
