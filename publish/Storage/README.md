@@ -1,6 +1,6 @@
 # <a name='storage-abstraction'></a>Storage Abstraction
 
-[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
+[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
 Provides an abstraction layer for interacting with a storage; the storage can be a local file system or a cloud storage service. Supported cloud storage services are:
 
