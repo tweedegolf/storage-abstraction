@@ -1041,7 +1041,7 @@ getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads 
 ### removeFile
 
 ```typescript
-removeFile(bucketName?: string, fileName: string, allVersions: boolean = false): Promise<ResultObject>;
+removeFile(bucketName?: string, fileName: string): Promise<ResultObject>;
 ```
 
 return type:
@@ -1056,10 +1056,6 @@ export interface ResultObject {
 Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
-
-If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`. 
-
-If the bucket can not be found an error will be returned: `No bucket [your bucketname] found`. 
 
 If the call succeeds the `value` key will hold the string "ok".
 
@@ -1280,9 +1276,7 @@ You can create your own adapter in a separate repository and publish it from the
 
 ## Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
-
-You can run the Jasmine tests per storage type using one of the following commands:
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` and `config_urls.md` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
 
 ```bash
 # test local disk
@@ -1331,7 +1325,7 @@ npm run test-b2-s3
 npm run test-jasmine 8
 ```
 
-As you can see in the file `package.json`, the command sets the `type` environment variable which is then read by Jasmine.
+As you can see in the file `package.json`, the command sets the `type` environment variable which is read by Jasmine.
 
 To run all Jasmine tests consecutively:
 
@@ -1339,7 +1333,9 @@ To run all Jasmine tests consecutively:
 npm run test-all
 ```
 
-You can find some additional non-Jasmine tests in the file `tests/test_runs.ts`. This consist of a few functions that make a few API calls to test certain functionality in isolation. A the bottom you'll find the `run` function where you can comment out the tests you don't want to run.
+You can find some additional non-Jasmine tests in the file `tests/test_runs.ts`. Every test is a functions that makes a series of API calls to test certain functionality in isolation. A the bottom of this file you'll find the `run` function where you can comment out the  you don't want to run.
+
+You can find the API calls in the file `tests/api_calls.ts`. Every API call is declared in a function with the same name as the API method it is calling, some additional functionality like logging and checking the result is added to the function.
 
 You can select the type of storage by passing a commandline parameter:
 | command | storage

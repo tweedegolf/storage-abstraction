@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/storage-abstraction",
-  "version": "2.1.7",
+  "version": "2.2.0",
   "description": "Provides an abstraction layer for interacting with a storage; the storage can be local or in the cloud.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +29,6 @@
     "eslint-plugin-prettier": "^5.5.4",
     "file-type": "^21.0.0",
     "jasmine": "^5.10.0",
-    "markdown-toc": "^1.2.0",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "tsc-watch": "^7.1.1",
@@ -49,14 +48,12 @@
     "test-b2-s3": "npm run test-jasmine 8",
     "test-minio-2": "MINIO_ENDPOINT='play.min.io' MINIO_USE_SSL='true' MINIO_PORT='9000' MINIO_REGION='us-east-1' MINIO_ACCESS_KEY='Q3AM3UQ867SPQQA43P2F' MINIO_SECRET_KEY='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG' npm run test-jasmine 5",
     "test": "ts-node ./tests/test_runs.ts",
-    "test2": "ts-node ./tests/test2.ts",
     "test-urls": "ts-node ./tests/test_urls.ts",
     "ts": "ts-node",
     "tsc": "node_modules/.bin/tsc",
     "copy": "npm run tsc && ts-node copy.ts",
     "prepublishOnly": "",
-    "toc": "markdown-toc -i README.md",
-    "prepare": "npm run toc && npm run copy"
+    "prepare": "npm run copy"
   },
   "keywords": [
     "storage",

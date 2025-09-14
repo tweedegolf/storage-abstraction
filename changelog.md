@@ -2,11 +2,12 @@
 
 - updated dependencies of adapters
 - deprecated `getFileAsURL`
-- added `getPublicURL` and `getPresignedURL`
-- added `bucketIsPublic`
-- added extra key to the options object of all `addFile` functions:  `useSignedURL` (boolean) &rarr; returns the presigned url instead of the public url when set to `true`
+- added `getPublicURL` and `getSignedURL`
+- added `bucketIsPublic` (does not work for CloudFlare and Cubbit)
+- added extra key to the options object of all `addFile` functions: `useSignedURL` (boolean) &rarr; returns the presigned url instead of the public url when set to `true`
 - added extra key to the options object of `createBucket`:  `public` (boolean) &rarr; creates a public bucket when set to `true`
 - you can call `createBucket` without providing a bucket name. If a bucket name is selected, either in the initialization configuration of by setting one using `setSelectedBucket`, a bucket with that name will be created. If the selected bucket is null, an error will be returned.
+- fix: if you delete the selected bucket, the selected bucket will be set to `null`
 
 # 2.1.6
 
