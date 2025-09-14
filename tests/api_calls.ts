@@ -1,4 +1,4 @@
-import fs, { stat } from "fs";
+import fs from "fs";
 import path from "path";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
@@ -11,8 +11,8 @@ import { ResultObject } from "../src/types/result";
 let type: string;
 let storage: Storage;
 
-export const privateBucket = "aap892";
-export const publicBucket = "aap893";
+export const privateBucket = "sab-test-private";
+export const publicBucket = "sab-test-public";
 
 export type TestFile = {
     name: string,

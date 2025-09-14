@@ -10,7 +10,7 @@
     "url": "git+https://github.com/tweedegolf/storage-abstraction.git"
   },
   "dependencies": {
-    "@google-cloud/storage": "^7.17.0"
+    "@google-cloud/storage": "^7.17.1"
   },
   "scripts": {},
   "keywords": [

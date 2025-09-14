@@ -2,7 +2,6 @@
 - update @azure dependencies
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 
-
 # 1.0.7
 - add support for optional config option `blobDomain`
 

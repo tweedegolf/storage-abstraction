@@ -1,5 +1,5 @@
 import { S3Type, StorageType } from "../src/types/general";
-import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getTestFile, getFileSize, cleanup } from "./tests";
+import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getFileSize, cleanup } from "./api_calls";
 import { Color, colorLog } from "./util";
 
 const types = [
@@ -38,6 +38,7 @@ async function testPrivateBucket() {
   await getPublicURL('file1.jpg', { noCheck: true });
   await getPublicURL('file1.jpg', { noCheck: false });
   await getSignedURL("file1.jpg", "file1", {});
+
   await deleteBucket();
 }
 
@@ -47,11 +48,12 @@ async function testPublicBucket() {
   if (type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
     await createBucket(publicBucket, { public: true });
   } else {
-    // if you test Cloudflare or Backblaze with the S3 adapter this public bucket should be setup before you run this test!
+    /**
+     * If you're connecting to Cloudflare or Backblaze with the S3 adapter you can't create a public bucket in one go.
+     * The bucket will be created but you'll get a warning that you can only make this bucket public manually using the 
+     * Cloudflare or Backblaze web console.
+     */
     await createBucket(publicBucket, { public: true });
-    // trying to make a public bucket in Cloudflare and Backblaze should yield an warning
-    await createBucket("sab-test-public", { public: true });
-    await deleteBucket("sab-test-public");
   }
   await bucketIsPublic(publicBucket);
   setSelectedBucket(publicBucket)
@@ -68,6 +70,11 @@ async function testPublicBucket() {
   await getSignedURL('file2.jpg', "valid1", { expiresIn: 1 }); // expires after a second
   await getSignedURL('file2.jpg', "expired", { expiresIn: 1, waitUntilExpired: true }); // check url after expiration
   await getSignedURL('file2.jpg', "valid2", {});
+
+  // check url to files in a subdir of a bucket
+  await addFileFromPath("./tests/data/image2.jpg", "subdir/file2.jpg", {});
+  await getPublicURL('subdir/file2.jpg', { noCheck: true });
+  await getSignedURL('subdir/file2.jpg', "valid3", {});
 
   if (type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
     await deleteBucket();
@@ -145,15 +152,29 @@ async function testDownloadFilesFromBucket() {
 async function testFilesInBucket() {
   console.log("\n");
   colorLog("testFilesInBucket", Color.TEST);
-  await createBucket(privateBucket);
+  await createBucket(privateBucket, { versioning: true });
   setSelectedBucket(privateBucket);
-  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
 
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   await fileExists("file1.jpg");
   await sizeOf("file1.jpg");
   await removeFile("file1.jpg");
   await fileExists("file1.jpg");
+
+  // add multiple times to create versions (if versioning is enabled)
+  await addFileFromPath("./tests/data/image1.jpg", "subdir/file1.jpg", {});
+  await addFileFromPath("./tests/data/image1.jpg", "subdir/file1.jpg", {});
+  await addFileFromPath("./tests/data/image1.jpg", "subdir/file1.jpg", {});
+  await fileExists("subdir/file1.jpg");
+  await sizeOf("subdir/file1.jpg");
+  await removeFile("subdir/file1.jpg"); // removes all versions
+  await fileExists("subdir/file1.jpg");
+  await removeFile("subdir/file1111.jpg"); // try to remove a file that doesn't exist
+
   await deleteBucket();
+
+  await removeFile("file1.jpg"); // try to remove a file when no bucket is selected (because it has been deleted)
+  await removeFile("file1.jpg", "this-is-not-a-bucket-999"); // try to remove a file in a bucket that doesn't exist
 }
 
 async function testClearBucket() {
@@ -169,14 +190,17 @@ async function testClearBucket() {
 }
 
 async function run() {
+  // always run init first!
   await init(type);
-  await testPublicBucket();
-  await testPrivateBucket();
-  await testDeleteBucket();
-  await testAddFilesToBucket();
-  await testDownloadFilesFromBucket();
+
+  // select the tests you want to run by (un)commenting out
+  // await testPublicBucket();
+  // await testPrivateBucket();
+  // await testDeleteBucket();
+  // await testAddFilesToBucket();
+  // await testDownloadFilesFromBucket();
   await testFilesInBucket();
-  await testClearBucket();
+  // await testClearBucket();
 
   // clean up
   await cleanup();

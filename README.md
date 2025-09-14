@@ -1057,6 +1057,8 @@ Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
+If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`
+
 If the call succeeds the `value` key will hold the string "ok".
 
 ### sizeOf
@@ -1278,8 +1280,6 @@ You can create your own adapter in a separate repository and publish it from the
 
 If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
 
-You can run the Jasmine tests per storage type using one of the following commands:
-
 ```bash
 # test local disk
 npm run test-local
@@ -1312,12 +1312,18 @@ npm run test-minio
 npm run test-jasmine 5
 
 # test Cubbit
+npm run test-cubbit
+# or
 npm run test-jasmine 6
 
 # test Cloudflare R2
+npm run test-cloudflare
+# or
 npm run test-jasmine 7
 
 # test Backblaze B2 S3 API
+npm run test-b2-s3
+# or
 npm run test-jasmine 8
 ```
 
@@ -1329,9 +1335,26 @@ To run all Jasmine tests consecutively:
 npm run test-all
 ```
 
-You can find some additional non-Jasmine tests in the file `tests/test.ts`. First select which type of storage you want to test, then uncomment the API calls you want to test, and finally run:
+You can find some additional non-Jasmine tests in the file `tests/test_runs.ts`. Every test is a functions that makes a series of API calls to test certain functionality in isolation. A the bottom of this file you'll find the `run` function where you can comment out the  you don't want to run.
 
-`npm test`
+You can find the API calls in the file `tests/api_calls.ts`. Every API call is declared in a function with the same name as the API method it is calling, some additional functionality like logging and checking the result is added to the function.
+
+You can select the type of storage by passing a commandline parameter:
+| command | storage
+| --- | --- |
+| `npm test 0` | Local|
+| `npm test 1` | Amazon S3|
+| `npm test 2` | Backblaze B2|
+| `npm test 3` | Google Cloud Storage|
+| `npm test 4` | Azure Blob Storage|
+| `npm test 5` | Minio|
+| `npm test 6` | Cubbit (S3 compatible)|
+| `npm test 7` | Cloudflare R2 (S3 compatible)|
+| `npm test 8` | Backblaze B2 (S3 compatible)|
+
+Note that the test `testPublicBucket` tries to create a public bucket. However creating a public bucket on Cloudflare R2 and on Backblaze B2 when using the S3 adapter is not possible; even if you add `{public: true}` the created bucket  `sab-test-public` will be private.
+
+You can make the created bucket public using the web console of Cloudflare and Backblaze. You can also create a public bucket `sab-test-public` before you run the test.
 
 ## Example application
 

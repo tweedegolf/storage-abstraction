@@ -631,6 +631,8 @@ If you want to create a public bucket add a key `public` to the options object a
 >   }
 >});
 >```
+> Note that adding `{ACL: "public-read"}` or `{ACL: "public-read-write"}` also makes files in a private bucket publicly accessible!
+
 
 If the bucket was created successfully the `value` key will hold the string "ok". If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold "Bucket {bucket_name} created successfully but you can only make this bucket public using the web console".
 
@@ -965,7 +967,7 @@ const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true
 
 ```typescript
 getSignedURL(bucketName?: string, fileName: string, options?: {
-  expiresIn: number // number of seconds the url is valid, default to a week (604800)
+  expiresIn: number // number of seconds the url is valid, defaults to a week (604800)
 }): Promise<ResultObject>;
 ```
 
@@ -1054,6 +1056,10 @@ export interface ResultObject {
 Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`. 
+
+If the bucket can not be found an error will be returned: `No bucket [your bucketname] found`. 
 
 If the call succeeds the `value` key will hold the string "ok".
 
@@ -1310,16 +1316,22 @@ npm run test-minio
 npm run test-jasmine 5
 
 # test Cubbit
+npm run test-cubbit
+# or
 npm run test-jasmine 6
 
 # test Cloudflare R2
+npm run test-cloudflare
+# or
 npm run test-jasmine 7
 
 # test Backblaze B2 S3 API
+npm run test-b2-s3
+# or
 npm run test-jasmine 8
 ```
 
-As you can see in the file `package.json`, the command sets the `type` environment variable which is read by Jasmine.
+As you can see in the file `package.json`, the command sets the `type` environment variable which is then read by Jasmine.
 
 To run all Jasmine tests consecutively:
 
@@ -1327,9 +1339,24 @@ To run all Jasmine tests consecutively:
 npm run test-all
 ```
 
-You can find some additional non-Jasmine tests in the file `tests/test.ts`. First select which type of storage you want to test, then uncomment the API calls you want to test, and finally run:
+You can find some additional non-Jasmine tests in the file `tests/test_runs.ts`. This consist of a few functions that make a few API calls to test certain functionality in isolation. A the bottom you'll find the `run` function where you can comment out the tests you don't want to run.
 
-`npm test`
+You can select the type of storage by passing a commandline parameter:
+| command | storage
+| --- | --- |
+| `npm test 0` | Local|
+| `npm test 1` | Amazon S3|
+| `npm test 2` | Backblaze B2|
+| `npm test 3` | Google Cloud Storage|
+| `npm test 4` | Azure Blob Storage|
+| `npm test 5` | Minio|
+| `npm test 6` | Cubbit (S3 compatible)|
+| `npm test 7` | Cloudflare R2 (S3 compatible)|
+| `npm test 8` | Backblaze B2 (S3 compatible)|
+
+Note that the test `testPublicBucket` tries to create a public bucket. However creating a public bucket on Cloudflare R2 and on Backblaze B2 when using the S3 adapter is not possible; even if you add `{public: true}` the created bucket  `sab-test-public` will be private.
+
+You can make the created bucket public using the web console of Cloudflare and Backblaze. You can also create a public bucket `sab-test-public` before you run the test.
 
 ## Example application
 

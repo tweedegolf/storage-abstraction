@@ -484,31 +484,44 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     allVersions: boolean
   ): Promise<ResultObject> {
-    let versionId = null;
+    let versions = [];
     // first try to remove the versioned files
     const { value, error } = await this.getFileVersions(bucketName);
     if (error !== null) {
       if (error !== "no versions" && error !== "ListObjectVersions not implemented") {
         return { value: null, error };
       }
-    } else if (typeof value !== null) {
-      versionId = value.find((v) => v.Key === fileName).VersionId;
+    } else if (Array.isArray(value)) {
+      versions = value.filter((v) => v.Key === fileName);
     }
-    // console.log(versionId)
-    try {
-      const input = versionId === null ? {
-        Bucket: bucketName,
-        Key: fileName,
-      } : {
-        Bucket: bucketName,
-        Key: fileName,
-        VersionId: versionId
-      };
-      const command = new DeleteObjectCommand(input);
-      const response = await this._client.send(command);
-      return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    // console.log(versions)
+    if (versions.length > 0) {
+      try {
+        for (const v of versions) {
+          await this._client.send(
+            new DeleteObjectCommand({
+              Bucket: bucketName,
+              Key: fileName,
+              VersionId: v.VersionId,
+            })
+          );
+        }
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
+    } else {
+      try {
+        const input = {
+          Bucket: bucketName,
+          Key: fileName,
+        };
+        const command = new DeleteObjectCommand(input);
+        const response = await this._client.send(command);
+        return { value: "ok", error: null };
+      } catch (e) {
+        return { value: null, error: e.message };
+      }
     }
   }
 

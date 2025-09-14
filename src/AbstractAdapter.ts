@@ -438,9 +438,29 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
+    if (this.configError !== null) {
+      return { value: null, error: this.configError };
+    }
     const { bucketName, fileName, options: allVersions, error } = this._getFileAndBucketAndOptions(...args);
     if (error !== null) {
       return { error, value: null };
+    }
+
+    let r = await this.bucketExists(bucketName);
+    if (r.error) {
+      return { value: null, error: r.error }
+    }
+    if (r.value === false) {
+      return { value: null, error: `No bucket '${bucketName}' found` }
+    }
+
+    // check if file exists, this is especially necessary for Backblaze B2 with S3 adapter!
+    r = await this.fileExists(bucketName, fileName);
+    if (r.error) {
+      return { value: null, error: r.error }
+    }
+    if (r.value === false) {
+      return { value: null, error: `No file '${fileName}' found in bucket '${bucketName}'` }
     }
     return this._removeFile(bucketName, fileName, allVersions === null ? false : allVersions as boolean);
   }

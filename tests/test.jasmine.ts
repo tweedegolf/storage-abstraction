@@ -2,7 +2,7 @@ import "jasmine";
 import fs from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, StorageType } from "../src/types/general";
+import { AdapterConfig, S3Type, StorageType } from "../src/types/general";
 import { saveFile } from "./util";
 import { Readable } from "stream";
 import { getConfig } from "./config";
@@ -14,9 +14,9 @@ const types = [
   StorageType.B2, // 3
   StorageType.AZURE, // 4
   StorageType.MINIO, // 5
-  "S3-Cubbit", // 6
-  "S3-Cloudflare-R2", // 7
-  "S3-Backblaze-B2", // 8
+  S3Type.CUBBIT, // 6
+  S3Type.CLOUDFLARE, // 7
+  S3Type.BACKBLAZE, // 8
 ];
 
 let index = 0;
@@ -186,11 +186,9 @@ describe(`[testing ${type} storage]`, () => {
 
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
-    // remove file does not fail if the file doesn't exist
-    expect(value).not.toBeNull();
-    expect(error).toBeNull();
-    // expect(value).toBeNull();
-    // expect(error).not.toBeNull();
+    // remove file fails if the file doesn't exist
+    expect(value).toBeNull();
+    expect(error).not.toBeNull();
   });
 
   it("(11) list files 2", async () => {
@@ -422,7 +420,7 @@ describe(`[testing ${type} storage]`, () => {
     // const { value: v2, error: e2 } = await storage.listFiles(newBucketName1);
     // console.log(v2, e2)
     const { value, error } = await storage.deleteBucket(newBucketName1);
-    console.log(value, error)
+    // console.log(value, error);
     expect(value).not.toBeNull();
     expect(error).toBeNull();
   });

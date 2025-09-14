@@ -1,5 +1,5 @@
 # 1.0.11
-- update minio npm package to 8.0.5
+- update minio npm package to 8.0.6
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 
 # 1.0.10
