@@ -25,7 +25,8 @@ if (process.argv[5]) {
   index = parseInt(process.argv[5], 10);
 }
 const config = getConfig(types[index]);
-const type = (config as AdapterConfig).type || StorageType.LOCAL;
+// const type = (config as AdapterConfig).type || StorageType.LOCAL;
+const type = types[index];
 
 const newBucketName1 = "bucket-test-sab-1";
 const newBucketName2 = "bucket-test-sab-2";
@@ -186,9 +187,16 @@ describe(`[testing ${type} storage]`, () => {
 
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
-    // remove file fails if the file doesn't exist
-    expect(value).toBeNull();
-    expect(error).not.toBeNull();
+    // console.log(type, value, error);
+    if (type === S3Type.BACKBLAZE) {
+      // remove file fails if the file doesn't exist in Backblaze
+      expect(value).toBeNull();
+      expect(error).not.toBeNull();
+    } else {
+      // remove file does not fails if the file doesn't exist
+      expect(value).not.toBeNull();
+      expect(error).toBeNull();
+    }
   });
 
   it("(11) list files 2", async () => {

@@ -1041,7 +1041,7 @@ getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads 
 ### removeFile
 
 ```typescript
-removeFile(bucketName?: string, fileName: string, allVersions: boolean = false): Promise<ResultObject>;
+removeFile(bucketName?: string, fileName: string): Promise<ResultObject>;
 ```
 
 return type:
@@ -1056,8 +1056,6 @@ export interface ResultObject {
 Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
-
-If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`
 
 If the call succeeds the `value` key will hold the string "ok".
 

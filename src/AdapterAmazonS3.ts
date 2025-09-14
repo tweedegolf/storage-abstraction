@@ -484,6 +484,26 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     fileName: string,
     allVersions: boolean
   ): Promise<ResultObject> {
+
+    if (this._s3Type === S3Type.BACKBLAZE) {
+      let r = await this.bucketExists(bucketName);
+      if (r.error) {
+        return { value: null, error: r.error }
+      }
+      if (r.value === false) {
+        return { value: null, error: `No bucket '${bucketName}' found` }
+      }
+
+      // check if file exists, this is especially necessary for Backblaze B2 with S3 adapter!
+      r = await this.fileExists(bucketName, fileName);
+      if (r.error) {
+        return { value: null, error: r.error }
+      }
+      if (r.value === false) {
+        return { value: null, error: `No file '${fileName}' found in bucket '${bucketName}'` }
+      }
+    }
+
     let versions = [];
     // first try to remove the versioned files
     const { value, error } = await this.getFileVersions(bucketName);
