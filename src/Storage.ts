@@ -196,12 +196,6 @@ export class Storage implements IAdapter {
     return this.adapter.getFileAsStream(...args);
   }
 
-  async getFileAsURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]): Promise<ResultObject> {
-    return this.adapter.getFileAsURL(...args);
-  }
-
   async getPublicURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
     [fileName: string, options?: Options]): Promise<ResultObject> {
