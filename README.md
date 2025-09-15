@@ -1,6 +1,6 @@
 # <a name='storage-abstraction'></a>Storage Abstraction
 
-[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
+[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
 Provides an abstraction layer for interacting with a storage; the storage can be a local file system or a cloud storage service. Supported cloud storage services are:
 
@@ -48,7 +48,6 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
   * [addFileFromPath](#addfilefrompath)
   * [addFileFromBuffer](#addfilefrombuffer)
   * [addFileFromStream](#addfilefromstream)
-  * [getFileAsURL (deprecated)](#getfileasurl-deprecated)
   * [getPublicURL](#getpublicurl)
   * [getSignedURL](#getsignedurl)
   * [getFileAsStream](#getfileasstream)
@@ -394,11 +393,14 @@ Sets the name of the bucket that will be stored in the local state of the Adapte
 
 If you use this method to select a bucket you don't have to provide a bucket name when you call any of these methods:
 
+- `createBucket`
 - `clearBucket`
 - `deleteBucket`
 - `bucketExists`
+- `bucketIsPublic`
 - `addFile`, `addFileFromStream`, `addFileFromBuffer`, `addFileFromPath`
-- `getFileAsURL`, `getFileAsStream`
+- `getFileAsStream`
+- `getPublicURL`, `getSignedURL`
 - `fileExists`
 - `removeFile`
 - `listFiles`
@@ -489,7 +491,7 @@ export interface ResultObject {
 }
 ```
 
-If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"` or for instance an array of bucket names
+If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"` or for instance an array of bucket names or a warning.
 
 In case the call yields an error, the `value` key will be `null` and the `error` key will hold the error message. Usually this is the error message as sent by the cloud storage service so if necessary you can lookup the error message in the documentation of that service to learn more about the error.
 
@@ -515,7 +517,11 @@ Returns an array with the names of all buckets in the storage.
 ### listFiles
 
 ```typescript
-listFiles(bucketName?: string): Promise<ResultObjectFiles>;
+listFiles(...args:
+  [bucketName?: string, numFiles?: number] |
+  [numFiles?: number] |
+  [bucketName?: string]
+)): Promise<ResultObjectFiles>;
 ```
 
 return type:
@@ -574,7 +580,10 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 ### fileExists
 
 ```typescript
-fileExists(bucketName?: string, fileName: string): Promise<ResultObjectBoolean>;
+fileExists(...args:
+  [bucketName: string, fileName: string] |
+  [fileName: string]
+): Promise<ResultObjectBoolean>;
 ```
 
 return type:
@@ -593,7 +602,17 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 ### createBucket
 
 ```typescript
-createBucket(bucketName?: string, options?: {public: boolean, [anykey]: any}): Promise<ResultObject>;
+createBucket(...args:
+  [bucketName?: string, options?: Options] |
+  [options?: Options]
+): Promise<ResultObject>;
+```
+
+```typescript
+type Options {
+  public: boolean, 
+  [anykey]: any
+};
 ```
 
 return type:
@@ -605,7 +624,7 @@ export interface ResultObject {
 }
 ```
 
-Creates a new bucket. You can provide extra storage-specific settings such as access rights using the `options` object. 
+Creates a new bucket. If successful, value will hold a string "ok". You can provide extra storage-specific settings such as access rights using the `options` object. 
 
 If you want to create a public bucket add a key `public` to the options object and set its value to `true`. 
 
@@ -658,7 +677,7 @@ export interface ResultObject {
 }
 ```
 
-Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok".
+Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok". If versioning is enabled, all versions of the files in the bucket will be removed.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
@@ -679,7 +698,7 @@ export interface ResultObject {
 }
 ```
 
-Deletes the bucket and all files in it. If the call succeeds the `value` key will hold the string "ok".
+Deletes the bucket and all files in it. If the call succeeds the `value` key will hold the string "ok". If the deleted bucket was the selected bucket, selected bucket will be set to `null`
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
@@ -710,7 +729,6 @@ export type FilePathParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    signedURL?: boolean;
     ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
@@ -729,20 +747,10 @@ Copies a file from a local path `origPath` to the provided path `targetPath` in 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` or just `signedURL` and set it to `true` a signed URL will be returned. 
+If the call is successful `value` will hold the string "ok".
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
-
-> [!WARNING] 
-> In a future version this function will no longer return a url. Please use `getPublicURL` or `getSignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
-> 
-> ```typescript
-> export interface ResultObjectBoolean {
->   value: boolean | null;
->   error: string | null;
-> }
-> ```
 
 ### addFileFromBuffer
 
@@ -759,7 +767,6 @@ export type FileBufferParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    signedURL?: boolean;
     ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
@@ -778,22 +785,12 @@ Copies a buffer to a file in the storage. The value for `targetPath` needs to in
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` or just `signedURL` and set it to `true` a signed URL will be returned.
+If the call is successful `value` will hold the string "ok".
 
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
-
-> [!WARNING] 
-> In a future version this function will no longer return a url. Please use `getPublicURL` or `getSignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
-> 
-> ```typescript
-> export interface ResultObjectBoolean {
->   value: boolean | null;
->   error: string | null;
-> }
-> ```
 
 ### addFileFromStream
 
@@ -810,7 +807,6 @@ export type FileStreamParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    signedURL?: boolean;
     ACL?: string // for AdapterAmazonS3 i.c.w. Cubbit
   };
 };
@@ -829,7 +825,7 @@ Allows you to stream a file directly to the storage. The value for `targetPath` 
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If the call is successful `value` will hold the public url to the file (if the bucket is publicly accessible and the authorized user has sufficient rights). If you add a key `useSignedURL` or just `signedURL` and set it to `true` a signed URL will be returned.
+If the call is successful `value` will hold the string "ok".
 
 This method is particularly handy when you want to store files while they are being processed; for instance if a user has uploaded a full-size image and you want to store resized versions of this image in the storage; you can pipe the output stream of the resizing process directly to the storage.
 
@@ -837,90 +833,22 @@ This method is particularly handy when you want to store files while they are be
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
-> [!WARNING] 
-> In a future version this function will no longer return a url. Please use `getPublicURL` or `getSignedURL` to get the URL of an object in a bucket. The return type of this function will change to:
-> 
-> ```typescript
-> export interface ResultObjectBoolean {
->   value: boolean | null;
->   error: string | null;
-> }
-> ```
-
-### getFileAsURL (deprecated)
-
-```typescript
-/**
- * @deprecated: use getPublicURL or getSignedURL
- */
-getFileAsURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObject>;
-```
-
-param type:
-
-```typescript
-export Options {
-  [id: string]: any; // eslint-disable-line
-  withoutDirectory?: boolean // only for the local adapter
-}
-```
-
-return type:
-
-```typescript
-export type ResultObject = {
-  value: string | null;
-  error: string | null;
-};
-```
-
-Returns the public url of the file (if the bucket is publicly accessible and the authorized user has sufficient rights).
-
-The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
-
-If you want a signed url to the file you can pass add a key `useSignedUrl` to the options object:
-
-```typescript
-const signedUrl = getFileAsURL("bucketName", "fileName", { useSignedUrl: true });
-```
-
-Note that the local adapter can't return a signed url.
-
-For the local adapter you can use the key `withoutDirectory` in the options object:
-
-```typescript
-const s = new Storage({
-  type: StorageType.LOCAL,
-  directory: "./your_working_dir/sub_dir",
-  bucketName: "bucketName",
-});
-
-const url1 = getFileAsURL("bucketName", "fileName.jpg");
-// your_working_dir/sub_dir/bucketName/fileName.jpg
-
-const url2 = getFileAsURL("bucketName", "fileName.jpg", { withoutDirectory: true });
-// bucketName/fileName.jpg
-```
-
-> [!WARNING] 
-> This method cannot return public urls for Cloudflare R2. You have to use the Cloudflare R2 web console to create public url. Therefor this method always return the signed url if you use the Amazon S3 adapter to access Cloudflare R2.
-
-> [!WARNING] 
-> This method is deprecated: please use `getPublicURL` or `getSignedURL`.
-
 ### getPublicURL
 
 ```typescript
-getPublicURL(bucketName?: string, fileName: string, options?: Options): Promise<ResultObject>;
+getPublicURL(...args:
+  [bucketName: string, fileName: string, options?: Options] |
+  [fileName: string, options?: Options]
+): Promise<ResultObject>;
 ```
 
 param type:
 
 ```typescript
-export Options {
-  [id: string]: any; // eslint-disable-line
-  noCheck?: boolean
-  withoutDirectory?: boolean // only for the local adapter
+type Options {
+  [id: string]: any;
+  noCheck?: boolean;
+  withoutDirectory?: boolean; // only for the local adapter
 }
 ```
 
@@ -966,16 +894,18 @@ const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true
 ### getSignedURL
 
 ```typescript
-getSignedURL(bucketName?: string, fileName: string, options?: {
-  expiresIn: number // number of seconds the url is valid, defaults to a week (604800)
-}): Promise<ResultObject>;
+getSignedURL(...args:
+  [bucketName: string, fileName: string, options?: Options] |
+  [fileName: string, options?: Options]
+): Promise<ResultObject>;
 ```
 
 param type:
 
 ```typescript
 export Options {
-  [id: string]: any; // eslint-disable-line
+  expiresIn: number // number of seconds the url is valid, defaults to a week (604800)
+  [id: string]: any; 
 }
 ```
 
@@ -997,7 +927,10 @@ Because the local adapter does not support signed urls, this method behaves exac
 ### getFileAsStream
 
 ```typescript
-getFileAsStream(bucketName?: string, fileName: string, options?: StreamOptions): Promise<ResultObjectStream>;
+getFileAsStream(...args:
+  [bucketName: string, fileName: string, options?: StreamOptions] |
+  [fileName: string, options?: StreamOptions]
+): Promise<ResultObjectStream>;
 ```
 
 param type:
@@ -1041,7 +974,16 @@ getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads 
 ### removeFile
 
 ```typescript
-removeFile(bucketName?: string, fileName: string): Promise<ResultObject>;
+removeFile(...args:
+  [bucketName: string, fileName: string, options?: Options] |
+  [fileName: string, options?: Options]
+): Promise<ResultObject>;
+```
+
+```typescript
+type Options {
+  allVersions?: boolean;
+}
 ```
 
 return type:
@@ -1053,16 +995,23 @@ export interface ResultObject {
 }
 ```
 
-Removes a file from the bucket. Does not fail if the file doesn't exist.
+Removes a file from the bucket. Fails if the file or the bucket doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`. 
+
+If the bucket can not be found an error will be returned: `No bucket [your bucketname] found`. 
 
 If the call succeeds the `value` key will hold the string "ok".
 
 ### sizeOf
 
 ```typescript
-sizeOf(bucketName?: string, fileName: string): Promise<ResultObjectNumber>;
+sizeOf(...args:
+  [bucketName: string, fileName: string] |
+  [fileName: string]
+): Promise<ResultObjectNumber>;
 ```
 
 return type:
@@ -1218,7 +1167,9 @@ Note that all API methods that have and optional `bucketName` arg are implemente
 - `clearBucket`
 - `deleteBucket`
 - `bucketExists`
-- `getFileAsURL`
+- `bucketIsPublic`
+- `getPublicURL`
+- `getSignedURL`
 - `getFileAsStream`
 - `fileExists`
 - `removeFile`
@@ -1276,7 +1227,9 @@ You can create your own adapter in a separate repository and publish it from the
 
 ## Tests
 
-If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
+If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` and `config_urls.md` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
+
+You can run the Jasmine tests per storage type using one of the following commands:
 
 ```bash
 # test local disk
@@ -1325,7 +1278,7 @@ npm run test-b2-s3
 npm run test-jasmine 8
 ```
 
-As you can see in the file `package.json`, the command sets the `type` environment variable which is read by Jasmine.
+As you can see in the file `package.json`, the command sets the `type` environment variable which is then read by Jasmine.
 
 To run all Jasmine tests consecutively:
 

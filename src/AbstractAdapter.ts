@@ -77,18 +77,6 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._bucketName;
   }
 
-  async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
-    return await this.addFile(params);
-  }
-
-  async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
-    return await this.addFile(params);
-  }
-
-  async addFileFromStream(params: FileStreamParams): Promise<ResultObject> {
-    return await this.addFile(params);
-  }
-
   protected _getFileAndBucketAndOptions(...args:
     [bucketName: string, fileName: string, options?: boolean | Options | StreamOptions] |
     [fileName: string, options?: boolean | Options | StreamOptions] |
@@ -147,6 +135,18 @@ export abstract class AbstractAdapter implements IAdapter {
     }
   }
 
+  async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
+    return await this.addFile(params);
+  }
+
+  async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
+    return await this.addFile(params);
+  }
+
+  async addFileFromStream(params: FileStreamParams): Promise<ResultObject> {
+    return await this.addFile(params);
+  }
+
   // protected stubs
 
   protected abstract _listBuckets(): Promise<ResultObjectBuckets>;
@@ -179,12 +179,6 @@ export abstract class AbstractAdapter implements IAdapter {
     fileName: string,
     options: StreamOptions
   ): Promise<ResultObjectStream>;
-
-  protected abstract _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject>;
 
   protected abstract _getPublicURL(
     bucketName: string,
@@ -363,23 +357,6 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._getFileAsStream(bucketName, fileName, options === null ? {} : options as StreamOptions);
   }
 
-  /**
-   * @deprecated: please use getPublicURL or getSignedURL
-   */
-  public async getFileAsURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
-  ): Promise<ResultObject> {
-    if (this._configError !== null) {
-      return { value: null, error: this.configError };
-    }
-    const { bucketName, fileName, options, error } = this._getFileAndBucketAndOptions(...args);
-    if (error !== null) {
-      return { error, value: null };
-    }
-    return this._getFileAsURL(bucketName, fileName, options === null ? {} : options as Options);
-  }
-
   public async getPublicURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
     [fileName: string, options?: Options]
@@ -445,24 +422,24 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { error, value: null };
     }
-    /*
-        let r = await this.bucketExists(bucketName);
-        if (r.error) {
-          return { value: null, error: r.error }
-        }
-        if (r.value === false) {
-          return { value: null, error: `No bucket '${bucketName}' found` }
-        }
-    
-        // check if file exists, this is especially necessary for Backblaze B2 with S3 adapter!
-        r = await this.fileExists(bucketName, fileName);
-        if (r.error) {
-          return { value: null, error: r.error }
-        }
-        if (r.value === false) {
-          return { value: null, error: `No file '${fileName}' found in bucket '${bucketName}'` }
-        }
-    */
+
+    let r = await this.bucketExists(bucketName);
+    if (r.error) {
+      return { value: null, error: r.error }
+    }
+    if (r.value === false) {
+      return { value: null, error: `No bucket '${bucketName}' found` }
+    }
+
+    // check if file exists, this is especially necessary for Backblaze B2 with S3 adapter!
+    r = await this.fileExists(bucketName, fileName);
+    if (r.error) {
+      return { value: null, error: r.error }
+    }
+    if (r.value === false) {
+      return { value: null, error: `No file '${fileName}' found in bucket '${bucketName}'` }
+    }
+
     return this._removeFile(bucketName, fileName, allVersions === null ? false : allVersions as boolean);
   }
 }
