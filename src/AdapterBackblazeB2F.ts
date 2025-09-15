@@ -73,16 +73,6 @@ const getFileAsStream = async (...args:
   return { value: fs.createReadStream(""), error: null };
 };
 
-/**
- * @deprecated: use getPublicURL or getSignedURL
- */
-const getFileAsURL = async (...args:
-  [bucketName: string, fileName: string, options?: Options] |
-  [fileName: string, options?: Options]
-): Promise<ResultObject> => {
-  return { value: "url", error: null };
-};
-
 const getPublicURL = async (...args:
   [bucketName: string, fileName: string, options?: Options] |
   [fileName: string, options?: Options]
@@ -169,7 +159,6 @@ const adapter: IAdapter = {
   addFileFromBuffer,
   addFileFromStream,
   getFileAsStream,
-  getFileAsURL,
   getPublicURL,
   getSignedURL,
   removeFile,

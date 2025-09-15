@@ -440,11 +440,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       };
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
-      if (params.options.signedURL === true || params.options.useSignedURL === true) {
-        return this._getSignedURL(params.bucketName, params.targetPath, params.options);
-      }
-      // return this._getPublicURL(params.bucketName, params.targetPath, params.options)
-      return this._getFileAsURL(params.bucketName, params.targetPath, params.options);
+      return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -522,21 +518,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       } catch (e) {
         return { value: null, error: e.message };
       }
-    }
-  }
-
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options // e.g. { expiresIn: 3600 }
-  ): Promise<ResultObject> {
-    if (options.signedUrl === true || options.useSignedUrl === true || this._s3Type === S3Type.CLOUDFLARE) {
-      return this._getSignedURL(bucketName, fileName, options);
-    } else {
-      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
   }
 

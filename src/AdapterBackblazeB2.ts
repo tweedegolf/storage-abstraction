@@ -261,10 +261,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         ...options,
       });
       // console.log(_data);
-      if (options.signedURL === true || options.useSignedURL === true) {
-        return this._getSignedURL(bucketName, targetPath, options);
-      }
-      return this._getPublicURL(bucketName, targetPath, { ...options, noCheck: true });
+      return { value: "ok", error: null };
     } catch (e) {
       // console.log(e.toJSON());
       return { value: null, error: e.message };
@@ -315,21 +312,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: data, error: null };
     } catch (e) {
       return { value: null, error: e.message };
-    }
-  }
-
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject> {
-    if (options.signedUrl === true || options.useSignedURL === true) {
-      return this._getSignedURL(bucketName, fileName, options);
-    } else {
-      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
   }
 

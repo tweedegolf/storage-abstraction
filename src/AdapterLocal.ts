@@ -162,7 +162,7 @@ export class AdapterLocal extends AbstractAdapter {
             resolve({ value: null, error: `[readStream error] ${e.message}` });
           })
           .on("finish", () => {
-            resolve({ value: dest, error: null });
+            resolve({ value: "ok", error: null });
           });
         writeStream.on("error", (e) => {
           resolve({ value: null, error: `[writeStream error] ${e.message}` });
@@ -228,17 +228,6 @@ export class AdapterLocal extends AbstractAdapter {
     } catch (e) {
       return { value: null, error: e };
     }
-  }
-
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject> {
-    return this._getPublicURL(bucketName, fileName, options);
   }
 
   protected async _getPublicURL(

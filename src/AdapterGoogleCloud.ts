@@ -96,21 +96,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject> {
-    if (options.signedUrl === true || options.useSignedURL === true) {
-      return this._getSignedURL(bucketName, fileName, options);
-    } else {
-      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
-    }
-  }
-
   protected async _getPublicURL(
     bucketName: string,
     fileName: string,
@@ -248,12 +233,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
             resolve({ value: null, error: e.message });
           })
           .on("finish", async () => {
-            if (params.options.signedURL === true || params.options.useSignedURL === true) {
-              const r = await this._getSignedURL(params.bucketName, params.targetPath, params.options);
-              resolve(r);
-            } else {
-              resolve({ value: file.publicUrl(), error: null });
-            }
+            resolve({ value: "ok", error: null });
           });
         writeStream.on("error", (e: Error) => {
           resolve({ value: null, error: e.message });

@@ -243,27 +243,9 @@ export class AdapterMinio extends AbstractAdapter {
         size,
         options
       );
-      if (options.signedURL === true || options.useSignedURL === true) {
-        return this._getSignedURL(bucketName, targetPath, options);
-      }
-      return this.getPublicURL(params.bucketName, params.targetPath, { ...options, noCheck: true });
+      return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
-    }
-  }
-
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options // e.g. { expiry: 3600 }
-  ): Promise<ResultObject> {
-    if (options.signedUrl === true || options.useSignedURL === true) {
-      return this._getSignedURL(bucketName, fileName, options);
-    } else {
-      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
     }
   }
 
