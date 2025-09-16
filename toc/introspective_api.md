@@ -1,4 +1,4 @@
-<h4 style="align=left;">Introspective API</h4>
+Introspective API
 ---
 [getType](README.md#gettype)
 [getConfiguration](README.md#getconfiguration)

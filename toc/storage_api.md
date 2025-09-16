@@ -1,4 +1,4 @@
-<h4 style="align=left;">Storage API</h4>
+<span style="align=right;">Storage API</span>
 ---
 [getAdapter](README.md#getadapter)
 [switchAdapter](README.md#switchadapter)

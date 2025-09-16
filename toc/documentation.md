@@ -1,8 +1,8 @@
-<h4 style="align=left;">Documentation</h4>
+<span style="text-align:right">Documentation</span>
 ---
 [1. How it works](README.md#how-it-works)
 [2. Instantiate a storage](README.md#instantiate-a-storage)
-&nbsp; [a. Configuration object](README.md#configuration-object)
+[a. Configuration object](README.md#configuration-object)
 &nbsp; [b. Configuration URL](README.md#configuration-url)
 &nbsp; [c. How bucketName is used](README.md#how-bucketname-is-used)
 [3. Adapters](README.md#adapters)
