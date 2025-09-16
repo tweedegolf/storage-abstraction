@@ -1,4 +1,4 @@
-Adapter API
+<h4 style="align=left;">Adapter API</h4>
 ---
 [listBuckets](README.md#listbuckets)           
 [listFiles](README.md#listfiles)        

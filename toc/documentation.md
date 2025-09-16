@@ -1,4 +1,4 @@
-Documentation
+<h4 style="align=left;">Documentation</h4>
 ---
 [1. How it works](README.md#how-it-works)
 [2. Instantiate a storage](README.md#instantiate-a-storage)
