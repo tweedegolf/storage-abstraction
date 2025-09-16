@@ -1,5 +1,5 @@
-<span style="text-align:right">Documentation</span>
----
+Documentation
+:---
 [1. How it works](README.md#how-it-works)
 [2. Instantiate a storage](README.md#instantiate-a-storage)
 [a. Configuration object](README.md#configuration-object)

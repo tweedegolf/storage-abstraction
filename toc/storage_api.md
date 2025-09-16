@@ -1,4 +1,4 @@
-<span style="align=right;">Storage API</span>
----
+Storage API
+:---
 [getAdapter](README.md#getadapter)
 [switchAdapter](README.md#switchadapter)

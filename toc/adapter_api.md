@@ -1,5 +1,5 @@
 Adapter API
----
+:---
 [listBuckets](README.md#listbuckets)           
 [listFiles](README.md#listfiles)        
 [bucketIsPublic](README.md#bucketispublic)

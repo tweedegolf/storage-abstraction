@@ -1,5 +1,5 @@
-<span style="text-align:right">Documentation</span>|Adapter API|Introspective API|<span style="align=right;">Storage API</span>
----|---|---|---
+Documentation|Adapter API|Introspective API|Storage API
+:---|:---|:---|:---
 [1. How it works](README.md#how-it-works)|[listBuckets](README.md#listbuckets)           |[getType](README.md#gettype)|[getAdapter](README.md#getadapter)
 [2. Instantiate a storage](README.md#instantiate-a-storage)|[listFiles](README.md#listfiles)        |[getConfiguration](README.md#getconfiguration)|[switchAdapter](README.md#switchadapter)
 [a. Configuration object](README.md#configuration-object)|[bucketIsPublic](README.md#bucketispublic)|[getConfigurationError](README.md#getconfigurationerror)|
