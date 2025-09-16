@@ -20,11 +20,11 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 ## Table of contents
 
-<th style="align=left;">Documentation</th>|<th style="align=left;">Adapter API</th>|<th style="align=left;">Introspective API</th>|<th style="align=left;">Storage API</th>
----|---|---|---
+Documentation|Adapter API|Introspective API|Storage API
+:---|:---|:---|:---
 [1. How it works](README.md#how-it-works)|[listBuckets](README.md#listbuckets)           |[getType](README.md#gettype)|[getAdapter](README.md#getadapter)
 [2. Instantiate a storage](README.md#instantiate-a-storage)|[listFiles](README.md#listfiles)        |[getConfiguration](README.md#getconfiguration)|[switchAdapter](README.md#switchadapter)
-&nbsp; [a. Configuration object](README.md#configuration-object)|[bucketIsPublic](README.md#bucketispublic)|[getConfigurationError](README.md#getconfigurationerror)|
+[a. Configuration object](README.md#configuration-object)|[bucketIsPublic](README.md#bucketispublic)|[getConfigurationError](README.md#getconfigurationerror)|
 &nbsp; [b. Configuration URL](README.md#configuration-url)|[bucketExists](README.md#bucketexists)  |[getServiceClient](README.md#getserviceclient)|
 &nbsp; [c. How bucketName is used](README.md#how-bucketname-is-used)|[fileExists](README.md#fileexists)         |[getSelectedBucket](README.md#getselectedbucket)|
 [3. Adapters](README.md#adapters)|[createBucket](README.md#createbucket)|[setSelectedBucket](README.md#setselectedbucket)|
