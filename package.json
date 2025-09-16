@@ -29,7 +29,6 @@
     "eslint-plugin-prettier": "^5.5.4",
     "file-type": "^21.0.0",
     "jasmine": "^5.10.0",
-    "markdown-toc": "^1.2.0",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "tsc-watch": "^7.1.1",
@@ -55,8 +54,7 @@
     "tsc": "node_modules/.bin/tsc",
     "copy": "npm run tsc && ts-node copy.ts",
     "prepublishOnly": "",
-    "toc": "markdown-toc -i README.md",
-    "prepare": "npm run toc && npm run copy"
+    "prepare": "npm run copy"
   },
   "keywords": [
     "storage",

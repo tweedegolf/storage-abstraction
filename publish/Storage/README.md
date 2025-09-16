@@ -20,54 +20,26 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 ## Table of contents
 
-<!-- toc -->
+|Adapter API | Introspective API | Storage API | Documentation | 
+| --- | --- | --- | --- |
+[listBuckets](README.md#listbuckets)|                                  [getType](README.md#gettype)|             [getAdapter](README.md#getadapter)|       [1. How it works](README.md#how-it-works)|
+[listFiles](README.md#listfiles)|           [getConfiguration](README.md#getconfiguration)|[switchAdapter](README.md#switchadapter)|[2. Instantiate a storage](README.md#instantiate-a-storage)|
+[bucketIsPublic](README.md#bucketispublic)| [getConfigurationError](README.md#getconfigurationerror)||[&nbsp; a. Configuration object](README.md#configuration-object)|
+[bucketExists](README.md#bucketexists)|    [getServiceClient](README.md#getserviceclient)||[&nbsp; b. Configuration URL](README.md#configuration-url)|
+[fileExists](README.md#fileexists)|         [getSelectedBucket](README.md#getselectedbucket)||[&nbsp; c. How bucketName is used](README.md#how-bucketname-is-used)|
+[createBucket](README.md#createbucket)|     [setSelectedBucket](README.md#setselectedbucket)||[3. Adapters](README.md#adapters)|
+[clearBucket](README.md#clearbucket)| ||[4. Adding an adapter](README.md#adding-an-adapter)|
+[deleteBucket](README.md#deletebucket)| ||[&nbsp; a. Add your storage type](README.md#add-your-storage-type)|
+[addFile](README.md#addfile)| ||[&nbsp; b. Define your configuration](README.md#define-your-configuration)|
+[addFileFromPath](README.md#addfilefrompath)| ||[&nbsp; c. Adapter class](README.md#adapter-class)|
+[addFileFromBuffer](README.md#addfilefrombuffer)| ||[&nbsp; d. Adapter function](README.md#adapter-function)|
+[addFileFromStream](README.md#addfilefromstream)| ||[&nbsp; e. Register your adapter](README.md#register-your-adapter)|
+[getPublicURL](README.md#getpublicurl)| ||[&nbsp; f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|
+[getSignedURL](README.md#getsignedurl)| ||[5. Tests](README.md#tests)|
+[getFileAsStream](README.md#getfileasstream)| ||[6. Example application](README.md#example-application)|
+[removeFile](README.md#removefile)| ||[7. Questions and requests](README.md#questions-and-requests)|
+[sizeOf](README.md#sizeof)| |||
 
-- [How it works](#how-it-works)
-- [Instantiate a storage](#instantiate-a-storage)
-  * [Configuration object](#configuration-object)
-  * [Configuration URL](#configuration-url)
-  * [How bucketName is used](#how-bucketname-is-used)
-- [Adapters](#adapters)
-- [Adapter Introspect API](#adapter-introspect-api)
-  * [getType](#gettype)
-  * [getSelectedBucket](#getselectedbucket)
-  * [setSelectedBucket](#setselectedbucket)
-  * [getConfiguration](#getconfiguration)
-  * [getConfigurationError](#getconfigurationerror)
-  * [getServiceClient](#getserviceclient)
-- [Adapter API](#adapter-api)
-  * [listBuckets](#listbuckets)
-  * [listFiles](#listfiles)
-  * [bucketIsPublic](#bucketispublic)
-  * [bucketExists](#bucketexists)
-  * [fileExists](#fileexists)
-  * [createBucket](#createbucket)
-  * [clearBucket](#clearbucket)
-  * [deleteBucket](#deletebucket)
-  * [addFile](#addfile)
-  * [addFileFromPath](#addfilefrompath)
-  * [addFileFromBuffer](#addfilefrombuffer)
-  * [addFileFromStream](#addfilefromstream)
-  * [getPublicURL](#getpublicurl)
-  * [getSignedURL](#getsignedurl)
-  * [getFileAsStream](#getfileasstream)
-  * [removeFile](#removefile)
-  * [sizeOf](#sizeof)
-- [Storage API](#storage-api)
-  * [getAdapter](#getadapter)
-  * [switchAdapter](#switchadapter)
-- [Adding an adapter](#adding-an-adapter)
-  * [Add your storage type](#add-your-storage-type)
-  * [Define your configuration](#define-your-configuration)
-  * [Adapter class](#adapter-class)
-  * [Adapter function](#adapter-function)
-  * [Register your adapter](#register-your-adapter)
-  * [Adding your adapter code to this package](#adding-your-adapter-code-to-this-package)
-- [Tests](#tests)
-- [Example application](#example-application)
-- [Questions and requests](#questions-and-requests)
-
-<!-- tocstop -->
 
 ## How it works
 
