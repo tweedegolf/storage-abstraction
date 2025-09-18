@@ -20,26 +20,29 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 ## Table of contents
 
-|Adapter API | Introspective API | Storage API | Documentation | 
-| --- | --- | --- | --- |
-[listBuckets](README.md#listbuckets)|                                  [getType](README.md#gettype)|             [getAdapter](README.md#getadapter)|       [1. How it works](README.md#how-it-works)|
-[listFiles](README.md#listfiles)|           [getConfiguration](README.md#getconfiguration)|[switchAdapter](README.md#switchadapter)|[2. Instantiate a storage](README.md#instantiate-a-storage)|
-[bucketIsPublic](README.md#bucketispublic)| [getConfigurationError](README.md#getconfigurationerror)||[&nbsp; a. Configuration object](README.md#configuration-object)|
-[bucketExists](README.md#bucketexists)|    [getServiceClient](README.md#getserviceclient)||[&nbsp; b. Configuration URL](README.md#configuration-url)|
-[fileExists](README.md#fileexists)|         [getSelectedBucket](README.md#getselectedbucket)||[&nbsp; c. How bucketName is used](README.md#how-bucketname-is-used)|
-[createBucket](README.md#createbucket)|     [setSelectedBucket](README.md#setselectedbucket)||[3. Adapters](README.md#adapters)|
-[clearBucket](README.md#clearbucket)| ||[4. Adding an adapter](README.md#adding-an-adapter)|
-[deleteBucket](README.md#deletebucket)| ||[&nbsp; a. Add your storage type](README.md#add-your-storage-type)|
-[addFile](README.md#addfile)| ||[&nbsp; b. Define your configuration](README.md#define-your-configuration)|
-[addFileFromPath](README.md#addfilefrompath)| ||[&nbsp; c. Adapter class](README.md#adapter-class)|
-[addFileFromBuffer](README.md#addfilefrombuffer)| ||[&nbsp; d. Adapter function](README.md#adapter-function)|
-[addFileFromStream](README.md#addfilefromstream)| ||[&nbsp; e. Register your adapter](README.md#register-your-adapter)|
-[getPublicURL](README.md#getpublicurl)| ||[&nbsp; f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|
-[getSignedURL](README.md#getsignedurl)| ||[5. Tests](README.md#tests)|
-[getFileAsStream](README.md#getfileasstream)| ||[6. Example application](README.md#example-application)|
-[removeFile](README.md#removefile)| ||[7. Questions and requests](README.md#questions-and-requests)|
-[sizeOf](README.md#sizeof)| |||
+<!--start_toc-->
 
+Documentation|Adapter API|Introspective API|Storage API
+:---|:---|:---|:---
+[1. How it works](README.md#how-it-works)|[listBuckets](README.md#listbuckets)           |[getType](README.md#gettype)|[getAdapter](README.md#getadapter)
+[2. Instantiate a storage](README.md#instantiate-a-storage)|[listFiles](README.md#listfiles)        |[getConfiguration](README.md#getconfiguration)|[switchAdapter](README.md#switchadapter)
+[a. Configuration object](README.md#configuration-object)|[bucketIsPublic](README.md#bucketispublic)|[getConfigurationError](README.md#getconfigurationerror)|
+&nbsp; [b. Configuration URL](README.md#configuration-url)|[bucketExists](README.md#bucketexists)  |[getServiceClient](README.md#getserviceclient)|
+&nbsp; [c. How bucketName is used](README.md#how-bucketname-is-used)|[fileExists](README.md#fileexists)         |[getSelectedBucket](README.md#getselectedbucket)|
+[3. Adapters](README.md#adapters)|[createBucket](README.md#createbucket)|[setSelectedBucket](README.md#setselectedbucket)|
+[4. Adding an adapter](README.md#adding-an-adapter)|[clearBucket](README.md#clearbucket)||
+&nbsp; [a. Add your storage type](README.md#add-your-storage-type)|[deleteBucket](README.md#deletebucket)||
+&nbsp; [b. Define your configuration](README.md#define-your-configuration)|[addFile](README.md#addfile)||
+&nbsp; [c. Adapter class](README.md#adapter-class)|[addFileFromPath](README.md#addfilefrompath)||
+&nbsp; [d. Adapter function](README.md#adapter-function)|[addFileFromBuffer](README.md#addfilefrombuffer)||
+&nbsp; [e. Register your adapter](README.md#register-your-adapter)|[addFileFromStream](README.md#addfilefromstream) ||
+&nbsp; [f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|[getPublicURL](README.md#getpublicurl)||
+[5. Tests](README.md#tests)|[getSignedURL](README.md#getsignedurl) ||
+[6. Example application](README.md#example-application)|[getFileAsStream](README.md#getfileasstream)||
+[7. Questions and requests](README.md#questions-and-requests)|[removeFile](README.md#removefile)||
+&nbsp;|[sizeOf](README.md#sizeof)||
+
+<!--end_toc-->
 
 ## How it works
 

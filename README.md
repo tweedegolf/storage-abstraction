@@ -20,6 +20,8 @@ The API only provides basic storage operations (see [below](#adapter-api)) and t
 
 ## Table of contents
 
+<!--start_toc-->
+
 Documentation|Adapter API|Introspective API|Storage API
 :---|:---|:---|:---
 [1. How it works](README.md#how-it-works)|[listBuckets](README.md#listbuckets)           |[getType](README.md#gettype)|[getAdapter](README.md#getadapter)
@@ -39,6 +41,8 @@ Documentation|Adapter API|Introspective API|Storage API
 [6. Example application](README.md#example-application)|[getFileAsStream](README.md#getfileasstream)||
 [7. Questions and requests](README.md#questions-and-requests)|[removeFile](README.md#removefile)||
 &nbsp;|[sizeOf](README.md#sizeof)||
+
+<!--end_toc-->
 
 ## How it works
 
