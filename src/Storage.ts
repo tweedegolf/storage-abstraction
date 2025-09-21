@@ -207,6 +207,7 @@ export class Storage implements IAdapter {
     [fileName: string, options?: Options]): Promise<ResultObject> {
     return this.adapter.getPublicURL(...args);
   }
+
   async getSignedURL(...args:
     [bucketName: string, fileName: string, options?: Options] |
     [fileName: string, options?: Options]): Promise<ResultObject> {

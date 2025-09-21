@@ -1,3 +1,6 @@
+# 1.0.9
+- include @deprecated functions
+
 # 1.0.8
 - update @azure dependencies
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`

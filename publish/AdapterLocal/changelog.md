@@ -1,3 +1,6 @@
+# 1.0.9
+- include @deprecated functions
+
 # 1.0.8
 - update glob to 11.0.3
 - update rimraf to 6.0.1

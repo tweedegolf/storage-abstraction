@@ -1,4 +1,7 @@
-# 2.1.7
+# 2.2.1
+- include @deprecated functions
+
+# 2.2.0
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 - fixed several unnoticed bugs
 

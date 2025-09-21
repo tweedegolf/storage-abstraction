@@ -1,3 +1,6 @@
+# 1.0.20
+- include @deprecated functions
+
 # 1.0.19
 - update @aws-sdk to 3.893.0
 

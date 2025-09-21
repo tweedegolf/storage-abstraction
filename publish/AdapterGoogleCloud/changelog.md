@@ -1,3 +1,6 @@
+# 1.0.10
+- include @deprecated functions
+
 # 1.0.9
 - update @google-cloud dependency to 7.17.1
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
