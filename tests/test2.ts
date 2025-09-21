@@ -1,12 +1,7 @@
-import fs from "fs";
-import path from "path";
-import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
-import { AdapterAmazonS3 } from "../src/AdapterAmazonS3";
-import { IAdapter, Options, StorageType } from "../src/types/general";
+import { IAdapter, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
-import { saveFile, timeout } from "./util";
-import { ResultObject } from "../src/types/result";
+import { timeout } from "./util";
 
 let storage: Storage;
 
@@ -45,7 +40,7 @@ async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: n
       // console.log(`\tfiles: ${files}`);
       await storage.deleteBucket(b);
     } catch (e) {
-      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e.message);
+      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e);
     }
   }
 }

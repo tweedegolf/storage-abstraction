@@ -195,7 +195,6 @@ export abstract class AbstractAdapter implements IAdapter {
   protected abstract _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject>;
 
   // public
@@ -409,8 +408,8 @@ export abstract class AbstractAdapter implements IAdapter {
   }
 
   public async removeFile(...args:
-    [bucketName: string, fileName: string, allVersions?: boolean] |
-    [fileName: string, allVersions?: boolean]
+    [bucketName: string, fileName: string] |
+    [fileName: string]
   ): Promise<ResultObject> {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
@@ -418,7 +417,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (this.configError !== null) {
       return { value: null, error: this.configError };
     }
-    const { bucketName, fileName, options: allVersions, error } = this._getFileAndBucketAndOptions(...args);
+    const { bucketName, fileName, options: _allVersions, error } = this._getFileAndBucketAndOptions(...args);
     if (error !== null) {
       return { error, value: null };
     }
@@ -440,6 +439,6 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: `No file '${fileName}' found in bucket '${bucketName}'` }
     }
 
-    return this._removeFile(bucketName, fileName, allVersions === null ? false : allVersions as boolean);
+    return this._removeFile(bucketName, fileName);
   }
 }

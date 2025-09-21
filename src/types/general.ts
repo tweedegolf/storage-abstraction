@@ -261,13 +261,10 @@ export interface IAdapter {
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file to be removed
-   * @param allVersions in case there are more versions of this file you can choose to remove
-   * all of them in one go or delete only the latest version (only if applicable such as with Backblaze B2 and S3
-   * when you've enabled versioning)
    */
   removeFile(...args:
-    [bucketName: string, fileName: string, allVersions?: boolean] |
-    [fileName: string, allVersions?: boolean]
+    [bucketName: string, fileName: string] |
+    [fileName: string]
   ): Promise<ResultObject>;
 
   /**

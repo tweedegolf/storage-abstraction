@@ -199,8 +199,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: null, error: `waitUntilBucketExists: ${e.message}` };
     }
 
-    try {
-      if (options.public === true) {
+    if (options.public === true) {
+      try {
         if (this._s3Type === S3Type.AWS) {
           await this._client.send(
             new PutPublicAccessBlockCommand({
@@ -213,6 +213,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
               },
             })
           );
+
           const publicReadPolicy = {
             Version: "2012-10-17",
             Statement: [
@@ -239,74 +240,94 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         } else if (this._s3Type === S3Type.CLOUDFLARE || this._s3Type === S3Type.BACKBLAZE) {
           okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._s3Type} web console`;
         }
+      } catch (e) {
+        return { value: null, error: `make bucket public: ${e.message}` };
       }
-      // const response = await this._client.send(command);
-      // console.log(response.Location, response.Location.indexOf(bucketName));
-      /*
-      console.log(response);
-      // not sure if this is necessary
-      if (response.$metadata.httpStatusCode === 200) {
-        return { value: "ok", error: null };
-      } else {
-        return {
-          value: null,
-          error: `Error http status code ${response.$metadata.httpStatusCode}`,
-        };
-      }
-      */
-      return { value: okMsg, error: null };
-    } catch (e) {
-      return { value: null, error: `make bucket public: ${e.message}` };
     }
+
+    // if (options.versioning === true) {
+    //   try {
+    //     const input = {
+    //       Bucket: bucketName,
+    //       VersioningConfiguration: {
+    //         Status: BucketVersioningStatus.Enabled,
+    //       },
+    //     };
+    //     const command = new PutBucketVersioningCommand(input);
+    //     await this._client.send(command);
+    //   } catch (e) {
+    //     return { value: null, error: `enable versioning: ${e.message}` };
+    //   }
+    // }
+
+    return { value: okMsg, error: null };
   }
 
   protected async _clearBucket(bucketName: string): Promise<ResultObject> {
-    let objects: Array<{ Key: string; VersionId?: string }>;
-
-    // first try to remove the versioned files
-    const { value, error } = await this.getFileVersions(bucketName);
-    if (error === "no versions" || error === "ListObjectVersions not implemented") {
-      // if that fails remove non-versioned files
+    if (this._s3Type === S3Type.BACKBLAZE) {
+      let versions: Array<{ Key: string; VersionId: string }> = [];
+      const { value, error } = await this.getFileVersions(bucketName);
+      if (error !== null) {
+        return { value: null, error };
+      } else if (Array.isArray(value)) {
+        versions = value.map((value) => ({
+          Key: value.Key,
+          VersionId: value.VersionId,
+        }));
+      }
+      console.log(versions)
+      if (versions.length > 0) {
+        try {
+          for (const v of versions) {
+            await this._client.send(
+              new DeleteObjectCommand({
+                Bucket: bucketName,
+                Key: v.Key,
+                VersionId: v.VersionId,
+              })
+            );
+          }
+          return { value: "ok", error: null };
+        } catch (e) {
+          return { value: null, error: e.message };
+        }
+      } else {
+        return { value: "ok", error: null };
+      }
+    } else {
+      let objects: Array<{ Key: string }> = [];
       const { value, error } = await this.getFiles(bucketName);
-      if (error === "no contents") {
-        return { value: null, error: "Could not remove files" };
-      } else if (error !== null) {
+      if (error !== null) {
         return { value: null, error };
       } else if (typeof value !== "undefined") {
         objects = value.map((value) => ({ Key: value.Key }));
       }
-    } else if (error !== null) {
-      return { value: null, error };
-    } else if (typeof value !== "undefined") {
-      objects = value.map((value) => ({
-        Key: value.Key,
-        VersionId: value.VersionId,
-      }));
-    }
 
-    if (typeof objects !== "undefined") {
-      try {
-        const input = {
-          Bucket: bucketName,
-          Delete: {
-            Objects: objects,
-            Quiet: false,
-          },
-        };
-        const command = new DeleteObjectsCommand(input);
-        await this._client.send(command);
-        return { value: "ok", error: null };
-      } catch (e) {
-        return { value: null, error: e.message };
+      if (objects.length > 0) {
+        try {
+          const input = {
+            Bucket: bucketName,
+            Delete: {
+              Objects: objects,
+              Quiet: false,
+            },
+          };
+          const command = new DeleteObjectsCommand(input);
+          await this._client.send(command);
+          return { value: "ok", error: null };
+        } catch (e) {
+          return { value: null, error: e.message };
+        }
       }
     }
-
-    return { value: "ok", error: null };
   }
 
   protected async _deleteBucket(bucketName: string): Promise<ResultObject> {
     try {
-      const { value, error } = await this.clearBucket(bucketName);
+      const r = await this.clearBucket(bucketName);
+      if (r.error !== null) {
+        return { value: null, error };
+      }
       const input = {
         Bucket: bucketName,
       };
@@ -478,19 +499,33 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   protected async _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject> {
-    let versions = [];
-    // first try to remove the versioned files
+    try {
+      await this._client.send(
+        new DeleteObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+        })
+      );
+      return { value: "ok", error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+  }
+
+  protected async _removeFileVersions(
+    bucketName: string,
+    fileName: string,
+  ): Promise<ResultObject> {
+    let versions: Array<{ Key: string; VersionId?: string }>;
+    // first check if there are any versioned files
     const { value, error } = await this.getFileVersions(bucketName);
     if (error !== null) {
-      if (error !== "no versions" && error !== "ListObjectVersions not implemented") {
-        return { value: null, error };
-      }
-    } else if (Array.isArray(value)) {
-      versions = value.filter((v) => v.Key === fileName);
+      return { value: null, error };
+    } else {
+      versions = value.map((value) => ({ Key: value.Key }));
     }
-    // console.log(versions)
+
     if (versions.length > 0) {
       try {
         for (const v of versions) {
@@ -504,16 +539,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         }
         return { value: "ok", error: null };
       } catch (e) {
-        return { value: null, error: e.message };
+        return { value: null, error: e };
       }
     } else {
       try {
-        const input = {
-          Bucket: bucketName,
-          Key: fileName,
-        };
-        const command = new DeleteObjectCommand(input);
-        const response = await this._client.send(command);
+        await this._client.send(
+          new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: fileName,
+          })
+        );
         return { value: "ok", error: null };
       } catch (e) {
         return { value: null, error: e.message };

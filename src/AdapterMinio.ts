@@ -173,7 +173,6 @@ export class AdapterMinio extends AbstractAdapter {
   protected async _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject> {
     try {
       await this._client.removeObject(bucketName, fileName);

@@ -15,6 +15,3 @@ type GetFile = {
 getFile(GetFile): Promise<ResultObjectStream | ResultObject>
 ```
 
-- versioning
-
-If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`

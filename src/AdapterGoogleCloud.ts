@@ -83,13 +83,13 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       if (options.public === true) {
         await this._client.bucket(name, options).makePublic();
       }
-      if (options.versioning === true) {
-        await this._client.bucket(name).setMetadata({
-          versioning: {
-            enabled: true,
-          },
-        });
-      }
+      // if (options.versioning === true) {
+      //   await this._client.bucket(name).setMetadata({
+      //     versioning: {
+      //       enabled: true,
+      //     },
+      //   });
+      // }
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -170,7 +170,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   protected async _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);

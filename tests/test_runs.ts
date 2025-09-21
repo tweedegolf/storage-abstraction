@@ -106,6 +106,21 @@ async function testAddFilesToBucket() {
   await deleteBucket();
 }
 
+async function testVersioning() {
+  console.log("\n");
+  colorLog("testVersioning", Color.TEST);
+  // await createBucket(privateBucket, { versioning: true });
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
+  await removeFile("file1.jpg");
+  await removeFile("file2.jpg");
+  await listFiles();
+  await deleteBucket();
+}
+
 async function testDownloadFilesFromBucket() {
   console.log("\n");
   colorLog("testDownloadFilesFromBucket", Color.TEST);
@@ -152,7 +167,7 @@ async function testDownloadFilesFromBucket() {
 async function testFilesInBucket() {
   console.log("\n");
   colorLog("testFilesInBucket", Color.TEST);
-  await createBucket(privateBucket, { versioning: true });
+  await createBucket(privateBucket);
   setSelectedBucket(privateBucket);
 
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
@@ -198,8 +213,9 @@ async function run() {
   // await testPrivateBucket();
   // await testDeleteBucket();
   // await testAddFilesToBucket();
+  await testVersioning();
   // await testDownloadFilesFromBucket();
-  await testFilesInBucket();
+  // await testFilesInBucket();
   // await testClearBucket();
 
   // clean up

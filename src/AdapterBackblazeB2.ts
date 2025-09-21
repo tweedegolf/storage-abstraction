@@ -17,7 +17,6 @@ import {
   BackblazeB2Bucket,
   FileB2,
   ResultObjectBucketB2,
-  ResultObjectBucketsB2,
   ResultObjectFileB2,
   ResultObjectFilesB2,
 } from "./types/adapter_backblaze_b2";
@@ -29,7 +28,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _configError: string | null = null;
   protected _client: B2 = null;
   private authorized: boolean = false;
-  private versioning: boolean = true;
+  private versioning: boolean = false;
 
   constructor(config: string | AdapterConfigBackblazeB2) {
     super(config);
@@ -118,7 +117,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   private async getFiles(
     bucketName: string,
-    versioning: boolean,
+    versioning: boolean = this.versioning,
     numFiles = 1000
   ): Promise<ResultObjectFilesB2> {
     const { value: bucket, error } = await this.getBucket(bucketName);
@@ -168,7 +167,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         return { value: file, error: null };
       }
     }
-    return { value: null, error: `Could not find file "${name}" in bucket "${bucketName}".` };
+    return { value: null, error: `Could not find file '${name}' in bucket '${bucketName}'.` };
   }
 
   // protected, called by methods of public API via AbstractAdapter
@@ -374,14 +373,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected async _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
     }
 
-    const data = await this.getFiles(bucketName, !this.versioning);
+    const data = await this.getFiles(bucketName, true);
     if (error !== null) {
       return { value: null, error };
     }
@@ -389,9 +387,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     const { value: files } = data;
     const index = files.findIndex(({ name }) => name === fileName);
     if (index === -1) {
-      // return { value: null, error: `Could not find file "${fileName}"` };
-      // no fail if the file does not exist
-      return { value: "ok", error: null };
+      return { value: null, error: `No file '${fileName}' found in bucket '${bucketName}'` };
     }
 
     if (this.versioning) {

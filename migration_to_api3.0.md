@@ -1,3 +1,7 @@
+### Versioning
+
+
+
 ### createBucket
 
 `createBucket(bucketName, {public: true})` creates a public bucket if possible. Cloudflare and Backblaze don't support creating a public bucket with the S3 API; the bucket will be created but you have to manually make the bucket public using their web console. The call won't fail but it will yield a warning:
@@ -6,7 +10,7 @@
  ```
 
 ### removeFile
-`removeFile` now supports versioning in all adapters except the local adapter
+removed the option `{allVersions: boolean}` from `removeFile`
 
 ### deleteBucket
 If you delete the bucket that was selected, `selectedBucket` will be set to `null`
@@ -23,6 +27,8 @@ Now yields an error if the file doesn't exist. Also yields an error if the bucke
 ### selectedBucket
 If your config contains a bucket name, it will be set as the selected bucket but it won't be created if it doesn't exist.
 
-### clearBucket
-Removes all versions (if versioning is enabled)
+### clearBucket()
+Now always removes all versions
+
+
 

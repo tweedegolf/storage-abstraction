@@ -16,7 +16,7 @@ import {
 } from "./types/result";
 import { AdapterConfigLocal } from "./types/adapter_local";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseMode, parseUrl, validateName } from "./util";
+import { parseMode, parseUrl } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
   protected _type = StorageType.LOCAL;
@@ -264,7 +264,6 @@ export class AdapterLocal extends AbstractAdapter {
   protected async _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);

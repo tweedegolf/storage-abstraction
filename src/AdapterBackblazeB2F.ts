@@ -13,7 +13,7 @@ import {
 } from "./types/result";
 import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2";
 
-import { parseQueryString, parseUrl, validateName } from "./util";
+import { parseQueryString, validateName } from "./util";
 
 const getConfig = (): AdapterConfigBackblazeB2 => {
   return {
@@ -88,8 +88,8 @@ const getSignedURL = async (...args:
 }
 
 const removeFile = async (...args:
-  [bucketName: string, fileName: string, allVersions?: boolean] |
-  [fileName: string, allVersions?: boolean]
+  [bucketName: string, fileName: string] |
+  [fileName: string]
 ): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };

@@ -603,6 +603,11 @@ Creates a new bucket. If successful, value will hold a string "ok". You can prov
 
 If you want to create a public bucket add a key `public` to the options object and set its value to `true`. 
 
+By default a bucket is private and has no versioning.
+
+
+
+
 >[!NOTE]
 > Setting `public` to true equals `access='blob'` in Azure Blob Storage; if you want to set your bucket to another access level you add it to the options object: 
 > ```typescript
@@ -652,7 +657,7 @@ export interface ResultObject {
 }
 ```
 
-Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok". If versioning is enabled, all versions of the files in the bucket will be removed.
+Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok". Backblaze B2 uses by default a form of versioning which can't be turned off, `clearBucket` automatically removes all existing versions of the file.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
@@ -950,15 +955,9 @@ getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads 
 
 ```typescript
 removeFile(...args:
-  [bucketName: string, fileName: string, options?: Options] |
+  [bucketName: string, fileName: string] |
   [fileName: string, options?: Options]
 ): Promise<ResultObject>;
-```
-
-```typescript
-type Options {
-  allVersions?: boolean;
-}
 ```
 
 return type:

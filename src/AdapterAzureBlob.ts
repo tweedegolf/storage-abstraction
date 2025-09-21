@@ -167,6 +167,8 @@ export class AdapterAzureBlob extends AbstractAdapter {
         options.access = "blob";
       }
       const res = await this._client.createContainer(name, options);
+      // const containerClient = this._client.getContainerClient(name);
+      // await containerClient.create();
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -359,7 +361,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
   protected async _removeFile(
     bucketName: string,
     fileName: string,
-    allVersions: boolean
   ): Promise<ResultObject> {
     try {
       const container = this._client.getContainerClient(bucketName);

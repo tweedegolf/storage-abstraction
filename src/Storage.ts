@@ -208,8 +208,8 @@ export class Storage implements IAdapter {
   }
 
   async removeFile(...args:
-    [bucketName: string, fileName: string, allVersions?: boolean] |
-    [fileName: string, allVersions?: boolean]
+    [bucketName: string, fileName: string] |
+    [fileName: string]
   ): Promise<ResultObject> {
     return this.adapter.removeFile(...args);
   }
