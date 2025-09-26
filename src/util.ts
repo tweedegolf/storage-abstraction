@@ -232,13 +232,13 @@ export const validateName = (name: string): string => {
     return "Bucket name can not be `null`";
   }
   if (name === "null") {
-    return 'Please do not use the string "null" as bucket name';
+    return 'Bucket name can not be the string "null"';
   }
   if (typeof name === "undefined") {
     return "Bucket name can not be `undefined`";
   }
   if (name === "undefined") {
-    return 'Please do not use the string "undefined" as bucket name';
+    return 'Bucket name can not be the string "undefined"';
   }
   if (isBlankString(name)) {
     return "Bucket name can not be an empty string";

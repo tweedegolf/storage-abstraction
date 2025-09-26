@@ -17,6 +17,7 @@ export type ParseUrlResult = {
  * Generic return type
  */
 export interface ResultObject {
+  // value: string | number | boolean | Array<string> | Array<[string, number]> | Readable | { [key: string]: any } | null;
   value: string | null;
   error: string | null;
 }
@@ -32,11 +33,6 @@ export type ResultObjectBoolean = {
 };
 
 export type ResultObjectFiles = {
-  error: string | null;
-  value: Array<[string, number]> | null; // file name, file size
-};
-
-export type ResultObjectTupleStringNumberArray = {
   error: string | null;
   value: Array<[string, number]> | null; // file name, file size
 };

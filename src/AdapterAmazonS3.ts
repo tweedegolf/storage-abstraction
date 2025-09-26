@@ -1,4 +1,3 @@
-import fs from "fs";
 import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
@@ -275,7 +274,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           VersionId: value.VersionId,
         }));
       }
-      console.log(versions)
+      // console.log(versions)
       if (versions.length > 0) {
         try {
           for (const v of versions) {
@@ -314,19 +313,23 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           };
           const command = new DeleteObjectsCommand(input);
           await this._client.send(command);
+          // return { value: `${objects.length} files removed from '${bucketName}'`, error: null };
           return { value: "ok", error: null };
         } catch (e) {
           return { value: null, error: e.message };
         }
+      } else {
+        // return { value: `No files removed; ${bucketName} contained no files`, error: null };
+        return { value: "ok", error: null };
       }
     }
   }
 
   protected async _deleteBucket(bucketName: string): Promise<ResultObject> {
     try {
-      const r = await this.clearBucket(bucketName);
+      const r = await this._clearBucket(bucketName);
       if (r.error !== null) {
-        return { value: null, error };
+        return { value: null, error: r.error };
       }
       const input = {
         Bucket: bucketName,
@@ -336,10 +339,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       // console.log(response);
       return { value: "ok", error: null };
     } catch (e) {
-      // error message Cubbit
-      if (e.message === "NoSuchBucket") {
-        return { value: null, error: `The specified bucket does not exist: ${bucketName}` };
-      }
       return { value: null, error: e.message };
     }
   }
@@ -430,20 +429,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     try {
       let fileData: Readable | Buffer;
-      if (typeof (params as FilePathParams).origPath !== "undefined") {
-        const f = (params as FilePathParams).origPath;
-        if (!fs.existsSync(f)) {
-          return {
-            value: null,
-            error: `File with given path: ${f}, was not found`,
-          };
-        }
-        fileData = fs.createReadStream(f);
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         fileData = (params as FileBufferParams).buffer;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         fileData = (params as FileStreamParams).stream;

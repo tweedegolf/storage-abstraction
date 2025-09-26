@@ -184,8 +184,11 @@ export async function deleteBucket(bucketName?: string) {
     logResult("deleteBucket", r, bucketName);
 }
 
-export async function listFiles(bucketName?: string) {
-    const r = typeof bucketName !== "string" ? await storage.listFiles() : await storage.listFiles(bucketName, 10000);
+export async function listFiles(...args:
+    [bucketName: string, numFiles?: number] |
+    [numFiles?: number]) {
+    const [arg1, arg2] = args;
+    const r = typeof arg1 !== "string" ? await storage.listFiles(arg2) : await storage.listFiles(arg1, arg2);
     logResult("listFiles", r);
 }
 
@@ -315,6 +318,9 @@ export async function getFileSize(p: string): Promise<number> {
     return stats.size;
 }
 
+export function getStorage(): Storage {
+    return storage;
+}
 
 // export async function getFileInfo(fileName: string, bucketName: string) {
 //     const info = await (storage.getAdapter() as AdapterAmazonS3).getFileInfo(

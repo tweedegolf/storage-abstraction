@@ -62,7 +62,7 @@ const addFileFromStream = async (params: FileStreamParams): Promise<ResultObject
 };
 
 const addFile = async (
-  params: FilePathParams | FileBufferParams | FileStreamParams
+  params: FileBufferParams | FileStreamParams
 ): Promise<ResultObject> => {
   return { value: "public url", error: null };
 };

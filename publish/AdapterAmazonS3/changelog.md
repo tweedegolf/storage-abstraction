@@ -1,5 +1,8 @@
 # 2.0.0
-- implemented new API
+- removed `getFileAsURL`
+- removed option `{allVersions: boolean}` for `removeFile`
+- removed support for versioning (wasn't implemented consistently anyway)
+- see also the [migration guide](https://github.com/tweedegolf/storage-abstraction/blob/master/migration_to_api3.0.md)
 - update @aws-sdk to 3.892.0
 
 # 1.0.18

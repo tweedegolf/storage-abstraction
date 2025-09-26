@@ -1,4 +1,3 @@
-import fs from "fs";
 import { Readable } from "stream";
 import { Storage as GoogleCloudStorage } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
@@ -204,17 +203,11 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     try {
       let readStream: Readable;
-      if (typeof (params as FilePathParams).origPath === "string") {
-        const f = (params as FilePathParams).origPath;
-        if (!fs.existsSync(f)) {
-          return { value: null, error: `File with given path: ${f}, was not found` };
-        }
-        readStream = fs.createReadStream(f);
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
         readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
@@ -246,8 +239,12 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       const data = await this._client.bucket(bucketName).getFiles();
+      let files: Array<[string, number]> = data[0].map((f) => [f.name, parseInt(f.metadata.size as string, 10)]);
+      if (typeof numFiles === "number") {
+        files = files.slice(0, numFiles);
+      }
       return {
-        value: data[0].map((f) => [f.name, parseInt(f.metadata.size as string, 10)]),
+        value: files,
         error: null,
       };
     } catch (e) {
@@ -268,7 +265,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   protected async _bucketExists(name: string): Promise<ResultObjectBoolean> {
     try {
       const data = await this._client.bucket(name).exists();
-      // console.log(data);
       return { value: data[0], error: null };
     } catch (e) {
       return { value: null, error: e.message };

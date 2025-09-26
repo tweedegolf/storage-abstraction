@@ -466,7 +466,7 @@ export interface ResultObject {
 }
 ```
 
-If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"` or for instance an array of bucket names or a warning.
+If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"`, a status message, a warning or for instance an array of bucket names.
 
 In case the call yields an error, the `value` key will be `null` and the `error` key will hold the error message. Usually this is the error message as sent by the cloud storage service so if necessary you can lookup the error message in the documentation of that service to learn more about the error.
 

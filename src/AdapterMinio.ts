@@ -1,4 +1,3 @@
-import fs from "fs";
 import * as Minio from "minio";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
@@ -210,24 +209,12 @@ export class AdapterMinio extends AbstractAdapter {
   }
 
   protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     try {
       let fileData: Readable | Buffer;
       let size: number;
-      if (typeof (params as FilePathParams).origPath !== "undefined") {
-        const f = (params as FilePathParams).origPath;
-        if (!fs.existsSync(f)) {
-          return { value: null, error: `File with given path: ${f}, was not found` };
-        }
-        try {
-          const stats = await fs.promises.stat(f);
-          size = stats.size;
-        } catch (e) {
-          return { value: null, error: `Cannot access file ${f} Error: ${e}` };
-        }
-        fileData = fs.createReadStream(f);
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         fileData = (params as FileBufferParams).buffer;
         size = fileData.buffer.byteLength;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {

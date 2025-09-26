@@ -131,7 +131,7 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     const dest = path.join(this._config.directory, params.bucketName, params.targetPath);
 
@@ -142,10 +142,7 @@ export class AdapterLocal extends AbstractAdapter {
 
     try {
       let readStream: Readable;
-      if (typeof (params as FilePathParams).origPath === "string") {
-        await fs.promises.copyFile((params as FilePathParams).origPath, dest);
-        return { value: dest, error: null };
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
         readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);

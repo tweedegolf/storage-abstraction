@@ -1,4 +1,3 @@
-import fs from "fs";
 import { Readable } from "stream";
 import {
   AnonymousCredential,
@@ -10,7 +9,7 @@ import {
 import { DefaultAzureCredential } from "@azure/identity";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -325,17 +324,11 @@ export class AdapterAzureBlob extends AbstractAdapter {
   }
 
   protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     try {
       let readStream: Readable;
-      if (typeof (params as FilePathParams).origPath === "string") {
-        const f = (params as FilePathParams).origPath;
-        if (!fs.existsSync(f)) {
-          return { value: null, error: `File with given path: ${f}, was not found` };
-        }
-        readStream = fs.createReadStream(f);
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
         readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
@@ -351,7 +344,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       if (writeStream.errorCode) {
         return { value: null, error: writeStream.errorCode };
       } else {
-        return { value: "ok", error: "null" };
+        return { value: "ok", error: null };
       }
     } catch (e) {
       return { value: null, error: e.message };

@@ -1,5 +1,4 @@
 import B2 from "@nichoth/backblaze-b2";
-import fs from "fs";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
@@ -209,7 +208,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FileBufferParams | FileStreamParams
   ): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
@@ -240,9 +239,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     try {
       let buffer: Buffer;
-      if (typeof (params as FilePathParams).origPath !== "undefined") {
-        buffer = await fs.promises.readFile((params as FilePathParams).origPath);
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         buffer = (params as FileBufferParams).buffer;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         const buffers: Array<any> = []; // eslint-disable-line
