@@ -29,7 +29,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType, S3Type } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,

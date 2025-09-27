@@ -139,7 +139,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     } else {
       endpoint = `https://${this.config.accountName}.blob.core.windows.net`
     }
-    console.log(endpoint);
+    // console.log(endpoint);
     return endpoint;
   }
 
@@ -181,13 +181,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
   ): Promise<ResultObjectStream> {
     try {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
-      const exists = await file.exists();
-      if (!exists) {
-        return {
-          value: null,
-          error: `File ${fileName} could not be found in bucket ${bucketName}`,
-        };
-      }
       const { start, end } = options;
       let offset: number;
       let count: number;
@@ -229,13 +222,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
         }
       }
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
-      const exists = await file.exists();
-      if (!exists) {
-        return {
-          value: null,
-          error: `File ${fileName} could not be found in bucket ${bucketName}`,
-        };
-      }
       return { value: file.url, error: null };
     } catch (e) {
       return { value: null, error: e.message };
@@ -249,13 +235,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
-      const exists = await file.exists();
-      if (!exists) {
-        return {
-          value: null,
-          error: `File ${fileName} could not be found in bucket ${bucketName}`,
-        };
-      }
       const exp = new Date();
       if (typeof options.expiresIn !== "number") {
         exp.setUTCDate(exp.getUTCDate() + 7);

@@ -149,19 +149,11 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   ): Promise<ResultObjectStream> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
-      const [exists] = await file.exists();
-      if (exists) {
-        return { value: file.createReadStream(options as object), error: null };
-      } else {
-        return {
-          value: null,
-          error: `File '${fileName}' does not exist in bucket '${bucketName}'.`,
-        };
-      }
+      return { value: file.createReadStream(options as object), error: null };
     } catch (e) {
       return {
         value: null,
-        error: `File ${fileName} could not be retrieved from bucket ${bucketName}`,
+        error: e.message,
       };
     }
   }
@@ -172,12 +164,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
-      const [exists] = await file.exists();
-      if (exists) {
-        await this._client.bucket(bucketName).file(fileName).delete();
-        return { value: "ok", error: null };
-      }
-      // no fail if the file does not exist
+      await this._client.bucket(bucketName).file(fileName).delete();
       return { value: "ok", error: null };
     } catch (e) {
       return { value: null, error: e.message };

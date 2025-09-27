@@ -466,7 +466,7 @@ export interface ResultObject {
 }
 ```
 
-If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"` or for instance an array of bucket names or a warning.
+If the call succeeds the `error` key will be `null` and the `value` key will hold the returned value. This can be a simple string `"ok"`, a status message, a warning or for instance an array of bucket names.
 
 In case the call yields an error, the `value` key will be `null` and the `error` key will hold the error message. Usually this is the error message as sent by the cloud storage service so if necessary you can lookup the error message in the documentation of that service to learn more about the error.
 
@@ -603,6 +603,10 @@ Creates a new bucket. If successful, value will hold a string "ok". You can prov
 
 If you want to create a public bucket add a key `public` to the options object and set its value to `true`. 
 
+By default a bucket is private and has no versioning.
+
+Fails if the bucket already exists. This is done because bucket names must be globally unique so if the bucket already exists it might have been created by someone else and may therefor not be accessible for you.
+
 >[!NOTE]
 > Setting `public` to true equals `access='blob'` in Azure Blob Storage; if you want to set your bucket to another access level you add it to the options object: 
 > ```typescript
@@ -628,7 +632,9 @@ If you want to create a public bucket add a key `public` to the options object a
 > Note that adding `{ACL: "public-read"}` or `{ACL: "public-read-write"}` also makes files in a private bucket publicly accessible!
 
 
-If the bucket was created successfully the `value` key will hold the string "ok". If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold "Bucket {bucket_name} created successfully but you can only make this bucket public using the web console".
+If the bucket was created successfully the `value` key will hold the string "ok". 
+
+If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold `Bucket ${bucketName} created successfully but you can only make this bucket public using the web console`.
 
 If the bucket exists or if creating the bucket fails for another reason the `error` key will hold the error message.
 
@@ -652,7 +658,7 @@ export interface ResultObject {
 }
 ```
 
-Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok". If versioning is enabled, all versions of the files in the bucket will be removed.
+Removes all files in the bucket. If the call succeeds the `value` key will hold the string "ok". Backblaze B2 uses by default a form of versioning which can't be turned off, `clearBucket` automatically removes all existing versions of the file.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
@@ -673,7 +679,9 @@ export interface ResultObject {
 }
 ```
 
-Deletes the bucket and all files in it. If the call succeeds the `value` key will hold the string "ok". If the deleted bucket was the selected bucket, selected bucket will be set to `null`
+Deletes the bucket and all files in it. If the call succeeds the `value` key will hold the string "ok". If the deleted bucket was the selected bucket, selected bucket will be set to `null`.
+
+Does not fail if the bucket doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
@@ -950,15 +958,9 @@ getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads 
 
 ```typescript
 removeFile(...args:
-  [bucketName: string, fileName: string, options?: Options] |
+  [bucketName: string, fileName: string] |
   [fileName: string, options?: Options]
 ): Promise<ResultObject>;
-```
-
-```typescript
-type Options {
-  allVersions?: boolean;
-}
 ```
 
 return type:
@@ -970,15 +972,15 @@ export interface ResultObject {
 }
 ```
 
-Removes a file from the bucket. Fails if the file or the bucket doesn't exist.
+Removes a file from the bucket. Does not fail if the file doesn't exist.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-If the file can not be found an error will be returned: `No file [your filename] found in bucket [your bucketname]`. 
-
-If the bucket can not be found an error will be returned: `No bucket [your bucketname] found`. 
+If the bucket can not be found an error will be returned: `No bucket ${bucketname} found`. 
 
 If the call succeeds the `value` key will hold the string "ok".
+
+If the file can not be found `value` will be: `No file ${filename} found in bucket ${bucketname}`. 
 
 ### sizeOf
 

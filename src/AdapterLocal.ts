@@ -264,9 +264,6 @@ export class AdapterLocal extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
-      if (!fs.existsSync(p)) {
-        return { value: "ok", error: null };
-      }
       await fs.promises.unlink(p);
       return { value: "ok", error: null };
     } catch (e) {

@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-backblaze-b2",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "Provides an abstraction layer for interacting with Backblaze B2 cloud service.",
   "main": "dist/index/AdapterBackblazeB2.js",
   "types": "dist/index/AdapterBackblazeB2.d.ts",

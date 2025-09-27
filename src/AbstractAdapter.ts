@@ -279,7 +279,11 @@ export abstract class AbstractAdapter implements IAdapter {
   public async deleteBucket(name?: string): Promise<ResultObject> {
     const r = await this.checkBucket(name, true);
     if (r.error !== null) {
-      return r;
+      if (r.error === `No bucket '${name}' found.`) {
+        return { value: r.error, error: null };
+      } else {
+        return r;
+      }
     }
     name = r.value;
     if (this.selectedBucket === name) {
@@ -379,7 +383,6 @@ export abstract class AbstractAdapter implements IAdapter {
   ): Promise<ResultObjectStream> {
     const { bucketName, fileName, options, error } = this.getFileAndBucketAndOptions(...args);
     // console.log(bucketName, fileName, options, error);
-
     if (error !== null) {
       return { error, value: null };
     }
@@ -387,6 +390,10 @@ export abstract class AbstractAdapter implements IAdapter {
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
       return { value: null, error: r.error }
+    }
+    const r2 = await this.checkFile(r.value, fileName);
+    if (r2.error !== null) {
+      return { value: null, error: r2.error }
     }
 
     return this._getFileAsStream(r.value, fileName, options === null ? {} : options as StreamOptions);
@@ -443,6 +450,10 @@ export abstract class AbstractAdapter implements IAdapter {
     if (r.error !== null) {
       return { value: null, error: r.error }
     }
+    const r2 = await this.checkFile(r.value, fileName);
+    if (r2.error !== null) {
+      return { value: null, error: r2.error }
+    }
     return this._sizeOf(r.value, fileName);
   }
 
@@ -478,7 +489,11 @@ export abstract class AbstractAdapter implements IAdapter {
     // check if file exists, this is especially necessary for Backblaze B2 with S3 adapter!
     const r2 = await this.checkFile(r.value, fileName);
     if (r2.error !== null) {
-      return { value: null, error: r2.error }
+      if (r2.error.startsWith(`No file '${fileName}' found in bucket`)) {
+        return { value: r2.error, error: null }
+      } else {
+        return { value: null, error: r2.error }
+      }
     }
 
     return this._removeFile(bucketName, fileName);

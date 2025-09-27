@@ -1,3 +1,11 @@
+# 2.0.0
+- removed support for versioning (wasn't implemented consistently anyway)
+- removed `getFileAsURL`
+- removed option `{allVersions: boolean}` for `removeFile`
+- `removeFile` does not fail if the file doesn't exist
+- `deleteBucket` does not fail if the bucket doesn't exist
+- see also the [migration guide](https://github.com/tweedegolf/storage-abstraction/blob/master/migration_to_api3.0.md)
+
 # 1.0.8
 - update glob to 11.0.3
 - update rimraf to 6.0.1
