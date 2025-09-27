@@ -128,25 +128,25 @@ async function testVersioning() {
 }
 
 async function testNonExistingUp() {
+  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {}, "imaginary-bucket");
   await createBucket(privateBucket);
   await addFileFromPath("./tests/data/imaginary.jpg", "file1.jpg", {}, privateBucket);
   await addFileFromPath("./tests/data/image3.jpg", "file1.jpg", {}, privateBucket);
+  await deleteBucket(privateBucket);
 }
 
 async function testNonExistingDown() {
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {}, "imaginary-bucket");
   await getPublicURL("imaginary-file.jpg", {}, "imaginary-bucket");
   await getSignedURL("imaginary-file.jpg", "imaginary", {}, "imaginary-bucket");
-
-  const r = await getStorage().listFiles("imaginary-bucket");
-  logResult("listFiles", r);
+  await listFiles("imaginary-bucket");
 
   await createBucket(privateBucket);
-  await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {}, "imaginary-bucket");
-  await addFileFromPath("./tests/data/imaginary.jpg", "file1.jpg", {}, privateBucket);
-  // await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {}, privateBucket);
   await getPublicURL("imaginary-file.jpg", {}, privateBucket);
   await getSignedURL("imaginary-file.jpg", "imaginary", {}, privateBucket);
+  await listFiles(privateBucket);
+
+  await deleteBucket(privateBucket);
 }
 
 async function testDownloadFilesFromBucket() {
@@ -244,7 +244,8 @@ async function run() {
   // await testDeleteBucket();
   // await testAddFilesToBucket();
   // await testVersioning();
-  await testNonExistingUp();
+  // await testNonExistingUp();
+  await testNonExistingDown();
   // await testDownloadFilesFromBucket();
   // await testFilesInBucket();
   // await testClearBucket();

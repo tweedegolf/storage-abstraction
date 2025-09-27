@@ -170,7 +170,10 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const input = {};
       const command = new ListBucketsCommand(input);
       const response = await this._client.send(command);
-      const bucketNames = response.Buckets?.map((b) => b?.Name);
+      let bucketNames = [];
+      if (response.Buckets) {
+        bucketNames = response.Buckets.map((b) => b?.Name);
+      }
       return { value: bucketNames, error: null };
     } catch (e) {
       return { value: null, error: e.message };
