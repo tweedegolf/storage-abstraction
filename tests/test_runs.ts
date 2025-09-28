@@ -1,5 +1,5 @@
 import { S3Type, StorageType } from "../src/types/general";
-import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getFileSize, cleanup, getStorage } from "./api_calls";
+import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getFileSize, cleanup, getStorage, getPresignedUploadURL } from "./api_calls";
 import { Color, colorLog, logResult } from "./util";
 
 const types = [
@@ -220,6 +220,14 @@ async function testFilesInBucket() {
   await removeFile("file1.jpg", "this-is-not-a-bucket-999"); // try to remove a file in a bucket that doesn't exist
 }
 
+async function testPresignedUploadURL() {
+  console.log("\n");
+  colorLog("testPresignedUploadURL", Color.TEST);
+  await createBucket(privateBucket);
+  setSelectedBucket(privateBucket);
+  await getPresignedUploadURL("test-aap.jpg");
+}
+
 async function testClearBucket() {
   console.log("\n");
   colorLog("testClearBucket", Color.TEST);
@@ -245,9 +253,10 @@ async function run() {
   // await testAddFilesToBucket();
   // await testVersioning();
   // await testNonExistingUp();
-  await testNonExistingDown();
+  // await testNonExistingDown();
   // await testDownloadFilesFromBucket();
   // await testFilesInBucket();
+  await testPresignedUploadURL();
   // await testClearBucket();
 
   // clean up

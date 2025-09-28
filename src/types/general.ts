@@ -4,6 +4,7 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./result";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_params";
@@ -309,4 +310,15 @@ export interface IAdapter {
     [bucketName: string, fileName: string] |
     [fileName: string]
   ): Promise<ResultObjectBoolean>;
+
+  /**
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
+   * @param options constraint validity of URL
+   * @returns string presigned upload URL
+   */
+  getPresignedUploadURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]
+  ): Promise<ResultObjectObject>;
 }

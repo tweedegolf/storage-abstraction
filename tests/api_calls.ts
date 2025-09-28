@@ -7,12 +7,17 @@ import { getConfig } from "./config";
 import { Color, colorLog, logResult, saveFile } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
+import fetch, { RequestInit } from 'node-fetch';
+import FormData from 'form-data';
+import dotenv from "dotenv";
 
 let type: string;
 let storage: Storage;
 
 export const privateBucket = "sab-test-private";
 export const publicBucket = "sab-test-public";
+
+dotenv.config();
 
 export type TestFile = {
     name: string,
@@ -268,7 +273,7 @@ export async function getPublicURL(fileName: string, options: Options = {}, buck
         await storage.getPublicURL(bucketName, fileName, options);
     logResult("getPublicURL", r), options;
     if (r.value !== null && type !== StorageType.LOCAL) {
-        const response = await fetch(new Request(r.value));
+        const response = await fetch(r.value);
         if (!response.ok) {
             colorLog("checkPublicURL", Color.ERROR, `HTTP status: ${response.status}`, options);
         } else {
@@ -288,7 +293,7 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
             if (options.waitUntilExpired === true) {
                 await waitABit((options.expiresIn * 1000) + 700); // milliseconds
             }
-            const response = await fetch(new Request(r.value));
+            const response = await fetch(r.value);
             const arrayBuffer = await response.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             const fileType = await fileTypeFromBuffer(buffer);
@@ -316,6 +321,46 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
 export async function getFileSize(p: string): Promise<number> {
     const stats = await fs.promises.stat(p);
     return stats.size;
+}
+
+export async function getPresignedUploadURL(fileName: string, options: Options = {}, bucketName?: string): Promise<void> {
+    const r = typeof bucketName === "undefined" ?
+        await storage.getPresignedUploadURL(fileName, options) :
+        await storage.getPresignedUploadURL(bucketName, fileName, options);
+    // logResult("getSignedURL", r), options;
+
+    const { url, fields, expires } = r.value as any;
+    const form = new FormData();
+    Object.entries(fields).forEach(([field, value]) => {
+        form.append(field, value);
+    });
+    form.append("file", fs.createReadStream("./tests/data/image1.jpg"));
+    form.submit(url, async (err, res) => {
+        await listFiles(bucketName as string);
+    });
+
+
+    // const formData = new FormData();
+    // const fileStream = fs.createReadStream('./tests/data/image1.jpg');
+    // for (const [key, value] of Object.entries(fields)) {
+    //     formData.append(key, value);
+    // }
+    // formData.append('file', fileStream);
+    // formData.append('AWSAccessKeyId', process.env.AWS_ACCESS_KEY_ID);
+    // formData.append('AWSAccessKeyId', process.env.AWS_ACCESS_KEY_ID);
+    // // console.log(formData.getHeaders());
+
+    // const res = await fetch(url, {
+    //     method: "PUT",
+    //     body: formData,
+    //     headers: formData.getHeaders(),
+    // });
+
+    // if (res.ok) {
+    //     console.log('Upload successful');
+    // } else {
+    //     console.error('Upload failed', res.status, res.statusText);
+    // }
 }
 
 export function getStorage(): Storage {

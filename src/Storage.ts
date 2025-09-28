@@ -13,6 +13,7 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters";
@@ -242,5 +243,12 @@ export class Storage implements IAdapter {
     [fileName: string]
   ): Promise<ResultObjectBoolean> {
     return this.adapter.fileExists(...args);
+  }
+
+  async getPresignedUploadURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]
+  ): Promise<ResultObjectObject> {
+    return this.adapter.getPresignedUploadURL(...args);
   }
 }

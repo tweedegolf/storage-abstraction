@@ -55,6 +55,7 @@ export type ResultObjectKeyValue = {
 export type ResultObjectObject = {
   error: string | null;
   value: { [key: string]: any } | null; // eslint-disable-line
+  // value: any | null; // eslint-disable-line
 };
 
 export type ResultObjectStream = {

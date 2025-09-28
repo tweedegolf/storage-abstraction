@@ -1,5 +1,6 @@
 import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import {
   S3Client,
   _Object,
@@ -35,11 +36,15 @@ import {
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
+  ResultObjectKeyValue,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
 import { parseUrl } from "./util";
+import { threadCpuUsage } from "process";
+import { KeyObject } from "crypto";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   protected _type = StorageType.S3;
@@ -646,6 +651,32 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       return { value: true, error: null };
     } catch (e) {
       return { value: false, error: null };
+    }
+  }
+
+  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+    const expires = 3600;
+    try {
+      const data = await createPresignedPost(this._client, {
+        Bucket: bucketName,
+        Key: fileName,
+        Expires: expires,
+        Conditions: [
+          ["starts-with", "$key", fileName],
+          // ["content-length-range", 1, 25 * 1024 * 1024],
+          // ["starts-with", "$Content-Type", ""], // or "image/" to restrict
+          { "x-amz-server-side-encryption": "AES256" },
+          // { "acl": "private" },                 // if using ACLs
+          // ["starts-with", "$x-amz-meta-user", ""], // force certain metadata fields
+        ],
+        Fields: {
+          "x-amz-server-side-encryption": "AES256",
+          acl: "bucket-owner-full-control",
+        },
+      });
+      return { value: { ...data, expires }, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
     }
   }
 

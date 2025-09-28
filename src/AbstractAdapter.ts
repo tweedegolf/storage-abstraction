@@ -7,6 +7,7 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { validateName } from "./util";
@@ -191,37 +192,19 @@ export abstract class AbstractAdapter implements IAdapter {
 
   protected abstract _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
-  protected abstract _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
-  ): Promise<ResultObject>;
+  protected abstract _addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
 
-  protected abstract _fileExists(
-    bucketName: string,
-    fileName: string
-  ): Promise<ResultObjectBoolean>;
+  protected abstract _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
 
-  protected abstract _getFileAsStream(
-    bucketName: string,
-    fileName: string,
-    options: StreamOptions
-  ): Promise<ResultObjectStream>;
+  protected abstract _getFileAsStream(bucketName: string, fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
 
-  protected abstract _getPublicURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject>;
+  protected abstract _getPublicURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
 
-  protected abstract _getSignedURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject>;
+  protected abstract _getSignedURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
 
-  protected abstract _removeFile(
-    bucketName: string,
-    fileName: string,
-  ): Promise<ResultObject>;
+  protected abstract _removeFile(bucketName: string, fileName: string,): Promise<ResultObject>;
+
+  protected abstract _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject>;
 
   // public
   public async listBuckets(): Promise<ResultObjectBuckets> {
@@ -498,4 +481,20 @@ export abstract class AbstractAdapter implements IAdapter {
 
     return this._removeFile(bucketName, fileName);
   }
+
+  public async getPresignedUploadURL(...args:
+    [bucketName: string, fileName: string, options?: Options] |
+    [fileName: string, options?: Options]
+  ): Promise<ResultObjectObject> {
+    const { bucketName, fileName, options, error } = this.getFileAndBucketAndOptions(...args);
+    if (error !== null) {
+      return { value: null, error };
+    }
+    const r = await this.checkBucket(bucketName);
+    if (r.error !== null) {
+      return { value: null, error: r.error }
+    }
+    return this._getPresignedUploadURL(r.value, fileName, options as object);
+  }
+
 }
