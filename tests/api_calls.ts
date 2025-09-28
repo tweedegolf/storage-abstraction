@@ -7,7 +7,6 @@ import { getConfig } from "./config";
 import { Color, colorLog, logResult, saveFile } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
-import fetch, { RequestInit } from 'node-fetch';
 import FormData from 'form-data';
 import dotenv from "dotenv";
 
@@ -327,40 +326,30 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
     const r = typeof bucketName === "undefined" ?
         await storage.getPresignedUploadURL(fileName, options) :
         await storage.getPresignedUploadURL(bucketName, fileName, options);
-    // logResult("getSignedURL", r), options;
+    logResult("getPresignedUploadURL", r, "ok"), options;
 
-    const { url, fields, expires } = r.value as any;
-    const form = new FormData();
-    Object.entries(fields).forEach(([field, value]) => {
-        form.append(field, value);
-    });
-    form.append("file", fs.createReadStream("./tests/data/image1.jpg"));
-    form.submit(url, async (err, res) => {
-        await listFiles(bucketName as string);
-    });
-
-
-    // const formData = new FormData();
-    // const fileStream = fs.createReadStream('./tests/data/image1.jpg');
-    // for (const [key, value] of Object.entries(fields)) {
-    //     formData.append(key, value);
-    // }
-    // formData.append('file', fileStream);
-    // formData.append('AWSAccessKeyId', process.env.AWS_ACCESS_KEY_ID);
-    // formData.append('AWSAccessKeyId', process.env.AWS_ACCESS_KEY_ID);
-    // // console.log(formData.getHeaders());
-
-    // const res = await fetch(url, {
-    //     method: "PUT",
-    //     body: formData,
-    //     headers: formData.getHeaders(),
-    // });
-
-    // if (res.ok) {
-    //     console.log('Upload successful');
-    // } else {
-    //     console.error('Upload failed', res.status, res.statusText);
-    // }
+    if (r.error === null) {
+        const { url, fields } = r.value as any;
+        const form = new FormData();
+        Object.entries(fields).forEach(([field, value]) => {
+            form.append(field, value);
+        });
+        form.append("file", fs.createReadStream("./tests/data/image1.jpg"));
+        new Promise(() => {
+            form.submit(url, (err, res) => {
+                if (err) {
+                    colorLog("checkPresignedUploadURL", Color.ERROR, err);
+                    return;
+                }
+                if (res.statusCode !== 200 && res.statusCode !== 204) {
+                    colorLog("checkPresignedUploadURL", Color.ERROR, res.statusCode);
+                    return;
+                }
+                colorLog("checkPresignedUploadURL", Color.OK, res.statusCode);
+                return;
+            });
+        })
+    }
 }
 
 export function getStorage(): Storage {

@@ -1,5 +1,5 @@
 import { Readable, Stream, Writable } from "stream";
-import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectStream } from "../src/types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "../src/types/result";
 import { Options } from "../src/types/general";
 
 /**
@@ -81,6 +81,7 @@ export type ResultObjectType =
   ResultObjectNumber |
   ResultObjectStream |
   ResultObjectBuckets |
+  ResultObjectObject |
   ResultObjectFiles;
 
 export function logResult(label: string, result: ResultObjectType, msg?: string, options?: Options): void {

@@ -225,7 +225,22 @@ async function testPresignedUploadURL() {
   colorLog("testPresignedUploadURL", Color.TEST);
   await createBucket(privateBucket);
   setSelectedBucket(privateBucket);
-  await getPresignedUploadURL("test-aap.jpg");
+  await getPresignedUploadURL("test.jpg");
+  await getPresignedUploadURL("test.jpg", {
+    expires: 1,
+  });
+  if (type === StorageType.S3) {
+    await getPresignedUploadURL("test.jpg", {
+      conditions: [
+        ["starts-with", "$key", "something-else"],
+      ]
+    });
+    await getPresignedUploadURL("test.jpg", {
+      conditions: [
+        ["content-length-range", 1, 1024],
+      ]
+    });
+  }
 }
 
 async function testClearBucket() {
