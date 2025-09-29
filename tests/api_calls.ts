@@ -7,7 +7,6 @@ import { getConfig } from "./config";
 import { Color, colorLog, logResult, saveFile } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
-import FormData from 'form-data';
 import dotenv from "dotenv";
 
 let type: string;
@@ -60,6 +59,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     const r = await storage.listBuckets();
     // logResult("listBuckets", r);
     if (r.error !== null) {
+        colorLog("init", Color.ERROR, r.error)
         process.exit(1);
     }
 
@@ -329,27 +329,60 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
     logResult("getPresignedUploadURL", r, "ok"), options;
 
     if (r.error === null) {
-        const { url, fields } = r.value as any;
+        const url = (r.value as any).url;
         const form = new FormData();
-        Object.entries(fields).forEach(([field, value]) => {
-            form.append(field, value);
-        });
-        form.append("file", fs.createReadStream("./tests/data/image1.jpg"));
-        new Promise(() => {
-            form.submit(url, (err, res) => {
-                if (err) {
-                    colorLog("checkPresignedUploadURL", Color.ERROR, err);
-                    return;
-                }
-                if (res.statusCode !== 200 && res.statusCode !== 204) {
-                    colorLog("checkPresignedUploadURL", Color.ERROR, res.statusCode);
-                    return;
-                }
-                colorLog("checkPresignedUploadURL", Color.OK, res.statusCode);
-                return;
+        const data = fs.readFileSync("./tests/data/image1.jpg")
+        form.append("file", new Blob([data]));
+        let headers = {};
+
+        if (type === StorageType.S3) {
+            Object.entries((r.value as any).fields).forEach(([field, value]) => {
+                form.append(field, value as string);
+                console.log(field, value)
             });
-        })
+        } else if (type === StorageType.AZURE) {
+            headers = {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': 'multipart/form-data',
+            }
+        }
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            body: form,
+            headers,
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            colorLog("checkPresignedUploadURL", Color.ERROR, `HTTP status: ${response.status} Message: ${text}}`, options);
+        } else {
+            colorLog("checkPresignedUploadURL", Color.OK, "presigned upload url is valid!", options);
+            await listFiles(typeof bucketName !== "undefined" ? bucketName : storage.getSelectedBucket() as string);
+        }
     }
+
+    // new Promise(() => {
+    //     form.submit(url, (err, res) => {
+    //         if (err) {
+    //             colorLog("checkPresignedUploadURL", Color.ERROR, err);
+    //             return;
+    //         }
+    //         if (res.statusCode !== 200 && res.statusCode !== 204) {
+    //             colorLog("checkPresignedUploadURL", Color.ERROR, res.statusCode);
+    //             return;
+    //         }
+    //         colorLog("checkPresignedUploadURL", Color.OK, res.statusCode);
+    //         return;
+    //     });
+    // })
+
+    // const response = await fetch(url, { method: "PUT" });
+    // if (!response.ok) {
+    //     colorLog("checkPresignedUploadURL", Color.ERROR, `HTTP status: ${response.status}`, options);
+    // } else {
+    //     colorLog("checkPresignedUploadURL", Color.OK, "public url is valid!", options);
+    // }
 }
 
 export function getStorage(): Storage {

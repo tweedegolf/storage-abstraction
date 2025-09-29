@@ -227,7 +227,7 @@ export const isBlankString = (str: string): boolean => {
  *
  * Checks if the value of the name is not null, undefined or an empty string
  */
-export const validateName = (name: string): string => {
+export const validateName = (name: string, type: string): string => {
   if (name === null) {
     return "Bucket name can not be `null`";
   }
@@ -242,6 +242,9 @@ export const validateName = (name: string): string => {
   }
   if (isBlankString(name)) {
     return "Bucket name can not be an empty string";
+  }
+  if (type === StorageType.AZURE && name.indexOf("_") !== -1) {
+    return "Bucket name can not contain undersores";
   }
   return null;
 };

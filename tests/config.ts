@@ -64,7 +64,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
       applicationKey: process.env.B2_APPLICATION_KEY,
     };
   } else if (t === StorageType.AZURE) {
-    const test: number = 6;
+    const test: number = 3;
     if (test === 1) {
       // azurite local
       config = {
@@ -75,6 +75,13 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
         blobDomain: process.env.AZURITE_BLOB_ENDPOINT
       };
     } else if (test === 2) {
+      // connection string azurite
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`
+      };
+    } else if (test === 3) {
       // account name and key
       config = {
         type: StorageType.AZURE,
@@ -82,7 +89,14 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
         accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
         accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
       };
-    } else if (test === 3) {
+    } else if (test === 4) {
+      // connection string azure
+      config = {
+        type: StorageType.AZURE,
+        bucketName: process.env.BUCKET_NAME,
+        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING
+      };
+    } else if (test === 5) {
       // sas token
       config = {
         type: StorageType.AZURE,
@@ -90,26 +104,12 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
         accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
         sasToken: process.env.AZURE_STORAGE_SAS_TOKEN,
       };
-    } else if (test === 4) {
+    } else if (test === 6) {
       // passwordless
       config = {
         type: StorageType.AZURE,
         bucketName: process.env.BUCKET_NAME,
         accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
-      };
-    } else if (test === 5) {
-      // connection string azurite
-      config = {
-        type: StorageType.AZURE,
-        bucketName: process.env.BUCKET_NAME,
-        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`
-      };
-    } else if (test === 6) {
-      // connection string azure
-      config = {
-        type: StorageType.AZURE,
-        bucketName: process.env.BUCKET_NAME,
-        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING
       };
     }
   } else if (t === StorageType.MINIO) {

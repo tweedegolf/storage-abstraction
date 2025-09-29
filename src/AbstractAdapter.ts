@@ -234,7 +234,7 @@ export abstract class AbstractAdapter implements IAdapter {
       name = this._bucketName;
     } else {
       name = arg1 as string;
-      const error = validateName(name as string);
+      const error = validateName(name as string, this.type);
       if (error !== null) {
         return { value: null, error };
       }

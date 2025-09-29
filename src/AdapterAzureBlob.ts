@@ -4,6 +4,7 @@ import {
   BlobGenerateSasUrlOptions,
   BlobSASPermissions,
   BlobServiceClient,
+  ContainerSASPermissions,
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
@@ -16,6 +17,7 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
@@ -384,6 +386,63 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
+  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+    try {
+      let starts = new Date();
+      let offset = 1 * 60;
+      if (typeof options.starts !== "undefined") {
+        offset = Number.parseInt(options.starts, 10);
+      }
+      starts.setSeconds(starts.getSeconds() - offset);
+
+      let expires = new Date();
+      offset = 5 * 60;
+      if (typeof options.expires !== "undefined") {
+        offset = Number.parseInt(options.expires, 10);
+      }
+      expires.setSeconds(expires.getSeconds() + offset);
+
+      let permissions = { add: true, create: true, write: true };
+      if (typeof options.permissions !== "undefined") {
+        permissions = options.permissions
+      }
+
+      const blockBlobClient = this._client.getContainerClient(bucketName).getBlockBlobClient(fileName);
+      const url = await blockBlobClient.generateSasUrl({
+        permissions: BlobSASPermissions.from(permissions),
+        expiresOn: expires,
+        startsOn: starts
+      });
+      return { value: { url }, error: null };
+    } catch (e) {
+      return { value: null, error: e.message };
+    }
+
+    /*
+    // Set the permissions for the SAS token
+    const permissions = new ContainerSASPermissions();
+    permissions.write = true; // Allow write access
+
+    // Set the expiry time for the SAS token
+    const expiryDate = new Date();
+    expiryDate.setMinutes(expiryDate.getMinutes() + 30); // Token valid for 30 minutes
+
+    // Generate the SAS token
+    const sasToken = generateBlobSASQueryParameters({
+      containerName: bucketName,
+      blobName: fileName,
+      permissions: permissions,
+      startsOn: new Date(Date.now() - 1 * 60 * 1000),
+      expiresOn: expiryDate
+    }, new StorageSharedKeyCredential(this.config.accountName, this.config.accountKey)).toString();
+
+    console.log(this.config.accountName, this.config.accountKey, sasToken);
+    // Construct the presigned URL
+    const url = `${this._client.getContainerClient(bucketName).getBlobClient(fileName).url}?${sasToken}`;
+    return { value: { url }, error: null };
+    */
+    // /*
+  }
 
   // public
 
@@ -403,3 +462,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     return this._client as BlobServiceClient;
   }
 }
+function generateContainerSASQueryParameters(arg0: { containerName: any; permissions: ContainerSASPermissions; startsOn: Date; expiresOn: Date; protocol: any; }, credential: any) {
+  throw new Error("Function not implemented.");
+}
+

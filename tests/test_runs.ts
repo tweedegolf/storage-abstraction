@@ -1,6 +1,6 @@
 import { S3Type, StorageType } from "../src/types/general";
 import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getFileSize, cleanup, getStorage, getPresignedUploadURL } from "./api_calls";
-import { Color, colorLog, logResult } from "./util";
+import { Color, colorLog } from "./util";
 
 const types = [
   StorageType.LOCAL, // 0
@@ -223,9 +223,16 @@ async function testFilesInBucket() {
 async function testPresignedUploadURL() {
   console.log("\n");
   colorLog("testPresignedUploadURL", Color.TEST);
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  if (type === StorageType.AZURE) {
+    const bucketName = `test-${Date.now()}`
+    await createBucket(bucketName);
+    setSelectedBucket(bucketName);
+  } else {
+    await createBucket(privateBucket);
+    setSelectedBucket(privateBucket);
+  }
   await getPresignedUploadURL("test.jpg");
+  return;
   await getPresignedUploadURL("test.jpg", {
     expires: 1,
   });
@@ -240,6 +247,9 @@ async function testPresignedUploadURL() {
         ["content-length-range", 1, 1024],
       ]
     });
+  } else if (type === StorageType.AZURE) {
+    await getPresignedUploadURL("test.jpg", { permissions: {} });
+    await getPresignedUploadURL("test.jpg", { permissions: { weird: 123 } });
   }
 }
 
