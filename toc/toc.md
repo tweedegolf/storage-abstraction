@@ -12,8 +12,9 @@ Documentation|Adapter API|Introspective API|Storage API
 &nbsp; [c. Adapter class](README.md#adapter-class)|[addFileFromPath](README.md#addfilefrompath)||
 &nbsp; [d. Adapter function](README.md#adapter-function)|[addFileFromBuffer](README.md#addfilefrombuffer)||
 &nbsp; [e. Register your adapter](README.md#register-your-adapter)|[addFileFromStream](README.md#addfilefromstream) ||
-&nbsp; [f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|[getPublicURL](README.md#getpublicurl)||
-[5. Tests](README.md#tests)|[getSignedURL](README.md#getsignedurl) ||
-[6. Example application](README.md#example-application)|[getFileAsStream](README.md#getfileasstream)||
-[7. Questions and requests](README.md#questions-and-requests)|[removeFile](README.md#removefile)||
-&nbsp;|[sizeOf](README.md#sizeof)||
+&nbsp; [f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|[getPresignedUploadURL](README.md#getPresignedUploadURL)||
+[5. Tests](README.md#tests)|[getPublicURL](README.md#getpublicurl)||
+[6. Example application](README.md#example-application)|[getSignedURL](README.md#getsignedurl) ||
+[7. Questions and requests](README.md#questions-and-requests)|[getFileAsStream](README.md#getfileasstream)||
+&nbsp;|[removeFile](README.md#removefile)||
+|[sizeOf](README.md#sizeof)||

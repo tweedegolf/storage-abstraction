@@ -12,6 +12,7 @@ Adapter API
 [addFileFromPath](README.md#addfilefrompath)
 [addFileFromBuffer](README.md#addfilefrombuffer)
 [addFileFromStream](README.md#addfilefromstream) 
+[getPresignedUploadURL](README.md#getPresignedUploadURL)
 [getPublicURL](README.md#getpublicurl)
 [getSignedURL](README.md#getsignedurl) 
 [getFileAsStream](README.md#getfileasstream)

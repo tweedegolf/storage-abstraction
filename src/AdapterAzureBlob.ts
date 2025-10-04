@@ -389,11 +389,11 @@ export class AdapterAzureBlob extends AbstractAdapter {
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
     try {
       let starts = new Date();
-      let offset = 1 * 60;
+      let offset = 1 * -60;
       if (typeof options.starts !== "undefined") {
         offset = Number.parseInt(options.starts, 10);
       }
-      starts.setSeconds(starts.getSeconds() - offset);
+      starts.setSeconds(starts.getSeconds() + offset);
 
       let expires = new Date();
       offset = 5 * 60;

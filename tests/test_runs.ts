@@ -23,13 +23,30 @@ if (process.argv[2]) {
 }
 // console.log(index, type);
 
+function getPrivateBucketName() {
+  // Azure needs more time to delete a bucket
+  if (type === StorageType.AZURE) {
+    return `${privateBucket}-${Date.now()}`
+  }
+  return privateBucket;
+}
+
+function getPublicBucketName() {
+  // Azure needs more time to delete a bucket
+  if (type === StorageType.AZURE) {
+    return `${publicBucket}-${Date.now()}`
+  }
+  return publicBucket;
+}
+
 async function testPrivateBucket() {
   console.log("\n");
   colorLog("testPrivateBucket", Color.TEST);
-  await createBucket(privateBucket, { public: false });
-  await bucketIsPublic(privateBucket);
+  const name = getPrivateBucketName();
+  await createBucket(name, { public: false });
+  await bucketIsPublic(name);
 
-  setSelectedBucket(privateBucket);
+  setSelectedBucket(name);
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   await listFiles();
   if (type === StorageType.B2 || type === S3Type.BACKBLAZE) {
@@ -45,18 +62,19 @@ async function testPrivateBucket() {
 async function testPublicBucket() {
   console.log("\n");
   colorLog("testPublicBucket", Color.TEST);
+  const name = getPublicBucketName();
   if (type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
-    await createBucket(publicBucket, { public: true });
+    await createBucket(name, { public: true });
   } else {
     /**
      * If you're connecting to Cloudflare or Backblaze with the S3 adapter you can't create a public bucket in one go.
      * The bucket will be created but you'll get a warning that you can only make this bucket public manually using the 
      * Cloudflare or Backblaze web console.
      */
-    await createBucket(publicBucket, { public: true });
+    await createBucket(name, { public: true });
   }
-  await bucketIsPublic(publicBucket);
-  setSelectedBucket(publicBucket)
+  await bucketIsPublic(name);
+  setSelectedBucket(name)
 
   /**
    * To make a file publicly accessible in Cubbit you need to set ACL per file.
@@ -84,12 +102,13 @@ async function testPublicBucket() {
 async function testDeleteBucket() {
   console.log("\n");
   colorLog("testDeleteBucket", Color.TEST);
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  const name = getPrivateBucketName();
+  await createBucket(name);
+  setSelectedBucket(name);
   getSelectedBucket();
   await listBuckets();
   await deleteBucket();
-  await bucketExists(privateBucket);
+  await bucketExists(name);
   await listBuckets();
   getSelectedBucket();
 }
@@ -97,8 +116,9 @@ async function testDeleteBucket() {
 async function testAddFilesToBucket() {
   console.log("\n");
   colorLog("testAddFilesToBucket", Color.TEST);
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  const name = getPrivateBucketName();
+  await createBucket(name);
+  setSelectedBucket(name);
   await addFileFromPath("./tests/data/with space.jpg", "file-from-path.jpg", {});
   await addFileFromBuffer("./tests/data/input.txt", "file-from-buffer.txt", {});
   await addFileFromStream("./tests/data/image1.jpg", "file-from-stream.jpg", {});
@@ -109,9 +129,10 @@ async function testAddFilesToBucket() {
 async function testVersioning() {
   console.log("\n");
   colorLog("testVersioning", Color.TEST);
+  const name = getPrivateBucketName();
   // await createBucket(privateBucket, { versioning: true });
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  await createBucket(name);
+  setSelectedBucket(name);
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   await addFileFromPath("./tests/data/image1.jpg", "file2.jpg", {});
   await addFileFromPath("./tests/data/image1.jpg", "file3.jpg", {});
@@ -128,32 +149,39 @@ async function testVersioning() {
 }
 
 async function testNonExistingUp() {
+  console.log("\n");
+  colorLog("testNonExistingUp", Color.TEST);
+  const name = getPrivateBucketName();
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {}, "imaginary-bucket");
-  await createBucket(privateBucket);
+  await createBucket(name);
   await addFileFromPath("./tests/data/imaginary.jpg", "file1.jpg", {}, privateBucket);
   await addFileFromPath("./tests/data/image3.jpg", "file1.jpg", {}, privateBucket);
-  await deleteBucket(privateBucket);
+  await deleteBucket(name);
 }
 
 async function testNonExistingDown() {
+  console.log("\n");
+  colorLog("testNonExistingDown", Color.TEST);
+  const name = getPrivateBucketName();
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {}, "imaginary-bucket");
   await getPublicURL("imaginary-file.jpg", {}, "imaginary-bucket");
   await getSignedURL("imaginary-file.jpg", "imaginary", {}, "imaginary-bucket");
   await listFiles("imaginary-bucket");
 
-  await createBucket(privateBucket);
+  await createBucket(name);
   await getPublicURL("imaginary-file.jpg", {}, privateBucket);
   await getSignedURL("imaginary-file.jpg", "imaginary", {}, privateBucket);
-  await listFiles(privateBucket);
+  await listFiles(name);
 
-  await deleteBucket(privateBucket);
+  await deleteBucket(name);
 }
 
 async function testDownloadFilesFromBucket() {
   console.log("\n");
   colorLog("testDownloadFilesFromBucket", Color.TEST);
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  const name = getPrivateBucketName();
+  await createBucket(name);
+  setSelectedBucket(name);
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   const origSize = await getFileSize("./tests/data/image1.jpg");
 
@@ -195,8 +223,9 @@ async function testDownloadFilesFromBucket() {
 async function testFilesInBucket() {
   console.log("\n");
   colorLog("testFilesInBucket", Color.TEST);
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  const name = getPrivateBucketName();
+  await createBucket(name);
+  setSelectedBucket(name);
 
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   await fileExists("file1.jpg");
@@ -223,19 +252,15 @@ async function testFilesInBucket() {
 async function testPresignedUploadURL() {
   console.log("\n");
   colorLog("testPresignedUploadURL", Color.TEST);
-  if (type === StorageType.AZURE) {
-    const bucketName = `test-${Date.now()}`
-    await createBucket(bucketName);
-    setSelectedBucket(bucketName);
-  } else {
-    await createBucket(privateBucket);
-    setSelectedBucket(privateBucket);
-  }
+  const name = getPrivateBucketName();
+  await createBucket(name);
+  setSelectedBucket(name);
   await getPresignedUploadURL("test.jpg");
-  return;
   await getPresignedUploadURL("test.jpg", {
     expires: 1,
+    waitUntilExpired: true
   });
+
   if (type === StorageType.S3) {
     await getPresignedUploadURL("test.jpg", {
       conditions: [
@@ -256,8 +281,9 @@ async function testPresignedUploadURL() {
 async function testClearBucket() {
   console.log("\n");
   colorLog("testClearBucket", Color.TEST);
-  await createBucket(privateBucket);
-  setSelectedBucket(privateBucket);
+  const name = getPrivateBucketName();
+  await createBucket(name);
+  setSelectedBucket(name);
   await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
   await addFileFromPath("./tests/data/image2.jpg", "file2.jpg", {});
   await listFiles();
@@ -272,7 +298,7 @@ async function run() {
   await init(type);
 
   // select the tests you want to run by (un)commenting out
-  // await testPublicBucket();
+  await testPublicBucket();
   // await testPrivateBucket();
   // await testDeleteBucket();
   // await testAddFilesToBucket();
@@ -281,7 +307,7 @@ async function run() {
   // await testNonExistingDown();
   // await testDownloadFilesFromBucket();
   // await testFilesInBucket();
-  await testPresignedUploadURL();
+  // await testPresignedUploadURL();
   // await testClearBucket();
 
   // clean up

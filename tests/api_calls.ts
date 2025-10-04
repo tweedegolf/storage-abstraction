@@ -130,9 +130,9 @@ export async function cleanup() {
 }
 
 export async function waitABit(millis = 100): Promise<void> {
+    colorLog("waitABit", Color.MESSAGE, `${millis}ms`);
     return new Promise((resolve) => {
         setTimeout(() => {
-            colorLog("waitABit", Color.MESSAGE, `${millis}ms`);
             resolve();
         }, millis);
     });
@@ -331,27 +331,33 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
     if (r.error === null) {
         const url = (r.value as any).url;
         const form = new FormData();
-        const data = fs.readFileSync("./tests/data/image1.jpg")
-        form.append("file", new Blob([data]));
-        let headers = {};
+        const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+        let response: Response = new Response();
+
+        if (options.waitUntilExpired === true) {
+            await waitABit(3 * 1000); // milliseconds
+        }
 
         if (type === StorageType.S3) {
             Object.entries((r.value as any).fields).forEach(([field, value]) => {
                 form.append(field, value as string);
-                console.log(field, value)
+            });
+            form.append("file", new Blob([fileBuffer]), fileName);
+
+            response = await fetch(url, {
+                method: 'POST',
+                body: form,
             });
         } else if (type === StorageType.AZURE) {
-            headers = {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': 'multipart/form-data',
-            }
+            response = await fetch(url, {
+                method: 'PUT',
+                body: fileBuffer,
+                headers: {
+                    'x-ms-blob-type': 'BlockBlob',
+                    // 'Content-Type': 'multipart/form-data',
+                }
+            });
         }
-
-        const response = await fetch(url, {
-            method: 'PUT',
-            body: form,
-            headers,
-        });
 
         if (!response.ok) {
             const text = await response.text();

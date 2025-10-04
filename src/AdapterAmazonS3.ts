@@ -653,7 +653,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
-    let expires = 18000; // 5 * 60 * 60
+    let expires = 300; // 5 * 60
     if (typeof options.expires !== "undefined") {
       expires = Number.parseInt(options.expires, 10);
     }

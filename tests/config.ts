@@ -64,7 +64,7 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
       applicationKey: process.env.B2_APPLICATION_KEY,
     };
   } else if (t === StorageType.AZURE) {
-    const test: number = 3;
+    const test: number = 6;
     if (test === 1) {
       // azurite local
       config = {
