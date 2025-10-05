@@ -13,7 +13,7 @@
     "@azure/identity": "^4.12.0",
     "@azure/storage-blob": "^12.28.0",
     "@google-cloud/storage": "^7.17.1",
-    "@nichoth/backblaze-b2": "^1.7.1",
+    "backblaze-b2": "^1.7.1",
     "glob": "^11.0.3",
     "minio": "^8.0.6",
     "rimraf": "^6.0.1"

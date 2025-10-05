@@ -1,3 +1,5 @@
+import fs from "fs";
+import crypto from "crypto";
 import { Readable, Stream, Writable } from "stream";
 import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "../src/types/result";
 import { Options } from "../src/types/general";
@@ -90,4 +92,24 @@ export function logResult(label: string, result: ResultObjectType, msg?: string,
   } else {
     console.log(`\x1b[96m[${label}]\x1b[0m`, msg || result.value, options || "");
   }
+}
+
+export const getSha1ForFile = (filePath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha1');
+    const stream = fs.createReadStream(filePath);
+
+    stream.on('data', (chunk) => {
+      hash.update(chunk);
+    });
+
+    stream.on('end', () => {
+      const sha1sum = hash.digest('hex');
+      resolve(sha1sum);
+    });
+
+    stream.on('error', (err) => {
+      reject(err);
+    });
+  });
 }

@@ -4,13 +4,14 @@ import { glob } from "glob";
 import { rimraf } from "rimraf";
 import { Readable } from "stream";
 import { Options, StreamOptions, StorageType } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
   ResultObjectStringArray,
 } from "./types/result";
@@ -308,6 +309,10 @@ export class AdapterLocal extends AbstractAdapter {
     } catch (e) {
       return { value: false, error: null };
     }
+  }
+
+  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+    return { value: {}, error: null }
   }
 
   // public

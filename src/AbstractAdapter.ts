@@ -153,7 +153,7 @@ export abstract class AbstractAdapter implements IAdapter {
     }
 
     if (checkIfExists === true) {
-      const { value, error } = await this.bucketExists(name);
+      const { value, error } = await this._bucketExists(name);
       if (error !== null) {
         return { value: null, error }
       } else if (value === false) {

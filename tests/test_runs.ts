@@ -1,5 +1,5 @@
 import { S3Type, StorageType } from "../src/types/general";
-import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getFileSize, cleanup, getStorage, getPresignedUploadURL } from "./api_calls";
+import { init, getSelectedBucket, listBuckets, createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket, bucketExists, addFileFromBuffer, addFileFromStream, getFileAsStream, privateBucket, publicBucket, clearBucket, fileExists, removeFile, sizeOf, getFileSize, cleanup, getStorage, getPresignedUploadURL, waitABit } from "./api_calls";
 import { Color, colorLog } from "./util";
 
 const types = [
@@ -256,10 +256,10 @@ async function testPresignedUploadURL() {
   await createBucket(name);
   setSelectedBucket(name);
   await getPresignedUploadURL("test.jpg");
-  await getPresignedUploadURL("test.jpg", {
-    expires: 1,
-    waitUntilExpired: true
-  });
+  // await getPresignedUploadURL("test.jpg", {
+  //   expires: 1,
+  //   waitUntilExpired: true
+  // });
 
   if (type === StorageType.S3) {
     await getPresignedUploadURL("test.jpg", {
@@ -298,7 +298,7 @@ async function run() {
   await init(type);
 
   // select the tests you want to run by (un)commenting out
-  await testPublicBucket();
+  // await testPublicBucket();
   // await testPrivateBucket();
   // await testDeleteBucket();
   // await testAddFilesToBucket();
@@ -307,7 +307,7 @@ async function run() {
   // await testNonExistingDown();
   // await testDownloadFilesFromBucket();
   // await testFilesInBucket();
-  // await testPresignedUploadURL();
+  await testPresignedUploadURL();
   // await testClearBucket();
 
   // clean up

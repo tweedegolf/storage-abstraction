@@ -859,7 +859,7 @@ The way presigned upload URLs are implemented in the various cloud storage servi
 #### Amazon S3
 
 ```typescript
-const r = await storage.getPresignedUploadURL("test.jpg", {
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
   expires: 3600, // seconds, default 300
   conditions: [
     ["starts-with", "$key", fileName], // only upload if the name of the uploaded file matches
@@ -877,7 +877,7 @@ const r = await storage.getPresignedUploadURL("test.jpg", {
 
 // Process the result in Node 18+ using Node native fetch and FormData:
 
-const {url, fields} = r;
+const {value: {url, fields}} = r;
 const form = new FormData();
 const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
 
@@ -896,7 +896,7 @@ response = await fetch(url, {
 #### Azure Blob
 
 ```typescript
-const r = await storage.getPresignedUploadURL("test.jpg", {
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
   expires: 3600, // seconds, default 300
   starts: -60, // seconds, default -60
   permissions: {
@@ -908,7 +908,9 @@ const r = await storage.getPresignedUploadURL("test.jpg", {
 
 // Process the result in Node 18+ using Node native fetch PUT:
 
-const {url} = r;
+const {value: {url}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
 response = await fetch(url, {
     method: 'PUT',
     body: fileBuffer,
@@ -918,6 +920,31 @@ response = await fetch(url, {
 });
 
 ```
+
+#### Backblaze B2 (native API)
+
+```typescript
+const r = await storage.getPresignedUploadURL("the-bucket");
+
+// Process the result in Node 18+ using Node native fetch POST:
+
+const {value: {url, authToken}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+response = await fetch(url, {
+    method: 'POST',
+    body: fileBuffer,
+    headers: {
+        "Authorization": authToken,
+        "X-Bz-File-Name": "test.jpg", 
+        "Content-Type": "image/jpeg",
+        "X-Bz-Content-Sha1": crypto.createHash("sha1").update(fileBuffer).digest("hex"),
+        "X-Bz-Info-Author": "sab-test" // anything goes
+    }
+});
+
+```
+> [!NOTE] You don't have to specify a filename and there are not options available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable.
 
 ### getPublicURL
 

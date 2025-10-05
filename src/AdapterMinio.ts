@@ -2,13 +2,14 @@ import * as Minio from "minio";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigMinio } from "./types/adapter_minio";
@@ -343,6 +344,10 @@ export class AdapterMinio extends AbstractAdapter {
     } catch (e) {
       return { value: false, error: null };
     }
+  }
+
+  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+    return { value: {}, error: null }
   }
 
   // public

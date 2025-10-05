@@ -1,5 +1,5 @@
 import fs from "fs";
-import B2 from "@nichoth/backblaze-b2";
+import B2 from "backblaze-b2";
 
 import { Options, StreamOptions, StorageType, IAdapter } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
@@ -9,6 +9,7 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2";
@@ -30,7 +31,7 @@ const getConfigError = (): string => "string";
 const getServiceClient = (): any => { }; // eslint-disable-line
 
 const createBucket = async (name: string, options: Options = {}): Promise<ResultObject> => {
-  const error = validateName(name);
+  const error = validateName(name, StorageType.B2);
   if (error !== null) {
     return { value: null, error };
   }
@@ -86,6 +87,14 @@ const getSignedURL = async (...args:
 ): Promise<ResultObject> => {
   return Promise.resolve({ value: "url", error: null });
 }
+
+const getPresignedUploadURL = async (...args:
+  [bucketName: string, fileName: string, options?: Options] |
+  [fileName: string, options?: Options]
+): Promise<ResultObjectObject> => {
+  return { value: {}, error: null }
+}
+
 
 const removeFile = async (...args:
   [bucketName: string, fileName: string] |
@@ -161,6 +170,7 @@ const adapter: IAdapter = {
   getFileAsStream,
   getPublicURL,
   getSignedURL,
+  getPresignedUploadURL,
   removeFile,
   listFiles,
   sizeOf,

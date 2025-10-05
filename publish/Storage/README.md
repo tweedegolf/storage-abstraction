@@ -36,11 +36,12 @@ Documentation|Adapter API|Introspective API|Storage API
 &nbsp; [c. Adapter class](README.md#adapter-class)|[addFileFromPath](README.md#addfilefrompath)||
 &nbsp; [d. Adapter function](README.md#adapter-function)|[addFileFromBuffer](README.md#addfilefrombuffer)||
 &nbsp; [e. Register your adapter](README.md#register-your-adapter)|[addFileFromStream](README.md#addfilefromstream) ||
-&nbsp; [f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|[getPublicURL](README.md#getpublicurl)||
-[5. Tests](README.md#tests)|[getSignedURL](README.md#getsignedurl) ||
-[6. Example application](README.md#example-application)|[getFileAsStream](README.md#getfileasstream)||
-[7. Questions and requests](README.md#questions-and-requests)|[removeFile](README.md#removefile)||
-&nbsp;|[sizeOf](README.md#sizeof)||
+&nbsp; [f. Adding your adapter code to this package](README.md#adding-your-adapter-code-to-this-package)|[getPresignedUploadURL](README.md#getPresignedUploadURL)||
+[5. Tests](README.md#tests)|[getPublicURL](README.md#getpublicurl)||
+[6. Example application](README.md#example-application)|[getSignedURL](README.md#getsignedurl) ||
+[7. Questions and requests](README.md#questions-and-requests)|[getFileAsStream](README.md#getfileasstream)||
+&nbsp;|[removeFile](README.md#removefile)||
+|[sizeOf](README.md#sizeof)||
 
 <!--end_toc-->
 
@@ -533,6 +534,12 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 >[!NOTE]
 > Both Cloudflare R2 and Cubbit do not provide a way to check if a bucket is public. You have to check this in the respective web consoles.
 
+>[!NOTE]
+> If you are connected to Azure using a SAS token this method will return an error: "This request is not authorized to perform this operation using this permission."
+> Please use any of the other ways to login to Azure if you want to use this method. 
+
+
+
 ### bucketExists
 
 ```typescript
@@ -816,6 +823,102 @@ This method is particularly handy when you want to store files while they are be
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
+### getPresignedUploadURL
+
+```typescript
+getPresignedUploadURL(  
+  [bucketName: string, fileName: string, options?: Options] |
+  [fileName: string, options?: Options]
+): Promise<ResultObjectObject>;
+```
+Options:
+
+```typescript
+type Options = {
+  starts?: number,
+  expires?: number,
+  [id: string]: any,
+}
+```
+
+return type:
+
+```typescript
+export interface ResultObject {
+  value: { url: string, [id: string]: any, } | null;
+  error: string | null;
+}
+```
+
+Returns a presigned upload URL that you can use to upload a file without having to log in to the cloud storage service.
+
+The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+The way presigned upload URLs are implemented in the various cloud storage services differs a lot. Below code examples for the supported services:
+
+#### Amazon S3
+
+```typescript
+const r = await storage.getPresignedUploadURL("test.jpg", {
+  expires: 3600, // seconds, default 300
+  conditions: [
+    ["starts-with", "$key", fileName], // only upload if the name of the uploaded file matches
+    ["content-length-range", 1, 25 * 1024 * 1024], // limit upload to 25MB
+    ["starts-with", "$Content-Type", "image/"], // only allow images
+    { "x-amz-server-side-encryption": "AES256" },
+    { "acl": "private" }, // if using ACLs
+    ["starts-with", "$x-amz-meta-user", ""], // force certain metadata fields
+  ],
+  fields: [
+    "x-amz-server-side-encryption": "AES256",
+    acl: "bucket-owner-full-control",
+  ] 
+});
+
+// Process the result in Node 18+ using Node native fetch and FormData:
+
+const {url, fields} = r;
+const form = new FormData();
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+Object.entries((r.value as any).fields).forEach(([field, value]) => {
+    form.append(field, value as string);
+});
+form.append("file", new Blob([fileBuffer]), fileName);
+
+response = await fetch(url, {
+    method: 'POST',
+    body: form,
+});
+
+```
+
+#### Azure Blob
+
+```typescript
+const r = await storage.getPresignedUploadURL("test.jpg", {
+  expires: 3600, // seconds, default 300
+  starts: -60, // seconds, default -60
+  permissions: {
+    add: true,
+    create: true,
+    write: true,
+  }
+});
+
+// Process the result in Node 18+ using Node native fetch PUT:
+
+const {url} = r;
+response = await fetch(url, {
+    method: 'PUT',
+    body: fileBuffer,
+    headers: {
+        'x-ms-blob-type': 'BlockBlob',
+    }
+});
+
+```
+
 ### getPublicURL
 
 ```typescript
@@ -906,6 +1009,9 @@ Returns a signed url of the file.
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 Because the local adapter does not support signed urls, this method behaves exactly the same as `getPublicURL` when using the local adapter, see previous section.
+
+> [!NOTE] If you are connected to Azure using the password less option or with a SAS token you get an error: "Can only generate the SAS when the client is initialized with a shared key credential"
+> Please use any of the other ways to login to Azure if you want to use this method.
 
 ### getFileAsStream
 

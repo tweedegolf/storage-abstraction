@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
-import { IAdapter, Options, S3Type, StorageType } from "../src/types/general";
+import { IAdapter, Options, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
-import { Color, colorLog, logResult, saveFile } from "./util";
+import { Color, colorLog, logResult, saveFile, getSha1ForFile } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
 import dotenv from "dotenv";
@@ -56,41 +57,45 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
         await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
     });
 
-    const r = await storage.listBuckets();
-    // logResult("listBuckets", r);
-    if (r.error !== null) {
-        colorLog("init", Color.ERROR, r.error)
-        process.exit(1);
-    }
+    /*
+        const r = await storage.listBuckets();
+        // logResult("listBuckets", r);
+        if (r.error !== null) {
+            colorLog("init", Color.ERROR, r.error)
+            process.exit(1);
+        }
+    */
 
     /**
      * Don't delete buckets at Minio, Backblaze S3 and Cubbit
      * - Minio: because there exist a zillion buckets in the public test environment
      * - Backblaze S3 and Cubbit: because you can only make a bucket public using the web console
     */
-    const buckets = r.value;
-    if (type !== StorageType.MINIO && type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
-        if (buckets !== null && buckets.length > 0) {
-            const r = await deleteAllBuckets(buckets, storage);
-            if (r.error !== null) {
-                process.exit(1);
+    /*
+        const buckets = r.value;
+        if (type !== StorageType.MINIO && type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
+            if (buckets !== null && buckets.length > 0) {
+                const r = await deleteAllBuckets(buckets, storage);
+                if (r.error !== null) {
+                    process.exit(1);
+                }
+            }
+        } else {
+            // only delete the private bucket
+            const r = await storage.bucketExists(privateBucket);
+            if (r.value === true) {
+                const r2 = await storage.deleteBucket(privateBucket);
+                logResult("init::deleteBucket", r2);
+                if (r2.error !== null) {
+                    process.exit(1);
+                }
             }
         }
-    } else {
-        // only delete the private bucket
-        const r = await storage.bucketExists(privateBucket);
-        if (r.value === true) {
-            const r2 = await storage.deleteBucket(privateBucket);
-            logResult("init::deleteBucket", r2);
-            if (r2.error !== null) {
-                process.exit(1);
-            }
-        }
-    }
-
-    // if (type === StorageType.AZURE) {
-    //     await waitABit(10000);
-    // }
+    
+        // if (type === StorageType.AZURE) {
+        //     await waitABit(10000);
+        // }
+    */
     return Promise.resolve(bucketName);
 }
 
@@ -328,7 +333,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
         await storage.getPresignedUploadURL(bucketName, fileName, options);
     logResult("getPresignedUploadURL", r, "ok"), options;
 
-    if (r.error === null) {
+    if (r.value !== null) {
         const url = (r.value as any).url;
         const form = new FormData();
         const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
@@ -355,6 +360,29 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                 headers: {
                     'x-ms-blob-type': 'BlockBlob',
                     // 'Content-Type': 'multipart/form-data',
+                }
+            });
+        } else if (type === StorageType.B2) {
+            /*
+            curl \
+              -H "Authorization: $UPLOAD_AUTHORIZATION_TOKEN" \
+              -H "X-Bz-File-Name: $(basename $FILE_TO_UPLOAD)" \
+              -H "Content-Type: $MIME_TYPE" \
+              -H "X-Bz-Content-Sha1: $SHA1_OF_FILE" \
+              -H "X-Bz-Info-Author: unknown" \
+              --data-binary "@$FILE_TO_UPLOAD" \
+              $UPLOAD_URL
+            */
+            // const sha1 = await getSha1ForFile("./tests/data/image1.jpg");
+            response = await fetch(url, {
+                method: 'POST',
+                body: fileBuffer,
+                headers: {
+                    "Authorization": r.value.authToken,
+                    "X-Bz-File-Name": "test1.jpg",
+                    "Content-Type": "image/jpeg",
+                    "X-Bz-Content-Sha1": crypto.createHash("sha1").update(fileBuffer).digest("hex"),
+                    "X-Bz-Info-Author": "sab"
                 }
             });
         }
@@ -394,6 +422,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
 export function getStorage(): Storage {
     return storage;
 }
+
 
 // export async function getFileInfo(fileName: string, bucketName: string) {
 //     const info = await (storage.getAdapter() as AdapterAmazonS3).getFileInfo(

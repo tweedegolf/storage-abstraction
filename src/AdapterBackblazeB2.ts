@@ -1,14 +1,14 @@
-import B2 from "@nichoth/backblaze-b2";
+import B2 from "backblaze-b2"
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
-  ResultObjectKeyValue,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import {
@@ -80,7 +80,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     try {
       const { data: _data } = await this._client.authorize();
-      // console.log(_data.allowed.capabilities);
       this.authorized = true;
       return { value: "ok", error: null };
     } catch (e) {
@@ -101,14 +100,13 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  private async getUploadUrl(bucketId: string): Promise<ResultObjectKeyValue> {
+  private async getUploadUrl(bucketId: string): Promise<ResultObjectObject> {
     try {
-      const { data } = await this._client.getUploadUrl(bucketId);
+      const { data } = await this._client.getUploadUrl({ bucketId });
       if (typeof data.uploadUrl === "undefined") {
         return { value: null, error: data.message };
       }
-      const { uploadUrl, authorizationToken: uploadAuthToken } = data;
-      return { value: { uploadUrl, uploadAuthToken }, error: null };
+      return { value: data, error: null };
     } catch (e) {
       return { value: null, error: e.message };
     }
@@ -126,6 +124,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     try {
       let data: any; //eslint-disable-line
+      // const options: ListFileVersionsOpts = {
       const options = {
         bucketId: bucket.id,
         maxFileCount: numFiles,
@@ -188,16 +187,24 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
     const { error } = await this.authorize();
-    if (options.public !== true && typeof options.bucketType === "undefined") {
-      options.bucketType = "allPrivate";
-    } else {
+    let bucketType = "allPrivate"
+    if (typeof options.bucketType !== "undefined") {
+      bucketType = options.bucketType;
+    } else if (options.public === true) {
       options.bucketType = "allPublic"
+    }
+
+    if (bucketType !== "allPrivate" && bucketType !== "allPublic") {
+      return {
+        value: null, error: `${bucketType} is not valid: bucket type must be either 'allPrivate' or 'allPublic'`
+      }
     }
 
     try {
       const { data } = await this._client.createBucket({
         ...options,
         bucketName: name,
+        bucketType,
       });
       const { bucketType: _type } = data;
       // console.log(_type);
@@ -228,9 +235,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (data2.error !== null) {
       return { value: null, error: data2.error };
     }
-    const {
-      value: { uploadUrl, uploadAuthToken },
-    } = data2;
+    const { uploadUrl, authorizationToken } = data2 as any;
 
     let { options } = params;
     if (typeof options === "undefined") {
@@ -251,7 +256,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
       const { data: _data } = await this._client.uploadFile({
         uploadUrl,
-        uploadAuthToken,
+        uploadAuthToken: authorizationToken,
         fileName: targetPath,
         data: buffer,
         ...options,
@@ -353,10 +358,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         fileNamePrefix: fileName,
         validDurationInSeconds: options.expiresIn
       });
-      const { data: { authorizationToken: token } } = r;
+      const { data: { authorizationToken } } = r;
 
       return {
-        value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}?Authorization=${token}`,
+        value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}?Authorization=${authorizationToken}`,
         error: null,
       };
     } catch (e) {
@@ -406,7 +411,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           files
             .filter((f: FileB2) => f.name === fileName)
             .map(({ id: fileId, name: fileName }) => {
-              console.log(fileName, fileId);
+              // console.log(fileName, fileId);
               return this._client.deleteFileVersion({
                 fileId,
                 fileName,
@@ -421,7 +426,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   protected async _clearBucket(name: string): Promise<ResultObject> {
-    const { error } = await this.authorize();
+    const { value, error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
     }
@@ -540,11 +545,27 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
-    const { error, value } = await this.sizeOf(bucketName, fileName);
+    const { error, value } = await this._sizeOf(bucketName, fileName);
     if (error === null) {
       return { value: true, error: null };
     } else {
       return { value: false, error: null };
+    }
+  }
+
+  protected async _getPresignedUploadURL(bucketName: string, _fileName: string, _options: Options): Promise<ResultObjectObject> {
+    try {
+      const data = await this.getBucket(bucketName);
+      if (data.error !== null) {
+        return { value: null, error: data.error };
+      }
+      const {
+        value: { id: bucketId },
+      } = data;
+      const { value: { uploadUrl, authorizationToken } } = await this.getUploadUrl(bucketId) as any;
+      return { value: { url: uploadUrl, authToken: authorizationToken }, error: null }
+    } catch (e) {
+      return { value: null, error: e.message }
     }
   }
 
