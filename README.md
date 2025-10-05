@@ -488,7 +488,8 @@ export type ResultObjectBuckets = {
 
 Returns an array with the names of all buckets in the storage.
 
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+> [!NOTE]
+> dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
 ### listFiles
 
@@ -944,7 +945,8 @@ response = await fetch(url, {
 });
 
 ```
-> [!NOTE] You don't have to specify a filename and there are not options available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable.
+> [!NOTE] 
+> You don't have to specify a filename and there are not options available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable
 
 ### getPublicURL
 
@@ -1037,7 +1039,8 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 
 Because the local adapter does not support signed urls, this method behaves exactly the same as `getPublicURL` when using the local adapter, see previous section.
 
-> [!NOTE] If you are connected to Azure using the password less option or with a SAS token you get an error: "Can only generate the SAS when the client is initialized with a shared key credential"
+> [!NOTE] 
+> If you are connected to Azure using the password less option or with a SAS token you get an error: "Can only generate the SAS when the client is initialized with a shared key credential"
 > Please use any of the other ways to login to Azure if you want to use this method.
 
 ### getFileAsStream
@@ -1419,7 +1422,8 @@ You can make the created bucket public using the web console of Cloudflare and B
 
 ## Example application
 
-> NOTE: not yet updated to API 2.0!
+> [!NOTE]
+> not yet updated to API 2.0!
 
 A simple application that shows how you can use the storage abstraction package can be found in [this repository](https://github.com/tweedegolf/storage-abstraction-example). It uses and Ts.ED and TypeORM and it consists of both a backend and a frontend.
 
