@@ -971,6 +971,7 @@ response = await fetch(url, {
         "Content-Type": "application/octet-stream" // content type must match with the value specified above!
     }
 });
+```
 
 ### getPublicURL
 
@@ -979,7 +980,6 @@ getPublicURL(...args:
   [bucketName: string, fileName: string, options?: Options] |
   [fileName: string, options?: Options]
 ): Promise<ResultObject>;
-```
 
 param type:
 
