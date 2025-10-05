@@ -343,6 +343,7 @@ Also implemented as getter:
 const storage = new Storage(config);
 console.log(storage.type);
 ```
+<hr>
 
 ### getSelectedBucket
 
@@ -358,6 +359,7 @@ Also implemented as getter:
 const storage = new Storage(config);
 console.log(storage.bucketName);
 ```
+<hr>
 
 ### setSelectedBucket
 
@@ -389,6 +391,8 @@ const storage = new Storage(config);
 storage.bucketName = "the-buck-2";
 ```
 
+<hr>
+
 ### getConfiguration
 
 ```typescript
@@ -404,6 +408,8 @@ const storage = new Storage(config);
 console.log(storage.config);
 ```
 
+<hr>
+
 ### getConfigurationError
 
 ```typescript
@@ -418,6 +424,8 @@ Also implemented as getter:
 const storage = new Storage(config);
 console.log(storage.configError);
 ```
+
+<hr>
 
 ### getServiceClient
 
@@ -491,6 +499,8 @@ Returns an array with the names of all buckets in the storage.
 > [!NOTE]
 > dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
 
+<hr>
+
 ### listFiles
 
 ```typescript
@@ -513,6 +523,8 @@ export type ResultObjectFiles = {
 Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file. If the call succeeds the `value` key will hold an array of tuples.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+<hr>
 
 ### bucketIsPublic
 
@@ -539,7 +551,7 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 > If you are connected to Azure using a SAS token this method will return an error: "This request is not authorized to perform this operation using this permission."
 > Please use any of the other ways to login to Azure if you want to use this method. 
 
-
+<hr>
 
 ### bucketExists
 
@@ -559,6 +571,8 @@ export type ResultObjectBoolean = {
 Check whether a bucket exists or not. If the call succeeds the `value` key will hold a boolean value.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+<hr>
 
 ### fileExists
 
@@ -581,6 +595,8 @@ export type ResultObjectBoolean = {
 Check whether a file exists or not. If the call succeeds the `value` key will hold a boolean value.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+<hr>
 
 ### createBucket
 
@@ -651,6 +667,8 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 > [!NOTE] 
 > dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket. Additionally you may not have the rights to create a public bucket.
 
+<hr>
+
 ### clearBucket
 
 ```typescript
@@ -671,6 +689,8 @@ Removes all files in the bucket. If the call succeeds the `value` key will hold 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
+
+<hr>
 
 ### deleteBucket
 
@@ -695,6 +715,8 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
+<hr>
+
 ### addFile
 
 ```typescript
@@ -704,6 +726,8 @@ addFile(params: FilePathParams | FileStreamParams | FileBufferParams): Promise<R
 A generic method that is called under the hood when you call `addFileFromPath`, `addFileFromStream` or `addFileFromBuffer`. It adds a file to a bucket and accepts the file in 3 different ways; as a path, a stream or a buffer, dependent on the type of `params`.
 
 There is no difference between using this method or one of the 3 specific methods. For details about the `params` object and the return value see the documentation below.
+
+<hr>
 
 ### addFileFromPath
 
@@ -742,6 +766,8 @@ If the call is successful `value` will hold the string "ok".
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+
+<hr>
 
 ### addFileFromBuffer
 
@@ -783,6 +809,8 @@ This method is particularly handy when you want to move uploaded files directly 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
+<hr>
+
 ### addFileFromStream
 
 ```typescript
@@ -823,6 +851,8 @@ This method is particularly handy when you want to store files while they are be
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+
+<hr>
 
 ### getPresignedUploadURL
 
@@ -973,6 +1003,8 @@ response = await fetch(url, {
 });
 ```
 
+<hr>
+
 ### getPublicURL
 
 ```typescript
@@ -1030,6 +1062,8 @@ const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true
 // bucketName/fileName.jpg
 ```
 
+<hr>
+
 ### getSignedURL
 
 ```typescript
@@ -1066,6 +1100,8 @@ Because the local adapter does not support signed urls, this method behaves exac
 > [!NOTE] 
 > If you are connected to Azure using the password less option or with a SAS token you get an error: "Can only generate the SAS when the client is initialized with a shared key credential"
 > Please use any of the other ways to login to Azure if you want to use this method.
+
+<hr>
 
 ### getFileAsStream
 
@@ -1114,6 +1150,8 @@ getFileAsReadable("bucket-name", "image.png", { end: 1999 }); // &rarr; reads fi
 getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads file from byte 2000
 ```
 
+<hr>
+
 ### removeFile
 
 ```typescript
@@ -1141,6 +1179,8 @@ If the bucket can not be found an error will be returned: `No bucket ${bucketnam
 If the call succeeds the `value` key will hold the string "ok".
 
 If the file can not be found `value` will be: `No file ${filename} found in bucket ${bucketname}`. 
+
+<hr>
 
 ### sizeOf
 
@@ -1181,6 +1221,8 @@ const a = s.adapter;
 ```
 
 Returns the instance of the Adapter class that this Storage instance is currently using to access a storage service.
+
+<hr>
 
 ### <a name='switchadapter'></a>switchAdapter
 
