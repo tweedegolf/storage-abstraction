@@ -11,6 +11,7 @@ publish/**/src
 publish/**/dist/**/*.js
 publish/**/dist/**/*.js.map
 publish/**/dist/**/*.d.ts
+tests/data/image3.jpg
 tests_local
 tests/test_directory
 __azurite**
