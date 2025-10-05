@@ -235,7 +235,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (data2.error !== null) {
       return { value: null, error: data2.error };
     }
-    const { uploadUrl, authorizationToken } = data2 as any;
+    const { value: { uploadUrl, authorizationToken } } = data2;
 
     let { options } = params;
     if (typeof options === "undefined") {
@@ -349,14 +349,15 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         value: { id: bucketId },
       } = data;
 
-      if (typeof options.expiresIn !== "number") {
-        options.expiresIn = 604800
+      let expiresIn = 300; // 5 * 60
+      if (typeof options.expiresIn !== "undefined") {
+        expiresIn = Number.parseInt(options.expiresIn, 10);
       }
 
       const r = await this._client.getDownloadAuthorization({
         bucketId,
         fileNamePrefix: fileName,
-        validDurationInSeconds: options.expiresIn
+        validDurationInSeconds: expiresIn
       });
       const { data: { authorizationToken } } = r;
 

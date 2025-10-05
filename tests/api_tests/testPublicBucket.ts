@@ -24,7 +24,7 @@ export async function testPublicBucket(type: string) {
      * Note that this also makes files in a private bucket publicly accessible!
      */
     const options = type === S3Type.CUBBIT ? { ACL: "public-read" } : {};
-    await addFileFromPath("./tests/data/image2.jpg", 'file2.jpg', options);
+    await addFileFromPath("./tests/data/image2.jpg", 'file2.jpg', options)
     await listFiles();
     await getPublicURL('file2.jpg');
     await getPublicURL('file2.jpg', { noCheck: true });

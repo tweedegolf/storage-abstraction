@@ -1,4 +1,4 @@
-import fs, { Stats } from "fs";
+import fs from "fs";
 import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
@@ -11,6 +11,7 @@ import {
   ResultObjectStream,
 } from "./types/result";
 import { validateName } from "./util";
+import { FileHandle } from "fs/promises";
 
 export abstract class AbstractAdapter implements IAdapter {
   protected _type = "abstract-adapter";
@@ -345,10 +346,11 @@ export abstract class AbstractAdapter implements IAdapter {
       params.options = options === null ? {} : options as object;
     }
 
+    let fh: FileHandle = null;
     if (typeof (params as FilePathParams).origPath === "string") {
       const f = (params as FilePathParams).origPath;
       try {
-        await fs.promises.open(f);
+        fh = await fs.promises.open(f);
       } catch (e) {
         return { value: null, error: e.message };
       }
@@ -357,7 +359,11 @@ export abstract class AbstractAdapter implements IAdapter {
       (params as FileStreamParams).stream = readStream;
     }
 
-    return this._addFile(params);
+    const r2 = await this._addFile(params);
+    if (fh !== null) {
+      fh.close();
+    }
+    return r2;
   }
 
   public async getFileAsStream(...args:

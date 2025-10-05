@@ -296,13 +296,13 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     try {
       let expires = new Date();
       let offset = 5 * 60;
-      if (typeof (options as any).expires !== "undefined") {
-        offset = Number.parseInt(options.expires, 10);
+      if (typeof options.expiresIn !== "undefined") {
+        offset = Number.parseInt(options.expiresIn, 10);
       }
       expires.setSeconds(expires.getSeconds() + offset);
 
       let version: "v2" | "v4" = "v4";
-      if (typeof (options as any).version !== "undefined") {
+      if (typeof options.version !== "undefined") {
         version = options.version;
       }
       if (version !== "v2" && version !== "v4") {
@@ -310,7 +310,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       }
 
       let action: "write" | "read" | "delete" | "resumable" = "write";
-      if (typeof (options as any).action !== "undefined") {
+      if (typeof options.action !== "undefined") {
         action = options.version;
       }
       if (action !== "write" && action !== "read" && action !== "delete" && action !== "resumable") {
@@ -318,7 +318,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       }
 
       let contentType = "application/octet-stream";
-      if (typeof (options as any).contentType !== "undefined") {
+      if (typeof options.contentType !== "undefined") {
         contentType = options.contentType;
       }
 
@@ -328,7 +328,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
         expires,
         contentType,
       };
-      console.log("contentType", contentType);
+      // console.log("contentType", contentType);
       const [url] = await this._client.bucket(bucketName).file(fileName).getSignedUrl(config);
       return { value: { url }, error: null }
     } catch (e) {

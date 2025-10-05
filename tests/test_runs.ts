@@ -1,6 +1,6 @@
 import { S3Type, StorageType } from "../src/types/general";
 import { init, cleanup, getStorage, waitABit } from "./api_calls";
-import { testPresignedUploadURL } from "./api_tests/testPresignedUploadURL";
+import { testAddFilesToBucket, testClearBucket, testDeleteBucket, testDownloadFilesFromBucket, testFilesInBucket, testNonExistingDown, testNonExistingUp, testPresignedUploadURL, testPrivateBucket, testPublicBucket, testVersioning } from "./api_tests/";
 
 const types = [
   StorageType.LOCAL, // 0
@@ -28,7 +28,7 @@ async function run() {
   await init(type);
 
   // select the tests you want to run by (un)commenting out
-  // await testPublicBucket(type);
+  await testPublicBucket(type);
   // await testPrivateBucket(type);
   // await testDeleteBucket(type);
   // await testAddFilesToBucket(type);
@@ -37,11 +37,11 @@ async function run() {
   // await testNonExistingDown(type);
   // await testDownloadFilesFromBucket(type);
   // await testFilesInBucket(type);
-  await testPresignedUploadURL(type);
+  // await testPresignedUploadURL(type);
   // await testClearBucket(type);
 
   // clean up
-  await cleanup();
+  // await cleanup();
 }
 
 run();

@@ -390,15 +390,15 @@ export class AdapterAzureBlob extends AbstractAdapter {
     try {
       let starts = new Date();
       let offset = 1 * -60;
-      if (typeof options.starts !== "undefined") {
-        offset = Number.parseInt(options.starts, 10);
+      if (typeof options.startsAt !== "undefined") {
+        offset = Number.parseInt(options.startsAt, 10);
       }
       starts.setSeconds(starts.getSeconds() + offset);
 
       let expires = new Date();
       offset = 5 * 60;
-      if (typeof options.expires !== "undefined") {
-        offset = Number.parseInt(options.expires, 10);
+      if (typeof options.expiresIn !== "undefined") {
+        offset = Number.parseInt(options.expiresIn, 10);
       }
       expires.setSeconds(expires.getSeconds() + offset);
 

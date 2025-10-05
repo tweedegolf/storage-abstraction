@@ -866,8 +866,7 @@ Options:
 
 ```typescript
 type Options = {
-  starts?: number,
-  expires?: number,
+  expiresIn?: number,
   [id: string]: any,
 }
 ```
@@ -891,7 +890,7 @@ The way presigned upload URLs are implemented in the various cloud storage servi
 
 ```typescript
 const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
-  expires: 3600, // seconds, default 300
+  expiresIn: 3600, // seconds, default 300
   conditions: [
     ["starts-with", "$key", fileName], // only upload if the name of the uploaded file matches
     ["content-length-range", 1, 25 * 1024 * 1024], // limit upload to 25MB
@@ -928,8 +927,8 @@ response = await fetch(url, {
 
 ```typescript
 const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
-  expires: 3600, // seconds, default 300
-  starts: -60, // seconds, default -60
+  expiresIn: 3600, // seconds, default 300
+  startsAt: -60, // seconds, default -60
   permissions: {
     add: true,
     create: true,
@@ -976,14 +975,14 @@ response = await fetch(url, {
 
 ```
 > [!NOTE] 
-> You don't have to specify a filename and there are not options available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable
+> You don't have to specify a filename and there are no options such as `expiresIn` available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable
 
 
 #### Google Cloud Storage
 
 ```typescript
 const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
-  expires: 3600,    // seconds, default 300
+  expiresIn: 3600,    // seconds, default 300
   version: "v4",    // either "v2" or "v4", defaults to "v4"
   action: "write",  // either "write", "read", "delete" or "resumable", defaults to "write"
   contentType: "application/octet-stream", // set content type to match your file type or use the default "application/octet-stream" that works in any case
@@ -999,6 +998,27 @@ response = await fetch(url, {
     body: fileBuffer,
     headers: {
         "Content-Type": "application/octet-stream" // content type must match with the value specified above!
+    }
+});
+```
+
+#### Minio
+
+```typescript
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
+  expiresIn: 3600,    // seconds, default 300
+});
+
+// Process the result in Node 18+ using Node native fetch PUT:
+
+const {value: {url}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+response = await fetch(url, {
+    method: 'PUT',
+    body: fileBuffer,
+    headers: {
+        "Content-Type": "application/octet-stream"
     }
 });
 ```

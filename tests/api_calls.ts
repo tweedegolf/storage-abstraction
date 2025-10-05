@@ -232,6 +232,7 @@ export async function addFileFromStream(origPath: string, targetPath: string, op
         targetPath,
         options,
     });
+    stream.close();
     logResult("addFileFromStream", r), options;
 }
 
@@ -249,6 +250,7 @@ export async function getFileAsStream(fileName: string, destName: string, option
         );
         const writeStream = fs.createWriteStream(filePath);
         await saveFile(r.value, writeStream);
+        writeStream.close();
     }
 }
 
@@ -300,9 +302,11 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
             const fileType = await fileTypeFromBuffer(buffer);
             if (!response.ok) {
                 colorLog("checkSignedURL", Color.ERROR, `HTTP status: ${response.status}`, options);
+                return;
             } else {
                 if (fileType?.ext !== "jpg") {
                     colorLog("checkSignedURL", Color.ERROR, "not an image, probably an error message", options);
+                    return;
                 } else {
                     colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
                 }
@@ -314,7 +318,9 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
                 "test_directory",
                 outputFile
             );
-            fs.createWriteStream(filePath).write(buffer);
+            const stream = fs.createWriteStream(filePath);
+            stream.write(buffer);
+            stream.close();
         }
     }
 }
@@ -376,7 +382,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                 body: fileBuffer,
                 headers: {
                     "Authorization": r.value.authToken,
-                    "X-Bz-File-Name": "test1.jpg",
+                    "X-Bz-File-Name": "test.jpg",
                     "Content-Type": "image/jpeg",
                     "X-Bz-Content-Sha1": crypto.createHash("sha1").update(fileBuffer).digest("hex"),
                     "X-Bz-Info-Author": "sab"
@@ -391,6 +397,14 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     // "Content-Type": "image/jpeg"
                 }
             });
+        } else if (type === StorageType.MINIO) {
+            response = await fetch(url, {
+                method: 'PUT',
+                body: fileBuffer,
+                headers: {
+                    "Content-Type": "application/octet-stream"
+                }
+            });
         }
 
         if (!response.ok) {
@@ -399,6 +413,14 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
         } else {
             colorLog("checkPresignedUploadURL", Color.OK, "presigned upload url is valid!", options);
             await listFiles(typeof bucketName !== "undefined" ? bucketName : storage.getSelectedBucket() as string);
+            // check size
+            await getFileAsStream("test.jpg", "presigned_upload_test.jpg");
+            const size = await getFileSize("./tests/test_directory/presigned_upload_test.jpg");
+            if (size !== fs.statSync('./tests/data/image1.jpg').size) {
+                colorLog("checkPresignedUploadURL:size", Color.ERROR, "file size does not match!")
+            } else {
+                colorLog("checkPresignedUploadURL:size", Color.OK, "file has been uploaded successfully")
+            }
         }
     }
 

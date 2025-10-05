@@ -653,9 +653,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   }
 
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
-    let expires = 300; // 5 * 60
-    if (typeof options.expires !== "undefined") {
-      expires = Number.parseInt(options.expires, 10);
+    let expiresIn = 300; // 5 * 60
+    if (typeof options.expiresIn !== "undefined") {
+      expiresIn = Number.parseInt(options.expiresIn, 10);
     }
 
     let conditions: Array<Conditions> = [
@@ -682,7 +682,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const data = await createPresignedPost(this._client, {
         Bucket: bucketName,
         Key: fileName,
-        Expires: expires,
+        Expires: expiresIn,
         Conditions: conditions,
         Fields: fields,
       });

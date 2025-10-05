@@ -262,9 +262,12 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    const expires = options.expiresIn; // defaults to one week if 0, undefined or not a number
+    let expiresIn = 300; // 5 * 60
+    if (typeof options.expiresIn !== "undefined") {
+      expiresIn = Number.parseInt(options.expiresIn, 10);
+    }
     try {
-      const url = await this._client.presignedUrl("GET", bucketName, fileName, expires);
+      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiresIn);
       return { value: url, error: null };
     } catch (e) {
       return { value: null, error: e };
@@ -347,7 +350,16 @@ export class AdapterMinio extends AbstractAdapter {
   }
 
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
-    return { value: {}, error: null }
+    try {
+      let expires = 300; // 5 * 60
+      if (typeof options.expires !== "undefined") {
+        expires = Number.parseInt(options.expires, 10);
+      }
+      const url = await this._client.presignedPutObject(bucketName, fileName, expires);
+      return { value: { url }, error: null }
+    } catch (e) {
+      return { value: null, error: e.message }
+    }
   }
 
   // public

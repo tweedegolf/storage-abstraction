@@ -312,7 +312,7 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
-    return { value: {}, error: null }
+    return { value: { url: "" }, error: null }
   }
 
   // public
