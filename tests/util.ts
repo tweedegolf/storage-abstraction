@@ -2,7 +2,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { Readable, Stream, Writable } from "stream";
 import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "../src/types/result";
-import { Options } from "../src/types/general";
+import { Options, StorageType } from "../src/types/general";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
@@ -112,4 +112,23 @@ export const getSha1ForFile = (filePath: string): Promise<string> => {
       reject(err);
     });
   });
+}
+
+export const privateBucket = "sab-test-private";
+export const publicBucket = "sab-test-public";
+
+export function getPrivateBucketName(type: string) {
+  // Azure needs more time to delete a bucket
+  if (type === StorageType.AZURE) {
+    return `${privateBucket}-${Date.now()}`
+  }
+  return privateBucket;
+}
+
+export function getPublicBucketName(type: string) {
+  // Azure needs more time to delete a bucket
+  if (type === StorageType.AZURE) {
+    return `${publicBucket}-${Date.now()}`
+  }
+  return publicBucket;
 }

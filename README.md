@@ -948,6 +948,30 @@ response = await fetch(url, {
 > [!NOTE] 
 > You don't have to specify a filename and there are not options available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable
 
+
+#### Google Cloud Storage
+
+```typescript
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
+  expires: 3600,    // seconds, default 300
+  version: "v4",    // either "v2" or "v4", defaults to "v4"
+  action: "write",  // either "write", "read", "delete" or "resumable", defaults to "write"
+  contentType: "application/octet-stream", // set content type to match your file type or use the default "application/octet-stream" that works in any case
+});
+
+// Process the result in Node 18+ using Node native fetch PUT:
+
+const {value: {url}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+response = await fetch(url, {
+    method: 'PUT',
+    body: fileBuffer,
+    headers: {
+        "Content-Type": "application/octet-stream" // content type must match with the value specified above!
+    }
+});
+
 ### getPublicURL
 
 ```typescript

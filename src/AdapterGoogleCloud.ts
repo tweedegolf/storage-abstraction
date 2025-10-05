@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { Storage as GoogleCloudStorage } from "@google-cloud/storage";
+import { GetSignedUrlConfig, Storage as GoogleCloudStorage } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, StorageType } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
@@ -293,7 +293,47 @@ export class AdapterGoogleCloud extends AbstractAdapter {
   }
 
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
-    return { value: {}, error: null }
+    try {
+      let expires = new Date();
+      let offset = 5 * 60;
+      if (typeof (options as any).expires !== "undefined") {
+        offset = Number.parseInt(options.expires, 10);
+      }
+      expires.setSeconds(expires.getSeconds() + offset);
+
+      let version: "v2" | "v4" = "v4";
+      if (typeof (options as any).version !== "undefined") {
+        version = options.version;
+      }
+      if (version !== "v2" && version !== "v4") {
+        return { value: null, error: `${version} is not valid: version must be either 'v2' or 'v4'` }
+      }
+
+      let action: "write" | "read" | "delete" | "resumable" = "write";
+      if (typeof (options as any).action !== "undefined") {
+        action = options.version;
+      }
+      if (action !== "write" && action !== "read" && action !== "delete" && action !== "resumable") {
+        return { value: null, error: `${action} is not valid: version must be either 'write', 'read', 'delete' or 'resumable'` }
+      }
+
+      let contentType = "application/octet-stream";
+      if (typeof (options as any).contentType !== "undefined") {
+        contentType = options.contentType;
+      }
+
+      const config: GetSignedUrlConfig = {
+        version,
+        action,
+        expires,
+        contentType,
+      };
+      console.log("contentType", contentType);
+      const [url] = await this._client.bucket(bucketName).file(fileName).getSignedUrl(config);
+      return { value: { url }, error: null }
+    } catch (e) {
+      return { value: null, error: e.message }
+    }
   }
 
   //public

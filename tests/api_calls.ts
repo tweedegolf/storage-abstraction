@@ -5,16 +5,13 @@ import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
 import { IAdapter, Options, StorageType } from "../src/types/general";
 import { getConfig } from "./config";
-import { Color, colorLog, logResult, saveFile, getSha1ForFile } from "./util";
+import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
 import dotenv from "dotenv";
 
 let type: string;
 let storage: Storage;
-
-export const privateBucket = "sab-test-private";
-export const publicBucket = "sab-test-public";
 
 dotenv.config();
 
@@ -47,7 +44,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     await cleanup();
     type = _type;
     storage = new Storage(getConfig(type));
-    bucketName = storage.config.bucketName || bucketName || privateBucket;
+    bucketName = storage.config.bucketName || bucketName || getPrivateBucketName(type);
     colorLog("init::type", Color.MESSAGE, storage.getType());
     colorLog("init::config", Color.MESSAGE, storage.getConfig());
     // colorLog("init::serviceClient", Color.MESSAGE, storage.getServiceClient());
@@ -383,6 +380,15 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     "Content-Type": "image/jpeg",
                     "X-Bz-Content-Sha1": crypto.createHash("sha1").update(fileBuffer).digest("hex"),
                     "X-Bz-Info-Author": "sab"
+                }
+            });
+        } else if (type === StorageType.GCS) {
+            response = await fetch(url, {
+                method: 'PUT',
+                body: fileBuffer,
+                headers: {
+                    "Content-Type": "application/octet-stream"
+                    // "Content-Type": "image/jpeg"
                 }
             });
         }
