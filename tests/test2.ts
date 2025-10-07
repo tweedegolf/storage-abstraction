@@ -1,5 +1,5 @@
 import { Storage } from "../src/Storage";
-import { IAdapter, StorageType } from "../src/types/general";
+import { IAdapter, Provider } from "../src/types/general";
 import { getConfig } from "./config";
 import { timeout } from "./util";
 
@@ -10,15 +10,18 @@ function colorLog(s: string): string {
 }
 
 const types = [
-  StorageType.LOCAL, // 0
-  StorageType.S3, // 1
-  StorageType.B2, // 2
-  StorageType.GCS, // 3
-  StorageType.AZURE, // 4
-  StorageType.MINIO, // 5
-  "S3-Cubbit", // 6
-  "S3-Cloudflare-R2", // 7
-  "S3-Backblaze-B2", // 8
+  Provider.LOCAL, // 0
+  Provider.S3, // 1
+  Provider.B2, // 2
+  Provider.GCS, // 3
+  Provider.AZURE, // 4
+  Provider.MINIO, // 5
+  Provider.CUBBIT, // 6
+  Provider.CLOUDFLARE, // 7
+  Provider.B2_S3, // 8
+  // "S3-Cubbit", // 6
+  // "S3-Cloudflare-R2", // 7
+  // "S3-Backblaze-B2", // 8
 ];
 
 let index = 0;

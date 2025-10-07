@@ -96,26 +96,39 @@ When you create a new `Storage` instance the `config` argument is used to instan
 
 Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
 
-The configuration must at least specify a type; the type is used to determine which adapter should be created. Note that the adapters are not included in the Storage Abstraction package so you have to add them to you project's package.json before you can use them.
+The configuration must at least specify a provider; the provider is used to determine which adapter should be created. Note that the adapters are not included in the Storage Abstraction package so you have to add them to you project's package.json before you can use them.
 
-The value of the type is one of the enum members of `StorageType`:
+The value of the type is one of the enum members of `Provider`:
 
 ```typescript
-enum StorageType {
-  LOCAL = "local",
-  GCS = "gcs",
-  S3 = "s3",
-  B2 = "b2",
-  AZURE = "azure",
-  MINIO = "minio",
+export enum Provider {
+  NONE = "none",    // initial value for the abstract adapter, don't use this one
+  LOCAL = "local",  // local testing adapter
+  GCS = "gcs",      // Google Cloud Storage
+  GS = "gs",        // Google Cloud Storage
+  S3 = "s3",        // Amazon S3
+  AWS = "aws",      // Amazon S3
+  AZURE = "azure",  // Azure Storage Blob
+  B2 = "b2",              // BackBlaze B2 using native API with AdapterBackblazeB2
+  BACKBLAZE = "b2",       // BackBlaze B2 using native API with AdapterBackblazeB2
+  B2_S3 = "b2-s3",        // Backblaze B2 using S3 API with AdapterAmazonS3
+  BACKBLAZE_S3 = "b2-s3", // Backblaze B2 using S3 API with AdapterAmazonS3
+  MINIO = "minio",        // Minio using native API with AdapterMinio
+  MINIO_S3 = "minio-s3",  // Minio using S3 API with AdapterAmazonS3
+  CUBBIT = "cubbit",      // Cubbit uses S3 API with AdapterAmazonS3  
+  R2 = "r2",              // Cloudflare R2 uses S3 API with AdapterAmazonS3    
+  CLOUDFLARE = "r2",      // Cloudflare R2 uses S3 API with AdapterAmazonS3   
 }
 ```
 
-The Storage instance is only interested in the type so it checks if the type is valid and then passes the rest of the configuration on to the adapter constructor. It is the responsibility of the adapter to perform further checks on the configuration. I.e. if all mandatory values are available such as credentials or an endpoint.
+The Storage instance is only interested in the provider so it checks if the provider is valid and then passes the rest of the configuration on to the adapter constructor. It is the responsibility of the adapter to perform further checks on the configuration. I.e. if all mandatory values are available such as credentials or an endpoint.
+
+>[!NOTE]
+> Although there are 15 members in the enum, there are only 6 adapters supporting 7 different cloud storage providers. The providers Minio and Backblaze B2 have both a native API and support for the S3 API.
 
 ### Configuration object
 
-To enforce that the configuration object contains a `type` key, it expects the configuration object to be of type `StorageAdapterConfig`
+To enforce that the configuration object contains a `provider` key, it expects the configuration object to be of type `StorageAdapterConfig`
 
 ```typescript
 interface AdapterConfig {
@@ -124,11 +137,11 @@ interface AdapterConfig {
 }
 
 interface StorageAdapterConfig extends AdapterConfig {
-  type: string;
+  provider: Provider;
 }
 ```
 
-Besides the mandatory key `type` one or more keys may be mandatory or optional dependent on the type of adapter; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
+Besides the mandatory key `provider` one or more keys may be mandatory or optional dependent on the provider; for instance keys for passing credentials such as `keyFilename` for Google Storage or `accessKeyId` and `secretAccessKey` for Amazon S3, and keys for further configuring the storage service such as `StoragePipelineOptions` for Azure Blob.
 
 ### Configuration URL
 
@@ -140,16 +153,25 @@ const u = "protocol://username:password@host:port/path/to/object?region=auto&opt
 
 For most storage services `username` and `password` are the credentials, such as key id and secret but this is not mandatory; you may use these values for other purposes.
 
-The protocol part of the url defines the type of storage:
+The protocol part of the url defines the storage provider and should be one of the members of the `Provider` type:
 
 - `local://` &rarr; local storage
 - `minio://` &rarr; MinIO
+- `minio-s3://` &rarr; MinIO S3 API
 - `b2://` &rarr; Backblaze B2
+- `backblaze://` &rarr; Backblaze B2
+- `b2-s3://` &rarr; Backblaze B2 S3 API
+- `backblaze-s3://` &rarr; Backblaze B2 S3 API
 - `s3://` &rarr; Amazon S3
+- `aws://` &rarr; Amazon S3
 - `gcs://` &rarr; Google Cloud
+- `gs://` &rarr; Google Cloud
 - `azure://` &rarr; Azure Blob Storage
+- `r2://` &rarr; Cloudflare R2 Storage
+- `cloudflare://` &rarr; Cloudflare R2 Storage
+- `cubbit://` &rarr; Cubbit Storage
 
-These values match the values in the enum `StorageType` shown above.
+Note that some providers can be addressed by multiple protocols, e.g. for Amazon S3 you can use both `aws` and `s3`.
 
 <!--
 ```typescript
@@ -158,7 +180,7 @@ const c = "azure://account_name:account_key@bucket_name?maxTries=10";
 
 // internally the config url is converted to a config object:
 const c1 = {
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   accountName: "account_name",
   accountKey: "account_key",
   bucketName: "bucket_name",
@@ -198,7 +220,7 @@ const c = {
 };
 ```
 
-The components of the url represent config parameters and because not all adapters require the same and/or the same number of parameters,not all components of the url are mandatory. When you leave certain components out, it may result in an invalid url according to the [official specification](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) but the parser will parse them anyway.
+The components of the url represent config parameters and because not all adapters require the same and/or the same number of parameters, not all components of the url are mandatory. When you leave certain components out, it may result in an invalid url according to the [official specification](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) but the parser will parse them anyway.
 
 ```typescript
 // port and bucket
@@ -310,14 +332,18 @@ Note that if the bucket does not exist it will not be created automatically for 
 
 ## Adapters
 
-The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the cloud storage by translating generic API methods calls to storage specific calls. The adapters are not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
+The adapters are the key part of this library; where the `Storage` is merely a thin wrapper, adapters perform the actual actions on the cloud storage by translating generic API methods calls to storage provider specific calls. The adapters are not part of the Storage Abstraction package; you need to install the separately. See [How it works](#how-it-works).
 
 A description of the available adapters; what the configuration objects and URLs look like and what the default values are can be found in the README of the adapter packages:
 
-| type          | npm command                                  | readme                                                                                                    |
+| provider          | npm command                                  | readme                                                                                                    |
 | ------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Local storage | `npm i @tweedegolf/sab-adapter-local`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-local?activeTab=readme)        |
 | Amazon S3     | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
+| Cubbit        | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
+| Cloudflare R2 | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
+| MinIO S3      | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
+| Backblaze B2 S3 | `npm i @tweedegolf/sab-adapter-amazon-s3`  | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
 | Google Cloud  | `npm i @tweedegolf/sab-adapter-google-cloud` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud?activeTab=readme) |
 | Azure Blob    | `npm i @tweedegolf/sab-adapter-azure-blob`   | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob?activeTab=readme)   |
 | MinIO         | `npm i @tweedegolf/sab-adapter-minio`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio?activeTab=readme)        |
@@ -325,24 +351,28 @@ A description of the available adapters; what the configuration objects and URLs
 
 You can also add more adapters yourself very easily, see [below](#adding-more-adapters).
 
+>[!NOTE] 
+> Note that the Amazon S3 adapter also supports Cubbit, Cloudflare R2 and the S3 API of Backblaze B2 and Minio.
+
 ## Adapter Introspect API
 
 These methods can be used to introspect the adapter. Unlike all other methods, these methods do not return a promise but return a value immediately.
 
-### getType
+### getProvider
 
 ```typescript
-getType(): string;
+getProvider(): Provider;
 ```
 
-Returns the type of storage, value is one of the enum `StorageType`.
+Returns the cloud storage provider, value is a member of the enum `Provider`.
 
 Also implemented as getter:
 
 ```typescript
 const storage = new Storage(config);
-console.log(storage.type);
+console.log(storage.provider);
 ```
+<hr>
 
 ### getSelectedBucket
 
@@ -358,6 +388,7 @@ Also implemented as getter:
 const storage = new Storage(config);
 console.log(storage.bucketName);
 ```
+<hr>
 
 ### setSelectedBucket
 
@@ -389,6 +420,8 @@ const storage = new Storage(config);
 storage.bucketName = "the-buck-2";
 ```
 
+<hr>
+
 ### getConfiguration
 
 ```typescript
@@ -404,6 +437,8 @@ const storage = new Storage(config);
 console.log(storage.config);
 ```
 
+<hr>
+
 ### getConfigurationError
 
 ```typescript
@@ -418,6 +453,8 @@ Also implemented as getter:
 const storage = new Storage(config);
 console.log(storage.configError);
 ```
+
+<hr>
 
 ### getServiceClient
 
@@ -488,7 +525,10 @@ export type ResultObjectBuckets = {
 
 Returns an array with the names of all buckets in the storage.
 
-> Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+> [!NOTE]
+> dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket.
+
+<hr>
 
 ### listFiles
 
@@ -512,6 +552,8 @@ export type ResultObjectFiles = {
 Returns a list of all files in the bucket; for each file a tuple is returned: the first value is the path and the second value is the size of the file. If the call succeeds the `value` key will hold an array of tuples.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+<hr>
 
 ### bucketIsPublic
 
@@ -538,7 +580,7 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 > If you are connected to Azure using a SAS token this method will return an error: "This request is not authorized to perform this operation using this permission."
 > Please use any of the other ways to login to Azure if you want to use this method. 
 
-
+<hr>
 
 ### bucketExists
 
@@ -558,6 +600,8 @@ export type ResultObjectBoolean = {
 Check whether a bucket exists or not. If the call succeeds the `value` key will hold a boolean value.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+<hr>
 
 ### fileExists
 
@@ -580,6 +624,8 @@ export type ResultObjectBoolean = {
 Check whether a file exists or not. If the call succeeds the `value` key will hold a boolean value.
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
+
+<hr>
 
 ### createBucket
 
@@ -650,6 +696,8 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 > [!NOTE] 
 > dependent on the type of storage and the credentials used, you may need extra access rights for this action. E.g.: sometimes a user may only access the contents of one single bucket and has no rights to create a new bucket. Additionally you may not have the rights to create a public bucket.
 
+<hr>
+
 ### clearBucket
 
 ```typescript
@@ -670,6 +718,8 @@ Removes all files in the bucket. If the call succeeds the `value` key will hold 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
+
+<hr>
 
 ### deleteBucket
 
@@ -694,6 +744,8 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 
 > Note: dependent on the type of storage and the credentials used, you may need extra access rights for this action.
 
+<hr>
+
 ### addFile
 
 ```typescript
@@ -703,6 +755,8 @@ addFile(params: FilePathParams | FileStreamParams | FileBufferParams): Promise<R
 A generic method that is called under the hood when you call `addFileFromPath`, `addFileFromStream` or `addFileFromBuffer`. It adds a file to a bucket and accepts the file in 3 different ways; as a path, a stream or a buffer, dependent on the type of `params`.
 
 There is no difference between using this method or one of the 3 specific methods. For details about the `params` object and the return value see the documentation below.
+
+<hr>
 
 ### addFileFromPath
 
@@ -741,6 +795,8 @@ If the call is successful `value` will hold the string "ok".
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+
+<hr>
 
 ### addFileFromBuffer
 
@@ -781,6 +837,8 @@ This method is particularly handy when you want to move uploaded files directly 
 
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+
+<hr>
 
 ### addFileFromStream
 
@@ -823,6 +881,8 @@ This method is particularly handy when you want to store files while they are be
 >[!NOTE]
 > If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
+<hr>
+
 ### getPresignedUploadURL
 
 ```typescript
@@ -835,8 +895,7 @@ Options:
 
 ```typescript
 type Options = {
-  starts?: number,
-  expires?: number,
+  expiresIn?: number,
   [id: string]: any,
 }
 ```
@@ -859,8 +918,8 @@ The way presigned upload URLs are implemented in the various cloud storage servi
 #### Amazon S3
 
 ```typescript
-const r = await storage.getPresignedUploadURL("test.jpg", {
-  expires: 3600, // seconds, default 300
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
+  expiresIn: 3600, // seconds, default 300
   conditions: [
     ["starts-with", "$key", fileName], // only upload if the name of the uploaded file matches
     ["content-length-range", 1, 25 * 1024 * 1024], // limit upload to 25MB
@@ -877,7 +936,7 @@ const r = await storage.getPresignedUploadURL("test.jpg", {
 
 // Process the result in Node 18+ using Node native fetch and FormData:
 
-const {url, fields} = r;
+const {value: {url, fields}} = r;
 const form = new FormData();
 const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
 
@@ -896,9 +955,9 @@ response = await fetch(url, {
 #### Azure Blob
 
 ```typescript
-const r = await storage.getPresignedUploadURL("test.jpg", {
-  expires: 3600, // seconds, default 300
-  starts: -60, // seconds, default -60
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
+  expiresIn: 3600, // seconds, default 300
+  startsAt: -60, // seconds, default -60
   permissions: {
     add: true,
     create: true,
@@ -908,7 +967,9 @@ const r = await storage.getPresignedUploadURL("test.jpg", {
 
 // Process the result in Node 18+ using Node native fetch PUT:
 
-const {url} = r;
+const {value: {url}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
 response = await fetch(url, {
     method: 'PUT',
     body: fileBuffer,
@@ -919,6 +980,80 @@ response = await fetch(url, {
 
 ```
 
+#### Backblaze B2 (native API)
+
+```typescript
+const r = await storage.getPresignedUploadURL("the-bucket");
+
+// Process the result in Node 18+ using Node native fetch POST:
+
+const {value: {url, authToken}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+response = await fetch(url, {
+    method: 'POST',
+    body: fileBuffer,
+    headers: {
+        "Authorization": authToken,
+        "X-Bz-File-Name": "test.jpg", 
+        "Content-Type": "image/jpeg",
+        "X-Bz-Content-Sha1": crypto.createHash("sha1").update(fileBuffer).digest("hex"),
+        "X-Bz-Info-Author": "sab-test" // anything goes
+    }
+});
+
+```
+> [!NOTE] 
+> You don't have to specify a filename and there are no options such as `expiresIn` available. The Backblaze B2 upload url is standard valid for 24 hours and this isn't customizable
+
+
+#### Google Cloud Storage
+
+```typescript
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
+  expiresIn: 3600,    // seconds, default 300
+  version: "v4",    // either "v2" or "v4", defaults to "v4"
+  action: "write",  // either "write", "read", "delete" or "resumable", defaults to "write"
+  contentType: "application/octet-stream", // set content type to match your file type or use the default "application/octet-stream" that works in any case
+});
+
+// Process the result in Node 18+ using Node native fetch PUT:
+
+const {value: {url}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+response = await fetch(url, {
+    method: 'PUT',
+    body: fileBuffer,
+    headers: {
+        "Content-Type": "application/octet-stream" // content type must match with the value specified above!
+    }
+});
+```
+
+#### Minio
+
+```typescript
+const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
+  expiresIn: 3600,    // seconds, default 300
+});
+
+// Process the result in Node 18+ using Node native fetch PUT:
+
+const {value: {url}} = r;
+const fileBuffer = fs.readFileSync("./tests/data/image1.jpg");
+
+response = await fetch(url, {
+    method: 'PUT',
+    body: fileBuffer,
+    headers: {
+        "Content-Type": "application/octet-stream"
+    }
+});
+```
+
+<hr>
+
 ### getPublicURL
 
 ```typescript
@@ -926,7 +1061,6 @@ getPublicURL(...args:
   [bucketName: string, fileName: string, options?: Options] |
   [fileName: string, options?: Options]
 ): Promise<ResultObject>;
-```
 
 param type:
 
@@ -965,7 +1099,7 @@ For the local adapter you can use the key `withoutDirectory` in the options obje
 
 ```typescript
 const s = new Storage({
-  type: StorageType.LOCAL,
+  type: Provider.LOCAL,
   directory: "./your_working_dir/sub_dir",
   bucketName: "bucketName",
 });
@@ -976,6 +1110,8 @@ const url1 = getPublicURL("bucketName", "fileName.jpg");
 const url2 = getPublicURL("bucketName", "fileName.jpg", { withoutDirectory: true });
 // bucketName/fileName.jpg
 ```
+
+<hr>
 
 ### getSignedURL
 
@@ -1010,8 +1146,11 @@ The `bucketName` arg is optional; if you don't pass a value the selected bucket 
 
 Because the local adapter does not support signed urls, this method behaves exactly the same as `getPublicURL` when using the local adapter, see previous section.
 
-> [!NOTE] If you are connected to Azure using the password less option or with a SAS token you get an error: "Can only generate the SAS when the client is initialized with a shared key credential"
+> [!NOTE] 
+> If you are connected to Azure using the password less option or with a SAS token you get an error: "Can only generate the SAS when the client is initialized with a shared key credential"
 > Please use any of the other ways to login to Azure if you want to use this method.
+
+<hr>
 
 ### getFileAsStream
 
@@ -1060,6 +1199,8 @@ getFileAsReadable("bucket-name", "image.png", { end: 1999 }); // &rarr; reads fi
 getFileAsReadable("bucket-name", "image.png", { start: 2000 }); // &rarr; reads file from byte 2000
 ```
 
+<hr>
+
 ### removeFile
 
 ```typescript
@@ -1087,6 +1228,8 @@ If the bucket can not be found an error will be returned: `No bucket ${bucketnam
 If the call succeeds the `value` key will hold the string "ok".
 
 If the file can not be found `value` will be: `No file ${filename} found in bucket ${bucketname}`. 
+
+<hr>
 
 ### sizeOf
 
@@ -1122,11 +1265,13 @@ The Storage class has two extra method besides all methods of the `IAdapter` int
 getAdapter(): IAdapter;
 
 // also implemented as getter
-const s = new Storage({type: StorageType.S3})
+const s = new Storage({type: Provider.S3})
 const a = s.adapter;
 ```
 
 Returns the instance of the Adapter class that this Storage instance is currently using to access a storage service.
+
+<hr>
 
 ### <a name='switchadapter'></a>switchAdapter
 
@@ -1168,33 +1313,34 @@ You may also want to add some tests for your adapter and it would be very much a
 
 Follow these steps:
 
-1. Add a new type to the `StorageType` enum in `./src/types/general.ts`
+1. Add a new type to the `Provider` enum in `./src/types/general.ts`
 2. Define a configuration object (and a configuration url if you like)
 3. Write your adapter, make sure it implements all API methods
 4. Register your adapter in `./src/adapters.ts`
 5. Publish your adapter on npm.
-6. You may also want to add the newly supported cloud storage service to the keywords array in the package.json file of the Storage Abstraction storage (note: there 2 package.json file for this package, one in the root folder and another in the publish folder)
+6. You may also want to add the newly supported cloud storage provider to the keywords array in the package.json file of the Storage Abstraction storage (note: there 2 package.json file for this package, one in the root folder and another in the publish folder)
 
 ### Add your storage type
 
-You should add the name of the your type to the enum `StorageType` in `./src/types/general.ts`. It is not mandatory but may be very handy.
+You should add the name of the your type to the enum `Provider` in `./src/types/general.ts`. It is not mandatory but may be very handy.
 
 ```typescript
 // add your type to the enum
-enum StorageType {
+export enum Provider {
   LOCAL = "local",
-  GCS = "gcs", // Google Cloud Storage
-  S3 = "s3", // Amazon S3
-  B2 = "b2", // BackBlaze B2
-  AZURE = "azure", // Microsoft Azure Blob
+  GCS = "gcs",      // Google Cloud Storage
+  S3 = "s3",        // Amazon S3
+  B2 = "b2",        // BackBlaze B2
+  AZURE = "azure",  // Microsoft Azure Blob
   MINIO = "minio",
-  YOUR_TYPE = "yourtype",
+  ...
+  YOUR_PROVIDER = "your-provider",
 }
 ```
 
 ### Define your configuration
 
-A configuration object type should at least contain a key `type`. To enforce this the Storage class expects the config object to be of type `StorageAdapterConfig`:
+A configuration object type should at least contain a key `provider`. To enforce this the Storage class expects the config object to be of type `StorageAdapterConfig`:
 
 ```typescript
 export interface AdapterConfig {
@@ -1203,11 +1349,11 @@ export interface AdapterConfig {
 }
 
 export interface StorageAdapterConfig extends AdapterConfig {
-  type: string;
+  provider: Provider;
 }
 ```
 
-For your custom configuration object you can either choose to extend `StorageAdapterConfig` or `AdapterConfig`. If you choose the latter you can use your adapter standalone without having to provide a redundant key `type`, which is why the configuration object of all existing adapters extend `AdapterConfig`.
+For your custom configuration object you can either choose to extend `StorageAdapterConfig` or `AdapterConfig`. If you choose the latter you can use your adapter standalone without having to specify a redundant key `provider`, which is why the configuration object of all existing adapters extend `AdapterConfig`.
 
 ```typescript
 export interface YourAdapterConfig extends AdapterConfig {
@@ -1216,7 +1362,7 @@ export interface YourAdapterConfig extends AdapterConfig {
 }
 
 const s = new Storage({
-  type: StorageType.YOUR_TYPE, // mandatory for Storage
+  provider: Provider.YOUR_PROVIDER, // mandatory for Storage
   key1: string, // other mandatory or optional key that your adapter need for instantiation
   key2: string,
 }) // works!
@@ -1225,16 +1371,16 @@ const a = new YourAdapter({
   key1: string,
   key2: string,
 
-}) // works because type is not mandatory
+}) // works because provider is not mandatory
 ```
 
-Also your configuration URL should at least contain the type. The name of the type is used for the protocol part of the URL. Upon instantiation the Storage class checks if a protocol is present on the provided URL.
+Also your configuration URL should at least contain the provider. The name of the provider is used for the protocol part of the URL. Upon instantiation the Storage class checks if a protocol is present on the provided URL.
 
 example:
 
 ```typescript
 // your configuration URL
-const u = "yourtype://user:pass@bucket_name?option1=value1&...";
+const u = "your-provider://user:pass@bucket_name?option1=value1&...";
 ```
 
 You can format the configuration URL completely as you like as long as your adapter has an appropriate function to parse it into the configuration object that your adapter expects. If your url follows the standard URL format you don't need to write a parse function, you can import the `parseUrl` function from `./src/util.ts`.
@@ -1392,7 +1538,8 @@ You can make the created bucket public using the web console of Cloudflare and B
 
 ## Example application
 
-> NOTE: not yet updated to API 2.0!
+> [!NOTE]
+> not yet updated to API 2.0!
 
 A simple application that shows how you can use the storage abstraction package can be found in [this repository](https://github.com/tweedegolf/storage-abstraction-example). It uses and Ts.ED and TypeORM and it consists of both a backend and a frontend.
 

@@ -11,10 +11,10 @@ It is also possible to access all the specific functionality of the cloud servic
 If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
 
 ```typescript
-import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
+import { Storage, Provider } from "@tweedegolf/storage-abstraction";
 
 const configuration = {
-  type: StorageType.S3,
+  type: Provider.S3,
 };
 
 const storage = new Storage(configuration);
@@ -26,13 +26,13 @@ console.log(result);
 
 The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses and adapters are completely interchangeable. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
 
-When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
+When you create a Storage instance it checks the mandatory `provider` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
 ## Configuration
 
 The configuration object that you pass to the Storage constructor is forwarded to the constructor of the adapter.
 
-The Storage constructor is only interested in the `type` key of the configuration object, all other keys are necessary for configuring the adapter.
+The Storage constructor is only interested in the `provider` key of the configuration object, all other keys are necessary for configuring the adapter.
 
 The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
 
@@ -71,7 +71,7 @@ Examples with configuration object:
 ```typescript
 // Cubbit S3 compatible
 const s = new Storage({
-  type: StorageType.S3,
+  type: Provider.S3,
   accessKeyId: 'your-key-id'
   secretAccessKey: 'your-secret'
   endpoint: "https://s3.cubbit.eu/",
@@ -79,7 +79,7 @@ const s = new Storage({
 });
 
 const s = new Storage({
-  type: StorageType.S3,
+  type: Provider.S3,
   accessKeyId: 'your-key-id'
   secretAccessKey: 'your-secret'
   endpoint: "https://s3.cubbit.eu/",
@@ -109,7 +109,7 @@ If you use this adapter to interact with the original Amazon S3 service it is po
 
 ```typescript
 // only for Amazon S3
-const s = new Storage({ type: StorageType.S3 });
+const s = new Storage({ type: Provider.S3 });
 // with a config url:
 const s = new Storage("s3://");
 // and even:
@@ -141,7 +141,7 @@ Cloudflare R2, Backblaze B2 and Cubbit are S3 compatible services. You can use t
 
 ```typescript
 const s = new Storage({
-  type: StorageType.S3,
+  type: Provider.S3,
   region: 'auto'
   endpoint: R2_ENDPOINT,
   accessKeyId: R2_ACCESS_KEY,
@@ -168,7 +168,7 @@ You can also set the region using the `AWS_REGION` environment variable.
 
 ```typescript
 const s = new Storage({
-  type: StorageType.S3,
+  type: Provider.S3,
   region: "eu-central-003",
   endpoint: B2_ENDPOINT,
   accessKeyId: B2_APPLICATION_KEY_ID,

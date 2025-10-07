@@ -10,5 +10,4 @@ export interface AdapterConfigAmazonS3 extends AdapterConfig {
   };
   accessKeyId?: string;
   secretAccessKey?: string;
-  provider?: string
 }

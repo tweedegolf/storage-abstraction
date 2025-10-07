@@ -2,21 +2,21 @@ import "jasmine";
 import fs from "fs";
 import path from "path";
 import { Storage } from "../src/Storage";
-import { AdapterConfig, S3Type, StorageType } from "../src/types/general";
+import { AdapterConfig, Provider } from "../src/types/general";
 import { saveFile } from "./util";
 import { Readable } from "stream";
 import { getConfig } from "./config";
 
 const types = [
-  StorageType.LOCAL, // 0
-  StorageType.S3, // 1
-  StorageType.GCS, // 2
-  StorageType.B2, // 3
-  StorageType.AZURE, // 4
-  StorageType.MINIO, // 5
-  S3Type.CUBBIT, // 6
-  S3Type.CLOUDFLARE, // 7
-  S3Type.BACKBLAZE, // 8
+  Provider.LOCAL, // 0
+  Provider.S3, // 1
+  Provider.GCS, // 2
+  Provider.B2, // 3
+  Provider.AZURE, // 4
+  Provider.MINIO, // 5
+  Provider.CUBBIT, // 6
+  Provider.CLOUDFLARE, // 7
+  Provider.BACKBLAZE, // 8
 ];
 
 let index = 0;
@@ -25,7 +25,7 @@ if (process.argv[5]) {
   index = parseInt(process.argv[5], 10);
 }
 const config = getConfig(types[index]);
-// const type = (config as AdapterConfig).type || StorageType.LOCAL;
+// const type = (config as AdapterConfig).type || Provider.LOCAL;
 const type = types[index];
 
 const newBucketName1 = "bucket-test-sab-1";
@@ -54,7 +54,7 @@ function streamToString(stream: Readable) {
 describe(`[testing ${type} storage]`, () => {
   beforeAll(async () => {
     // create a temporary working directory
-    if (type !== StorageType.LOCAL) {
+    if (type !== Provider.LOCAL) {
       await fs.promises
         .stat(path.join(process.cwd(), "tests", "test_directory"))
         .catch(async (e) => {
@@ -127,7 +127,7 @@ describe(`[testing ${type} storage]`, () => {
   it("(5) add file success", async () => {
     let value: null | string;
     let error: null | string;
-    if (storage.getType() === StorageType.S3) {
+    if (storage.getProvider() === Provider.S3) {
       ({ value, error } = await storage.addFileFromPath({
         bucketName,
         origPath: "./tests/data/image1.jpg",
@@ -188,7 +188,7 @@ describe(`[testing ${type} storage]`, () => {
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
     // console.log(type, value, error);
-    if (type === S3Type.BACKBLAZE) {
+    if (type === Provider.BACKBLAZE_S3) {
       // remove file fails if the file doesn't exist in Backblaze
       expect(value).toBeNull();
       expect(error).not.toBeNull();
@@ -227,7 +227,7 @@ describe(`[testing ${type} storage]`, () => {
       process.cwd(),
       "tests",
       "test_directory",
-      `test-${storage.getType()}.jpg`
+      `test-${storage.getProvider()}.jpg`
     );
     const writeStream = fs.createWriteStream(filePath);
 
@@ -248,7 +248,7 @@ describe(`[testing ${type} storage]`, () => {
       process.cwd(),
       "tests",
       "test_directory",
-      `test-${storage.getType()}-part.jpg`
+      `test-${storage.getProvider()}-part.jpg`
     );
     const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg", { end: 2999 });
 
@@ -421,7 +421,7 @@ describe(`[testing ${type} storage]`, () => {
 
   it("(31) delete non-empty bucket", async () => {
     // S3 doesn't allow you to delete a non-empty bucket
-    // if (storage.getType() !== StorageType.S3) {
+    // if (storage.getProvider() !== Provider.S3) {
     // }
     // const { value: v, error: e } = await storage.clearBucket(newBucketName1);
     // console.log(v, e)

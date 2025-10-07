@@ -68,7 +68,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     */
     /*
         const buckets = r.value;
-        if (type !== StorageType.MINIO && type !== S3Type.CLOUDFLARE && type !== S3Type.BACKBLAZE) {
+        if (type !== Provider.MINIO && type !== Provider.CLOUDFLARE && type !== Provider.BACKBLAZE_S3) {
             if (buckets !== null && buckets.length > 0) {
                 const r = await deleteAllBuckets(buckets, storage);
                 if (r.error !== null) {
@@ -87,7 +87,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
             }
         }
     
-        // if (type === StorageType.AZURE) {
+        // if (type === Provider.AZURE) {
         //     await waitABit(10000);
         // }
     */
@@ -100,7 +100,7 @@ export async function deleteAllBuckets(list: Array<string>, storage: IAdapter, d
         const b = list[i];
         /*
         // It is not possible to delete the snapshots bucket on Backblaze!
-        if (type === StorageType.B2 && b.indexOf("b2-snapshots") !== -1) {
+        if (type === Provider.B2 && b.indexOf("b2-snapshots") !== -1) {
             continue;
             }
             const r = await storage.deleteBucket(b);

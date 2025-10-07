@@ -11,10 +11,10 @@ It is also possible to access all the specific functionality of the cloud servic
 If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
 
 ```typescript
-import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
+import { Storage, Provider } from "@tweedegolf/storage-abstraction";
 
 const configuration = {
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   accountName: "yourAccount",
   accountKey: "yourKey",
 };
@@ -28,13 +28,13 @@ console.log(result);
 
 The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses and adapters are completely interchangeable. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
 
-When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
+When you create a Storage instance it checks the mandatory `provider` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
 ## Configuration
 
 The configuration object that you pass to the Storage constructor is forwarded to the constructor of the adapter.
 
-The Storage constructor is only interested in the `type` key of the configuration object, all other keys are necessary for configuring the adapter.
+The Storage constructor is only interested in the `provider` key of the configuration object, all other keys are necessary for configuring the adapter.
 
 The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
 
@@ -71,13 +71,13 @@ Examples with configuration object:
 
 ```typescript
 const s = new Storage({
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   accountName: "your-account-name",
   accountKey: "your-account-key",
 });
 
 const s = new Storage({
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   accountName: "your-account-name",
   accountKey: "your-account-key",
   bucketName: "the-buck"
@@ -85,7 +85,7 @@ const s = new Storage({
 });
 
 const s = new Storage({
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   accountName: "your-account-name",
   sasToken: "your-sas-token",
   blobDomain: "your-blob-domain", // Defaults to blob.core.windows.net
@@ -93,7 +93,7 @@ const s = new Storage({
 });
 
 const s = new Storage({
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   connectionString: "DefaultEndpointsProtocol=http;AccountName=test;AccountKey=test;BlobEndpoint=http://127.0.0.1:10000/test"
 });
 ```
@@ -140,7 +140,7 @@ You can your code with Azurite. I would recommend using the commandline version.
 ```typescript
 // connect to Azurite using the builtin account
 const config = {
-  type: StorageType.AZURE,
+  type: Provider.AZURE,
   bucketName: "test",
   accountName: "devstoreaccount1",
   accountKey: "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==",

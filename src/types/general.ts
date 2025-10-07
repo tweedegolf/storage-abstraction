@@ -11,23 +11,23 @@ import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_p
 
 // add your custom type here
 export enum Provider {
-  NONE = "none", // initial value for the abstract adapter
-  LOCAL = "local",
-  GCS = "gcs", // Google Cloud Storage
-  GS = "gs", // Google Cloud Storage
-  S3 = "s3", // Amazon S3
-  AWS = "aws", // Amazon S3
-  B2 = "b2", // BackBlaze B2
-  AZURE = "azure", // Azure Storage Blob
-  MINIO = "minio",
-  MINIO_S3 = "minio-s3",
-  B2_S3 = "b2-s3",
-  BACKBLAZE_S3 = "b2-s3",
-  CUBBIT = "cubbit",
-  R2 = "r2",
-  CLOUDFLARE = "r2",
+  NONE = "none",    // initial value for the abstract adapter, don't use this one
+  LOCAL = "local",  // local testing adapter
+  GCS = "gcs",      // Google Cloud Storage
+  GS = "gs",        // Google Cloud Storage
+  S3 = "s3",        // Amazon S3
+  AWS = "aws",      // Amazon S3
+  AZURE = "azure",  // Azure Storage Blob
+  B2 = "b2",              // BackBlaze B2 using native API with AdapterBackblazeB2
+  BACKBLAZE = "b2",       // BackBlaze B2 using native API with AdapterBackblazeB2
+  B2_S3 = "b2-s3",        // Backblaze B2 using S3 API with AdapterAmazonS3
+  BACKBLAZE_S3 = "b2-s3", // Backblaze B2 using S3 API with AdapterAmazonS3
+  MINIO = "minio",        // Minio using native API with AdapterMinio
+  MINIO_S3 = "minio-s3",  // Minio using S3 API with AdapterAmazonS3
+  CUBBIT = "cubbit",      // Cubbit uses S3 API with AdapterAmazonS3  
+  R2 = "r2",              // Cloudflare R2 uses S3 API with AdapterAmazonS3    
+  CLOUDFLARE = "r2",      // Cloudflare R2 uses S3 API with AdapterAmazonS3   
 }
-
 export interface AdapterConfig {
   bucketName?: string;
   [id: string]: any; // eslint-disable-line

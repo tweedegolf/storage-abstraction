@@ -1,3 +1,27 @@
+### Provider
+
+`StorageType` has been refactored to `Provider` and you can now specify which S3 compatible provider you want to connect to. This is done because the various S3 compatible providers differ quite a lot in how the S3 API has been implemented.
+
+```typescript
+export enum Provider {
+  NONE = "none",    // initial value for the abstract adapter
+  LOCAL = "local",
+  GCS = "gcs",      // Google Cloud Storage
+  GS = "gs",        // Google Cloud Storage
+  S3 = "s3",        // Amazon S3
+  AWS = "aws",      // Amazon S3
+  B2 = "b2",        // BackBlaze B2
+  AZURE = "azure",  // Azure Storage Blob
+  MINIO = "minio",
+  MINIO_S3 = "minio-s3",  // Minio using AdapterAmazonS3
+  B2_S3 = "b2-s3",        // Backblaze using AdapterAmazonS3
+  BACKBLAZE_S3 = "b2-s3", // Backblaze using AdapterAmazonS3
+  CUBBIT = "cubbit",      // Cubbit uses AdapterAmazonS3  
+  R2 = "r2",              // Cloudflare R2 uses AdapterAmazonS3    
+  CLOUDFLARE = "r2",      // Cloudflare R2 uses AdapterAmazonS3   
+}
+```
+
 ### Versioning
 
 In earlier versions object versioning wasn't implemented in a consistent way. This is because versioning is implemented differently across the support cloud storage platforms. Backblaze B2 uses a form of versioning that cannot be turned off and Azure Blob Storage you cannot enable versioning using the SDK (read the [documentation](https://learn.microsoft.com/en-us/azure/storage/blobs/versioning-enable?tabs=template#enable-blob-versioning) if you want to know how you can enable versioning on a Azure Blob container). Therefor we have decided to remove the support for versioning altogether. Let us know if you disagree or if this decision causes you trouble.
