@@ -2,7 +2,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { Readable, Stream, Writable } from "stream";
 import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "../src/types/result";
-import { Options, StorageType } from "../src/types/general";
+import { Options, Provider } from "../src/types/general";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)
@@ -87,7 +87,9 @@ export type ResultObjectType =
   ResultObjectFiles;
 
 export function logResult(label: string, result: ResultObjectType, msg?: string, options?: Options): void {
-  if (result.error !== null) {
+  if (typeof result === "undefined") {
+    console.log(`\x1b[91m[${label}]\x1b[0m No result!!` || "");
+  } else if (result.error !== null) {
     console.log(`\x1b[91m[${label}]\x1b[0m ${result.error}`, msg || "");
   } else {
     console.log(`\x1b[96m[${label}]\x1b[0m`, msg || result.value, options || "");
@@ -119,7 +121,7 @@ export const publicBucket = "sab-test-public";
 
 export function getPrivateBucketName(type: string) {
   // Azure needs more time to delete a bucket
-  if (type === StorageType.AZURE) {
+  if (type === Provider.AZURE) {
     return `${privateBucket}-${Date.now()}`
   }
   return privateBucket;
@@ -127,7 +129,7 @@ export function getPrivateBucketName(type: string) {
 
 export function getPublicBucketName(type: string) {
   // Azure needs more time to delete a bucket
-  if (type === StorageType.AZURE) {
+  if (type === Provider.AZURE) {
     return `${publicBucket}-${Date.now()}`
   }
   return publicBucket;

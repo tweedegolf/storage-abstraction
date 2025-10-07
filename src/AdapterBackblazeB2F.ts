@@ -1,7 +1,7 @@
 import fs from "fs";
 import B2 from "backblaze-b2";
 
-import { Options, StreamOptions, StorageType, IAdapter } from "./types/general";
+import { Options, StreamOptions, Provider, IAdapter } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -18,20 +18,20 @@ import { parseQueryString, validateName } from "./util";
 
 const getConfig = (): AdapterConfigBackblazeB2 => {
   return {
-    type: StorageType.B2,
+    provider: Provider.B2,
     applicationKeyId: "",
     applicationKey: "",
   };
 };
 
-const getType = (): string => "string";
+const getProvider = (): Provider => Provider.B2;
 
 const getConfigError = (): string => "string";
 
 const getServiceClient = (): any => { }; // eslint-disable-line
 
 const createBucket = async (name: string, options: Options = {}): Promise<ResultObject> => {
-  const error = validateName(name, StorageType.B2);
+  const error = validateName(name, Provider.B2);
   if (error !== null) {
     return { value: null, error };
   }
@@ -131,8 +131,8 @@ const bucketIsPublic = async (bucketName?: string): Promise<ResultObjectBoolean>
 };
 
 const adapter: IAdapter = {
-  get type() {
-    return getType();
+  get provider() {
+    return getProvider();
   },
   get config() {
     return getConfig();
@@ -155,7 +155,7 @@ const adapter: IAdapter = {
   getSelectedBucket(): string {
     return "bucketName";
   },
-  getType,
+  getProvider,
   getConfigError,
   getConfig,
   getServiceClient,

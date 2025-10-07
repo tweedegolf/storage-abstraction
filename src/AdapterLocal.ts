@@ -3,7 +3,7 @@ import path from "path";
 import { glob } from "glob";
 import { rimraf } from "rimraf";
 import { Readable } from "stream";
-import { Options, StreamOptions, StorageType } from "./types/general";
+import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -20,7 +20,7 @@ import { AbstractAdapter } from "./AbstractAdapter";
 import { parseMode, parseUrl } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
-  protected _type = StorageType.LOCAL;
+  protected _provider = Provider.LOCAL;
   protected _config: AdapterConfigLocal;
   protected _configError: string | null = null;
 

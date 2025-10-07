@@ -1,5 +1,5 @@
 import fs from "fs";
-import { AdapterConfig, IAdapter, Options, StreamOptions } from "./types/general";
+import { AdapterConfig, IAdapter, Options, Provider, StreamOptions } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -14,7 +14,7 @@ import { validateName } from "./util";
 import { FileHandle } from "fs/promises";
 
 export abstract class AbstractAdapter implements IAdapter {
-  protected _type = "abstract-adapter";
+  protected _provider: Provider = Provider.NONE;
   protected _config: AdapterConfig | null;
   protected _configError: string | null = null;
   protected _bucketName: string = null;
@@ -22,12 +22,12 @@ export abstract class AbstractAdapter implements IAdapter {
 
   constructor(config: string | AdapterConfig) { }
 
-  get type(): string {
-    return this._type;
+  get provider(): Provider {
+    return this._provider;
   }
 
-  getType(): string {
-    return this.type;
+  getProvider(): Provider {
+    return this.provider;
   }
 
   get config(): AdapterConfig {
@@ -235,7 +235,7 @@ export abstract class AbstractAdapter implements IAdapter {
       name = this._bucketName;
     } else {
       name = arg1 as string;
-      const error = validateName(name as string, this.type);
+      const error = validateName(name as string, this.provider);
       if (error !== null) {
         return { value: null, error };
       }

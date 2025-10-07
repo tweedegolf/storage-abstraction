@@ -1,5 +1,5 @@
 import { URL } from "url";
-import { StorageType } from "./types/general";
+import { Provider } from "./types/general";
 import { ParseUrlResult, ResultObjectNumber } from "./types/result";
 
 /**
@@ -97,7 +97,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
   protocol = url.substring(0, p);
   if (
     checkType === true &&
-    Object.values(StorageType).includes(protocol as StorageType) === false
+    Object.values(Provider).includes(protocol as Provider) === false
   ) {
     return { value: null, error: `"${protocol}" is not a valid storage type` };
   }
@@ -243,7 +243,7 @@ export const validateName = (name: string, type: string): string => {
   if (isBlankString(name)) {
     return "Bucket name can not be an empty string";
   }
-  if (type === StorageType.AZURE && name.indexOf("_") !== -1) {
+  if (type === Provider.AZURE && name.indexOf("_") !== -1) {
     return "Bucket name can not contain undersores";
   }
   return null;

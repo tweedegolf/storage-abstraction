@@ -10,21 +10,22 @@ import {
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_params";
 
 // add your custom type here
-export enum StorageType {
+export enum Provider {
+  NONE = "none", // initial value for the abstract adapter
   LOCAL = "local",
   GCS = "gcs", // Google Cloud Storage
   GS = "gs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
+  AWS = "aws", // Amazon S3
   B2 = "b2", // BackBlaze B2
   AZURE = "azure", // Azure Storage Blob
   MINIO = "minio",
-}
-
-export enum S3Type {
-  AWS = "Amazon",
-  BACKBLAZE = "Backblaze S3",
-  CUBBIT = "Cubbit",
-  CLOUDFLARE = "Cloudflare R2",
+  MINIO_S3 = "minio-s3",
+  B2_S3 = "b2-s3",
+  BACKBLAZE_S3 = "b2-s3",
+  CUBBIT = "cubbit",
+  R2 = "r2",
+  CLOUDFLARE = "r2",
 }
 
 export interface AdapterConfig {
@@ -33,7 +34,7 @@ export interface AdapterConfig {
 }
 
 export interface StorageAdapterConfig extends AdapterConfig {
-  type: string;
+  provider: string;
 }
 export interface Options {
   [id: string]: any; // eslint-disable-line
@@ -61,15 +62,15 @@ export interface IAdapter {
   get serviceClient(): any; // eslint-disable-line
 
   /**
-   * @returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
+   * @returns the storage provide, e.g. 'gcs', 'b2', 'local' etc.
    */
-  getType(): string;
+  getProvider(): Provider;
 
   /**
    * `getType` implemented as getter
    * The adapter type, e.g. 'gcs', 'b2', 'local' etc.
    */
-  get type(): string;
+  get provider(): Provider;
 
   /**
    * Returns configuration settings that you've provided when instantiating as an object.

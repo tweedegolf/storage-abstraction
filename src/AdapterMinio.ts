@@ -1,7 +1,7 @@
 import * as Minio from "minio";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, StorageType } from "./types/general";
+import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -16,7 +16,7 @@ import { AdapterConfigMinio } from "./types/adapter_minio";
 import { parseUrl } from "./util";
 
 export class AdapterMinio extends AbstractAdapter {
-  protected _type = StorageType.MINIO;
+  protected _provider = Provider.MINIO;
   protected _client: Minio.Client;
   protected _configError: string | null = null;
   protected _config: AdapterConfigMinio;

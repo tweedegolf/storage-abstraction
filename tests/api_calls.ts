@@ -3,7 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import { rimraf } from "rimraf";
 import { Storage } from "../src/Storage";
-import { IAdapter, Options, StorageType } from "../src/types/general";
+import { IAdapter, Options, Provider } from "../src/types/general";
 import { getConfig } from "./config";
 import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName } from "./util";
 import { fileTypeFromBuffer } from 'file-type';
@@ -45,7 +45,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     type = _type;
     storage = new Storage(getConfig(type));
     bucketName = storage.config.bucketName || bucketName || getPrivateBucketName(type);
-    colorLog("init::type", Color.MESSAGE, storage.getType());
+    colorLog("init::type", Color.MESSAGE, storage.getProvider());
     colorLog("init::config", Color.MESSAGE, storage.getConfig());
     // colorLog("init::serviceClient", Color.MESSAGE, storage.getServiceClient());
     colorLog("init::selectedBucket", Color.MESSAGE, storage.getSelectedBucket());
@@ -54,14 +54,12 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
         await fs.promises.mkdir(path.join(process.cwd(), "tests", "test_directory"));
     });
 
-    /*
-        const r = await storage.listBuckets();
-        // logResult("listBuckets", r);
-        if (r.error !== null) {
-            colorLog("init", Color.ERROR, r.error)
-            process.exit(1);
-        }
-    */
+    // const r = await storage.listBuckets();
+    // // logResult("listBuckets", r);
+    // if (r.error !== null) {
+    //     colorLog("init", Color.ERROR, r.error)
+    //     process.exit(1);
+    // }
 
     /**
      * Don't delete buckets at Minio, Backblaze S3 and Cubbit
@@ -112,7 +110,7 @@ export async function deleteAllBuckets(list: Array<string>, storage: IAdapter, d
             }
         */
         const r = await storage.deleteBucket(b);
-        if (type === StorageType.B2 && b.indexOf("b2-snapshots") !== -1) {
+        if (type === Provider.B2 && b.indexOf("b2-snapshots") !== -1) {
             colorLog("init::deleteBucket", Color.OK, "Can't delete the snapshots bucket on B2, but that's okay!");
         } else {
             logResult("init::deleteBucket", r, b);
@@ -270,16 +268,31 @@ export async function removeFile(fileName: string, bucketName?: string) {
     logResult("removeFile", r);
 }
 
-export async function getPublicURL(fileName: string, options: Options = {}, bucketName?: string) {
+export async function getPublicURL(fileName: string, dest: string, options: Options = {}, bucketName?: string) {
     const r = typeof bucketName === "undefined" ?
         await storage.getPublicURL(fileName, options) :
         await storage.getPublicURL(bucketName, fileName, options);
-    logResult("getPublicURL", r), options;
-    if (r.value !== null && type !== StorageType.LOCAL) {
+
+    logResult("getPublicURL", r, undefined, options);
+
+    if (r.value !== null && type !== Provider.LOCAL) {
         const response = await fetch(r.value);
         if (!response.ok) {
             colorLog("checkPublicURL", Color.ERROR, `HTTP status: ${response.status}`, options);
         } else {
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const outputFile = `${dest}.jpg`;
+            const filePath = path.join(
+                process.cwd(),
+                "tests",
+                "test_directory",
+                outputFile
+            );
+            const stream = fs.createWriteStream(filePath);
+            stream.write(buffer);
+            stream.close();
+
             colorLog("checkPublicURL", Color.OK, "public url is valid!", options);
         }
     }
@@ -289,9 +302,10 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
     const r = typeof bucketName === "undefined" ?
         await storage.getSignedURL(fileName, options) :
         await storage.getSignedURL(bucketName, fileName, options);
-    logResult("getSignedURL", r), options;
 
-    if (type !== StorageType.LOCAL) {
+    logResult("getSignedURL", r, undefined, options);
+
+    if (type !== Provider.LOCAL) {
         if (r.value !== null) {
             if (options.waitUntilExpired === true) {
                 await waitABit((options.expiresIn * 1000) + 700); // milliseconds
@@ -301,7 +315,7 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
             const buffer = Buffer.from(arrayBuffer);
             const fileType = await fileTypeFromBuffer(buffer);
             if (!response.ok) {
-                colorLog("checkSignedURL", Color.ERROR, `HTTP status: ${response.status}`, options);
+                colorLog("checkSignedURL", Color.ERROR, `HTTP status: ${response.status} `, options);
                 return;
             } else {
                 if (fileType?.ext !== "jpg") {
@@ -311,7 +325,7 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
                     colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
                 }
             }
-            const outputFile = `${dest}.${fileType?.ext}`;
+            const outputFile = `${dest}.${fileType?.ext} `;
             const filePath = path.join(
                 process.cwd(),
                 "tests",
@@ -346,7 +360,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
             await waitABit(3 * 1000); // milliseconds
         }
 
-        if (type === StorageType.S3) {
+        if (type === Provider.S3) {
             Object.entries((r.value as any).fields).forEach(([field, value]) => {
                 form.append(field, value as string);
             });
@@ -356,7 +370,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                 method: 'POST',
                 body: form,
             });
-        } else if (type === StorageType.AZURE) {
+        } else if (type === Provider.AZURE) {
             response = await fetch(url, {
                 method: 'PUT',
                 body: fileBuffer,
@@ -365,7 +379,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     // 'Content-Type': 'multipart/form-data',
                 }
             });
-        } else if (type === StorageType.B2) {
+        } else if (type === Provider.B2) {
             /*
             curl \
               -H "Authorization: $UPLOAD_AUTHORIZATION_TOKEN" \
@@ -388,7 +402,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     "X-Bz-Info-Author": "sab"
                 }
             });
-        } else if (type === StorageType.GCS) {
+        } else if (type === Provider.GCS) {
             response = await fetch(url, {
                 method: 'PUT',
                 body: fileBuffer,
@@ -397,7 +411,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     // "Content-Type": "image/jpeg"
                 }
             });
-        } else if (type === StorageType.MINIO) {
+        } else if (type === Provider.MINIO) {
             response = await fetch(url, {
                 method: 'PUT',
                 body: fileBuffer,
@@ -409,7 +423,8 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
 
         if (!response.ok) {
             const text = await response.text();
-            colorLog("checkPresignedUploadURL", Color.ERROR, `HTTP status: ${response.status} Message: ${text}}`, options);
+            colorLog("checkPresignedUploadURL", Color.ERROR, `HTTP status: ${response.status} Message: ${text}
+        } `, options);
         } else {
             colorLog("checkPresignedUploadURL", Color.OK, "presigned upload url is valid!", options);
             await listFiles(typeof bucketName !== "undefined" ? bucketName : storage.getSelectedBucket() as string);
@@ -441,7 +456,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
 
     // const response = await fetch(url, { method: "PUT" });
     // if (!response.ok) {
-    //     colorLog("checkPresignedUploadURL", Color.ERROR, `HTTP status: ${response.status}`, options);
+    //     colorLog("checkPresignedUploadURL", Color.ERROR, `HTTP status: ${ response.status } `, options);
     // } else {
     //     colorLog("checkPresignedUploadURL", Color.OK, "public url is valid!", options);
     // }

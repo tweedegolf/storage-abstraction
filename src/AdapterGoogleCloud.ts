@@ -1,7 +1,7 @@
 import { Readable } from "stream";
 import { GetSignedUrlConfig, Storage as GoogleCloudStorage } from "@google-cloud/storage";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, StorageType } from "./types/general";
+import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -16,7 +16,7 @@ import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
 import { parseUrl } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
-  protected _type = StorageType.GCS;
+  protected _provider = Provider.GCS;
   protected _config: AdapterConfigGoogleCloud;
   protected _configError: string | null = null;
   protected _client: GoogleCloudStorage;

@@ -1,6 +1,6 @@
 import B2 from "backblaze-b2"
 import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, StorageType } from "./types/general";
+import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -22,7 +22,7 @@ import {
 import { parseUrl } from "./util";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
-  protected _type = StorageType.B2;
+  protected _provider = Provider.B2;
   protected _config: AdapterConfigBackblazeB2;
   protected _configError: string | null = null;
   protected _client: B2 = null;

@@ -1,11 +1,5 @@
 import { AdapterConfig } from "./general";
 
-export enum S3Compatible {
-  Amazon,
-  R2,
-  Backblaze,
-  Cubbit,
-}
 
 export interface AdapterConfigAmazonS3 extends AdapterConfig {
   region?: string;
@@ -16,4 +10,5 @@ export interface AdapterConfigAmazonS3 extends AdapterConfig {
   };
   accessKeyId?: string;
   secretAccessKey?: string;
+  provider?: string
 }

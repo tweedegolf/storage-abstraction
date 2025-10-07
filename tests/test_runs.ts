@@ -1,17 +1,18 @@
-import { S3Type, StorageType } from "../src/types/general";
+import { Provider } from "../src/types/general";
 import { init, cleanup, getStorage, waitABit } from "./api_calls";
 import { testAddFilesToBucket, testClearBucket, testDeleteBucket, testDownloadFilesFromBucket, testFilesInBucket, testNonExistingDown, testNonExistingUp, testPresignedUploadURL, testPrivateBucket, testPublicBucket, testVersioning } from "./api_tests/";
 
 const types = [
-  StorageType.LOCAL, // 0
-  StorageType.S3, // 1
-  StorageType.B2, // 2
-  StorageType.GCS, // 3
-  StorageType.AZURE, // 4
-  StorageType.MINIO, // 5
-  S3Type.CUBBIT, // 6
-  S3Type.CLOUDFLARE, // 7
-  S3Type.BACKBLAZE, // 8
+  Provider.LOCAL, // 0
+  Provider.S3, // 1
+  Provider.B2, // 2
+  Provider.GCS, // 3
+  Provider.AZURE, // 4
+  Provider.MINIO, // 5
+  Provider.CUBBIT, // 6
+  Provider.CLOUDFLARE, // 7
+  Provider.B2_S3, // 8
+  Provider.MINIO_S3, // 9
 ];
 
 let index = 0;
@@ -27,11 +28,14 @@ async function run() {
   // always run init first!
   await init(type);
 
+  // const r2 = await getStorage().deleteBucket("sab-test-public");
+  // console.log(r2)
+
   // select the tests you want to run by (un)commenting out
-  await testPublicBucket(type);
+  // await testPublicBucket(type);
   // await testPrivateBucket(type);
   // await testDeleteBucket(type);
-  // await testAddFilesToBucket(type);
+  await testAddFilesToBucket(type);
   // await testVersioning(type);
   // await testNonExistingUp(type);
   // await testNonExistingDown(type);
@@ -39,6 +43,7 @@ async function run() {
   // await testFilesInBucket(type);
   // await testPresignedUploadURL(type);
   // await testClearBucket(type);
+
 
   // clean up
   // await cleanup();

@@ -9,7 +9,7 @@ import {
 } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, StorageType } from "./types/general";
+import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -24,7 +24,7 @@ import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
 import { parseUrl } from "./util";
 
 export class AdapterAzureBlob extends AbstractAdapter {
-  protected _type = StorageType.AZURE;
+  protected _provider = Provider.AZURE;
   protected _config: AdapterConfigAzureBlob;
   protected _configError: string | null = null;
   protected _client: BlobServiceClient;

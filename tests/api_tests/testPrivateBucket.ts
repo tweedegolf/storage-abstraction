@@ -1,4 +1,4 @@
-import { StorageType, S3Type } from "../../src/types/general";
+import { Provider } from "../../src/types/general";
 import { createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket } from "../api_calls";
 import { colorLog, Color, getPrivateBucketName } from "../util";
 
@@ -12,11 +12,11 @@ export async function testPrivateBucket(type: string) {
     setSelectedBucket(name);
     await addFileFromPath("./tests/data/image1.jpg", "file1.jpg", {});
     await listFiles();
-    if (type === StorageType.B2 || type === S3Type.BACKBLAZE) {
+    if (type === Provider.B2 || type === Provider.BACKBLAZE_S3) {
         await listFiles("b2-snapshots-26f128630441");
     }
-    await getPublicURL('file1.jpg', { noCheck: true });
-    await getPublicURL('file1.jpg', { noCheck: false });
+    await getPublicURL('file1.jpg', 'public1', { noCheck: true });
+    await getPublicURL('file1.jpg', 'public2', { noCheck: false });
     await getSignedURL("file1.jpg", "file1", {});
 
     await deleteBucket();

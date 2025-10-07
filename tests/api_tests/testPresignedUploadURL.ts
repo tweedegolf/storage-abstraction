@@ -1,4 +1,4 @@
-import { StorageType } from "../../src/types/general";
+import { Provider } from "../../src/types/general";
 import { createBucket, setSelectedBucket, getPresignedUploadURL, deleteBucket } from "../api_calls";
 import { colorLog, Color, getPrivateBucketName } from "../util";
 
@@ -10,20 +10,20 @@ export async function testPresignedUploadURL(type: string) {
     setSelectedBucket(name);
     await getPresignedUploadURL("test.jpg");
 
-    if (type !== StorageType.B2) {
+    if (type !== Provider.B2) {
         await getPresignedUploadURL("test.jpg", {
             expires: 1,
             waitUntilExpired: true
         });
     }
 
-    if (type === StorageType.GCS) {
+    if (type === Provider.GCS) {
         await getPresignedUploadURL("test.jpg", {
             contentType: "image/jpeg"
         });
     }
 
-    if (type === StorageType.S3) {
+    if (type === Provider.S3) {
         await getPresignedUploadURL("test.jpg", {
             conditions: [
                 ["starts-with", "$key", "something-else"],
@@ -34,7 +34,7 @@ export async function testPresignedUploadURL(type: string) {
                 ["content-length-range", 1, 1024],
             ]
         });
-    } else if (type === StorageType.AZURE) {
+    } else if (type === Provider.AZURE) {
         await getPresignedUploadURL("test.jpg", { permissions: {} });
         await getPresignedUploadURL("test.jpg", { permissions: { weird: 123 } });
     }

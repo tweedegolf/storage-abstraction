@@ -5,6 +5,7 @@ import {
   Options,
   StreamOptions,
   StorageAdapterConfig,
+  Provider,
 } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
@@ -36,26 +37,26 @@ export class Storage implements IAdapter {
   public switchAdapter(config: string | StorageAdapterConfig): void {
     // console.log(config);
     // at this point we are only interested in the type of the config
-    let type: string;
+    let provider: string;
     if (typeof config === "string") {
       if (config.indexOf("://") !== -1) {
-        type = config.substring(0, config.indexOf("://"));
+        provider = config.substring(0, config.indexOf("://"));
       } else {
         // you can also pass a string that only contains the type, e.g. "gcs"
-        type = config;
+        provider = config;
       }
     } else {
-      type = config.type;
+      provider = config.provider;
     }
-    // console.log("type", type);
+    // console.log("provider", provider);
     // console.log("adapterClasses", adapterClasses);
-    // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
-    if (!adapterClasses[type] && !adapterFunctions[type]) {
+    // console.log("class", adapterClasses[provider], "function", adapterFunctions[type]);
+    if (!adapterClasses[provider] && !adapterFunctions[provider]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
-    if (adapterClasses[type]) {
-      const adapterName = adapterClasses[type][0];
-      const adapterPath = adapterClasses[type][1];
+    if (adapterClasses[provider]) {
+      const adapterName = adapterClasses[provider][0];
+      const adapterPath = adapterClasses[provider][1];
       // const AdapterClass = require(path.join(__dirname, name));
       let AdapterClass: any; // eslint-disable-line
       try {
@@ -73,9 +74,9 @@ export class Storage implements IAdapter {
       this._adapter = new AdapterClass(config);
       // const AdapterClass = await import(`./${name}`);
       // this.adapter = new AdapterClass[name](args);
-    } else if (adapterFunctions[type]) {
-      const adapterName = adapterClasses[type][0];
-      const adapterPath = adapterClasses[type][1];
+    } else if (adapterFunctions[provider]) {
+      const adapterName = adapterClasses[provider][0];
+      const adapterPath = adapterClasses[provider][1];
       // const module = require(path.join(__dirname, name));
       let module: any; // eslint-disable-line
       try {
@@ -121,12 +122,12 @@ export class Storage implements IAdapter {
     return this.adapter;
   }
 
-  get type(): string {
-    return this.adapter.type;
+  get provider(): Provider {
+    return this.adapter.provider;
   }
 
-  public getType(): string {
-    return this.adapter.type;
+  public getProvider(): Provider {
+    return this.adapter.provider;
   }
 
   get config(): AdapterConfig {
