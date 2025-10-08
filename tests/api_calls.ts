@@ -6,7 +6,7 @@ import { Storage } from "../src/Storage";
 import { IAdapter, Options, Provider } from "../src/types/general";
 import { getConfig } from "./config";
 import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName } from "./util";
-// import { fileTypeFromBuffer } from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
 import dotenv from "dotenv";
 
@@ -355,23 +355,23 @@ export async function getSignedURL(
       const response = await fetch(r.value);
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      // const fileType = await fileTypeFromBuffer(buffer);
+      const fileType = await fileTypeFromBuffer(buffer);
       if (!response.ok) {
         colorLog("checkSignedURL", Color.ERROR, `HTTP status: ${response.status} `, options);
         return;
       } else {
-        // if (fileType?.ext !== "jpg") {
-        //   colorLog(
-        //     "checkSignedURL",
-        //     Color.ERROR,
-        //     "not an image, probably an error message",
-        //     options
-        //   );
-        //   return;
-        // } else {
-        //   colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
-        // }
-        colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
+        if (fileType?.ext !== "jpg") {
+          colorLog(
+            "checkSignedURL",
+            Color.ERROR,
+            "not an image, probably an error message",
+            options
+          );
+          return;
+        } else {
+          colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
+        }
+        // colorLog("checkSignedURL", Color.OK, "signed url is valid!", options);
       }
       // const outputFile = `${dest}.${fileType?.ext}`;
       const outputFile = `${dest}.jpg`;

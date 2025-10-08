@@ -37,6 +37,7 @@
   "scripts": {
     "test-all": "npm run test-jasmine local && npm run test-gcs && npm run test-s3 && npm run test-b2 && npm run test-azure && npm run test-minio && npm run test-minio-s3 && npm run test-cubbit && npm run test-cloudflare && npm run test-b2-s3",
     "test-jasmine": "ts-node ./node_modules/.bin/jasmine --random=false --fail-fast ./tests/test.jasmine.ts",
+    "test-jasmine-1": "ts-node -O '{\"module\":\"commonjs\"}' ./node_modules/.bin/jasmine --random=false --fail-fast ./tests/test.jasmine.ts",
     "test-local": "LOCAL_DIRECTORY='tests/test_directory' npm run test-jasmine local",
     "test-s3": "npm run test-jasmine s3",
     "test-gcs": "npm run test-jasmine gcs",

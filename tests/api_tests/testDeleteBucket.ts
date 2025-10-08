@@ -1,4 +1,4 @@
-import { createBucket, setSelectedBucket, getSelectedBucket, listBuckets, deleteBucket, bucketExists } from "../api_calls";
+import { createBucket, setSelectedBucket, getSelectedBucket, listBuckets, deleteBucket, bucketExists, addFileFromPath, listFiles } from "../api_calls";
 import { colorLog, Color, getPrivateBucketName } from "../util";
 
 export async function testDeleteBucket(type: string) {
@@ -13,4 +13,9 @@ export async function testDeleteBucket(type: string) {
     await bucketExists(name);
     await listBuckets();
     getSelectedBucket();
+
+    await createBucket(name);
+    await addFileFromPath("./tests/data/image1.jpg", "image1.jpg", {}, name)
+    await listFiles(name);
+    await deleteBucket(name);
 }
