@@ -19,7 +19,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       bucketName: process.env.BUCKET_NAME,
       keyFilename: process.env.GOOGLE_CLOUD_KEY_FILENAME,
     };
-  } else if (provider === Provider.S3) {
+  } else if (provider === Provider.S3 || provider === Provider.AWS) {
     config = {
       provider,
       bucketName: process.env.BUCKET_NAME,
@@ -39,6 +39,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     };
+    config = `r2://${process.env.R2_ACCESS_KEY_ID}:${process.env.R2_SECRET_ACCESS_KEY}@${process.env.BUCKET_NAME}?endpoint=${process.env.R2_ENDPOINT}&region=${process.env.R2_REGION}`
   } else if (provider === Provider.B2_S3) {
     config = {
       provider,
@@ -51,6 +52,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
   } else if (provider === Provider.CUBBIT) {
     config = {
       provider,
+      // region: "eu",
       bucketName: process.env.BUCKET_NAME,
       endpoint: process.env.CUBBIT_ENDPOINT,
       accessKeyId: process.env.CUBBIT_ACCESS_KEY_ID,
@@ -61,13 +63,13 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       provider,
       bucketName: process.env.BUCKET_NAME,
 
-      endpoint: process.env.MINIO_ENDPOINT_DOCKER,
-      accessKeyId: process.env.MINIO_ACCESS_KEY_DOCKER,
-      secretAccessKey: process.env.MINIO_SECRET_KEY_DOCKER,
+      // endpoint: process.env.MINIO_ENDPOINT_DOCKER,
+      // accessKeyId: process.env.MINIO_ACCESS_KEY_DOCKER,
+      // secretAccessKey: process.env.MINIO_SECRET_KEY_DOCKER,
 
-      // endpoint: process.env.MINIO_ENDPOINT_S3,
-      // accessKeyId: process.env.MINIO_ACCESS_KEY,
-      // secretAccessKey: process.env.MINIO_SECRET_KEY,
+      endpoint: process.env.MINIO_ENDPOINT_S3,
+      accessKeyId: process.env.MINIO_ACCESS_KEY,
+      secretAccessKey: process.env.MINIO_SECRET_KEY,
 
       // region: process.env.MINIO_SECRET_KEY_DOCKER,
       // forcePathStyle: true,
@@ -81,7 +83,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       applicationKey: process.env.B2_APPLICATION_KEY,
     };
   } else if (provider === Provider.AZURE) {
-    const test: number = 6;
+    const test: number = 3;
     if (test === 1) {
       // azurite local
       config = {
@@ -139,6 +141,8 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       accessKey: process.env.MINIO_ACCESS_KEY,
       secretKey: process.env.MINIO_SECRET_KEY,
     };
+    config = `minio://${process.env.MINIO_ACCESS_KEY}:${process.env.MINIO_SECRET_KEY}@${process.env.BUCKET_NAME}?endPoint=${process.env.MINIO_ENDPOINT}&port=${process.env.MINIO_PORT}&useSSL=${process.env.MINIO_USE_SSL}&region=${process.env.MINIO_REGION}`;
+    // config = `minio://minioadmin:minioadmin@${process.env.BUCKET_NAME}?endPoint=localhost&port=9000&useSSL=false&region=${process.env.MINIO_REGION}`;
   } else {
     // const p = path.join(process.cwd(), "tests", "test_directory");
     const p = path.join("tests", "test_directory");

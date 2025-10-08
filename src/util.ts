@@ -99,7 +99,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
     checkType === true &&
     Object.values(Provider).includes(protocol as Provider) === false
   ) {
-    return { value: null, error: `"${protocol}" is not a valid storage type` };
+    return { value: null, error: `"${protocol}" is not a supported provider` };
   }
 
   let config = url.substring(p + 3);

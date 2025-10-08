@@ -12,7 +12,7 @@ export async function testPresignedUploadURL(type: string) {
 
     if (type !== Provider.B2) {
         await getPresignedUploadURL("test.jpg", {
-            expires: 1,
+            expiresIn: 1,
             waitUntilExpired: true
         });
     }

@@ -10,7 +10,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { ResultObject } from "../src/types/result";
 import dotenv from "dotenv";
 
-let type: string;
+let provider: Provider;
 let storage: Storage;
 
 dotenv.config();
@@ -39,13 +39,13 @@ export async function getTestFile(name: string, ...pathToFile: string[]): Promis
     return testFiles[name];
 }
 
-export async function init(_type: string, bucketName?: string): Promise<string> {
+export async function init(_provider: Provider, bucketName?: string): Promise<string> {
     colorLog("init", Color.TEST);
     await cleanup();
-    type = _type;
-    storage = new Storage(getConfig(type));
-    bucketName = storage.config.bucketName || bucketName || getPrivateBucketName(type);
-    colorLog("init::type", Color.MESSAGE, storage.getProvider());
+    provider = _provider;
+    storage = new Storage(getConfig(provider));
+    bucketName = storage.config.bucketName || bucketName || getPrivateBucketName(provider);
+    colorLog("init::provider", Color.MESSAGE, storage.getProvider());
     colorLog("init::config", Color.MESSAGE, storage.getConfig());
     // colorLog("init::serviceClient", Color.MESSAGE, storage.getServiceClient());
     colorLog("init::selectedBucket", Color.MESSAGE, storage.getSelectedBucket());
@@ -68,7 +68,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
     */
     /*
         const buckets = r.value;
-        if (type !== Provider.MINIO && type !== Provider.CLOUDFLARE && type !== Provider.BACKBLAZE_S3) {
+        if (provider !== Provider.MINIO && provider !== Provider.CLOUDFLARE && provider !== Provider.BACKBLAZE_S3) {
             if (buckets !== null && buckets.length > 0) {
                 const r = await deleteAllBuckets(buckets, storage);
                 if (r.error !== null) {
@@ -87,7 +87,7 @@ export async function init(_type: string, bucketName?: string): Promise<string> 
             }
         }
     
-        // if (type === Provider.AZURE) {
+        // if (provider === Provider.AZURE) {
         //     await waitABit(10000);
         // }
     */
@@ -100,7 +100,7 @@ export async function deleteAllBuckets(list: Array<string>, storage: IAdapter, d
         const b = list[i];
         /*
         // It is not possible to delete the snapshots bucket on Backblaze!
-        if (type === Provider.B2 && b.indexOf("b2-snapshots") !== -1) {
+        if (provider === Provider.B2 && b.indexOf("b2-snapshots") !== -1) {
             continue;
             }
             const r = await storage.deleteBucket(b);
@@ -110,7 +110,7 @@ export async function deleteAllBuckets(list: Array<string>, storage: IAdapter, d
             }
         */
         const r = await storage.deleteBucket(b);
-        if (type === Provider.B2 && b.indexOf("b2-snapshots") !== -1) {
+        if (provider === Provider.B2 && b.indexOf("b2-snapshots") !== -1) {
             colorLog("init::deleteBucket", Color.OK, "Can't delete the snapshots bucket on B2, but that's okay!");
         } else {
             logResult("init::deleteBucket", r, b);
@@ -269,13 +269,14 @@ export async function removeFile(fileName: string, bucketName?: string) {
 }
 
 export async function getPublicURL(fileName: string, dest: string, options: Options = {}, bucketName?: string) {
+    // console.log(bucketName)
     const r = typeof bucketName === "undefined" ?
         await storage.getPublicURL(fileName, options) :
         await storage.getPublicURL(bucketName, fileName, options);
 
     logResult("getPublicURL", r, undefined, options);
 
-    if (r.value !== null && type !== Provider.LOCAL) {
+    if (r.value !== null && provider !== Provider.LOCAL) {
         const response = await fetch(r.value);
         if (!response.ok) {
             colorLog("checkPublicURL", Color.ERROR, `HTTP status: ${response.status}`, options);
@@ -305,7 +306,7 @@ export async function getSignedURL(fileName: string, dest: string, options: Opti
 
     logResult("getSignedURL", r, undefined, options);
 
-    if (type !== Provider.LOCAL) {
+    if (provider !== Provider.LOCAL) {
         if (r.value !== null) {
             if (options.waitUntilExpired === true) {
                 await waitABit((options.expiresIn * 1000) + 700); // milliseconds
@@ -348,7 +349,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
     const r = typeof bucketName === "undefined" ?
         await storage.getPresignedUploadURL(fileName, options) :
         await storage.getPresignedUploadURL(bucketName, fileName, options);
-    logResult("getPresignedUploadURL", r, "ok"), options;
+    logResult("getPresignedUploadURL", r, r.value?.url), options;
 
     if (r.value !== null) {
         const url = (r.value as any).url;
@@ -360,7 +361,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
             await waitABit(3 * 1000); // milliseconds
         }
 
-        if (type === Provider.S3) {
+        if (provider === Provider.S3 || provider === Provider.AWS) {
             Object.entries((r.value as any).fields).forEach(([field, value]) => {
                 form.append(field, value as string);
             });
@@ -370,7 +371,15 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                 method: 'POST',
                 body: form,
             });
-        } else if (type === Provider.AZURE) {
+        } else if (provider === Provider.MINIO_S3 || provider === Provider.CUBBIT || provider === Provider.B2_S3 || provider === Provider.R2) {
+            response = await fetch(url, {
+                method: 'PUT',
+                body: fileBuffer,
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                },
+            });
+        } else if (provider === Provider.AZURE) {
             response = await fetch(url, {
                 method: 'PUT',
                 body: fileBuffer,
@@ -379,7 +388,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     // 'Content-Type': 'multipart/form-data',
                 }
             });
-        } else if (type === Provider.B2) {
+        } else if (provider === Provider.B2) {
             /*
             curl \
               -H "Authorization: $UPLOAD_AUTHORIZATION_TOKEN" \
@@ -402,7 +411,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     "X-Bz-Info-Author": "sab"
                 }
             });
-        } else if (type === Provider.GCS) {
+        } else if (provider === Provider.GCS) {
             response = await fetch(url, {
                 method: 'PUT',
                 body: fileBuffer,
@@ -411,7 +420,7 @@ export async function getPresignedUploadURL(fileName: string, options: Options =
                     // "Content-Type": "image/jpeg"
                 }
             });
-        } else if (type === Provider.MINIO) {
+        } else if (provider === Provider.MINIO) {
             response = await fetch(url, {
                 method: 'PUT',
                 body: fileBuffer,

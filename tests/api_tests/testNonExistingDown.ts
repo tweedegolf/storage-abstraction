@@ -1,4 +1,4 @@
-import { addFileFromPath, getPublicURL, getSignedURL, listFiles, createBucket, deleteBucket } from "../api_calls";
+import { addFileFromPath, getPublicURL, getSignedURL, listFiles, createBucket, deleteBucket, getStorage } from "../api_calls";
 import { colorLog, Color, getPrivateBucketName } from "../util";
 
 export async function testNonExistingDown(type: string) {

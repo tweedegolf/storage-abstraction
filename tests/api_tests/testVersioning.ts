@@ -1,4 +1,4 @@
-import { createBucket, setSelectedBucket, addFileFromPath, listFiles, removeFile, clearBucket } from "../api_calls";
+import { createBucket, setSelectedBucket, addFileFromPath, listFiles, removeFile, clearBucket, deleteBucket } from "../api_calls";
 import { colorLog, Color, getPrivateBucketName } from "../util";
 
 export async function testVersioning(type: string) {
@@ -19,6 +19,6 @@ export async function testVersioning(type: string) {
     await removeFile("file1.jpg");
     await clearBucket();
     await clearBucket();
-    // await deleteBucket();
-    // await deleteBucket("imaginary-bucket");
+    await deleteBucket();
+    await deleteBucket("imaginary-bucket");
 }

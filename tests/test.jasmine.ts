@@ -1,32 +1,17 @@
 import "jasmine";
 import fs from "fs";
 import path from "path";
-import { Storage } from "../src/Storage";
-import { AdapterConfig, Provider } from "../src/types/general";
-import { saveFile } from "./util";
 import { Readable } from "stream";
+import { Provider, StorageAdapterConfig } from "../src/types/general";
+import { saveFile } from "./util";
 import { getConfig } from "./config";
+import { Storage } from "../src/Storage";
 
-const types = [
-  Provider.LOCAL, // 0
-  Provider.S3, // 1
-  Provider.GCS, // 2
-  Provider.B2, // 3
-  Provider.AZURE, // 4
-  Provider.MINIO, // 5
-  Provider.CUBBIT, // 6
-  Provider.CLOUDFLARE, // 7
-  Provider.BACKBLAZE, // 8
-];
-
-let index = 0;
-// console.log(process.argv);
-if (process.argv[5]) {
-  index = parseInt(process.argv[5], 10);
+let provider = Provider.LOCAL;
+if (process.argv[2]) {
+  provider = process.argv[2] as Provider;
 }
-const config = getConfig(types[index]);
-// const type = (config as AdapterConfig).type || Provider.LOCAL;
-const type = types[index];
+const config: StorageAdapterConfig | string = getConfig(provider);
 
 const newBucketName1 = "bucket-test-sab-1";
 const newBucketName2 = "bucket-test-sab-2";
@@ -51,10 +36,10 @@ function streamToString(stream: Readable) {
   });
 }
 
-describe(`[testing ${type} storage]`, () => {
+describe(`[testing ${provider}]`, () => {
   beforeAll(async () => {
     // create a temporary working directory
-    if (type !== Provider.LOCAL) {
+    if (provider !== Provider.LOCAL) {
       await fs.promises
         .stat(path.join(process.cwd(), "tests", "test_directory"))
         .catch(async (e) => {
@@ -188,7 +173,7 @@ describe(`[testing ${type} storage]`, () => {
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
     // console.log(type, value, error);
-    if (type === Provider.BACKBLAZE_S3) {
+    if (provider === Provider.BACKBLAZE_S3) {
       // remove file fails if the file doesn't exist in Backblaze
       expect(value).toBeNull();
       expect(error).not.toBeNull();

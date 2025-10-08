@@ -86,15 +86,18 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     this._provider = this.config.provider as Provider;
 
-    if (typeof this._config.region === "undefined") {
-      if (this._provider === Provider.CUBBIT) {
-        this._config.region = "eu";
-      } else if (this._provider === Provider.MINIO_S3) {
+    if (this._provider !== Provider.S3 && this._provider !== Provider.AWS && typeof this._config.endpoint === "undefined") {
+      this._configError = `[configError] No endpoint specified for ${this._provider}`;
+    }
+
+    if (this._provider === Provider.MINIO_S3) {
+      if (typeof this._config.region === "undefined") {
         this._config.region = "us-east-1";
-        this._config.forcePathStyle = true;
-        // this._config.s3ForcePathStyle = true;
-        this._config.signatureVersion = "v4";
       }
+      // necessary for Minio S3 support!
+      this._config.forcePathStyle = true;
+      // this._config.s3ForcePathStyle = true;
+      this._config.signatureVersion = "v4";
     }
 
     // console.log(this._config);
@@ -113,6 +116,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           ...o,
         });
       } else {
+        console.log("HIER");
         const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
         delete o.accessKeyId;
         delete o.secretAccessKey;
@@ -731,13 +735,25 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     try {
-      const data = await createPresignedPost(this._client, {
-        Bucket: bucketName,
-        Key: fileName,
-        Expires: expiresIn,
-        Conditions: conditions,
-        Fields: fields,
-      });
+      let data: any;
+      console.log(this.provider)
+      if (this.provider === Provider.S3 || this.provider === Provider.AWS) {
+        data = await createPresignedPost(this._client, {
+          Bucket: bucketName,
+          Key: fileName,
+          Expires: expiresIn,
+          Conditions: conditions,
+          Fields: fields,
+        });
+      } else {
+        const command = new PutObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+          ACL: "public-read"
+        });
+        const url = await getSignedUrl(this._client, command, { expiresIn });
+        data = { url };
+      }
       return { value: data, error: null };
     } catch (e) {
       return { value: null, error: e.message };

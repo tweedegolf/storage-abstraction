@@ -1,6 +1,6 @@
 Introspective API
 :---
-[getType](README.md#gettype)
+[getProvider](README.md#getprovider)
 [getConfiguration](README.md#getconfiguration)
 [getConfigurationError](README.md#getconfigurationerror)
 [getServiceClient](README.md#getserviceclient)

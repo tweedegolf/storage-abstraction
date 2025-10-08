@@ -41,6 +41,12 @@ export class AdapterMinio extends AbstractAdapter {
         if (searchParams !== null) {
           ({ endPoint } = searchParams);
           delete searchParams.endPoint;
+          // if (typeof endPoint === "undefined") {
+          //   ({ endpoint: endPoint } = searchParams);
+          //   delete searchParams.endpoint;
+          // } else {
+          //   delete searchParams.endPoint;
+          // }
           this._config = { type, accessKey, secretKey, endPoint, ...searchParams };
         } else {
           this._config = { type, accessKey, secretKey, endPoint };
@@ -351,11 +357,11 @@ export class AdapterMinio extends AbstractAdapter {
 
   protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
     try {
-      let expires = 300; // 5 * 60
-      if (typeof options.expires !== "undefined") {
-        expires = Number.parseInt(options.expires, 10);
+      let expiresIn = 300; // 5 * 60
+      if (typeof options.expiresIn !== "undefined") {
+        expiresIn = Number.parseInt(options.expiresIn, 10);
       }
-      const url = await this._client.presignedPutObject(bucketName, fileName, expires);
+      const url = await this._client.presignedPutObject(bucketName, fileName, expiresIn);
       return { value: { url }, error: null }
     } catch (e) {
       return { value: null, error: e.message }
