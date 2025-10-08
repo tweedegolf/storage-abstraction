@@ -156,7 +156,9 @@ export class Storage implements IAdapter {
 
   // public adapter API
 
-  public async addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  public async addFile(
+    paramObject: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
     return this.adapter.addFile(paramObject);
   }
 
@@ -172,9 +174,8 @@ export class Storage implements IAdapter {
     return this.adapter.addFileFromStream(params);
   }
 
-  async createBucket(...args:
-    [bucketName?: string, options?: Options] |
-    [options?: Options]
+  async createBucket(
+    ...args: [bucketName?: string, options?: Options] | [options?: Options]
   ): Promise<ResultObject> {
     return this.adapter.createBucket(...args);
   }
@@ -191,42 +192,43 @@ export class Storage implements IAdapter {
     return this.adapter.listBuckets();
   }
 
-  async getFileAsStream(...args:
-    [bucketName: string, fileName: string, options?: StreamOptions] |
-    [fileName: string, options?: StreamOptions]
+  async getFileAsStream(
+    ...args:
+      | [bucketName: string, fileName: string, options?: StreamOptions]
+      | [fileName: string, options?: StreamOptions]
   ): Promise<ResultObjectStream> {
     return this.adapter.getFileAsStream(...args);
   }
 
-  async getPublicURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]): Promise<ResultObject> {
+  async getPublicURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
+  ): Promise<ResultObject> {
     return this.adapter.getPublicURL(...args);
   }
-  async getSignedURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]): Promise<ResultObject> {
+  async getSignedURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
+  ): Promise<ResultObject> {
     return this.adapter.getSignedURL(...args);
   }
 
-  async removeFile(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  async removeFile(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObject> {
     return this.adapter.removeFile(...args);
   }
 
-  async listFiles(...args:
-    [bucketName: string, numFiles?: number] |
-    [numFiles?: number] |
-    [bucketName?: string]
+  async listFiles(
+    ...args: [bucketName: string, numFiles?: number] | [numFiles?: number] | [bucketName?: string]
   ): Promise<ResultObjectFiles> {
     return this.adapter.listFiles(...args);
   }
 
-  async sizeOf(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  async sizeOf(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectNumber> {
     return this.adapter.sizeOf(...args);
   }
@@ -239,16 +241,16 @@ export class Storage implements IAdapter {
     return this.adapter.bucketIsPublic(bucketName);
   }
 
-  async fileExists(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  async fileExists(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectBoolean> {
     return this.adapter.fileExists(...args);
   }
 
-  async getPresignedUploadURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
+  async getPresignedUploadURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
   ): Promise<ResultObjectObject> {
     return this.adapter.getPresignedUploadURL(...args);
   }

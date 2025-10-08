@@ -8,9 +8,10 @@ import { getConfig } from "./config";
 import { Storage } from "../src/Storage";
 
 let provider = Provider.LOCAL;
-if (process.argv[2]) {
-  provider = process.argv[2] as Provider;
+if (process.argv[5]) {
+  provider = process.argv[5] as Provider;
 }
+console.log(provider);
 const config: StorageAdapterConfig | string = getConfig(provider);
 
 const newBucketName1 = "bucket-test-sab-1";
@@ -173,15 +174,8 @@ describe(`[testing ${provider}]`, () => {
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
     // console.log(type, value, error);
-    if (provider === Provider.BACKBLAZE_S3) {
-      // remove file fails if the file doesn't exist in Backblaze
-      expect(value).toBeNull();
-      expect(error).not.toBeNull();
-    } else {
-      // remove file does not fails if the file doesn't exist
-      expect(value).not.toBeNull();
-      expect(error).toBeNull();
-    }
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
   it("(11) list files 2", async () => {

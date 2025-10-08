@@ -27,8 +27,8 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION,
       options: {
-        foo: "bar"
-      }
+        foo: "bar",
+      },
     };
   } else if (provider === Provider.CLOUDFLARE) {
     config = {
@@ -39,7 +39,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     };
-    config = `r2://${process.env.R2_ACCESS_KEY_ID}:${process.env.R2_SECRET_ACCESS_KEY}@${process.env.BUCKET_NAME}?endpoint=${process.env.R2_ENDPOINT}&region=${process.env.R2_REGION}`
+    config = `r2://${process.env.R2_ACCESS_KEY_ID}:${process.env.R2_SECRET_ACCESS_KEY}@${process.env.BUCKET_NAME}?endpoint=${process.env.R2_ENDPOINT}&region=${process.env.R2_REGION}`;
   } else if (provider === Provider.B2_S3) {
     config = {
       provider,
@@ -74,7 +74,6 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       // region: process.env.MINIO_SECRET_KEY_DOCKER,
       // forcePathStyle: true,
     };
-
   } else if (provider === Provider.B2) {
     config = {
       provider,
@@ -91,14 +90,14 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
         bucketName: process.env.BUCKET_NAME,
         accountName: process.env.AZURITE_ACCOUNT_NAME,
         accountKey: process.env.AZURITE_ACCOUNT_KEY,
-        blobDomain: process.env.AZURITE_BLOB_ENDPOINT
+        blobDomain: process.env.AZURITE_BLOB_ENDPOINT,
       };
     } else if (test === 2) {
       // connection string azurite
       config = {
         provider,
         bucketName: process.env.BUCKET_NAME,
-        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`
+        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`,
       };
     } else if (test === 3) {
       // account name and key
@@ -113,7 +112,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       config = {
         provider,
         bucketName: process.env.BUCKET_NAME,
-        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING
+        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
       };
     } else if (test === 5) {
       // sas token
