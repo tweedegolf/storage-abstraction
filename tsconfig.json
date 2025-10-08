@@ -9,15 +9,20 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    // "baseUrl": ".",
+    // "checkJs": false,
+    // "skipLibCheck": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "preserveSymlinks": true,
     "sourceMap": true,
     "declaration": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
   },
   "include": [
+    // "tests/*.ts",
+    // "tests/api_tests/*.ts",
     "src/*.ts",
     "src/types/*.ts",
     "src/indexes/*.ts"
