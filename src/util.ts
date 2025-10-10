@@ -1,6 +1,6 @@
 import { URL } from "url";
-import { Provider } from "./types/general";
-import { ParseUrlResult, ResultObjectNumber } from "./types/result";
+import { Provider } from "./types/general.ts";
+import { ParseUrlResult, ResultObjectNumber } from "./types/result.ts";
 
 /**
  * @param {string} url

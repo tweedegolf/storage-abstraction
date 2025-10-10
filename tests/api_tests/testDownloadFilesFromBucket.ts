@@ -1,5 +1,5 @@
-import { createBucket, setSelectedBucket, addFileFromPath, getFileSize, getFileAsStream, deleteBucket } from "../api_calls";
-import { colorLog, Color, getPrivateBucketName } from "../util";
+import { createBucket, setSelectedBucket, addFileFromPath, getFileSize, getFileAsStream, deleteBucket } from "../api_calls.ts";
+import { colorLog, Color, getPrivateBucketName } from "../util.ts";
 
 
 export async function testDownloadFilesFromBucket(type: string) {

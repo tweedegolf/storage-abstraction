@@ -1,8 +1,8 @@
 import fs from "fs";
 import crypto from "crypto";
 import { Readable, Stream, Writable } from "stream";
-import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "../src/types/result";
-import { Options, Provider } from "../src/types/general";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "../src/types/result.ts";
+import { Options, Provider } from "../src/types/general.ts";
 
 /**
  * Utility function that connects a read-stream (from the storage) to a write-stream (to a local file)

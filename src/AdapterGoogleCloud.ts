@@ -1,8 +1,8 @@
 import { Readable } from "stream";
 import { GetSignedUrlConfig, Storage as GoogleCloudStorage } from "@google-cloud/storage";
-import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, Provider } from "./types/general";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { AbstractAdapter } from "./AbstractAdapter.ts";
+import { Options, StreamOptions, Provider } from "./types/general.ts";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -11,15 +11,15 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result";
-import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
-import { parseUrl } from "./util";
+} from "./types/result.ts";
+import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud.ts";
+import { parseUrl } from "./util.ts";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
   protected _provider = Provider.GCS;
-  protected _config: AdapterConfigGoogleCloud;
+  declare protected _config: AdapterConfigGoogleCloud;
+  declare protected _client: GoogleCloudStorage;
   protected _configError: string | null = null;
-  protected _client: GoogleCloudStorage;
 
   constructor(config?: string | AdapterConfigGoogleCloud) {
     super(config);

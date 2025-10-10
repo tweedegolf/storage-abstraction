@@ -1,6 +1,6 @@
-import { parseUrl } from "../src/util";
-import { parseUrlStandard } from "../src/util";
 import dotenv from "dotenv";
+import { parseUrl } from "../src/util.ts";
+import { parseUrlStandard } from "../src/util.ts";
 
 dotenv.config();
 

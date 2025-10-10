@@ -1,5 +1,5 @@
-import { createBucket, setSelectedBucket, addFileFromPath, listFiles, removeFile, clearBucket, deleteBucket } from "../api_calls";
-import { colorLog, Color, getPrivateBucketName } from "../util";
+import { createBucket, setSelectedBucket, addFileFromPath, listFiles, removeFile, clearBucket, deleteBucket } from "../api_calls.ts";
+import { colorLog, Color, getPrivateBucketName } from "../util.ts";
 
 export async function testVersioning(type: string) {
     console.log("\n");

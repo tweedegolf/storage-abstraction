@@ -1,40 +1,41 @@
 {
   "compilerOptions": {
-    "target": "es2021",
+    "target": "esnext",
     "lib": [
-      "es2021"
+      "esnext"
     ],
     // "types": ["reflect-metadata"],
     "outDir": "publish/dist",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "rootDir": ".",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     // "baseUrl": ".",
     // "checkJs": false,
-    // "skipLibCheck": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "emitDeclarationOnly": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "preserveSymlinks": true,
+    "strict": true,
     "sourceMap": true,
     "declaration": true,
-    "allowSyntheticDefaultImports": true,
+    "preserveConstEnums": true,
   },
   "include": [
-    // "tests/*.ts",
-    // "tests/api_tests/*.ts",
-    "src/*.ts",
-    "src/types/*.ts",
-    "src/indexes/*.ts"
+    "tests/**/*",
+    "src/**/*",
   ],
-  // "include": ["src/index.ts"],
   "exclude": [
+    "**/*.d.ts",
     "node_modules",
+    "dist",
     "publish",
-    "spec",
     "src/template_class.ts",
     "src/template_functional.ts",
-    "tests",
-    "tests_local"
-  ],
+    "tests_local",
+  ]
 }

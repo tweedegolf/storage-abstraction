@@ -3,8 +3,8 @@ import path from "path";
 import { glob } from "glob";
 import { rimraf } from "rimraf";
 import { Readable } from "stream";
-import { Options, StreamOptions, Provider } from "./types/general";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { Options, StreamOptions, Provider } from "./types/general.ts";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -14,14 +14,14 @@ import {
   ResultObjectObject,
   ResultObjectStream,
   ResultObjectStringArray,
-} from "./types/result";
-import { AdapterConfigLocal } from "./types/adapter_local";
-import { AbstractAdapter } from "./AbstractAdapter";
-import { parseMode, parseUrl } from "./util";
+} from "./types/result.ts";
+import { AdapterConfigLocal } from "./types/adapter_local.ts";
+import { AbstractAdapter } from "./AbstractAdapter.ts";
+import { parseMode, parseUrl } from "./util.ts";
 
 export class AdapterLocal extends AbstractAdapter {
   protected _provider = Provider.LOCAL;
-  protected _config: AdapterConfigLocal;
+  declare protected _config: AdapterConfigLocal;
   protected _configError: string | null = null;
 
   constructor(config: AdapterConfigLocal) {

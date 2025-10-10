@@ -108,7 +108,7 @@ const config = {
 const s = new Storage(config);
 
 // or
-const url = "local://directory=path/to/folder&mode=488";
+const url = "local://path/to/folder&mode=488";
 const s = new Storage(url);
 
 // and the same with octal values:
@@ -121,7 +121,7 @@ const config = {
 const s = new Storage(config);
 
 // or
-const url = "local://directory=path/to/folder&mode=0o750";
+const url = "local://path/to/folder&mode=0o750";
 const s = new Storage(url);
 ```
 

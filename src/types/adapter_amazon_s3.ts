@@ -1,4 +1,4 @@
-import { AdapterConfig } from "./general";
+import { AdapterConfig } from "./general.ts";
 
 export interface AdapterConfigAmazonS3 extends AdapterConfig {
   region?: string;

@@ -1,6 +1,6 @@
-import { Provider } from "../../src/types/general";
-import { createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket } from "../api_calls";
-import { colorLog, Color, getPrivateBucketName } from "../util";
+import { Provider } from "../../src/types/general.ts";
+import { createBucket, bucketIsPublic, setSelectedBucket, addFileFromPath, listFiles, getPublicURL, getSignedURL, deleteBucket } from "../api_calls.ts";
+import { colorLog, Color, getPrivateBucketName } from "../util.ts";
 
 export async function testPrivateBucket(type: string) {
     console.log("\n");

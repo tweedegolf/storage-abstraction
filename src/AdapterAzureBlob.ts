@@ -8,9 +8,9 @@ import {
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
-import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, Provider } from "./types/general";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { AbstractAdapter } from "./AbstractAdapter.ts";
+import { Options, StreamOptions, Provider } from "./types/general.ts";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -19,15 +19,15 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result";
-import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
-import { parseUrl } from "./util";
+} from "./types/result.ts";
+import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob.ts";
+import { parseUrl } from "./util.ts";
 
 export class AdapterAzureBlob extends AbstractAdapter {
   protected _provider = Provider.AZURE;
-  protected _config: AdapterConfigAzureBlob;
+  declare protected _config: AdapterConfigAzureBlob;
+  declare protected _client: BlobServiceClient;
   protected _configError: string | null = null;
-  protected _client: BlobServiceClient;
   private sharedKeyCredential: StorageSharedKeyCredential;
 
   constructor(config: string | AdapterConfigAzureBlob) {

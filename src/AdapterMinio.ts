@@ -1,8 +1,8 @@
 import * as Minio from "minio";
 import { Readable } from "stream";
-import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, Provider } from "./types/general";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { AbstractAdapter } from "./AbstractAdapter.ts";
+import { Options, StreamOptions, Provider } from "./types/general.ts";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -11,15 +11,15 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result";
-import { AdapterConfigMinio } from "./types/adapter_minio";
-import { parseUrl } from "./util";
+} from "./types/result.ts";
+import { AdapterConfigMinio } from "./types/adapter_minio.ts";
+import { parseUrl } from "./util.ts";
 
 export class AdapterMinio extends AbstractAdapter {
   protected _provider = Provider.MINIO;
-  protected _client: Minio.Client;
+  declare protected _client: Minio.Client;
+  declare protected _config: AdapterConfigMinio;
   protected _configError: string | null = null;
-  protected _config: AdapterConfigMinio;
 
   constructor(config: string | AdapterConfigMinio) {
     super(config);

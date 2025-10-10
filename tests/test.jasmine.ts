@@ -2,10 +2,10 @@ import "jasmine";
 import fs from "fs";
 import path from "path";
 import { Readable } from "stream";
-import { Provider, StorageAdapterConfig } from "../src/types/general";
-import { saveFile } from "./util";
-import { getConfig } from "./config";
-import { Storage } from "../src/Storage";
+import { Provider, StorageAdapterConfig } from "../src/types/general.ts";
+import { saveFile } from "./util.ts";
+import { getConfig } from "./config.ts";
+import { Storage } from "../src/Storage.ts";
 
 let provider = Provider.LOCAL;
 if (process.argv[5]) {

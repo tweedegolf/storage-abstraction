@@ -6,8 +6,8 @@ import {
   StreamOptions,
   StorageAdapterConfig,
   Provider,
-} from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+} from "./types/general.ts";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params.ts";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -16,8 +16,8 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result";
-import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters";
+} from "./types/result.ts";
+import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters.ts";
 
 const availableAdapters: string = getAvailableAdapters();
 

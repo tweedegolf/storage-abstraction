@@ -1,7 +1,7 @@
 import B2 from "backblaze-b2"
-import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, Provider } from "./types/general";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { AbstractAdapter } from "./AbstractAdapter.ts";
+import { Options, StreamOptions, Provider } from "./types/general.ts";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -10,7 +10,7 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result";
+} from "./types/result.ts";
 import {
   AdapterConfigBackblazeB2,
   BackblazeB2Bucket,
@@ -18,12 +18,12 @@ import {
   ResultObjectBucketB2,
   ResultObjectFileB2,
   ResultObjectFilesB2,
-} from "./types/adapter_backblaze_b2";
-import { parseUrl } from "./util";
+} from "./types/adapter_backblaze_b2.ts";
+import { parseUrl } from "./util.ts";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _provider = Provider.B2;
-  protected _config: AdapterConfigBackblazeB2;
+  declare protected _config: AdapterConfigBackblazeB2;
   protected _configError: string | null = null;
   protected _client: B2 = null;
   private authorized: boolean = false;
