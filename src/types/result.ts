@@ -1,15 +1,15 @@
 import { Readable } from "stream";
 
 export type ParseUrlResult = {
-  error: string | null;
-  value: {
-    protocol: string;
-    username: string;
-    password: string;
-    host: string;
-    port: string;
-    path: string;
-    searchParams: { [key: string]: string };
+  error: null | string;
+  value: null | {
+    protocol: null | string;
+    username: null | string;
+    password: null | string;
+    host: null | string;
+    port: null | string;
+    path: null | string;
+    searchParams: null | { [key: string]: string };
   };
 };
 

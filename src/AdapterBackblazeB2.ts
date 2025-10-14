@@ -1,4 +1,4 @@
-import B2 from "backblaze-b2"
+import B2 from "backblaze-b2";
 import { AbstractAdapter } from "./AbstractAdapter.ts";
 import { Options, StreamOptions, Provider } from "./types/general.ts";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
@@ -14,18 +14,20 @@ import {
 import {
   AdapterConfigBackblazeB2,
   BackblazeB2Bucket,
+  BucketB2,
   FileB2,
   ResultObjectBucketB2,
   ResultObjectFileB2,
   ResultObjectFilesB2,
 } from "./types/adapter_backblaze_b2.ts";
-import { parseUrl } from "./util.ts";
+import { getErrorMessage, parseUrl } from "./util.ts";
+import { delimiter } from "path";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _provider = Provider.B2;
   declare protected _config: AdapterConfigBackblazeB2;
+  declare protected _client: B2;
   protected _configError: string | null = null;
-  protected _client: B2 = null;
   private authorized: boolean = false;
   private versioning: boolean = false;
 
@@ -35,7 +37,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       this._config = { ...config };
     } else {
       const { value, error } = parseUrl(config);
-      if (error !== null) {
+      if (value === null) {
         this._configError = `[configError] ${error}`;
       } else {
         const {
@@ -45,6 +47,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           host: bucketName,
           searchParams,
         } = value;
+        if (applicationKey === null || applicationKeyId === null) {
+          this._configError =
+            'Please provide both a value for "applicationKey" and "applicationKeyId"';
+          return;
+        }
+
         if (searchParams !== null) {
           this._config = { type, applicationKeyId, applicationKey, ...searchParams };
         } else {
@@ -57,15 +65,12 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // console.log(this._config);
     }
 
-    if (!this._config.applicationKey || !this._config.applicationKeyId) {
-      this._configError = 'Please provide both a value for "applicationKey" and "applicationKeyId"';
-    } else {
-      try {
-        this._client = new B2(this._config);
-      } catch (e) {
-        this._configError = `[configError] ${e.message}`;
-      }
+    try {
+      this._client = new B2(this._config);
+    } catch (e) {
+      this._configError = `[configError] ${getErrorMessage(e)}`;
     }
+
     if (typeof this.config.bucketName !== "undefined") {
       this._bucketName = this.config.bucketName;
     }
@@ -83,7 +88,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       this.authorized = true;
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -96,7 +101,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       }
       return { value: null, error: `Could not find bucket "${name}"` };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -108,7 +113,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       }
       return { value: data, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -121,9 +126,19 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     if (error !== null) {
       return { value: null, error };
     }
+    if (bucket === null) {
+      return { value: null, error: `can't find bucket '${bucketName}'` };
+    }
 
     try {
-      let data: any; //eslint-disable-line
+      let data: {
+        files: Array<{
+          fileId: string;
+          fileName: string;
+          contentType: string;
+          contentLength: number;
+        }>;
+      };
       // const options: ListFileVersionsOpts = {
       const options = {
         bucketId: bucket.id,
@@ -146,10 +161,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         error: null,
       };
     } catch (e) {
-      return {
-        value: null,
-        error: e.message,
-      };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -157,6 +169,9 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     const { value: files, error } = await this.getFiles(bucketName, false);
     if (error !== null) {
       return { value: null, error };
+    }
+    if (files === null) {
+      return { value: null, error: `Could not find file '${name}' in bucket '${bucketName}'.` };
     }
 
     for (let i = 0; i < files.length; i++) {
@@ -177,27 +192,29 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     try {
-      const { data } = await this._client.listBuckets();
+      const { data }: { data: { buckets: Array<{ bucketName: string }> } } =
+        await this._client.listBuckets();
       const value = data.buckets.map(({ bucketName }) => bucketName);
       return { value, error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
   protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
     const { error } = await this.authorize();
-    let bucketType = "allPrivate"
+    let bucketType = "allPrivate";
     if (typeof options.bucketType !== "undefined") {
       bucketType = options.bucketType;
     } else if (options.public === true) {
-      options.bucketType = "allPublic"
+      options.bucketType = "allPublic";
     }
 
     if (bucketType !== "allPrivate" && bucketType !== "allPublic") {
       return {
-        value: null, error: `${bucketType} is not valid: bucket type must be either 'allPrivate' or 'allPublic'`
-      }
+        value: null,
+        error: `${bucketType} is not valid: bucket type must be either 'allPrivate' or 'allPublic'`,
+      };
     }
 
     try {
@@ -210,32 +227,30 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // console.log(_type);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.response.data.message };
+      return { value: null, error: (e as any).response.data.message };
     }
   }
 
-  protected async _addFile(
-    params: FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
+  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
     }
 
     const { bucketName, targetPath } = params;
-    const data1 = await this.getBucket(bucketName);
+    const data1 = await this.getBucket(bucketName as string);
     if (data1.error !== null) {
       return { value: null, error: data1.error };
     }
-    const {
-      value: { id: bucketId },
-    } = data1;
-
+    const { value: bucket } = data1;
+    const { id: bucketId } = bucket as BucketB2;
     const data2 = await this.getUploadUrl(bucketId);
     if (data2.error !== null) {
       return { value: null, error: data2.error };
     }
-    const { value: { uploadUrl, authorizationToken } } = data2;
+    const {
+      value: { uploadUrl, authorizationToken },
+    } = data2 as any;
 
     let { options } = params;
     if (typeof options === "undefined") {
@@ -243,7 +258,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     try {
-      let buffer: Buffer;
+      let buffer: undefined | Buffer;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
         buffer = (params as FileBufferParams).buffer;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
@@ -252,6 +267,10 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
           buffers.push(data);
         }
         buffer = Buffer.concat(buffers);
+      }
+
+      if (typeof buffer === "undefined") {
+        return { value: null, error: "Could get file buffer" };
       }
 
       const { data: _data } = await this._client.uploadFile({
@@ -265,7 +284,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       return { value: "ok", error: null };
     } catch (e) {
       // console.log(e.toJSON());
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -285,10 +304,14 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
     const { value: file } = data;
 
+    if (file === null) {
+      return { value: null, error: `Could not find file '${fileName}' in bucket '${bucketName}'.` };
+    }
+
     const { start, end } = options;
-    let range = `bytes=${start}-${end}`;
+    let range: undefined | string = `bytes=${start}-${end}`;
     if (typeof start === "undefined" && typeof end === "undefined") {
-      range = null;
+      range = undefined;
     } else if (typeof start === "undefined") {
       range = `bytes=0-${end}`;
     } else if (typeof end === "undefined") {
@@ -312,7 +335,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       });
       return { value: data, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -345,9 +368,8 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       if (data.error !== null) {
         return { value: null, error: data.error };
       }
-      const {
-        value: { id: bucketId },
-      } = data;
+      const { value: bucket } = data;
+      const { id: bucketId } = bucket as BucketB2;
 
       let expiresIn = 300; // 5 * 60
       if (typeof options.expiresIn !== "undefined") {
@@ -357,33 +379,29 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       const r = await this._client.getDownloadAuthorization({
         bucketId,
         fileNamePrefix: fileName,
-        validDurationInSeconds: expiresIn
+        validDurationInSeconds: expiresIn,
       });
-      const { data: { authorizationToken } } = r;
+      const {
+        data: { authorizationToken },
+      } = r;
 
       return {
         value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}?Authorization=${authorizationToken}`,
         error: null,
       };
     } catch (e) {
-      return {
-        value: null,
-        error: e,
-      };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-  ): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
     }
 
     const data = await this.getFiles(bucketName, true);
-    if (error !== null) {
+    if (data.value === null) {
       return { value: null, error };
     }
 
@@ -403,7 +421,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         });
         return { value: "ok", error: null };
       } catch (e) {
-        return { value: null, error: e.message };
+        return { value: null, error: getErrorMessage(e) };
       }
     } else {
       // delete all versions of the file
@@ -421,7 +439,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
         );
         return { value: "ok", error: null };
       } catch (e) {
-        return { value: null, error: e.message };
+        return { value: null, error: getErrorMessage(e) };
       }
     }
   }
@@ -433,7 +451,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const data = await this.getFiles(name, true);
-    if (data.error !== null) {
+    if (data.value === null) {
       return { value: null, error: data.error };
     }
     const { value: files } = data;
@@ -450,7 +468,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       // console.log("[clearBucket]", _data);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -461,7 +479,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const { error, value: bucket } = await this.getBucket(name);
-    if (error !== null) {
+    if (bucket === null) {
       return { value: null, error: error };
     }
 
@@ -469,7 +487,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
       await this._client.deleteBucket({ bucketId: bucket.id });
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -480,7 +498,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const data = await this.getFiles(bucketName, this.versioning, numFiles);
-    if (data.error === null) {
+    if (data.value !== null) {
       const { value: files } = data;
       return {
         value: files.map((f) => {
@@ -500,7 +518,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
 
     const data = await this.getFile(bucketName, fileName);
-    if (data.error === null) {
+    if (data.value !== null) {
       const { value: file } = data;
       return { value: file.contentLength, error: null };
     } else {
@@ -524,9 +542,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(
-    bucketName?: string,
-  ): Promise<ResultObjectBoolean> {
+  protected async _bucketIsPublic(bucketName?: string): Promise<ResultObjectBoolean> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -534,14 +550,16 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
     try {
       const { data } = await this._client.listBuckets();
-      const index = data.buckets.findIndex((bucket: BackblazeB2Bucket) => bucket.bucketName === bucketName);
+      const index = data.buckets.findIndex(
+        (bucket: BackblazeB2Bucket) => bucket.bucketName === bucketName
+      );
       if (index === -1) {
-        return { value: null, error: `Could not find the bucket "${bucketName}"` }
+        return { value: null, error: `Could not find the bucket "${bucketName}"` };
       }
       const bucket: BackblazeB2Bucket = data.buckets[index];
       return { value: bucket.bucketType === "allPublic", error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -554,19 +572,24 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(bucketName: string, _fileName: string, _options: Options): Promise<ResultObjectObject> {
+  protected async _getPresignedUploadURL(
+    bucketName: string,
+    _fileName: string,
+    _options: Options
+  ): Promise<ResultObjectObject> {
     try {
       const data = await this.getBucket(bucketName);
       if (data.error !== null) {
         return { value: null, error: data.error };
       }
+      const { value: bucket } = data;
+      const { id: bucketId } = bucket as BucketB2;
       const {
-        value: { id: bucketId },
-      } = data;
-      const { value: { uploadUrl, authorizationToken } } = await this.getUploadUrl(bucketId) as any;
-      return { value: { url: uploadUrl, authToken: authorizationToken }, error: null }
+        value: { uploadUrl, authorizationToken },
+      } = (await this.getUploadUrl(bucketId)) as any;
+      return { value: { url: uploadUrl, authToken: authorizationToken }, error: null };
     } catch (e) {
-      return { value: null, error: e.message }
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 

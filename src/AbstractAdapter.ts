@@ -10,17 +10,17 @@ import {
   ResultObjectObject,
   ResultObjectStream,
 } from "./types/result.ts";
-import { validateName } from "./util.ts";
+import { getErrorMessage, validateName } from "./util.ts";
 import { FileHandle } from "fs/promises";
 
 export abstract class AbstractAdapter implements IAdapter {
   protected _provider: Provider = Provider.NONE;
-  protected _config: AdapterConfig | null;
-  protected _configError: string | null = null;
-  protected _bucketName: string = null;
-  protected _client: any = null; // eslint-disable-line
+  declare protected _config: AdapterConfig;
+  declare protected _client: any;
+  protected _configError: null | string = null;
+  protected _bucketName: null | string = null;
 
-  constructor(config: string | AdapterConfig) { }
+  constructor(config: string | AdapterConfig) {}
 
   get provider(): Provider {
     return this._provider;
@@ -38,11 +38,11 @@ export abstract class AbstractAdapter implements IAdapter {
     return this.config;
   }
 
-  get configError(): string {
+  get configError(): null | string {
     return this._configError;
   }
 
-  getConfigError(): string {
+  getConfigError(): null | string {
     return this.configError;
   }
 
@@ -56,41 +56,47 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._client;
   }
 
-  setSelectedBucket(bucketName: string | null) {
+  setSelectedBucket(bucketName: null | string) {
     this._bucketName = bucketName;
   }
 
-  getSelectedBucket(): string | null {
+  getSelectedBucket(): null | string {
     return this._bucketName;
   }
 
-  set selectedBucket(bucketName: string | null) {
+  set selectedBucket(bucketName: null | string) {
     this._bucketName = bucketName;
   }
 
-  get selectedBucket(): string | null {
+  get selectedBucket(): null | string {
     return this._bucketName;
   }
 
-  set bucketName(bucketName: string | null) {
+  set bucketName(bucketName: null | string) {
     this._bucketName = bucketName;
   }
 
-  get bucketName(): string | null {
+  get bucketName(): null | string {
     return this._bucketName;
   }
 
-  private getFileAndBucketAndOptions(...args:
-    [bucketName: string, fileName: string, options?: boolean | Options | StreamOptions] |
-    [fileName: string, options?: boolean | Options | StreamOptions] |
-    [options: boolean | Options | StreamOptions]
-  ): { bucketName: string; fileName: string; options: object | boolean, error: string } {
+  private getFileAndBucketAndOptions(
+    ...args:
+      | [bucketName?: string, fileName?: string, options?: boolean | Options | StreamOptions]
+      | [fileName?: string, options?: boolean | Options | StreamOptions]
+      | [options?: boolean | Options | StreamOptions]
+  ): {
+    bucketName: undefined | string;
+    fileName: undefined | string;
+    options: object | boolean;
+    error: undefined | string;
+  } {
     const [arg1, arg2, arg3] = args;
     // console.log("getFileAndBucketAndOptions", arg1, arg2, arg3);
-    let bucketName: string = null;
-    let fileName: string = null;
-    let options: object | boolean = {};
-    let error = null;
+    let bucketName: undefined | string = undefined;
+    let fileName: undefined | string = undefined;
+    let options: undefined | object | boolean = {};
+    let error: undefined | string = undefined;
 
     if (typeof arg1 !== "string" && typeof arg2 !== "string") {
       return { bucketName, fileName, options, error: "Please provide a filename" };
@@ -106,7 +112,7 @@ export abstract class AbstractAdapter implements IAdapter {
     }
 
     if (typeof arg1 !== "string" && typeof arg2 === "string") {
-      bucketName = this._bucketName;
+      bucketName = this._bucketName === null ? undefined : this._bucketName;
       if (bucketName === null) {
         return { bucketName, fileName, options, error: "Please provide or select a bucket" };
       }
@@ -118,7 +124,7 @@ export abstract class AbstractAdapter implements IAdapter {
     }
 
     if (typeof arg1 === "string" && typeof arg2 !== "string") {
-      bucketName = this._bucketName;
+      bucketName = this._bucketName === null ? undefined : this._bucketName;
       if (bucketName === null) {
         return { bucketName, fileName, options, error: "Please provide or select a bucket" };
       }
@@ -136,6 +142,8 @@ export abstract class AbstractAdapter implements IAdapter {
     if (fileName === null) {
       return { bucketName, fileName, options, error: "Please provide a filename" };
     }
+
+    return { bucketName, fileName, options, error };
   }
 
   private async checkBucket(name?: string, checkIfExists: boolean = true): Promise<ResultObject> {
@@ -156,12 +164,12 @@ export abstract class AbstractAdapter implements IAdapter {
     if (checkIfExists === true) {
       const { value, error } = await this._bucketExists(name);
       if (error !== null) {
-        return { value: null, error }
+        return { value: null, error };
       } else if (value === false) {
-        return { value: null, error: `No bucket '${name}' found.` }
+        return { value: null, error: `No bucket '${name}' found.` };
       }
     }
-    return { value: name, error: null }
+    return { value: name, error: null };
   }
 
   private async checkFile(bucketName: string, fileName: string): Promise<ResultObject> {
@@ -193,19 +201,40 @@ export abstract class AbstractAdapter implements IAdapter {
 
   protected abstract _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
-  protected abstract _addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject>;
+  protected abstract _addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject>;
 
-  protected abstract _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+  protected abstract _fileExists(
+    bucketName: string,
+    fileName: string
+  ): Promise<ResultObjectBoolean>;
 
-  protected abstract _getFileAsStream(bucketName: string, fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
+  protected abstract _getFileAsStream(
+    bucketName: string,
+    fileName: string,
+    options: StreamOptions
+  ): Promise<ResultObjectStream>;
 
-  protected abstract _getPublicURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+  protected abstract _getPublicURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject>;
 
-  protected abstract _getSignedURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+  protected abstract _getSignedURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObject>;
 
-  protected abstract _removeFile(bucketName: string, fileName: string,): Promise<ResultObject>;
+  protected abstract _removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
 
-  protected abstract _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject>;
+  protected abstract _getPresignedUploadURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObjectObject>;
 
   // public
   public async listBuckets(): Promise<ResultObjectBuckets> {
@@ -215,9 +244,8 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._listBuckets();
   }
 
-  public async createBucket(...args:
-    [bucketName?: string, options?: Options] |
-    [options?: Options]
+  public async createBucket(
+    ...args: [bucketName?: string, options?: Options] | [options?: Options]
   ): Promise<ResultObject> {
     if (this._configError !== null) {
       return { value: null, error: this.configError };
@@ -243,9 +271,9 @@ export abstract class AbstractAdapter implements IAdapter {
 
     const { value, error } = await this.bucketExists(name);
     if (error !== null) {
-      return { value: null, error }
+      return { value: null, error };
     } else if (value === true) {
-      return { value: null, error: `Bucket '${name}' already exists.` }
+      return { value: null, error: `Bucket '${name}' already exists.` };
     }
 
     return this._createBucket(name, arg2 || {});
@@ -256,7 +284,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (r.error !== null) {
       return { value: null, error: r.error };
     }
-    name = r.value;
+    name = r.value as string;
     return this._clearBucket(name);
   }
 
@@ -269,7 +297,7 @@ export abstract class AbstractAdapter implements IAdapter {
         return r;
       }
     }
-    name = r.value;
+    name = r.value as string;
     if (this.selectedBucket === name) {
       this.selectedBucket = null;
     }
@@ -281,7 +309,7 @@ export abstract class AbstractAdapter implements IAdapter {
     if (r.error !== null) {
       return { value: null, error: r.error };
     }
-    name = r.value;
+    name = r.value as string;
     return this._bucketExists(name);
   }
 
@@ -290,17 +318,15 @@ export abstract class AbstractAdapter implements IAdapter {
     if (r.error !== null) {
       return { value: null, error: r.error };
     }
-    name = r.value;
+    name = r.value as string;
     return this._bucketIsPublic(name);
   }
 
-  public async listFiles(...args:
-    [bucketName?: string, numFiles?: number] |
-    [numFiles?: number] |
-    [bucketName?: string]
+  public async listFiles(
+    ...args: [bucketName?: string, numFiles?: number] | [numFiles?: number] | [bucketName?: string]
   ): Promise<ResultObjectFiles> {
     const [arg1, arg2] = args;
-    let bucketName: string;
+    let bucketName: undefined | string = undefined;
     let numFiles: number = 10000;
 
     if (typeof arg1 === "number") {
@@ -314,10 +340,10 @@ export abstract class AbstractAdapter implements IAdapter {
 
     const r = await this.checkBucket(bucketName, true);
     if (r.error) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
     // console.log(bucketName, numFiles)
-    return this._listFiles(r.value, numFiles);
+    return this._listFiles(r.value as string, numFiles);
   }
 
   public async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
@@ -332,31 +358,42 @@ export abstract class AbstractAdapter implements IAdapter {
     return await this.addFile(params);
   }
 
-  public async addFile(params: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject> {
-    const { bucketName, fileName: _fn, options, error } = this.getFileAndBucketAndOptions(params.bucketName, params.targetPath, params.options);
+  public async addFile(
+    params: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
+    const {
+      bucketName,
+      fileName: _fn,
+      options,
+      error,
+    } = this.getFileAndBucketAndOptions(params.bucketName, params.targetPath, params.options);
     if (error !== null) {
-      return { value: null, error };
+      return { value: null, error: error as string };
     }
 
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     } else {
-      params.bucketName = r.value;
-      params.options = options === null ? {} : options as object;
+      params.bucketName = r.value as string;
+      params.options = options === null ? {} : (options as object);
     }
 
-    let fh: FileHandle = null;
+    let fh: null | FileHandle = null;
     if (typeof (params as FilePathParams).origPath === "string") {
       const f = (params as FilePathParams).origPath;
       try {
         fh = await fs.promises.open(f);
-      } catch (e) {
-        return { value: null, error: e.message };
+      } catch (e: unknown) {
+        return { value: null, error: getErrorMessage(e) };
       }
       const readStream = fs.createReadStream(f);
-      delete (params as FilePathParams).origPath;
-      (params as FileStreamParams).stream = readStream;
+      (params as FileStreamParams) = {
+        bucketName: params.bucketName,
+        options: params.options,
+        stream: readStream,
+        targetPath: params.targetPath,
+      };
     }
 
     const r2 = await this._addFile(params);
@@ -366,141 +403,154 @@ export abstract class AbstractAdapter implements IAdapter {
     return r2;
   }
 
-  public async getFileAsStream(...args:
-    [bucketName: string, fileName: string, options?: StreamOptions] |
-    [fileName: string, options?: StreamOptions]
+  public async getFileAsStream(
+    ...args:
+      | [bucketName: string, fileName: string, options?: StreamOptions]
+      | [fileName: string, options?: StreamOptions]
   ): Promise<ResultObjectStream> {
     const { bucketName, fileName, options, error } = this.getFileAndBucketAndOptions(...args);
     // console.log(bucketName, fileName, options, error);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error: error as string };
     }
 
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
-    const r2 = await this.checkFile(r.value, fileName);
+    const r2 = await this.checkFile(r.value as string, fileName as string);
     if (r2.error !== null) {
-      return { value: null, error: r2.error }
+      return { value: null, error: r2.error };
     }
 
-    return this._getFileAsStream(r.value, fileName, options === null ? {} : options as StreamOptions);
+    return this._getFileAsStream(
+      r.value as string,
+      fileName as string,
+      options === null ? {} : (options as StreamOptions)
+    );
   }
 
-  public async getPublicURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
+  public async getPublicURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
   ): Promise<ResultObject> {
     const { bucketName, fileName, options: opt, error } = this.getFileAndBucketAndOptions(...args);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error: error as string };
     }
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
-    const r2 = await this.checkFile(r.value, fileName);
+    const r2 = await this.checkFile(r.value as string, fileName as string);
     if (r2.error !== null) {
-      return { value: null, error: r2.error }
+      return { value: null, error: r2.error };
     }
-    const options = opt === null ? {} : opt as Options
-    return this._getPublicURL(r.value, fileName, options);
+    const options = opt === null ? {} : (opt as Options);
+    return this._getPublicURL(r.value as string, fileName as string, options);
   }
 
-  public async getSignedURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
+  public async getSignedURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
   ): Promise<ResultObject> {
     const { bucketName, fileName, options, error } = this.getFileAndBucketAndOptions(...args);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error: error as string };
     }
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
-    const r2 = await this.checkFile(r.value, fileName);
+    const r2 = await this.checkFile(r.value as string, fileName as string);
     if (r2.error !== null) {
-      return { value: null, error: r2.error }
+      return { value: null, error: r2.error };
     }
-    return this._getSignedURL(r.value, fileName, options === null ? {} : options as Options);
+    return this._getSignedURL(
+      r.value as string,
+      fileName as string,
+      options === null ? {} : (options as Options)
+    );
   }
 
-  public async sizeOf(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  public async sizeOf(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectNumber> {
     const { bucketName, fileName, options: _o, error } = this.getFileAndBucketAndOptions(...args);
     if (error !== null) {
-      return { value: null, error };
+      return { value: null, error: error as string };
     }
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
-    const r2 = await this.checkFile(r.value, fileName);
+    const r2 = await this.checkFile(r.value as string, fileName as string);
     if (r2.error !== null) {
-      return { value: null, error: r2.error }
+      return { value: null, error: r2.error };
     }
-    return this._sizeOf(r.value, fileName);
+    return this._sizeOf(r.value as string, fileName as string);
   }
 
-  public async fileExists(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  public async fileExists(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectBoolean> {
     const { bucketName, fileName, options: _o, error } = this.getFileAndBucketAndOptions(...args);
     if (error !== null) {
-      return { value: null, error };
+      return { value: null, error: error as string };
     }
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
-    return this._fileExists(r.value, fileName);
+    return this._fileExists(r.value as string, fileName as string);
   }
 
-  public async removeFile(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  public async removeFile(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObject> {
-    const { bucketName, fileName, options: _allVersions, error } = this.getFileAndBucketAndOptions(...args);
+    const {
+      bucketName,
+      fileName,
+      options: _allVersions,
+      error,
+    } = this.getFileAndBucketAndOptions(...args);
     if (error !== null) {
-      return { error, value: null };
+      return { value: null, error: error as string };
     }
 
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
 
     // check if file exists, this is especially necessary for Backblaze B2 with S3 adapter!
-    const r2 = await this.checkFile(r.value, fileName);
+    const r2 = await this.checkFile(r.value as string, fileName as string);
     if (r2.error !== null) {
       if (r2.error.startsWith(`No file '${fileName}' found in bucket`)) {
-        return { value: r2.error, error: null }
+        return { value: r2.error, error: null };
       } else {
-        return { value: null, error: r2.error }
+        return { value: null, error: r2.error };
       }
     }
 
-    return this._removeFile(bucketName, fileName);
+    return this._removeFile(bucketName as string, fileName as string);
   }
 
-  public async getPresignedUploadURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
+  public async getPresignedUploadURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
   ): Promise<ResultObjectObject> {
     const { bucketName, fileName, options, error } = this.getFileAndBucketAndOptions(...args);
     if (error !== null) {
-      return { value: null, error };
+      return { value: null, error: error as string };
     }
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
-      return { value: null, error: r.error }
+      return { value: null, error: r.error };
     }
-    return this._getPresignedUploadURL(r.value, fileName, options as object);
+    return this._getPresignedUploadURL(r.value as string, fileName as string, options as object);
   }
-
 }

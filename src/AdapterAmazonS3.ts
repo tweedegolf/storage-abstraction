@@ -43,21 +43,21 @@ import {
   ResultObjectStream,
 } from "./types/result.ts";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3.ts";
-import { parseUrl } from "./util.ts";
+import { getErrorMessage, parseUrl } from "./util.ts";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   declare protected _provider: Provider;
   declare protected _config: AdapterConfigAmazonS3;
   declare protected _client: S3Client;
-  protected _configError: string | null = null;
+  protected _configError: null | string = null;
 
-  constructor(config?: string | AdapterConfigAmazonS3) {
+  constructor(config: string | AdapterConfigAmazonS3) {
     super(config);
     if (typeof config !== "string") {
       this._config = { ...config };
     } else {
       const { value, error } = parseUrl(config);
-      if (error !== null) {
+      if (value === null) {
         this._configError = `[configError] ${error}`;
       } else {
         const {
@@ -86,7 +86,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
     this._provider = this.config.provider as Provider;
 
-    if (this._provider !== Provider.S3 && this._provider !== Provider.AWS && typeof this._config.endpoint === "undefined") {
+    if (
+      this._provider !== Provider.S3 &&
+      this._provider !== Provider.AWS &&
+      typeof this._config.endpoint === "undefined"
+    ) {
       this._configError = `[configError] No endpoint specified for ${this._provider}`;
     }
 
@@ -122,15 +126,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         delete o.secretAccessKey;
         this._client = new S3Client(o);
       }
-    } catch (e) {
-      this._configError = `[configError] ${e.message}`;
+    } catch (e: unknown) {
+      this._configError = `[configError] ${getErrorMessage(e)}`;
     }
 
     if (typeof this.config.bucketName !== "undefined") {
       this._bucketName = this.config.bucketName;
     }
   }
-
 
   private async getFiles(
     bucketName: string,
@@ -144,9 +147,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new ListObjectsCommand(input);
       const { Contents } = await this._client.send(command);
       // console.log("Contents", Contents);
-      return { value: Contents, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+      return { value: typeof Contents === "undefined" ? [] : Contents, error: null };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -162,9 +165,9 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new ListObjectVersionsCommand(input);
       const { Versions } = await this._client.send(command);
       // console.log("Versions", Versions);
-      return { value: Versions, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+      return { value: typeof Versions === "undefined" ? [] : Versions, error: null };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -175,13 +178,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const input = {};
       const command = new ListBucketsCommand(input);
       const response = await this._client.send(command);
-      let bucketNames = [];
-      if (response.Buckets) {
-        bucketNames = response.Buckets.map((b) => b?.Name);
+      let bucketNames: Array<string> = [];
+      if (typeof response.Buckets !== "undefined") {
+        const tmp: Array<undefined | string> = response.Buckets.map((b) => b.Name);
+        bucketNames = tmp.filter((name) => typeof name !== "undefined");
       }
       return { value: bucketNames, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -194,16 +198,20 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       };
       const command = new CreateBucketCommand(input);
       await this._client.send(command);
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
 
     try {
-      await waitUntilBucketExists({
-        client: this._client, maxWaitTime: 120
-      }, { Bucket: bucketName });
-    } catch (e) {
-      return { value: null, error: `waitUntilBucketExists: ${e.message}` };
+      await waitUntilBucketExists(
+        {
+          client: this._client,
+          maxWaitTime: 120,
+        },
+        { Bucket: bucketName }
+      );
+    } catch (e: unknown) {
+      return { value: null, error: `waitUntilBucketExists: ${getErrorMessage(e)}` };
     }
 
     if (options.public === true) {
@@ -215,7 +223,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
               PublicAccessBlockConfiguration: {
                 BlockPublicAcls: false,
                 IgnorePublicAcls: false,
-                BlockPublicPolicy: false,       // DISABLE BlockPublicPolicy
+                BlockPublicPolicy: false, // DISABLE BlockPublicPolicy
                 RestrictPublicBuckets: false,
               },
             })
@@ -230,14 +238,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
                 // Principal: "*",
                 Principal: { AWS: ["*"] },
                 Action: ["s3:GetObject"],
-                Resource: [`arn:aws:s3:::${bucketName}/*`]
-              }
-            ]
+                Resource: [`arn:aws:s3:::${bucketName}/*`],
+              },
+            ],
           };
-          await this._client.send(new PutBucketPolicyCommand({
-            Bucket: bucketName,
-            Policy: JSON.stringify(publicReadPolicy)
-          }));
+          await this._client.send(
+            new PutBucketPolicyCommand({
+              Bucket: bucketName,
+              Policy: JSON.stringify(publicReadPolicy),
+            })
+          );
         } else if (this._provider === Provider.MINIO_S3) {
           const policy = {
             Version: "2012-10-17",
@@ -248,14 +258,16 @@ export class AdapterAmazonS3 extends AbstractAdapter {
                 // Principal: { AWS: ["*"] },
                 Principal: "*",
                 Action: ["s3:GetObject"],
-                Resource: [`arn:aws:s3:::${bucketName}/*`]
-              }
-            ]
+                Resource: [`arn:aws:s3:::${bucketName}/*`],
+              },
+            ],
           };
-          await this._client.send(new PutBucketPolicyCommand({
-            Bucket: bucketName,
-            Policy: JSON.stringify(policy)
-          }));
+          await this._client.send(
+            new PutBucketPolicyCommand({
+              Bucket: bucketName,
+              Policy: JSON.stringify(policy),
+            })
+          );
         } else if (this._provider === Provider.CUBBIT) {
           await this._client.send(
             new PutBucketAclCommand({
@@ -263,11 +275,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
               ACL: "public-read", // or "public-read-write"
             })
           );
-        } else if (this._provider === Provider.CLOUDFLARE || this._provider === Provider.BACKBLAZE_S3) {
+        } else if (
+          this._provider === Provider.CLOUDFLARE ||
+          this._provider === Provider.BACKBLAZE_S3
+        ) {
           okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._provider} web console`;
         }
-      } catch (e) {
-        return { value: null, error: `make bucket public: ${e.message}` };
+      } catch (e: unknown) {
+        return { value: null, error: `make bucket public: ${getErrorMessage(e)}` };
       }
     }
 
@@ -291,7 +306,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   protected async _clearBucket(bucketName: string): Promise<ResultObject> {
     if (this._provider === Provider.BACKBLAZE_S3) {
-      let versions: Array<{ Key: string; VersionId: string }> = [];
+      let versions: Array<{ Key: undefined | string; VersionId: undefined | string }> = [];
       const { value, error } = await this.getFileVersions(bucketName);
       if (error !== null) {
         return { value: null, error };
@@ -314,18 +329,18 @@ export class AdapterAmazonS3 extends AbstractAdapter {
             );
           }
           return { value: "ok", error: null };
-        } catch (e) {
-          return { value: null, error: e.message };
+        } catch (e: unknown) {
+          return { value: null, error: getErrorMessage(e) };
         }
       } else {
         return { value: "ok", error: null };
       }
     } else {
-      let objects: Array<{ Key: string }> = [];
+      let objects: Array<{ Key: undefined | string }> = [];
       const { value, error } = await this.getFiles(bucketName);
       if (error !== null) {
         return { value: null, error };
-      } else if (typeof value !== "undefined") {
+      } else if (value !== null && value.length > 0) {
         objects = value.map((value) => ({ Key: value.Key }));
       }
 
@@ -342,8 +357,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           await this._client.send(command);
           // return { value: `${objects.length} files removed from '${bucketName}'`, error: null };
           return { value: "ok", error: null };
-        } catch (e) {
-          return { value: null, error: e.message };
+        } catch (e: unknown) {
+          return { value: null, error: getErrorMessage(e) };
         }
       } else {
         // return { value: `No files removed; ${bucketName} contained no files`, error: null };
@@ -365,8 +380,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this._client.send(command);
       // console.log(response);
       return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -385,46 +400,49 @@ export class AdapterAmazonS3 extends AbstractAdapter {
 
   protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     if (this._provider === Provider.CLOUDFLARE || this._provider === Provider.CUBBIT) {
-      return { value: null, error: `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console` };
+      return {
+        value: null,
+        error: `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console`,
+      };
     }
 
     if (this._provider === Provider.BACKBLAZE_S3) {
       try {
         const aclResult = await this._client.send(new GetBucketAclCommand({ Bucket: bucketName }));
         // If one of the grants is for AllUsers with 'READ', it's public
-        const isPublic = aclResult.Grants.some(
-          grant =>
-            grant.Grantee.Type === "Group" &&
-            grant.Grantee.URI === "http://acs.amazonaws.com/groups/global/AllUsers" &&
+        const isPublic = aclResult.Grants?.some(
+          (grant) =>
+            grant.Grantee?.Type === "Group" &&
+            grant.Grantee?.URI === "http://acs.amazonaws.com/groups/global/AllUsers" &&
             grant.Permission === "READ"
         );
-        return { value: isPublic, error: null }
-      } catch (e) {
-        return { value: null, error: e }
+        return { value: typeof isPublic === "undefined" ? false : isPublic, error: null };
+      } catch (e: unknown) {
+        return { value: null, error: getErrorMessage(e) };
       }
     }
 
     if (this._provider === Provider.MINIO_S3) {
       try {
-        const policy = await this._client.send(
-          new GetBucketPolicyCommand({ Bucket: bucketName })
-        );
-        const p = JSON.parse(policy.Policy);
         let isPublic = false;
-        // console.log('Bucket policy:', policy);
-        for (let i = 0; i < p.Statement.length; i++) {
-          const s = p.Statement[i];
-          if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {
-            isPublic = true;
-            break;
+        const policy = await this._client.send(new GetBucketPolicyCommand({ Bucket: bucketName }));
+        if (typeof policy.Policy !== "undefined") {
+          const p = JSON.parse(policy.Policy);
+          // console.log('Bucket policy:', policy);
+          for (let i = 0; i < p.Statement.length; i++) {
+            const s = p.Statement[i];
+            if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {
+              isPublic = true;
+              break;
+            }
           }
         }
         return { value: isPublic, error: null };
-      } catch (e) {
-        if (e.Code === 'NoSuchBucketPolicy') {
-          return { value: false, error: null }
+      } catch (e: unknown) {
+        if ((e as any).Code === "NoSuchBucketPolicy") {
+          return { value: false, error: null };
         }
-        return { value: null, error: e }
+        return { value: null, error: getErrorMessage(e) };
       }
     }
 
@@ -451,10 +469,13 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         "http://acs.amazonaws.com/groups/global/AllUsers",
         "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
       ];
-      const hasPublicAcl = aclResponse.Grants.some((grant) =>
-        grant.Grantee.URI && publicGrantUris.includes(grant.Grantee.URI) &&
-        (grant.Permission === "READ" || grant.Permission === "WRITE")
+      let hasPublicAcl = aclResponse.Grants?.some(
+        (grant) =>
+          grant.Grantee?.URI &&
+          publicGrantUris.includes(grant.Grantee.URI) &&
+          (grant.Permission === "READ" || grant.Permission === "WRITE")
       );
+      hasPublicAcl = typeof hasPublicAcl === "undefined" ? false : hasPublicAcl;
 
       // Bucket is effectively public if:
       // - Policy allows public
@@ -462,40 +483,42 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       // - OR ACL grants public permissions
       const isBucketPublic = (isPolicyPublic && !blocksPublicPolicy) || hasPublicAcl;
       return { value: isBucketPublic, error: null };
-    } catch (e) {
-      if (e.name === "NoSuchPublicAccessBlockConfiguration") {
+    } catch (e: unknown) {
+      if ((e as any).name === "NoSuchPublicAccessBlockConfiguration") {
         // No Public Access Block means no restrictions by default, check policy and ACL anyway
         return { value: true, error: null }; // potential public, or run further checks
       }
-      if (e.name === "NoSuchBucketPolicy") {
+      if ((e as any).name === "NoSuchBucketPolicy") {
         // No bucket policy means no public policy, but could still have public ACL
-        const aclResponse = await this._client.send(new GetBucketAclCommand({ Bucket: bucketName }));
+        const aclResponse = await this._client.send(
+          new GetBucketAclCommand({ Bucket: bucketName })
+        );
         const publicGrantUris = [
           "http://acs.amazonaws.com/groups/global/AllUsers",
           "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
         ];
-        const hasPublicAcl = aclResponse.Grants.some((grant) =>
-          grant.Grantee.URI && publicGrantUris.includes(grant.Grantee.URI) &&
-          (grant.Permission === "READ" || grant.Permission === "WRITE")
+        const hasPublicAcl = aclResponse.Grants?.some(
+          (grant) =>
+            grant.Grantee?.URI &&
+            publicGrantUris.includes(grant.Grantee.URI) &&
+            (grant.Permission === "READ" || grant.Permission === "WRITE")
         );
-        return { value: hasPublicAcl, error: null };
+        return { value: typeof hasPublicAcl === "undefined" ? false : hasPublicAcl, error: null };
       }
-      return { value: null, error: `bucketIsPublic: ${e.message}` };
+      return { value: null, error: `bucketIsPublic: ${getErrorMessage(e)}` };
     }
   }
 
-  protected async _addFile(
-    params: FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
+  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
-      let fileData: Readable | Buffer;
+      let fileData: undefined | Readable | Buffer = undefined;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
         fileData = (params as FileBufferParams).buffer;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         fileData = (params as FileStreamParams).stream;
       }
 
-      if (typeof params.options.ACL === "string") {
+      if (typeof params.options?.ACL === "string") {
         params.options.ACL = params.options.ACL as ObjectCannedACL;
       }
 
@@ -508,8 +531,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new PutObjectCommand(input);
       const response = await this._client.send(command);
       return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -519,7 +542,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     options: StreamOptions
   ): Promise<ResultObjectStream> {
     const { start, end } = options;
-    let range = `bytes=${start}-${end}`;
+    let range: undefined | string = `bytes=${start}-${end}`;
     if (typeof start === "undefined" && typeof end === "undefined") {
       range = undefined;
     } else if (typeof start === "undefined") {
@@ -537,15 +560,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const command = new GetObjectCommand(params);
       const response = await this._client.send(command);
       return { value: response.Body as Readable, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-  ): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       await this._client.send(
         new DeleteObjectCommand({
@@ -554,21 +574,18 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         })
       );
       return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _removeFileVersions(
-    bucketName: string,
-    fileName: string,
-  ): Promise<ResultObject> {
-    let versions: Array<{ Key: string; VersionId?: string }>;
+  protected async _removeFileVersions(bucketName: string, fileName: string): Promise<ResultObject> {
+    let versions: Array<{ Key?: string; VersionId?: string }> = [];
     // first check if there are any versioned files
     const { value, error } = await this.getFileVersions(bucketName);
     if (error !== null) {
       return { value: null, error };
-    } else {
+    } else if (value !== null) {
       versions = value.map((value) => ({ Key: value.Key }));
     }
 
@@ -584,8 +601,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           );
         }
         return { value: "ok", error: null };
-      } catch (e) {
-        return { value: null, error: e };
+      } catch (e: unknown) {
+        return { value: null, error: getErrorMessage(e) };
       }
     } else {
       try {
@@ -596,8 +613,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           })
         );
         return { value: "ok", error: null };
-      } catch (e) {
-        return { value: null, error: e.message };
+      } catch (e: unknown) {
+        return { value: null, error: getErrorMessage(e) };
       }
     }
   }
@@ -615,14 +632,17 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (options.noCheck === true) {
         return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
       }
-      return { value: null, error: `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}` };
+      return {
+        value: null,
+        error: `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}`,
+      };
     }
 
     let url = "";
     if (this._provider === Provider.AWS) {
-      url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`
+      url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
     } else if (this._provider === Provider.BACKBLAZE_S3) {
-      url = `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`
+      url = `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`;
     } else if (this._provider === Provider.MINIO_S3) {
       // let tmp = this._config.endpoint
       // url = `${tmp.substring(0, tmp.indexOf("://") + 3)}${bucketName}.${tmp.substring(tmp.indexOf("://") + 3)}/${fileName}`;
@@ -648,7 +668,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
   ): Promise<ResultObject> {
     try {
       if (typeof options.expiresIn !== "number") {
-        options.expiresIn = 604800 // one week: 7*24*60*60
+        options.expiresIn = 604800; // one week: 7*24*60*60
       }
       // console.log(options.expiresIn);
       const url = await getSignedUrl(
@@ -660,8 +680,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         options
       );
       return { value: url, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -671,12 +691,18 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       if (error !== null) {
         return { value: null, error };
       }
-      if (typeof value === "undefined") {
+      if (value === null) {
         return { value: [], error: null };
       }
-      return { value: value.map((o) => [o.Key, o.Size]), error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+      const tmp: Array<null | [string, number]> = value.map((o) => {
+        if (typeof o.Key === "undefined" || typeof o.Size === "undefined") {
+          return null;
+        }
+        return [o.Key as string, o.Size as number];
+      });
+      return { value: tmp.filter((o) => o !== null), error: null };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -688,9 +714,12 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       };
       const command = new HeadObjectCommand(input);
       const response = await this._client.send(command);
+      if (typeof response.ContentLength === "undefined") {
+        return { value: null, error: `could not calculate filesize of ${fileName}` };
+      }
       return { value: response.ContentLength, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -708,7 +737,11 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+  protected async _getPresignedUploadURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObjectObject> {
     let expiresIn = 300; // 5 * 60
     if (typeof options.expiresIn !== "undefined") {
       expiresIn = Number.parseInt(options.expiresIn, 10);
@@ -723,20 +756,20 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       // ["starts-with", "$x-amz-meta-user", ""], // force certain metadata fields
     ];
     if (typeof options.conditions !== "undefined") {
-      conditions = options.conditions as Array<Conditions>
+      conditions = options.conditions as Array<Conditions>;
     }
 
     let fields = {
       "x-amz-server-side-encryption": "AES256",
       acl: "bucket-owner-full-control",
-    }
+    };
     if (typeof options.fields !== "undefined") {
-      fields = options.fields
+      fields = options.fields;
     }
 
     try {
       let data: any;
-      console.log(this.provider)
+      console.log(this.provider);
       if (this.provider === Provider.S3 || this.provider === Provider.AWS) {
         data = await createPresignedPost(this._client, {
           Bucket: bucketName,
@@ -749,14 +782,14 @@ export class AdapterAmazonS3 extends AbstractAdapter {
         const command = new PutObjectCommand({
           Bucket: bucketName,
           Key: fileName,
-          ACL: "public-read"
+          ACL: "public-read",
         });
         const url = await getSignedUrl(this._client, command, { expiresIn });
         data = { url };
       }
       return { value: data, error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -781,8 +814,8 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       const response = await this._client.send(command);
       console.log(response);
       return { value: "ok", error: null };
-    } catch (e) {
-      return { value: null, error: e.message };
+    } catch (e: unknown) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 

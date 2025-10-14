@@ -25,7 +25,7 @@ const availableAdapters: string = getAvailableAdapters();
  * @implements {IAdapter}
  */
 export class Storage implements IAdapter {
-  private _adapter: IAdapter;
+  declare private _adapter: IAdapter;
   // public ready: Promise<void>;
 
   constructor(config: string | StorageAdapterConfig) {
@@ -68,7 +68,11 @@ export class Storage implements IAdapter {
         try {
           AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
         } catch (e) {
-          throw new Error(e.message);
+          if (e instanceof Error) {
+            throw e.message;
+          } else {
+            throw e;
+          }
         }
       }
       this._adapter = new AdapterClass(config);
@@ -138,11 +142,11 @@ export class Storage implements IAdapter {
     return this.adapter.config;
   }
 
-  get configError(): string {
+  get configError(): string | null {
     return this.adapter.configError;
   }
 
-  public getConfigError(): string {
+  public getConfigError(): string | null {
     return this.adapter.configError;
   }
   //eslint-disable-next-line

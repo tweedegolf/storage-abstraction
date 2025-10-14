@@ -1,5 +1,5 @@
 //  add new storage adapters here
-export const adapterClasses = {
+export const adapterClasses: { [id: string]: Array<string> } = {
   s3: ["AdapterAmazonS3", "@tweedegolf/sab-adapter-amazon-s3"],
   aws: ["AdapterAmazonS3", "@tweedegolf/sab-adapter-amazon-s3"],
 
@@ -25,14 +25,14 @@ export const adapterClasses = {
 };
 
 // or here for functional adapters
-export const adapterFunctions = {
+export const adapterFunctions: { [id: string]: Array<string> } = {
   b2f: ["AdapterBackblazeB2F", "@tweedegolf/sab-adapter-backblaze-b2f"],
 };
 
 export function getAvailableAdapters(): string {
   return Object.keys(adapterClasses)
     .concat(Object.keys(adapterFunctions))
-    .reduce((acc, val) => {
+    .reduce((acc: Array<string>, val: string) => {
       if (acc.findIndex((v) => v === val) === -1) {
         acc.push(val[0]);
       }

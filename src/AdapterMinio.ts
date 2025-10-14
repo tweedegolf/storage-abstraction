@@ -13,7 +13,7 @@ import {
   ResultObjectStream,
 } from "./types/result.ts";
 import { AdapterConfigMinio } from "./types/adapter_minio.ts";
-import { parseUrl } from "./util.ts";
+import { getErrorMessage, parseUrl } from "./util.ts";
 
 export class AdapterMinio extends AbstractAdapter {
   protected _provider = Provider.MINIO;
@@ -27,7 +27,7 @@ export class AdapterMinio extends AbstractAdapter {
       this._config = { ...config };
     } else {
       const { value, error } = parseUrl(config);
-      if (error !== null) {
+      if (value === null) {
         this._configError = `[configError] ${error}`;
       } else {
         const {
@@ -37,20 +37,19 @@ export class AdapterMinio extends AbstractAdapter {
           host: bucketName,
           searchParams,
         } = value;
-        let endPoint: string;
+
+        let endPoint: undefined | string;
         if (searchParams !== null) {
           ({ endPoint } = searchParams);
           delete searchParams.endPoint;
-          // if (typeof endPoint === "undefined") {
-          //   ({ endpoint: endPoint } = searchParams);
-          //   delete searchParams.endpoint;
-          // } else {
-          //   delete searchParams.endPoint;
-          // }
-          this._config = { type, accessKey, secretKey, endPoint, ...searchParams };
-        } else {
-          this._config = { type, accessKey, secretKey, endPoint };
         }
+        if (accessKey === null || secretKey === null || typeof endPoint === "undefined") {
+          this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
+          return;
+        }
+
+        this._config = { type, accessKey, secretKey, endPoint };
+
         if (bucketName !== null) {
           this._config.bucketName = bucketName;
         }
@@ -92,7 +91,7 @@ export class AdapterMinio extends AbstractAdapter {
       try {
         this._client = new Minio.Client(c);
       } catch (e) {
-        this._configError = `[configError] ${e.message}`;
+        this._configError = `[configError] ${getErrorMessage(e)}`;
       }
     }
 
@@ -108,7 +107,7 @@ export class AdapterMinio extends AbstractAdapter {
       const buckets = await this._client.listBuckets();
       return { value: buckets.map((b) => b.name), error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -119,7 +118,7 @@ export class AdapterMinio extends AbstractAdapter {
         return { value: null, error: "bucket exists" };
       }
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
 
     try {
@@ -133,16 +132,16 @@ export class AdapterMinio extends AbstractAdapter {
               Effect: "Allow",
               Principal: { AWS: ["*"] },
               Action: ["s3:GetObject"],
-              Resource: [`arn:aws:s3:::${name}/*`]
-            }
-          ]
+              Resource: [`arn:aws:s3:::${name}/*`],
+            },
+          ],
         };
         // Set the bucket policy to public read
         await this._client.setBucketPolicy(name, JSON.stringify(publicReadPolicy));
       }
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -153,7 +152,7 @@ export class AdapterMinio extends AbstractAdapter {
   ): Promise<ResultObjectStream> {
     const { start, end } = options;
     let offset: number;
-    let length: number;
+    let length: undefined | number;
     if (typeof start !== "undefined") {
       offset = start;
     } else {
@@ -172,28 +171,24 @@ export class AdapterMinio extends AbstractAdapter {
       }
       return { value: stream, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-  ): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       await this._client.removeObject(bucketName, fileName);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
   protected async _clearBucket(name: string): Promise<ResultObject> {
     const { value: files, error } = await this.listFiles(name);
-    if (error !== null) {
+    if (files === null) {
       return { value: null, error };
     }
-
     try {
       await this._client.removeObjects(
         name,
@@ -201,7 +196,7 @@ export class AdapterMinio extends AbstractAdapter {
       );
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -211,34 +206,28 @@ export class AdapterMinio extends AbstractAdapter {
       await this._client.removeBucket(name);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _addFile(
-    params: FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
+  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
-      let fileData: Readable | Buffer;
-      let size: number;
+      let fileData: string | Readable | Buffer = "empty";
+      let size: undefined | number;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
         fileData = (params as FileBufferParams).buffer;
         size = fileData.buffer.byteLength;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         fileData = (params as FileStreamParams).stream;
       }
-
+      if (fileData instanceof Readable === false && fileData instanceof Buffer === false) {
+        return { value: null, error: "Could not find buffer or stream" };
+      }
       const { bucketName, targetPath, options } = params;
-      await this._client.putObject(
-        bucketName,
-        targetPath,
-        fileData,
-        size,
-        options
-      );
+      await this._client.putObject(bucketName as string, targetPath, fileData, size, options);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -276,7 +265,7 @@ export class AdapterMinio extends AbstractAdapter {
       const url = await this._client.presignedUrl("GET", bucketName, fileName, expiresIn);
       return { value: url, error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -286,13 +275,15 @@ export class AdapterMinio extends AbstractAdapter {
       const files: Array<[string, number]> = [];
       const { error: streamError } = await new Promise<ResultObjectFiles>((resolve) => {
         stream.on("data", function (obj) {
-          files.push([obj.name, obj.size]);
+          if (typeof obj.name !== "undefined") {
+            files.push([obj.name, obj.size]);
+          }
         });
         stream.on("end", function () {
           resolve({ value: files, error: null });
         });
         stream.on("error", function (e) {
-          resolve({ value: null, error: e.message });
+          resolve({ value: null, error: getErrorMessage(e) });
         });
       });
       if (streamError !== null) {
@@ -300,7 +291,7 @@ export class AdapterMinio extends AbstractAdapter {
       }
       return { value: files, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -309,7 +300,7 @@ export class AdapterMinio extends AbstractAdapter {
       const stats = await this._client.statObject(bucketName, fileName);
       return { value: stats.size, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -318,13 +309,11 @@ export class AdapterMinio extends AbstractAdapter {
       const exists = await this._client.bucketExists(bucketName);
       return { value: exists, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _bucketIsPublic(
-    bucketName: string,
-  ): Promise<ResultObjectBoolean> {
+  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const policy = await this._client.getBucketPolicy(bucketName);
       const p = JSON.parse(policy);
@@ -339,10 +328,10 @@ export class AdapterMinio extends AbstractAdapter {
       }
       return { value: isPublic, error: null };
     } catch (e) {
-      if (e.code === 'NoSuchBucketPolicy') {
-        return { value: false, error: null }
+      if ((e as any).code === "NoSuchBucketPolicy") {
+        return { value: false, error: null };
       }
-      return { value: null, error: e }
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -355,16 +344,20 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+  protected async _getPresignedUploadURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObjectObject> {
     try {
       let expiresIn = 300; // 5 * 60
       if (typeof options.expiresIn !== "undefined") {
         expiresIn = Number.parseInt(options.expiresIn, 10);
       }
       const url = await this._client.presignedPutObject(bucketName, fileName, expiresIn);
-      return { value: { url }, error: null }
+      return { value: { url }, error: null };
     } catch (e) {
-      return { value: null, error: e.message }
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 

@@ -21,14 +21,14 @@ import {
   ResultObjectStream,
 } from "./types/result.ts";
 import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob.ts";
-import { parseUrl } from "./util.ts";
+import { getErrorMessage, parseUrl } from "./util.ts";
 
 export class AdapterAzureBlob extends AbstractAdapter {
   protected _provider = Provider.AZURE;
   declare protected _config: AdapterConfigAzureBlob;
   declare protected _client: BlobServiceClient;
+  declare private sharedKeyCredential: StorageSharedKeyCredential;
   protected _configError: string | null = null;
-  private sharedKeyCredential: StorageSharedKeyCredential;
 
   constructor(config: string | AdapterConfigAzureBlob) {
     super(config);
@@ -36,20 +36,20 @@ export class AdapterAzureBlob extends AbstractAdapter {
       this._config = { ...config };
     } else {
       const { value, error } = parseUrl(config);
-      if (error !== null) {
+      if (value === null) {
         this._configError = `[configError] ${error}`;
       } else {
         const {
-          protocol: type,
+          protocol: provider,
           username: accountName,
           password: accountKey,
           host: bucketName,
           searchParams,
         } = value;
         if (searchParams !== null) {
-          this._config = { type, ...searchParams };
+          this._config = { provider, ...searchParams };
         } else {
-          this._config = { type };
+          this._config = { provider };
         }
         if (accountName !== null) {
           this._config.accountName = accountName;
@@ -75,8 +75,8 @@ export class AdapterAzureBlob extends AbstractAdapter {
           this.config.accountName as string,
           this.config.accountKey as string
         );
-      } catch (e) {
-        this._configError = `[configError] ${JSON.parse(e.message).code}`;
+      } catch (e: unknown) {
+        this._configError = `[configError] ${JSON.parse((e as any).code)}`;
       }
       try {
         this._client = new BlobServiceClient(
@@ -84,8 +84,8 @@ export class AdapterAzureBlob extends AbstractAdapter {
           this.sharedKeyCredential,
           this.config.options as object
         );
-      } catch (e) {
-        this._configError = `[configError] ${e.message}`;
+      } catch (e: unknown) {
+        this._configError = `[configError] ${getErrorMessage(e)}`;
       }
     } else if (typeof this.config.sasToken !== "undefined") {
       // option 2: accountName + sasToken
@@ -95,15 +95,15 @@ export class AdapterAzureBlob extends AbstractAdapter {
           new AnonymousCredential(),
           this.config.options as object
         );
-      } catch (e) {
-        this._configError = `[configError] ${e.message}`;
+      } catch (e: unknown) {
+        this._configError = `[configError] ${getErrorMessage(e)}`;
       }
     } else if (typeof this.config.connectionString !== "undefined") {
       // option 3: connection string
       try {
         this._client = BlobServiceClient.fromConnectionString(this.config.connectionString);
       } catch (e) {
-        this._configError = `[configError] ${e.message}`;
+        this._configError = `[configError] ${getErrorMessage(e)}`;
       }
     } else {
       // option 4: passwordless / Microsoft Entra
@@ -115,7 +115,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
           this.config.options as object
         );
       } catch (e) {
-        this._configError = `[configError] ${e.message}`;
+        this._configError = `[configError] ${getErrorMessage(e)}`;
       }
     }
     if (typeof this.config.bucketName !== "undefined") {
@@ -131,7 +131,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       if (blobDomain.indexOf("http") === 0) {
         protocol = blobDomain.substring(0, blobDomain.indexOf("://") + 3);
       }
-      blobDomain = blobDomain.replace(/^(https?:\/\/)/i, '');
+      blobDomain = blobDomain.replace(/^(https?:\/\/)/i, "");
       // for local testing with Azurite
       if (blobDomain.indexOf("127.0.0.1") === 0 || blobDomain.indexOf("localhost") === 0) {
         endpoint = `${protocol === "" ? "http://" : protocol}${blobDomain}/${this.config.accountName}`;
@@ -139,7 +139,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
         endpoint = `${protocol === "" ? "https://" : protocol}${this.config.accountName}.${blobDomain}`;
       }
     } else {
-      endpoint = `https://${this.config.accountName}.blob.core.windows.net`
+      endpoint = `https://${this.config.accountName}.blob.core.windows.net`;
     }
     // console.log(endpoint);
     return endpoint;
@@ -158,7 +158,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       }
       return { value: bucketNames, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -172,7 +172,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       // await containerClient.create();
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -185,7 +185,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const { start, end } = options;
       let offset: number;
-      let count: number;
+      let count: undefined | number;
       if (typeof start !== "undefined") {
         offset = start;
       } else {
@@ -202,10 +202,10 @@ export class AdapterAzureBlob extends AbstractAdapter {
         const stream = await file.download(offset, count, options as object);
         return { value: stream.readableStreamBody as Readable, error: null };
       } catch (e) {
-        return { value: null, error: e.message };
+        return { value: null, error: getErrorMessage(e) };
       }
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -226,7 +226,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       return { value: file.url, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -251,7 +251,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       const url = await file.generateSasUrl(sasOptions);
       return { value: url, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -274,7 +274,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       }
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -285,40 +285,51 @@ export class AdapterAzureBlob extends AbstractAdapter {
       //console.log('deleting container: ', del);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
   protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
+      let name = bucketName;
+      let prefix = "";
+      if (bucketName.indexOf("/") !== -1) {
+        [name, prefix] = bucketName.split("/");
+      }
+      const listOptions = {
+        includeMetadata: false,
+        includeSnapshots: false,
+        prefix, // Filter results by blob name prefix
+      };
       const files: [string, number][] = [];
-      const data = this._client.getContainerClient(bucketName).listBlobsFlat();
+      const data = this._client.getContainerClient(name).listBlobsFlat(listOptions);
       for await (const blob of data) {
-        if (blob.properties["ResourceType"] !== "directory") {
+        if (typeof blob.properties.contentLength !== "undefined") {
           files.push([blob.name, blob.properties.contentLength]);
         }
       }
       return { value: files, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _addFile(
-    params: FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
+  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
-      let readStream: Readable;
+      let readStream: undefined | Readable;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => { }; // _read is required but you can noop it
+        readStream._read = (): void => {}; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         readStream = (params as FileStreamParams).stream;
       }
+      if (typeof readStream === "undefined") {
+        return { value: null, error: `could not read local file, buffer or stream` };
+      }
       const file = this._client
-        .getContainerClient(params.bucketName)
+        .getContainerClient(params.bucketName as string)
         .getBlobClient(params.targetPath)
         .getBlockBlobClient();
       const writeStream = await file.uploadStream(readStream, 64000, 20, params.options);
@@ -328,20 +339,17 @@ export class AdapterAzureBlob extends AbstractAdapter {
         return { value: "ok", error: null };
       }
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-  ): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const container = this._client.getContainerClient(bucketName);
       const file = await container.getBlobClient(fileName).deleteIfExists();
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -349,9 +357,12 @@ export class AdapterAzureBlob extends AbstractAdapter {
     try {
       const blob = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const length = (await blob.getProperties()).contentLength;
+      if (typeof length === "undefined") {
+        return { value: null, error: `could not calculate filesize of ${fileName}` };
+      }
       return { value: length, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -363,7 +374,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       const value = accessLevel === "container" || accessLevel === "blob";
       return { value, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -373,20 +384,27 @@ export class AdapterAzureBlob extends AbstractAdapter {
       const exists = await cont.exists();
       return { value: exists, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
   protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
-      const exists = await this._client.getContainerClient(bucketName).getBlobClient(fileName).exists();
+      const exists = await this._client
+        .getContainerClient(bucketName)
+        .getBlobClient(fileName)
+        .exists();
       return { value: exists, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject> {
+  protected async _getPresignedUploadURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObjectObject> {
     try {
       let starts = new Date();
       let offset = 1 * -60;
@@ -404,18 +422,20 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
       let permissions = { add: true, create: true, write: true };
       if (typeof options.permissions !== "undefined") {
-        permissions = options.permissions
+        permissions = options.permissions;
       }
 
-      const blockBlobClient = this._client.getContainerClient(bucketName).getBlockBlobClient(fileName);
+      const blockBlobClient = this._client
+        .getContainerClient(bucketName)
+        .getBlockBlobClient(fileName);
       const url = await blockBlobClient.generateSasUrl({
         permissions: BlobSASPermissions.from(permissions),
         expiresOn: expires,
-        startsOn: starts
+        startsOn: starts,
       });
       return { value: { url }, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
 
     /*
@@ -462,7 +482,15 @@ export class AdapterAzureBlob extends AbstractAdapter {
     return this._client as BlobServiceClient;
   }
 }
-function generateContainerSASQueryParameters(arg0: { containerName: any; permissions: ContainerSASPermissions; startsOn: Date; expiresOn: Date; protocol: any; }, credential: any) {
+function generateContainerSASQueryParameters(
+  arg0: {
+    containerName: any;
+    permissions: ContainerSASPermissions;
+    startsOn: Date;
+    expiresOn: Date;
+    protocol: any;
+  },
+  credential: any
+) {
   throw new Error("Function not implemented.");
 }
-

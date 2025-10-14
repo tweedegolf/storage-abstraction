@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     // "types": ["reflect-metadata"],
     "outDir": "publish/dist",
     "rootDir": ".",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    // "module": "nodenext",
+    // "moduleResolution": "nodenext",
+    "module": "commonjs",
+    // "moduleResolution": "node",
     "esModuleInterop": true,
     // "baseUrl": ".",
     // "checkJs": false,
@@ -24,11 +24,9 @@
     "sourceMap": true,
     "declaration": true,
     "preserveConstEnums": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": [
-    "tests/**/*",
-    "src/**/*",
-  ],
+  "include": ["tests/**/*", "src/**/*", "toc/*"],
   "exclude": [
     "**/*.d.ts",
     "node_modules",
@@ -36,6 +34,6 @@
     "publish",
     "src/template_class.ts",
     "src/template_functional.ts",
-    "tests_local",
+    "tests_local"
   ]
 }

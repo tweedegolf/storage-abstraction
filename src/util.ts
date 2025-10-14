@@ -1,6 +1,16 @@
 import { URL } from "url";
 import { Provider } from "./types/general.ts";
-import { ParseUrlResult, ResultObjectNumber } from "./types/result.ts";
+import {
+  ParseUrlResult,
+  ResultObject,
+  ResultObjectBoolean,
+  ResultObjectNumber,
+} from "./types/result.ts";
+
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  return String(error);
+};
 
 /**
  * @param {string} url
@@ -14,7 +24,7 @@ export const parseQueryString = (url: string): { [id: string]: string } => {
       .substring(questionMark + 1)
       .split("&")
       .map((pair) => pair.split("="))
-      .reduce((acc, val) => {
+      .reduce((acc: { [id: string]: string }, val: Array<string>) => {
         // acc[val[0]] = `${val[1]}`.valueOf();
         acc[val[0]] = val[1];
         return acc;
@@ -30,7 +40,7 @@ export const parseQueryString = (url: string): { [id: string]: string } => {
  */
 export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult => {
   let parsed = null;
-  let searchParams = null;
+  let searchParams: null | { [id: string]: string } = null;
 
   if (isBlankString(url)) {
     return {
@@ -41,8 +51,8 @@ export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult
 
   try {
     parsed = new URL(url);
-  } catch (e) {
-    return { value: null, error: e.message };
+  } catch (e: unknown) {
+    return { value: null, error: getErrorMessage(e) };
   }
 
   if (Object.keys(parsed.searchParams)) {
@@ -54,12 +64,12 @@ export const parseUrlStandard = (url: string, checkType = false): ParseUrlResult
 
   return {
     value: {
-      protocol: parsed.protocol || null,
-      username: parsed.username || null,
-      password: parsed.password || null,
-      host: parsed.host || null,
-      port: parsed.port || null,
-      path: parsed.path || null,
+      protocol: parsed.protocol,
+      username: parsed.username,
+      password: parsed.password,
+      host: parsed.host,
+      port: parsed.port,
+      path: parsed.pathname || null,
       searchParams,
     },
     error: null,
@@ -95,10 +105,7 @@ export const parseUrl = (url: string, checkType = false): ParseUrlResult => {
     };
   }
   protocol = url.substring(0, p);
-  if (
-    checkType === true &&
-    Object.values(Provider).includes(protocol as Provider) === false
-  ) {
+  if (checkType === true && Object.values(Provider).includes(protocol as Provider) === false) {
     return { value: null, error: `"${protocol}" is not a supported provider` };
   }
 
@@ -227,24 +234,20 @@ export const isBlankString = (str: string): boolean => {
  *
  * Checks if the value of the name is not null, undefined or an empty string
  */
-export const validateName = (name: string, type: string): string => {
+export const validateName = (name: string, type: string): null | string => {
+  let error: null | string = null;
   if (name === null) {
-    return "Bucket name can not be `null`";
+    error = "Bucket name can not be `null`";
+  } else if (name === "null") {
+    error = 'Bucket name can not be the string "null"';
+  } else if (typeof name === "undefined") {
+    error = "Bucket name can not be `undefined`";
+  } else if (name === "undefined") {
+    error = 'Bucket name can not be the string "undefined"';
+  } else if (isBlankString(name)) {
+    error = "Bucket name can not be an empty string";
+  } else if (type === Provider.AZURE && name.indexOf("_") !== -1) {
+    error = "Bucket name can not contain underscores";
   }
-  if (name === "null") {
-    return 'Bucket name can not be the string "null"';
-  }
-  if (typeof name === "undefined") {
-    return "Bucket name can not be `undefined`";
-  }
-  if (name === "undefined") {
-    return 'Bucket name can not be the string "undefined"';
-  }
-  if (isBlankString(name)) {
-    return "Bucket name can not be an empty string";
-  }
-  if (type === Provider.AZURE && name.indexOf("_") !== -1) {
-    return "Bucket name can not contain undersores";
-  }
-  return null;
+  return error;
 };
