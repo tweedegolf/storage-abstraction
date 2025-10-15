@@ -18,7 +18,7 @@ function getConfig(provider = general_1.Provider.LOCAL) {
             directory: process.env.LOCAL_DIRECTORY,
         };
     }
-    else if (provider === general_1.Provider.GCS) {
+    else if (provider === general_1.Provider.GCS || provider === general_1.Provider.GS) {
         config = {
             provider,
             bucketName: process.env.BUCKET_NAME,
@@ -161,7 +161,7 @@ function getConfig(provider = general_1.Provider.LOCAL) {
     else {
         // const p = path.join(process.cwd(), "tests", "test_directory");
         const p = path_1.default.join("tests", "test_directory");
-        config = process.env.CONFIG_URL || `local://directory=${p}`;
+        config = process.env.CONFIG_URL || `local://${p}`;
     }
     return config;
 }

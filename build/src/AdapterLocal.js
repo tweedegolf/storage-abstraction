@@ -126,7 +126,7 @@ class AdapterLocal extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    _createBucket(name, options) {
+    _createBucket(name, _options) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const p = path_1.default.join(this._config.directory, name);

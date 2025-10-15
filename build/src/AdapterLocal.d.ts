@@ -15,7 +15,7 @@ export declare class AdapterLocal extends AbstractAdapter {
     private createDirectory;
     private globFiles;
     protected _listBuckets(): Promise<ResultObjectBuckets>;
-    protected _createBucket(name: string, options: Options): Promise<ResultObject>;
+    protected _createBucket(name: string, _options: Options): Promise<ResultObject>;
     protected _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject>;
     protected _clearBucket(name: string): Promise<ResultObject>;
     protected _deleteBucket(name: string): Promise<ResultObject>;

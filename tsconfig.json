@@ -35,5 +35,20 @@
     "src/template_class.ts",
     "src/template_functional.ts",
     "tests_local"
-  ]
+  ],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": true,
+    "excludeDirectories": [
+      "node_modules",
+      "publish",
+      "build",
+      "toc"
+    ],
+    "excludeFiles": [
+      "copy.ts"
+    ]
+  }
 }

@@ -120,7 +120,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+  protected async _createBucket(name: string, _options: Options): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, name);
       const created = await this.createDirectory(p);

@@ -51,7 +51,8 @@
     "toc": "ts-node ./toc/replace.ts && cd ./toc && ./create_toc.sh && cd ../",
     "copy": "npm run tsc && ts-node copy.ts",
     "prepublishOnly": "",
-    "prepare": "npm run toc && npm run copy"
+    "prepare": "npm run toc && npm run copy",
+    "watch": "tsc --watch"
   },
   "keywords": [
     "storage",

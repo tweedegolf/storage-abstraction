@@ -13,7 +13,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       bucketName: process.env.BUCKET_NAME,
       directory: process.env.LOCAL_DIRECTORY,
     };
-  } else if (provider === Provider.GCS) {
+  } else if (provider === Provider.GCS || provider === Provider.GS) {
     config = {
       provider,
       bucketName: process.env.BUCKET_NAME,
@@ -145,7 +145,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
   } else {
     // const p = path.join(process.cwd(), "tests", "test_directory");
     const p = path.join("tests", "test_directory");
-    config = process.env.CONFIG_URL || `local://directory=${p}`;
+    config = process.env.CONFIG_URL || `local://${p}`;
   }
 
   return config;
