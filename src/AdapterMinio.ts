@@ -203,7 +203,6 @@ export class AdapterMinio extends AbstractAdapter {
 
   protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(name);
       await this._client.removeBucket(name);
       return { value: "ok", error: null };
     } catch (e) {

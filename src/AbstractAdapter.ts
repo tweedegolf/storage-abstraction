@@ -298,10 +298,19 @@ export abstract class AbstractAdapter implements IAdapter {
       }
     }
     name = r.value as string;
-    if (this.selectedBucket === name) {
-      this.selectedBucket = null;
+
+    const data = await this._clearBucket(name);
+    if (data.error !== null) {
+      return { value: null, error: data.error };
     }
-    return this._deleteBucket(name);
+
+    const r2 = await this._deleteBucket(name);
+    if (r2.error === null) {
+      if (this.selectedBucket === name) {
+        this.selectedBucket = null;
+      }
+    }
+    return r2;
   }
 
   public async bucketExists(name?: string): Promise<ResultObjectBoolean> {
@@ -371,8 +380,7 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: error as string };
     }
 
-    console.log(bucketName, _fn, options, error);
-
+    // console.log(bucketName, _fn, options, error);
 
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {

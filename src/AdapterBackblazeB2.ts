@@ -473,11 +473,6 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   }
 
   protected async _deleteBucket(name: string): Promise<ResultObject> {
-    const data = await this.clearBucket(name);
-    if (data.error !== null) {
-      return { value: null, error: data.error };
-    }
-
     const { error, value: bucket } = await this.getBucket(name);
     if (bucket === null) {
       return { value: null, error: error };

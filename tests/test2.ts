@@ -9,50 +9,16 @@ function colorLog(s: string): string {
   return `\x1b[96m [${s}]\x1b[0m`;
 }
 
-const types = [
-  Provider.LOCAL, // 0
-  Provider.S3, // 1
-  Provider.B2, // 2
-  Provider.GCS, // 3
-  Provider.AZURE, // 4
-  Provider.MINIO, // 5
-  Provider.CUBBIT, // 6
-  Provider.CLOUDFLARE, // 7
-  Provider.B2_S3, // 8
-  // "S3-Cubbit", // 6
-  // "S3-Cloudflare-R2", // 7
-  // "S3-Backblaze-B2", // 8
-];
-
-let index = 0;
-// console.log(process.argv);
+let provider = Provider.LOCAL;
 if (process.argv[2]) {
-  index = parseInt(process.argv[2], 10);
-}
-
-async function deleteAllBuckets(list: Array<string>, storage: IAdapter, delay: number = 500) {
-  for (let i = 0; i < list.length; i++) {
-    const b = list[i];
-    console.log(colorLog("remove bucket"), b);
-    try {
-      await storage.clearBucket(b);
-      if (delay) {
-        await timeout(delay);
-      }
-      // const files = await storage.listFiles();
-      // console.log(`\tfiles: ${files}`);
-      await storage.deleteBucket(b);
-    } catch (e) {
-      console.error("\x1b[31m", "[Error removeAllBuckets]", b, e);
-    }
-  }
+  provider = process.argv[2] as Provider;
 }
 
 async function run() {
   const bucket = "aap894";
   let r: any;
 
-  storage = new Storage(getConfig(types[index]));
+  storage = new Storage(getConfig(provider));
 
   r = await storage.deleteBucket("aap894");
   console.log(colorLog("deleteBucket"), r);

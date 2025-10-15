@@ -6,7 +6,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { Storage } from "../src/Storage";
 import { IAdapter, Options, Provider } from "../src/types/general";
 import { getConfig } from "./config";
-import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName } from "./util";
+import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName, timeout } from "./util";
 import { ResultObject } from "../src/types/result";
 import dotenv from "dotenv";
 
@@ -97,7 +97,7 @@ export async function init(_provider: Provider, bucketName?: string): Promise<st
 export async function deleteAllBuckets(
   list: Array<string>,
   storage: IAdapter,
-  delay: number = 500
+  delay?: number
 ): Promise<ResultObject> {
   colorLog("init::deleteAllBuckets", Color.MESSAGE, list);
   for (let i = 0; i < list.length; i++) {
@@ -125,6 +125,9 @@ export async function deleteAllBuckets(
       if (r.error) {
         return { value: null, error: r.error };
       }
+    }
+    if (typeof delay === "number") {
+      await timeout(delay);
     }
   }
   return { value: "ok", error: null };

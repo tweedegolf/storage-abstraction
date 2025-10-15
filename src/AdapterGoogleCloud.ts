@@ -276,11 +276,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(name);
-    } catch (e) {
-      return { value: null, error: getErrorMessage(e) };
-    }
-    try {
       await this._client.bucket(name).delete();
       return { value: "ok", error: null };
     } catch (e) {

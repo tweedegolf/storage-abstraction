@@ -20,7 +20,7 @@ let provider = Provider.LOCAL;
 if (process.argv[5]) {
   provider = process.argv[5] as Provider;
 }
-console.log(provider);
+// console.log(provider);
 const config: StorageAdapterConfig | string = getConfig(provider);
 
 const newBucketName1 = "bucket-test-sab-1";

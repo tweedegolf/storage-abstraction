@@ -280,7 +280,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(name);
       const del = await this._client.deleteContainer(name);
       //console.log('deleting container: ', del);
       return { value: "ok", error: null };
