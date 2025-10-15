@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 
+const distPath = ["publish", "dist", "src"];
+// const distPath = ["publish", "dist"];
+
 const classes = [
   "Storage",
   "AdapterLocal",
@@ -63,34 +66,34 @@ async function copy(): Promise<string> {
     extensions.forEach((ext) => {
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", "src", `${val}.${ext}`),
+          path.join(...distPath, `${val}.${ext}`),
           path.join("publish", val, "dist", `${val}.${ext}`)
         )
       );
 
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", "src", "indexes", `${val}.${ext}`),
+          path.join(...distPath, "indexes", `${val}.${ext}`),
           path.join("publish", val, "dist", "index", `${val}.${ext}`)
         )
       );
 
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", "src", `AbstractAdapter.${ext}`),
+          path.join(...distPath, `AbstractAdapter.${ext}`),
           path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
         )
       );
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", "src", `util.${ext}`),
+          path.join(...distPath, `util.${ext}`),
           path.join("publish", val, "dist", `util.${ext}`)
         )
       );
       if (val === "Storage") {
         acc.push(
           fs.promises.copyFile(
-            path.join("publish", "dist", "src", `adapters.${ext}`),
+            path.join(...distPath, `adapters.${ext}`),
             path.join("publish", val, "dist", `adapters.${ext}`)
           )
         );
@@ -99,7 +102,7 @@ async function copy(): Promise<string> {
       types.forEach((type) => {
         acc.push(
           fs.promises.copyFile(
-            path.join("publish", "dist", "src", "types", `${type}.${ext}`),
+            path.join(...distPath, "types", `${type}.${ext}`),
             path.join("publish", val, "dist", "types", `${type}.${ext}`)
           )
         );
@@ -108,7 +111,7 @@ async function copy(): Promise<string> {
       specificTypes[val].forEach((type: string) => {
         acc.push(
           fs.promises.copyFile(
-            path.join("publish", "dist", "src", "types", `${type}.${ext}`),
+            path.join(...distPath, "types", `${type}.${ext}`),
             path.join("publish", val, "dist", "types", `${type}.${ext}`)
           )
         );
@@ -116,6 +119,8 @@ async function copy(): Promise<string> {
 
       // copy README to Storage
       acc.push(fs.promises.copyFile("README.md", path.join("publish", "Storage", "README.md")));
+      // copy customized definitely typed file
+      acc.push(fs.promises.copyFile(path.join("src", "types", "backblaze-b2.d.ts"), path.join("publish", "AdapterBackblazeB2", "dist", "types", "backblaze-b2.d.ts")));
     });
 
     // acc.push(

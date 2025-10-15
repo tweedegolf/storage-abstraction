@@ -89,14 +89,14 @@ export abstract class AbstractAdapter implements IAdapter {
     bucketName: undefined | string;
     fileName: undefined | string;
     options: object | boolean;
-    error: undefined | string;
+    error: null | string;
   } {
     const [arg1, arg2, arg3] = args;
     // console.log("getFileAndBucketAndOptions", arg1, arg2, arg3);
     let bucketName: undefined | string = undefined;
     let fileName: undefined | string = undefined;
     let options: undefined | object | boolean = {};
-    let error: undefined | string = undefined;
+    let error: null | string = null;
 
     if (typeof arg1 !== "string" && typeof arg2 !== "string") {
       return { bucketName, fileName, options, error: "Please provide a filename" };
@@ -371,6 +371,9 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: error as string };
     }
 
+    console.log(bucketName, _fn, options, error);
+
+
     const r = await this.checkBucket(bucketName);
     if (r.error !== null) {
       return { value: null, error: r.error };
@@ -395,7 +398,6 @@ export abstract class AbstractAdapter implements IAdapter {
         targetPath: params.targetPath,
       };
     }
-
     const r2 = await this._addFile(params);
     if (fh !== null) {
       fh.close();

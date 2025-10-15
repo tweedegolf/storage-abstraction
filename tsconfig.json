@@ -6,13 +6,9 @@
     ],
     "outDir": "publish/dist",
     "rootDir": ".",
-    // "module": "nodenext",
-    // "moduleResolution": "nodenext",
-    "module": "es6",
+    "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    // "baseUrl": ".",
-    // "checkJs": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
@@ -26,10 +22,11 @@
       "./src/types"
     ]
   },
+  "files": [
+    "tests/test.jasmine.ts",
+  ],
   "include": [
-    "tests/**/*",
     "src/**/*",
-    "toc/*"
   ],
   "exclude": [
     "**/*.d.ts",

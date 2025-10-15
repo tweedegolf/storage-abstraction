@@ -4,7 +4,7 @@ import { colorLog, Color, getPrivateBucketName } from "../util";
 export async function testDeleteBucket(type: string) {
     console.log("\n");
     colorLog("testDeleteBucket", Color.TEST);
-    const name = getPrivateBucketName(type);
+    let name = getPrivateBucketName(type);
     await createBucket(name);
     setSelectedBucket(name);
     getSelectedBucket();
@@ -14,6 +14,7 @@ export async function testDeleteBucket(type: string) {
     await listBuckets();
     getSelectedBucket();
 
+    name = getPrivateBucketName(type);
     await createBucket(name);
     await addFileFromPath("./tests/data/image1.jpg", "image1.jpg", {}, name)
     await listFiles(name);

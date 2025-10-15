@@ -1,3 +1,12 @@
+// require("jasmine");
+// const fs = require("fs");
+// const path = require("path");
+// const { Readable } = require("stream");
+// const { Provider, StorageAdapterConfig } = require("../src/types/general");
+// const { saveFile } = require("./util");
+// const { getConfig } = require("./config");
+// const { CloudStorage } = require("../src/Storage");
+
 import "jasmine";
 import fs from "fs";
 import path from "path";

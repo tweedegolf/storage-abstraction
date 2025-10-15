@@ -76,7 +76,8 @@ export class AdapterMinio extends AbstractAdapter {
       }
       const region = this.config.region;
       if (typeof region !== "string") {
-        this.config.region = "auto";
+        // this.config.region = "auto";
+        this.config.region = "us-east-1";
       }
       // console.log(useSSL, port, region);
       const c = {

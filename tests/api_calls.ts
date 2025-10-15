@@ -211,6 +211,11 @@ export async function addFileFromPath(
   options: Options,
   bucketName?: string
 ) {
+  // console.log(bucketName,
+  //   origPath,
+  //   targetPath,
+  //   options,
+  // )
   const r = await storage.addFileFromPath({
     bucketName,
     origPath,
