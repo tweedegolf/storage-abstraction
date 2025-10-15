@@ -1,7 +1,7 @@
 import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
-import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types.ts";
+import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types";
 import {
   S3Client,
   _Object,
@@ -30,9 +30,9 @@ import {
   ObjectCannedACL,
   GetBucketPolicyCommand,
 } from "@aws-sdk/client-s3";
-import { AbstractAdapter } from "./AbstractAdapter.ts";
-import { Options, StreamOptions, Provider } from "./types/general.ts";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -41,9 +41,9 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result.ts";
-import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3.ts";
-import { getErrorMessage, parseUrl } from "./util.ts";
+} from "./types/result";
+import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
+import { getErrorMessage, parseUrl } from "./util";
 
 export class AdapterAmazonS3 extends AbstractAdapter {
   declare protected _provider: Provider;

@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { Options } from "./general.ts";
+import { Options } from "./general";
 
 /**
  * @param bucketName name of the bucket you want to use

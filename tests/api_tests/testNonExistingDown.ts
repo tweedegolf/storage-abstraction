@@ -1,5 +1,5 @@
-import { addFileFromPath, getPublicURL, getSignedURL, listFiles, createBucket, deleteBucket, getStorage } from "../api_calls.ts";
-import { colorLog, Color, getPrivateBucketName } from "../util.ts";
+import { addFileFromPath, getPublicURL, getSignedURL, listFiles, createBucket, deleteBucket, getStorage } from "../api_calls";
+import { colorLog, Color, getPrivateBucketName } from "../util";
 
 export async function testNonExistingDown(type: string) {
     console.log("\n");

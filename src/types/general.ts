@@ -6,8 +6,8 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./result.ts";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_params.ts";
+} from "./result";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_params";
 
 // add your custom type here
 export enum Provider {

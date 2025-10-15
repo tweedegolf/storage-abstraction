@@ -15,7 +15,7 @@ const extensions = ["js", "js.map", "d.ts"];
 
 const types = ["general", "result", "add_file_params"];
 
-const specificTypes = {
+const specificTypes: { [key: string]: Array<string> } = {
   Storage: [],
   AdapterLocal: ["adapter_local"],
   AdapterMinio: ["adapter_minio"],
@@ -25,6 +25,7 @@ const specificTypes = {
   AdapterBackblazeB2: ["adapter_backblaze_b2"],
 };
 
+// remove existing folders and their contents
 async function beforeAll(): Promise<string> {
   const promises = classes.reduce((acc: Array<Promise<void>>, val: string) => {
     acc.push(fs.promises.rm(path.join("publish", val, "src"), { recursive: true, force: true }));
@@ -41,6 +42,7 @@ async function beforeAll(): Promise<string> {
     });
 }
 
+// recreate the directory structure
 async function createDirs(): Promise<string> {
   try {
     for (let i = 0; i < classes.length; i++) {
@@ -51,43 +53,44 @@ async function createDirs(): Promise<string> {
     }
     return "ok";
   } catch (e) {
-    return e.message;
+    return (e as Error).message;
   }
 }
 
+// copy over all necessary files
 async function copy(): Promise<string> {
   const promises = classes.reduce((acc: Array<Promise<void>>, val: string) => {
     extensions.forEach((ext) => {
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", `${val}.${ext}`),
+          path.join("publish", "dist", "src", `${val}.${ext}`),
           path.join("publish", val, "dist", `${val}.${ext}`)
         )
       );
 
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", "indexes", `${val}.${ext}`),
+          path.join("publish", "dist", "src", "indexes", `${val}.${ext}`),
           path.join("publish", val, "dist", "index", `${val}.${ext}`)
         )
       );
 
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", `AbstractAdapter.${ext}`),
+          path.join("publish", "dist", "src", `AbstractAdapter.${ext}`),
           path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
         )
       );
       acc.push(
         fs.promises.copyFile(
-          path.join("publish", "dist", `util.${ext}`),
+          path.join("publish", "dist", "src", `util.${ext}`),
           path.join("publish", val, "dist", `util.${ext}`)
         )
       );
       if (val === "Storage") {
         acc.push(
           fs.promises.copyFile(
-            path.join("publish", "dist", `adapters.${ext}`),
+            path.join("publish", "dist", "src", `adapters.${ext}`),
             path.join("publish", val, "dist", `adapters.${ext}`)
           )
         );
@@ -96,7 +99,7 @@ async function copy(): Promise<string> {
       types.forEach((type) => {
         acc.push(
           fs.promises.copyFile(
-            path.join("publish", "dist", "types", `${type}.${ext}`),
+            path.join("publish", "dist", "src", "types", `${type}.${ext}`),
             path.join("publish", val, "dist", "types", `${type}.${ext}`)
           )
         );
@@ -105,7 +108,7 @@ async function copy(): Promise<string> {
       specificTypes[val].forEach((type: string) => {
         acc.push(
           fs.promises.copyFile(
-            path.join("publish", "dist", "types", `${type}.${ext}`),
+            path.join("publish", "dist", "src", "types", `${type}.${ext}`),
             path.join("publish", val, "dist", "types", `${type}.${ext}`)
           )
         );

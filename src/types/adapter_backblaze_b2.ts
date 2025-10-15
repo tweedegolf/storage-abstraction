@@ -1,4 +1,4 @@
-import { AdapterConfig } from "./general.ts";
+import { AdapterConfig } from "./general";
 
 export interface AdapterConfigBackblazeB2 extends AdapterConfig {
   applicationKey: string;

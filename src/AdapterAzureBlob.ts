@@ -8,9 +8,9 @@ import {
   StorageSharedKeyCredential,
 } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
-import { AbstractAdapter } from "./AbstractAdapter.ts";
-import { Options, StreamOptions, Provider } from "./types/general.ts";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -19,9 +19,9 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result.ts";
-import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob.ts";
-import { getErrorMessage, parseUrl } from "./util.ts";
+} from "./types/result";
+import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
+import { getErrorMessage, parseUrl } from "./util";
 
 export class AdapterAzureBlob extends AbstractAdapter {
   protected _provider = Provider.AZURE;
@@ -319,7 +319,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
       let readStream: undefined | Readable;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {

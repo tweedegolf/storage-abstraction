@@ -1,8 +1,8 @@
 import { Readable } from "stream";
 import { GetSignedUrlConfig, Storage as GoogleCloudStorage } from "@google-cloud/storage";
-import { AbstractAdapter } from "./AbstractAdapter.ts";
-import { Options, StreamOptions, Provider } from "./types/general.ts";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -11,9 +11,9 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result.ts";
-import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud.ts";
-import { getErrorMessage, parseUrl } from "./util.ts";
+} from "./types/result";
+import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
+import { getErrorMessage, parseUrl } from "./util";
 
 export class AdapterGoogleCloud extends AbstractAdapter {
   protected _provider = Provider.GCS;
@@ -197,7 +197,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
       let readStream: Readable;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
-        readStream._read = (): void => {}; // _read is required but you can noop it
+        readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
         readStream.push(null);
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {

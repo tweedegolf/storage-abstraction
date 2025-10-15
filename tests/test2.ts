@@ -1,7 +1,7 @@
-import { Storage } from "../src/Storage.ts";
-import { IAdapter, Provider } from "../src/types/general.ts";
-import { getConfig } from "./config.ts";
-import { timeout } from "./util.ts";
+import { Storage } from "../src/Storage";
+import { IAdapter, Provider } from "../src/types/general";
+import { getConfig } from "./config";
+import { timeout } from "./util";
 
 let storage: Storage;
 

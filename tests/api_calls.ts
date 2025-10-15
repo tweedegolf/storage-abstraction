@@ -3,11 +3,11 @@ import path from "path";
 import crypto from "crypto";
 import { rimraf } from "rimraf";
 import { fileTypeFromBuffer } from 'file-type';
-import { Storage } from "../src/Storage.ts";
-import { IAdapter, Options, Provider } from "../src/types/general.ts";
-import { getConfig } from "./config.ts";
-import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName } from "./util.ts";
-import { ResultObject } from "../src/types/result.ts";
+import { Storage } from "../src/Storage";
+import { IAdapter, Options, Provider } from "../src/types/general";
+import { getConfig } from "./config";
+import { Color, colorLog, logResult, saveFile, getSha1ForFile, getPrivateBucketName } from "./util";
+import { ResultObject } from "../src/types/result";
 import dotenv from "dotenv";
 
 let provider: Provider;

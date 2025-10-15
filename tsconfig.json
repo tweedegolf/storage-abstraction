@@ -1,36 +1,39 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "lib": ["esnext"],
-    // "types": ["reflect-metadata"],
+    "target": "es6",
+    "lib": [
+      "ES6"
+    ],
     "outDir": "publish/dist",
     "rootDir": ".",
     // "module": "nodenext",
     // "moduleResolution": "nodenext",
-    "module": "commonjs",
-    // "moduleResolution": "node",
+    "module": "es6",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     // "baseUrl": ".",
     // "checkJs": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
-    "emitDeclarationOnly": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "preserveSymlinks": true,
     "strict": true,
     "sourceMap": true,
     "declaration": true,
     "preserveConstEnums": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
-  "include": ["tests/**/*", "src/**/*", "toc/*"],
+  "include": [
+    "tests/**/*",
+    "src/**/*",
+    "toc/*"
+  ],
   "exclude": [
     "**/*.d.ts",
     "node_modules",
-    "dist",
     "publish",
     "src/template_class.ts",
     "src/template_functional.ts",

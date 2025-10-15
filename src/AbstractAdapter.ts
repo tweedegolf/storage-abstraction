@@ -1,6 +1,6 @@
 import fs from "fs";
-import { AdapterConfig, IAdapter, Options, Provider, StreamOptions } from "./types/general.ts";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params.ts";
+import { AdapterConfig, IAdapter, Options, Provider, StreamOptions } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -9,8 +9,8 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result.ts";
-import { getErrorMessage, validateName } from "./util.ts";
+} from "./types/result";
+import { getErrorMessage, validateName } from "./util";
 import { FileHandle } from "fs/promises";
 
 export abstract class AbstractAdapter implements IAdapter {
@@ -20,7 +20,7 @@ export abstract class AbstractAdapter implements IAdapter {
   protected _configError: null | string = null;
   protected _bucketName: null | string = null;
 
-  constructor(config: string | AdapterConfig) {}
+  constructor(config: string | AdapterConfig) { }
 
   get provider(): Provider {
     return this._provider;

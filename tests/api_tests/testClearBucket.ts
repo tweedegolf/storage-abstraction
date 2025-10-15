@@ -1,5 +1,5 @@
-import { createBucket, setSelectedBucket, addFileFromPath, listFiles, clearBucket, deleteBucket } from "../api_calls.ts";
-import { colorLog, Color, getPrivateBucketName } from "../util.ts";
+import { createBucket, setSelectedBucket, addFileFromPath, listFiles, clearBucket, deleteBucket } from "../api_calls";
+import { colorLog, Color, getPrivateBucketName } from "../util";
 
 export async function testClearBucket(type: string) {
     console.log("\n");

@@ -1,4 +1,4 @@
-import { AdapterConfig } from "./general.ts";
+import { AdapterConfig } from "./general";
 
 export interface AdapterConfigAzureBlob extends AdapterConfig {
   accountName?: string;

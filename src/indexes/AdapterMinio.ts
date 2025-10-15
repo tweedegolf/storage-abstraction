@@ -1,5 +1,5 @@
-export { AdapterMinio } from "../AdapterMinio.ts";
-export * from "../types/adapter_minio.ts";
-export * from "../types/general.ts";
-export * from "../types/result.ts";
-export * from "../types/add_file_params.ts";
+export { AdapterMinio } from "../AdapterMinio";
+export * from "../types/adapter_minio";
+export * from "../types/general";
+export * from "../types/result";
+export * from "../types/add_file_params";

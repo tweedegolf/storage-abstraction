@@ -1,11 +1,11 @@
 import { URL } from "url";
-import { Provider } from "./types/general.ts";
+import { Provider } from "./types/general";
 import {
   ParseUrlResult,
   ResultObject,
   ResultObjectBoolean,
   ResultObjectNumber,
-} from "./types/result.ts";
+} from "./types/result";
 
 export const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;

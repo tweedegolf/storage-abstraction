@@ -1,6 +1,6 @@
-import { Provider } from "../src/types/general.ts";
-import { init, cleanup, getStorage, waitABit } from "./api_calls.ts";
-import { testAddFilesToBucket, testClearBucket, testDeleteBucket, testDownloadFilesFromBucket, testFilesInBucket, testNonExistingDown, testNonExistingUp, testPresignedUploadURL, testPrivateBucket, testPublicBucket, testVersioning } from "./api_tests/index.ts";
+import { Provider } from "../src/types/general";
+import { init, cleanup, getStorage, waitABit } from "./api_calls";
+import { testAddFilesToBucket, testClearBucket, testDeleteBucket, testDownloadFilesFromBucket, testFilesInBucket, testNonExistingDown, testNonExistingUp, testPresignedUploadURL, testPrivateBucket, testPublicBucket, testVersioning } from "./api_tests/index";
 
 let provider = Provider.LOCAL;
 if (process.argv[2]) {

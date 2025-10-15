@@ -1,7 +1,7 @@
 import "jasmine";
 import path from "path";
 import dotenv from "dotenv";
-import { StorageAdapterConfig, Provider } from "../src/types/general.ts";
+import { StorageAdapterConfig, Provider } from "../src/types/general";
 
 export function getConfig(provider: string = Provider.LOCAL): string | StorageAdapterConfig {
   dotenv.config();

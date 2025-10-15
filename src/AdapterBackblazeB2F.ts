@@ -1,8 +1,8 @@
 import fs from "fs";
 import B2 from "backblaze-b2";
 
-import { Options, StreamOptions, Provider, IAdapter } from "./types/general.ts";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params.ts";
+import { Options, StreamOptions, Provider, IAdapter } from "./types/general";
+import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -11,10 +11,10 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result.ts";
-import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2.ts";
+} from "./types/result";
+import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2";
 
-import { parseQueryString, validateName } from "./util.ts";
+import { parseQueryString, validateName } from "./util";
 
 const getConfig = (): AdapterConfigBackblazeB2 => {
   return {

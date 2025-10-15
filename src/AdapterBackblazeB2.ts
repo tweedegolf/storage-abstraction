@@ -1,7 +1,7 @@
 import B2 from "backblaze-b2";
-import { AbstractAdapter } from "./AbstractAdapter.ts";
-import { Options, StreamOptions, Provider } from "./types/general.ts";
-import { FileBufferParams, FileStreamParams } from "./types/add_file_params.ts";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -10,7 +10,7 @@ import {
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
-} from "./types/result.ts";
+} from "./types/result";
 import {
   AdapterConfigBackblazeB2,
   BackblazeB2Bucket,
@@ -19,8 +19,8 @@ import {
   ResultObjectBucketB2,
   ResultObjectFileB2,
   ResultObjectFilesB2,
-} from "./types/adapter_backblaze_b2.ts";
-import { getErrorMessage, parseUrl } from "./util.ts";
+} from "./types/adapter_backblaze_b2";
+import { getErrorMessage, parseUrl } from "./util";
 import { delimiter } from "path";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
