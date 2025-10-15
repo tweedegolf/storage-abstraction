@@ -4,7 +4,7 @@
     "lib": [
       "ES6"
     ],
-    "outDir": "publish/dist",
+    "outDir": "build",
     "rootDir": ".",
     "module": "commonjs",
     "moduleResolution": "node",

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const distPath = ["publish", "dist", "src"];
+const buildPath = ["build", "src"];
 // const distPath = ["publish", "dist"];
 
 const classes = [
@@ -66,34 +66,34 @@ async function copy(): Promise<string> {
     extensions.forEach((ext) => {
       acc.push(
         fs.promises.copyFile(
-          path.join(...distPath, `${val}.${ext}`),
+          path.join(...buildPath, `${val}.${ext}`),
           path.join("publish", val, "dist", `${val}.${ext}`)
         )
       );
 
       acc.push(
         fs.promises.copyFile(
-          path.join(...distPath, "indexes", `${val}.${ext}`),
+          path.join(...buildPath, "indexes", `${val}.${ext}`),
           path.join("publish", val, "dist", "index", `${val}.${ext}`)
         )
       );
 
       acc.push(
         fs.promises.copyFile(
-          path.join(...distPath, `AbstractAdapter.${ext}`),
+          path.join(...buildPath, `AbstractAdapter.${ext}`),
           path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
         )
       );
       acc.push(
         fs.promises.copyFile(
-          path.join(...distPath, `util.${ext}`),
+          path.join(...buildPath, `util.${ext}`),
           path.join("publish", val, "dist", `util.${ext}`)
         )
       );
       if (val === "Storage") {
         acc.push(
           fs.promises.copyFile(
-            path.join(...distPath, `adapters.${ext}`),
+            path.join(...buildPath, `adapters.${ext}`),
             path.join("publish", val, "dist", `adapters.${ext}`)
           )
         );
@@ -102,7 +102,7 @@ async function copy(): Promise<string> {
       types.forEach((type) => {
         acc.push(
           fs.promises.copyFile(
-            path.join(...distPath, "types", `${type}.${ext}`),
+            path.join(...buildPath, "types", `${type}.${ext}`),
             path.join("publish", val, "dist", "types", `${type}.${ext}`)
           )
         );
@@ -111,7 +111,7 @@ async function copy(): Promise<string> {
       specificTypes[val].forEach((type: string) => {
         acc.push(
           fs.promises.copyFile(
-            path.join(...distPath, "types", `${type}.${ext}`),
+            path.join(...buildPath, "types", `${type}.${ext}`),
             path.join("publish", val, "dist", "types", `${type}.${ext}`)
           )
         );
@@ -158,7 +158,7 @@ async function run() {
     console.log(`error copy ${u}`);
     process.exit(1);
   }
-  await fs.promises.rm(path.join("publish", "dist"), { recursive: true, force: true });
+  // await fs.promises.rm(path.join("publish", "dist"), { recursive: true, force: true });
   process.exit(0);
 }
 
