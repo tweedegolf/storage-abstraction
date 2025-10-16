@@ -8,19 +8,34 @@ export enum Provider {
   LOCAL = "local",
   GCS = "gcs",      // Google Cloud Storage
   GS = "gs",        // Google Cloud Storage
-  S3 = "s3",        // Amazon S3
-  AWS = "aws",      // Amazon S3
-  B2 = "b2",        // BackBlaze B2
-  AZURE = "azure",  // Azure Storage Blob
-  MINIO = "minio",
-  MINIO_S3 = "minio-s3",  // Minio using AdapterAmazonS3
-  B2_S3 = "b2-s3",        // Backblaze using AdapterAmazonS3
-  BACKBLAZE_S3 = "b2-s3", // Backblaze using AdapterAmazonS3
-  CUBBIT = "cubbit",      // Cubbit uses AdapterAmazonS3  
-  R2 = "r2",              // Cloudflare R2 uses AdapterAmazonS3    
-  CLOUDFLARE = "r2",      // Cloudflare R2 uses AdapterAmazonS3   
+  S3 = "s3",        // Amazon S3 and S3 compatible Cubbit, Cloudflare, Minio and Backblaze
+  AWS = "aws",      // Amazon S3 (only Amazon or strict S3 compatible providers)
+  B2 = "b2",              // BackBlaze B2 using native API
+  BACKBLAZE = "b2",       // BackBlaze B2 using native API
+  AZURE = "azure",        // Azure Storage Blob
+  MINIO = "minio",        // Minio using native API
+  MINIO_S3 = "minio-s3",  // Minio using S3 API
+  B2_S3 = "b2-s3",        // Backblaze using S3 API
+  BACKBLAZE_S3 = "b2-s3", // Backblaze using S3 API
+  CUBBIT = "cubbit",      // Cubbit uses S3 API
+  R2 = "r2",              // Cloudflare R2 uses S3 API
+  CLOUDFLARE = "r2",      // Cloudflare R2 uses S3 API  
 }
 ```
+>[!NOTE]
+>`Provider.S3` and `Provider.AWS` are different adapters!
+>`Provider.S3` supports Amazon S3 and the loose compatible S3 cloud providers Backblaze, Cloudflare, Cubbit and Minio
+>`Provider.AWS` only supports Amazon S3 and strict compatible S3 cloud providers
+
+It is important to know that `S3` and `Amazon S3` are different adapters! `Amazon S3` only supports Amazon S3 and strict compatible whereas `S3` supports Amazon S3 and the partial compatible providers Cubbit, Cloudflare, MinIO S3 and Backblaze S3. The latter adapter exists for historical reasons; originally we tried to create a single adapter for all S3 compatible providers but unfortunately the implementation of S3 differs quite across 'compatible' providers which led to a lot of if-else forking in the code making it hard to read and maintain. 
+
+Therefor we decided to write one adapter with a strict Amazon S3 implementation and then write a separate adapter for every S3 compatible provider, extending the Amazon S3 adapter and overriding methods that had to be implemented differently. So far this has lead to 4 new adapters that extend the strict Amazon S3 adapter:
+
+- AdapterBackblazeS3
+- AdapterCloudflareS3
+- AdapterCubbitS3
+- AdapterMinioS3
+
 
 ### Versioning
 

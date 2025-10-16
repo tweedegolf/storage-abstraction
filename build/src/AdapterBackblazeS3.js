@@ -25,7 +25,7 @@ class AdapterBackblazeS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
     }
     makeBucketPublic(bucketName_1) {
         return __awaiter(this, arguments, void 0, function* (bucketName, _options = {}) {
-            const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._provider} web console`;
+            const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Backblaze B2 web console`;
             return { value: msg, error: null };
         });
     }

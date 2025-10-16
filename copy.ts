@@ -82,22 +82,21 @@ async function copy(): Promise<string> {
         )
       );
 
-      if (["AdapterS3", "AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
-        acc.push(
-          fs.promises.copyFile(
-            path.join(...buildPath, "indexes", `AdapterAmazonS3.${ext}`),
-            path.join("publish", val, "dist", "index", `AdapterAmazonS3.${ext}`)
-          )
-        );
-      } else {
-        acc.push(
-          fs.promises.copyFile(
-            path.join(...buildPath, "indexes", `${val}.${ext}`),
-            path.join("publish", val, "dist", "index", `${val}.${ext}`)
-          )
-        );
-      }
-
+      // if (["AdapterS3", "AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
+      //   acc.push(
+      //     fs.promises.copyFile(
+      //       path.join(...buildPath, "indexes", `AdapterAmazonS3.${ext}`),
+      //       path.join("publish", val, "dist", "index", `AdapterAmazonS3.${ext}`)
+      //     )
+      //   );
+      // } else {
+      //   acc.push(
+      //     fs.promises.copyFile(
+      //       path.join(...buildPath, "indexes", `${val}.${ext}`),
+      //       path.join("publish", val, "dist", "index", `${val}.${ext}`)
+      //     )
+      //   );
+      // }
 
       if (["AdapterS3", "AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
         acc.push(
@@ -107,6 +106,13 @@ async function copy(): Promise<string> {
           )
         );
       }
+
+      acc.push(
+        fs.promises.copyFile(
+          path.join(...buildPath, "indexes", `${val}.${ext}`),
+          path.join("publish", val, "dist", "index", `${val}.${ext}`)
+        )
+      );
 
       acc.push(
         fs.promises.copyFile(

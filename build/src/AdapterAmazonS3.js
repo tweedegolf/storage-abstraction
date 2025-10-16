@@ -190,7 +190,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                 return { value: null, error: `waitUntilBucketExists: ${(0, util_1.getErrorMessage)(e)}` };
             }
             if (options.public === true) {
-                this.makeBucketPublic(bucketName, options);
+                return this.makeBucketPublic(bucketName, options);
             }
             // if (options.versioning === true) {
             //   try {

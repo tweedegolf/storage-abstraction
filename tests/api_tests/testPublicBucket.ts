@@ -6,16 +6,12 @@ export async function testPublicBucket(type: string) {
     console.log("\n");
     colorLog("testPublicBucket", Color.TEST);
     const name = getPublicBucketName(type);
-    if (type !== Provider.CLOUDFLARE && type !== Provider.B2_S3) {
-        await createBucket(name, { public: true });
-    } else {
-        /**
-         * If you're connecting to Cloudflare or Backblaze with the S3 adapter you can't create a public bucket in one go.
-         * The bucket will be created but you'll get a warning that you can only make this bucket public manually using the
-         * Cloudflare or Backblaze web console.
-         */
-        await createBucket(name, { public: true });
-    }
+    /**
+     * If you're connecting to Cloudflare or Backblaze with the S3 adapter you can't create a public bucket in one go.
+     * The bucket will be created but you'll get a warning that you can only make this bucket public manually using the
+     * Cloudflare or Backblaze web console.
+     */
+    await createBucket(name, { public: true });
     await bucketIsPublic(name);
     setSelectedBucket(name);
 

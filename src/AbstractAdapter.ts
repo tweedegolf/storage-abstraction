@@ -459,7 +459,7 @@ export abstract class AbstractAdapter implements IAdapter {
     }
     const options = opt === null ? {} : (opt as Options);
 
-    if (options.noCheck !== true && this.provider !== Provider.CUBBIT /*ugly!*/) {
+    if (options.noCheck !== true && this.provider !== Provider.CUBBIT/*ouch!*/ && this.provider !== Provider.CLOUDFLARE/*ugly!*/) {
       const result = await this._bucketIsPublic(bucketName as string);
       if (result.error !== null) {
         return { value: null, error: result.error };

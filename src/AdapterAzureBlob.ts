@@ -1,25 +1,10 @@
 import { Readable } from "stream";
-import {
-  AnonymousCredential,
-  BlobGenerateSasUrlOptions,
-  BlobSASPermissions,
-  BlobServiceClient,
-  ContainerSASPermissions,
-  StorageSharedKeyCredential,
-} from "@azure/storage-blob";
+import { AnonymousCredential, BlobGenerateSasUrlOptions, BlobSASPermissions, BlobServiceClient, ContainerSASPermissions, StorageSharedKeyCredential, } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
-import {
-  ResultObject,
-  ResultObjectBoolean,
-  ResultObjectBuckets,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectObject,
-  ResultObjectStream,
-} from "./types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream, } from "./types/result";
 import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
 import { getErrorMessage, parseUrl } from "./util";
 
@@ -212,7 +197,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
   protected async _getPublicURL(
     bucketName: string,
     fileName: string,
-    options: Options
+    _options: Options
   ): Promise<ResultObject> {
     try {
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);

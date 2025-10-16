@@ -33,7 +33,7 @@ export class AdapterCubbitS3 extends AdapterAmazonS3 {
   }
 
   protected async _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean> {
-    const error = `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console`;
+    const error = "Cubbit does not support checking if a bucket is public, please use the Cubbit web console";
     return { value: null, error };
   }
 

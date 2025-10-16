@@ -2,7 +2,7 @@ import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types";
-import { S3Client, _Object, ListObjectsCommand, ObjectVersion, ListObjectVersionsCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand, CreateBucketCommandInput, CreateBucketCommand, DeleteObjectsCommand, DeleteBucketCommand, ListBucketsCommand, PutObjectCommand, HeadObjectCommand, GetObjectAttributesCommand, GetObjectAttributesRequest, waitUntilBucketExists, PutBucketPolicyCommand, PutPublicAccessBlockCommand, GetBucketPolicyStatusCommand, GetPublicAccessBlockCommand, GetBucketAclCommand, ObjectCannedACL, GetBucketPolicyCommand, } from "@aws-sdk/client-s3";
+import { S3Client, _Object, ListObjectsCommand, ObjectVersion, ListObjectVersionsCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand, CreateBucketCommandInput, CreateBucketCommand, DeleteObjectsCommand, DeleteBucketCommand, ListBucketsCommand, PutObjectCommand, HeadObjectCommand, GetObjectAttributesCommand, GetObjectAttributesRequest, waitUntilBucketExists, PutBucketPolicyCommand, PutPublicAccessBlockCommand, GetBucketPolicyStatusCommand, GetPublicAccessBlockCommand, GetBucketAclCommand, ObjectCannedACL } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
@@ -204,7 +204,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     }
 
     if (options.public === true) {
-      this.makeBucketPublic(bucketName, options);
+      return this.makeBucketPublic(bucketName, options);
     }
 
     // if (options.versioning === true) {

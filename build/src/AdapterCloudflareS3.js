@@ -25,13 +25,13 @@ class AdapterCloudflareS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
     }
     makeBucketPublic(bucketName_1) {
         return __awaiter(this, arguments, void 0, function* (bucketName, _options = {}) {
-            const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._provider} web console`;
+            const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Cloudflare R2 web console`;
             return { value: msg, error: null };
         });
     }
     _bucketIsPublic(_bucketName) {
         return __awaiter(this, void 0, void 0, function* () {
-            const error = `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console`;
+            const error = "Cloudflare does not support checking if a bucket is public, please use the Cloudflare R2 web console";
             return { value: null, error };
         });
     }

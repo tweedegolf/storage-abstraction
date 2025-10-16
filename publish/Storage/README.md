@@ -4,17 +4,13 @@
 
 Provides an abstraction layer for interacting with a storage; the storage can be a local file system or a cloud storage service. Supported cloud storage services are:
 
-- MinIO
-- Azure Blob
-- Backblaze B2
-- Google Cloud
 - Amazon S3
-
-Also S3 compliant cloud services are supported. Tested S3 compatible services are:
-
-- Backblaze S3
-- CloudFlare R2
-- Cubbit
+- Google Cloud
+- Azure Blob
+- MinIO (native and S3)
+- Backblaze B2 (native and S3)
+- CloudFlare R2 (S3)
+- Cubbit (S3)
 
 The API only provides basic storage operations (see [below](#adapter-api)) and therefor the API is cloud agnostic. This means that you can develop your application using local disk storage and then use for instance Google Cloud or Amazon S3 in your production environment without the need to change any code.
 
@@ -54,11 +50,25 @@ Most adapters are wrappers around the cloud storage service specific service cli
 List of available adapters:
 
 - [Local file system](https://www.npmjs.com/package/@tweedegolf/sab-adapter-local) `npm i @tweedegolf/sab-adapter-local`
-- [Amazon S3 (and compatible)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3) `npm i @tweedegolf/sab-adapter-amazon-s3`
+- [S3 (Amazon S3 and strict compatible)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3) `npm i @tweedegolf/sab-adapter-amazon-s3`
+- [Amazon S3 (and S3 compatible Backblaze, Cloudflare, Cubbit and MinIO)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-s3) `npm i @tweedegolf/sab-adapter-s3`
 - [Google cloud](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud) `npm i @tweedegolf/sab-adapter-google-cloud`
-- [Backblaze B2](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) `npm i @tweedegolf/sab-adapter-backblaze-b2`
 - [Azure Blob](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob) `npm i @tweedegolf/sab-adapter-azure-blob`
-- [MinIO](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio) `npm i @tweedegolf/sab-adapter-minio`
+- [Backblaze B2 using native API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) `npm i @tweedegolf/sab-adapter-backblaze-b2`
+- [Backblaze B2 using S3 API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-s3) `npm i @tweedegolf/sab-adapter-backblaze-s3`
+- [MinIO using native API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio) `npm i @tweedegolf/sab-adapter-minio`
+- [MinIO using S3 API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio-s3) `npm i @tweedegolf/sab-adapter-minio-s3`
+- [Cubbit](https://www.npmjs.com/package/@tweedegolf/sab-adapter-cubbit-s3) `npm i @tweedegolf/sab-adapter-cubbit-s3`
+- [Cloudflare R2](https://www.npmjs.com/package/@tweedegolf/sab-adapter-cloudflare-s3) `npm i @tweedegolf/sab-adapter-cloudflare-s3`
+
+It is important to know that `S3` and `Amazon S3` are different adapters! `Amazon S3` only supports Amazon S3 and strict compatible whereas `S3` supports Amazon S3 and the partial compatible providers Cubbit, Cloudflare, MinIO S3 and Backblaze S3. The latter adapter exists for historical reasons; originally we tried to create a single adapter for all S3 compatible providers but unfortunately the implementation of S3 differs quite across 'compatible' providers which led to a lot of if-else forking in the code making it hard to read and maintain. 
+
+Therefor we decided to write one adapter with a strict Amazon S3 implementation and then write a separate adapters for every S3 compatible provider, extending the Amazon S3 adapter and overriding methods that had to be implemented differently. So far this has lead to 4 new adapters that extend the strict Amazon S3 adapter:
+
+- AdapterBackblazeS3
+- AdapterCloudflareS3
+- AdapterCubbitS3
+- AdapterMinioS3
 
 When you create a `Storage` instance it creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
 
@@ -124,7 +134,10 @@ export enum Provider {
 The Storage instance is only interested in the provider so it checks if the provider is valid and then passes the rest of the configuration on to the adapter constructor. It is the responsibility of the adapter to perform further checks on the configuration. I.e. if all mandatory values are available such as credentials or an endpoint.
 
 >[!NOTE]
-> Although there are 15 members in the enum, there are only 6 adapters supporting 7 different cloud storage providers. The providers Minio and Backblaze B2 have both a native API and support for the S3 API.
+> Some adapters have two entries, for instance `Provider.BACKBLAZE` and `Provider.B2` both have value `b2` and use both `AdapterBackblazeB2`.
+
+>[!NOTE]
+> Although there are 15 members in the enum, there are only 9 adapters supporting 7 different cloud storage providers. The providers Minio and Backblaze B2 have both a native API and support for the S3 API.
 
 ### Configuration object
 
@@ -171,7 +184,9 @@ The protocol part of the url defines the storage provider and should be one of t
 - `cloudflare://` &rarr; Cloudflare R2 Storage
 - `cubbit://` &rarr; Cubbit Storage
 
-Note that some providers can be addressed by multiple protocols, e.g. for Amazon S3 you can use both `aws` and `s3`.
+Note that some providers can be addressed by multiple protocols, e.g. for Google Cloud Storage you can use both `gcs` and `gs`.
+
+Also note that `s3` and `aws` are different adapters! `aws` only support Amazon S3 and strict compatible whereas `s3` supports Amazon S3, Cubbit, Cloudflare, MinIO S3 and Backblaze S3.
 
 <!--
 ```typescript
@@ -1085,7 +1100,7 @@ Returns the public url of the file. Returns an error if the bucket is not public
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is actually public. Using this the method will always return a url. The bypass was put in place because there is no way to check if a bucket is public when you use Cubbit of Backblaze with the Amazon S3 SDK; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url returned will be unreachable.
+With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is actually public. Using this the method will always return a url. The bypass was put in place because there is no way to check if a bucket is public when you use Cubbit or Backblaze with the Amazon S3 SDK; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url returned will be unreachable.
 
 The Amazon S3 SDK doesn't have a method to retrieve a public url, instead the url is composed of known data using a cloud service specific template:
 - Amazon: `https://${bucket_name}.s3.${region}.amazon.com/${file_name}`
@@ -1094,6 +1109,16 @@ The Amazon S3 SDK doesn't have a method to retrieve a public url, instead the ur
 - Cubbit: `https://${bucket_name}.s3.cubbit.eu/${file_name}`
 
 Although Cloudflare R2 is S3 compatible, this method cannot return a public url when you use R2 cloud storage. R2 only supports public buckets if you add a custom domain to your bucket, see [the documentation](https://developers.cloudflare.com/r2/buckets/public-buckets/#managed-public-buckets-through-r2dev) on the Cloudflare site. You can add a custom domain to your bucket in the Cloudflare Console and after that you can simply construct the url of the bucket in your own code. You could enable and use the Public Development URL but that is not meant to be used for production. Alternately, you could use a pre-signed url instead of a public url.
+
+| API method | Service  | Remarks |
+| ---| ---| ---|
+|  `createBucket` | Cloudflare R2| Use web console to make bucket public|
+|   | Backblaze|Use web console to make bucket public|
+|  `bucketIsPublic` | Cloudflare R2|N/A|
+|   | Cubbit|N/A|
+|  `getPublicURL` | Cloudflare R2|N/A|
+|   | Cubbit|Only with options `{noCheck: true}`|
+
 
 For the local adapter you can use the key `withoutDirectory` in the options object:
 

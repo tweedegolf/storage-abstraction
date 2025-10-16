@@ -2,26 +2,9 @@ import B2 from "backblaze-b2";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
-import {
-  ResultObject,
-  ResultObjectBoolean,
-  ResultObjectBuckets,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectObject,
-  ResultObjectStream,
-} from "./types/result";
-import {
-  AdapterConfigBackblazeB2,
-  BackblazeB2Bucket,
-  BucketB2,
-  FileB2,
-  ResultObjectBucketB2,
-  ResultObjectFileB2,
-  ResultObjectFilesB2,
-} from "./types/adapter_backblaze_b2";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream, } from "./types/result";
+import { AdapterConfigBackblazeB2, BackblazeB2Bucket, BucketB2, FileB2, ResultObjectBucketB2, ResultObjectFileB2, ResultObjectFilesB2, } from "./types/adapter_backblaze_b2";
 import { getErrorMessage, parseUrl } from "./util";
-import { delimiter } from "path";
 
 export class AdapterBackblazeB2 extends AbstractAdapter {
   protected _provider = Provider.B2;
@@ -203,17 +186,24 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
     const { error } = await this.authorize();
+    if (error !== null) {
+      return { value: null, error };
+    }
+
     let bucketType = "allPrivate";
+
+    if (options.public === true) {
+      options.bucketType = "allPublic";
+    }
+
     if (typeof options.bucketType !== "undefined") {
       bucketType = options.bucketType;
-    } else if (options.public === true) {
-      options.bucketType = "allPublic";
     }
 
     if (bucketType !== "allPrivate" && bucketType !== "allPublic") {
       return {
         value: null,
-        error: `${bucketType} is not valid: bucket type must be either 'allPrivate' or 'allPublic'`,
+        error: `Bucket type '${options.bucketType}' is not valid: must be either 'allPrivate' or 'allPublic'`,
       };
     }
 
@@ -342,7 +332,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
   protected async _getPublicURL(
     bucketName: string,
     fileName: string,
-    options: Options
+    _options: Options
   ): Promise<ResultObject> {
     return {
       value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}`,

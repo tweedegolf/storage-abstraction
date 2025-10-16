@@ -39,7 +39,7 @@ class AdapterCubbitS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
     }
     _bucketIsPublic(_bucketName) {
         return __awaiter(this, void 0, void 0, function* () {
-            const error = `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console`;
+            const error = "Cubbit does not support checking if a bucket is public, please use the Cubbit web console";
             return { value: null, error };
         });
     }

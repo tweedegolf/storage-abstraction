@@ -19,12 +19,12 @@ export class AdapterCloudflareS3 extends AdapterAmazonS3 {
   }
 
   protected async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
-    const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._provider} web console`;
+    const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Cloudflare R2 web console`;
     return { value: msg, error: null }
   }
 
   protected async _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean> {
-    const error = `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console`;
+    const error = "Cloudflare does not support checking if a bucket is public, please use the Cloudflare R2 web console";
     return { value: null, error };
   }
 

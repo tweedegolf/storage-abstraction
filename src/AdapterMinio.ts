@@ -3,15 +3,7 @@ import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
-import {
-  ResultObject,
-  ResultObjectBoolean,
-  ResultObjectBuckets,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectObject,
-  ResultObjectStream,
-} from "./types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream, } from "./types/result";
 import { AdapterConfigMinio } from "./types/adapter_minio";
 import { getErrorMessage, parseUrl } from "./util";
 

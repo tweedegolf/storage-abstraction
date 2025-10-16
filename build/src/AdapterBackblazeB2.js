@@ -190,17 +190,20 @@ class AdapterBackblazeB2 extends AbstractAdapter_1.AbstractAdapter {
     _createBucket(name, options) {
         return __awaiter(this, void 0, void 0, function* () {
             const { error } = yield this.authorize();
+            if (error !== null) {
+                return { value: null, error };
+            }
             let bucketType = "allPrivate";
+            if (options.public === true) {
+                options.bucketType = "allPublic";
+            }
             if (typeof options.bucketType !== "undefined") {
                 bucketType = options.bucketType;
-            }
-            else if (options.public === true) {
-                options.bucketType = "allPublic";
             }
             if (bucketType !== "allPrivate" && bucketType !== "allPublic") {
                 return {
                     value: null,
-                    error: `${bucketType} is not valid: bucket type must be either 'allPrivate' or 'allPublic'`,
+                    error: `Bucket type '${options.bucketType}' is not valid: must be either 'allPrivate' or 'allPublic'`,
                 };
             }
             try {

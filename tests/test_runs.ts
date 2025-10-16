@@ -15,9 +15,9 @@ async function run() {
   // console.log(r2)
 
   // select the tests you want to run by (un)commenting out
-  // await testPublicBucket(provider);
+  await testPublicBucket(provider);
   // await testPrivateBucket(provider);
-  await testDeleteBucket(provider);
+  // await testDeleteBucket(provider);
   // await testAddFilesToBucket(provider);
   // await testVersioning(provider);
   // await testNonExistingUp(provider);

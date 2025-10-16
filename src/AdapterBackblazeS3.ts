@@ -19,7 +19,7 @@ export class AdapterBackblazeS3 extends AdapterAmazonS3 {
   }
 
   protected async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
-    const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._provider} web console`;
+    const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Backblaze B2 web console`;
     return { value: msg, error: null }
   }
 
