@@ -215,14 +215,6 @@ export class AdapterAzureBlob extends AbstractAdapter {
     options: Options
   ): Promise<ResultObject> {
     try {
-      if (options.noCheck !== true) {
-        const result = await this._bucketIsPublic(bucketName);
-        if (result.error !== null) {
-          return { value: null, error: result.error };
-        } else if (result.value === false) {
-          return { value: null, error: `Bucket "${bucketName}" is not public!` };
-        }
-      }
       const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       return { value: file.url, error: null };
     } catch (e) {

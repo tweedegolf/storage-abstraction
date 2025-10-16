@@ -8,7 +8,12 @@ const classes = [
   "Storage",
   "AdapterLocal",
   "AdapterMinio",
+  "AdapterS3",
   "AdapterAmazonS3",
+  "AdapterCubbitS3",
+  "AdapterMinioS3",
+  "AdapterBackblazeS3",
+  "AdapterCloudflareS3",
   "AdapterGoogleCloud",
   "AdapterAzureBlob",
   "AdapterBackblazeB2",
@@ -22,7 +27,12 @@ const specificTypes: { [key: string]: Array<string> } = {
   Storage: [],
   AdapterLocal: ["adapter_local"],
   AdapterMinio: ["adapter_minio"],
+  AdapterS3: ["adapter_amazon_s3"],
   AdapterAmazonS3: ["adapter_amazon_s3"],
+  AdapterCubbitS3: ["adapter_amazon_s3"],
+  AdapterCloudflareS3: ["adapter_amazon_s3"],
+  AdapterBackblazeS3: ["adapter_amazon_s3"],
+  AdapterMinioS3: ["adapter_amazon_s3"],
   AdapterGoogleCloud: ["adapter_google_cloud"],
   AdapterAzureBlob: ["adapter_azure_blob"],
   AdapterBackblazeB2: ["adapter_backblaze_b2"],
@@ -50,6 +60,7 @@ async function createDirs(): Promise<string> {
   try {
     for (let i = 0; i < classes.length; i++) {
       // await fs.promises.mkdir(path.join("publish", classes[i], "src"));
+      // await fs.promises.mkdir(path.join("publish", classes[i]));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist", "types"));
       await fs.promises.mkdir(path.join("publish", classes[i], "dist", "index"));
@@ -71,12 +82,31 @@ async function copy(): Promise<string> {
         )
       );
 
-      acc.push(
-        fs.promises.copyFile(
-          path.join(...buildPath, "indexes", `${val}.${ext}`),
-          path.join("publish", val, "dist", "index", `${val}.${ext}`)
-        )
-      );
+      if (["AdapterS3", "AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
+        acc.push(
+          fs.promises.copyFile(
+            path.join(...buildPath, "indexes", `AdapterAmazonS3.${ext}`),
+            path.join("publish", val, "dist", "index", `AdapterAmazonS3.${ext}`)
+          )
+        );
+      } else {
+        acc.push(
+          fs.promises.copyFile(
+            path.join(...buildPath, "indexes", `${val}.${ext}`),
+            path.join("publish", val, "dist", "index", `${val}.${ext}`)
+          )
+        );
+      }
+
+
+      if (["AdapterS3", "AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
+        acc.push(
+          fs.promises.copyFile(
+            path.join(...buildPath, `AdapterAmazonS3.${ext}`),
+            path.join("publish", val, "dist", `AdapterAmazonS3.${ext}`)
+          )
+        );
+      }
 
       acc.push(
         fs.promises.copyFile(
@@ -84,6 +114,7 @@ async function copy(): Promise<string> {
           path.join("publish", val, "dist", `AbstractAdapter.${ext}`)
         )
       );
+
       acc.push(
         fs.promises.copyFile(
           path.join(...buildPath, `util.${ext}`),

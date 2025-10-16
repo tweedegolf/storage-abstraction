@@ -47,6 +47,7 @@ export async function init(_provider: Provider, bucketName?: string): Promise<st
   bucketName = storage.config.bucketName || bucketName || getPrivateBucketName(provider);
   colorLog("init::provider", Color.MESSAGE, storage.getProvider());
   colorLog("init::config", Color.MESSAGE, storage.getConfig());
+  colorLog("init::adapter", Color.MESSAGE, storage.getAdapter().constructor.name);
   // colorLog("init::serviceClient", Color.MESSAGE, storage.getServiceClient());
   colorLog("init::selectedBucket", Color.MESSAGE, storage.getSelectedBucket());
 

@@ -263,15 +263,6 @@ class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
     }
     _getPublicURL(bucketName, fileName, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (options.noCheck !== true) {
-                const { value, error } = yield this._bucketIsPublic(bucketName);
-                if (error !== null) {
-                    return { value: null, error };
-                }
-                else if (value === false) {
-                    return { value: null, error: `Bucket "${bucketName}" is not public!` };
-                }
-            }
             let url = `https://${this.config.endPoint}`;
             if (this.config.port) {
                 url += `:${this.config.port}`;

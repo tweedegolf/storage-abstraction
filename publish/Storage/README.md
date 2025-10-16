@@ -1458,79 +1458,42 @@ You can create your own adapter in a separate repository and publish it from the
 
 If you want to run the tests you have to checkout the repository from github and install all dependencies with `npm install` or `yarn install`. There are tests for all storage types; note that you may need to add your credentials to a `.env` file, see the file `.env.default` and `config_urls.md` for more explanation, or provide credentials in another way. Also it should be noted that some of these tests require that the credentials allow to create, delete and list buckets.
 
-You can run the Jasmine tests per storage type using one of the following commands:
-
-```bash
-# test local disk
-npm run test-local
-# or
-npm run test-jasmine 0
-
-# test Amazon S3
-npm run test-s3
-# or
-npm run test-jasmine 1
-
-# test Backblaze B2
-npm run test-b2
-# or
-npm run test-jasmine 2
-
-# test Google Cloud Storage
-npm run test-gcs
-# or
-npm run test-jasmine 3
-
-# test Azure Blob Storage
-npm run test-azure
-# or
-npm run test-jasmine 4
-
-# test MinIO
-npm run test-minio
-# or
-npm run test-jasmine 5
-
-# test Cubbit
-npm run test-cubbit
-# or
-npm run test-jasmine 6
-
-# test Cloudflare R2
-npm run test-cloudflare
-# or
-npm run test-jasmine 7
-
-# test Backblaze B2 S3 API
-npm run test-b2-s3
-# or
-npm run test-jasmine 8
-```
-
-As you can see in the file `package.json`, the command sets the `type` environment variable which is then read by Jasmine.
-
 To run all Jasmine tests consecutively:
 
 ```bash
 npm run test-all
 ```
 
+To run the Jasmine tests per provider you can specify it as commandline argument:
+
+```bash
+# test local disk
+npm run jasmine local
+
+# test Amazon S3
+npm run jasmine s3
+
+# test Backblaze B2 S3 API
+npm run jasmine b2-s3
+
+# and so on
+```
+
+Note that you can specify the provider using the values in the `Provider` enum, see [here](README.md#instantiate-a-storage)
+
+>[!NOTE]
+>For some reason you can't run jasmine with ts-node and the current settings in tsconfig.json. So please don't forget to run `npm run tsc` after you've changed files in the `src` folder or in the `jasmine.ts` file itself. You can also run `npm run watch` to enable compiling on save.
+
 You can find some additional non-Jasmine tests in the file `tests/test_runs.ts`. Every test is a functions that makes a series of API calls to test certain functionality in isolation. A the bottom of this file you'll find the `run` function where you can comment out the  you don't want to run.
 
 You can find the API calls in the file `tests/api_calls.ts`. Every API call is declared in a function with the same name as the API method it is calling, some additional functionality like logging and checking the result is added to the function.
 
-You can select the type of storage by passing a commandline parameter:
-| command | storage
-| --- | --- |
-| `npm test 0` | Local|
-| `npm test 1` | Amazon S3|
-| `npm test 2` | Backblaze B2|
-| `npm test 3` | Google Cloud Storage|
-| `npm test 4` | Azure Blob Storage|
-| `npm test 5` | Minio|
-| `npm test 6` | Cubbit (S3 compatible)|
-| `npm test 7` | Cloudflare R2 (S3 compatible)|
-| `npm test 8` | Backblaze B2 (S3 compatible)|
+You can select the provider you want to test by passing it as a commandline parameter:
+```bash
+npm test local
+npm test s3
+npm test b2-s3
+```
 
 Note that the test `testPublicBucket` tries to create a public bucket. However creating a public bucket on Cloudflare R2 and on Backblaze B2 when using the S3 adapter is not possible; even if you add `{public: true}` the created bucket  `sab-test-public` will be private.
 

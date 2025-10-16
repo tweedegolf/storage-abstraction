@@ -102,15 +102,6 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     options: Options
   ): Promise<ResultObject> {
     try {
-      if (options.noCheck !== true) {
-        const { value, error } = await this._bucketIsPublic(bucketName);
-        if (error !== null) {
-          return { value: null, error };
-        } else if (value === false) {
-          return { value: null, error: `Bucket "${bucketName}" is not public!` };
-        }
-      }
-
       const bucket = this._client.bucket(bucketName, options);
       const file = bucket.file(fileName);
       return { value: file.publicUrl(), error: null };

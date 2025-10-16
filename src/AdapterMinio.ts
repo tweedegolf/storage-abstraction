@@ -236,14 +236,6 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    if (options.noCheck !== true) {
-      const { value, error } = await this._bucketIsPublic(bucketName);
-      if (error !== null) {
-        return { value: null, error };
-      } else if (value === false) {
-        return { value: null, error: `Bucket "${bucketName}" is not public!` };
-      }
-    }
     let url = `https://${this.config.endPoint}`;
     if (this.config.port) {
       url += `:${this.config.port}`;

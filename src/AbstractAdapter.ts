@@ -458,6 +458,17 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: r2.error };
     }
     const options = opt === null ? {} : (opt as Options);
+
+    if (options.noCheck !== true && this.provider !== Provider.CUBBIT /*ugly!*/) {
+      const result = await this._bucketIsPublic(bucketName as string);
+      if (result.error !== null) {
+        return { value: null, error: result.error };
+      }
+      if (result.value === false) {
+        return { value: null, error: `Bucket "${bucketName}" is not public!` };
+      }
+    }
+
     return this._getPublicURL(r.value as string, fileName as string, options);
   }
 

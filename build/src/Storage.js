@@ -16,6 +16,7 @@ exports.Storage = void 0;
 const path_1 = __importDefault(require("path"));
 const adapters_1 = require("./adapters");
 const availableAdapters = (0, adapters_1.getAvailableAdapters)();
+// console.log(availableAdapters)
 /**
  * @implements {IAdapter}
  */

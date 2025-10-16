@@ -20,6 +20,7 @@ import {
 import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters";
 
 const availableAdapters: string = getAvailableAdapters();
+// console.log(availableAdapters)
 
 /**
  * @implements {IAdapter}

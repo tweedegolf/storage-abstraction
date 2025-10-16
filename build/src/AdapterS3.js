@@ -9,23 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdapterAmazonS3 = void 0;
+exports.AdapterS3 = void 0;
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const client_s3_1 = require("@aws-sdk/client-s3");
 const AbstractAdapter_1 = require("./AbstractAdapter");
 const general_1 = require("./types/general");
 const util_1 = require("./util");
-class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
+class AdapterS3 extends AbstractAdapter_1.AbstractAdapter {
     constructor(config) {
         super(config);
-        this._provider = general_1.Provider.AWS;
         this._configError = null;
-        this.parseConfig(config);
-        this.createClient();
-    }
-    // protected helper functions
-    parseConfig(config) {
         if (typeof config !== "string") {
             this._config = Object.assign({}, config);
         }
@@ -53,11 +47,22 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                 }
             }
         }
-        if (typeof this.config.bucketName !== "undefined") {
-            this._bucketName = this.config.bucketName;
+        this._provider = this.config.provider;
+        if (this._provider !== general_1.Provider.S3 &&
+            this._provider !== general_1.Provider.AWS &&
+            typeof this._config.endpoint === "undefined") {
+            this._configError = `[configError] No endpoint specified for ${this._provider}`;
         }
-    }
-    createClient() {
+        if (this._provider === general_1.Provider.MINIO_S3) {
+            if (typeof this._config.region === "undefined") {
+                this._config.region = "us-east-1";
+            }
+            // necessary for Minio S3 support!
+            this._config.forcePathStyle = true;
+            // this._config.s3ForcePathStyle = true;
+            this._config.signatureVersion = "v4";
+        }
+        // console.log(this._config);
         try {
             if (this.config.accessKeyId && this.config.secretAccessKey) {
                 const o = Object.assign({}, this.config); // eslint-disable-line
@@ -70,7 +75,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                     } }, o));
             }
             else {
-                console.log("Do we ever get here?");
+                console.log("HIER");
                 const o = Object.assign({}, this.config); // eslint-disable-line
                 delete o.accessKeyId;
                 delete o.secretAccessKey;
@@ -79,6 +84,9 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
         }
         catch (e) {
             this._configError = `[configError] ${(0, util_1.getErrorMessage)(e)}`;
+        }
+        if (typeof this.config.bucketName !== "undefined") {
+            this._bucketName = this.config.bucketName;
         }
     }
     getFiles(bucketName_1) {
@@ -115,42 +123,6 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    makeBucketPublic(bucketName_1) {
-        return __awaiter(this, arguments, void 0, function* (bucketName, _options = {}) {
-            try {
-                yield this._client.send(new client_s3_1.PutPublicAccessBlockCommand({
-                    Bucket: bucketName,
-                    PublicAccessBlockConfiguration: {
-                        BlockPublicAcls: false,
-                        IgnorePublicAcls: false,
-                        BlockPublicPolicy: false, // DISABLE BlockPublicPolicy
-                        RestrictPublicBuckets: false,
-                    },
-                }));
-                const publicReadPolicy = {
-                    Version: "2012-10-17",
-                    Statement: [
-                        {
-                            Sid: "AllowPublicRead",
-                            Effect: "Allow",
-                            // Principal: "*",
-                            Principal: { AWS: ["*"] },
-                            Action: ["s3:GetObject"],
-                            Resource: [`arn:aws:s3:::${bucketName}/*`],
-                        },
-                    ],
-                };
-                yield this._client.send(new client_s3_1.PutBucketPolicyCommand({
-                    Bucket: bucketName,
-                    Policy: JSON.stringify(publicReadPolicy),
-                }));
-                return { value: "ok", error: null };
-            }
-            catch (e) {
-                return { value: null, error: `makeBucketPublic: ${(0, util_1.getErrorMessage)(e)}` };
-            }
-        });
-    }
     // protected methods, called by public methods of the API via AbstractAdapter
     _listBuckets() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -172,6 +144,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
     }
     _createBucket(bucketName_1) {
         return __awaiter(this, arguments, void 0, function* (bucketName, options = {}) {
+            let okMsg = "ok";
             try {
                 const input = Object.assign({ Bucket: bucketName }, options);
                 const command = new client_s3_1.CreateBucketCommand(input);
@@ -190,7 +163,68 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                 return { value: null, error: `waitUntilBucketExists: ${(0, util_1.getErrorMessage)(e)}` };
             }
             if (options.public === true) {
-                this.makeBucketPublic(bucketName, options);
+                try {
+                    if (this._provider === general_1.Provider.AWS) {
+                        yield this._client.send(new client_s3_1.PutPublicAccessBlockCommand({
+                            Bucket: bucketName,
+                            PublicAccessBlockConfiguration: {
+                                BlockPublicAcls: false,
+                                IgnorePublicAcls: false,
+                                BlockPublicPolicy: false, // DISABLE BlockPublicPolicy
+                                RestrictPublicBuckets: false,
+                            },
+                        }));
+                        const publicReadPolicy = {
+                            Version: "2012-10-17",
+                            Statement: [
+                                {
+                                    Sid: "AllowPublicRead",
+                                    Effect: "Allow",
+                                    // Principal: "*",
+                                    Principal: { AWS: ["*"] },
+                                    Action: ["s3:GetObject"],
+                                    Resource: [`arn:aws:s3:::${bucketName}/*`],
+                                },
+                            ],
+                        };
+                        yield this._client.send(new client_s3_1.PutBucketPolicyCommand({
+                            Bucket: bucketName,
+                            Policy: JSON.stringify(publicReadPolicy),
+                        }));
+                    }
+                    else if (this._provider === general_1.Provider.MINIO_S3) {
+                        const policy = {
+                            Version: "2012-10-17",
+                            Statement: [
+                                {
+                                    // Sid: "AllowPublicRead",
+                                    Effect: "Allow",
+                                    // Principal: { AWS: ["*"] },
+                                    Principal: "*",
+                                    Action: ["s3:GetObject"],
+                                    Resource: [`arn:aws:s3:::${bucketName}/*`],
+                                },
+                            ],
+                        };
+                        yield this._client.send(new client_s3_1.PutBucketPolicyCommand({
+                            Bucket: bucketName,
+                            Policy: JSON.stringify(policy),
+                        }));
+                    }
+                    else if (this._provider === general_1.Provider.CUBBIT) {
+                        yield this._client.send(new client_s3_1.PutBucketAclCommand({
+                            Bucket: bucketName,
+                            ACL: "public-read", // or "public-read-write"
+                        }));
+                    }
+                    else if (this._provider === general_1.Provider.CLOUDFLARE ||
+                        this._provider === general_1.Provider.BACKBLAZE_S3) {
+                        okMsg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the ${this._provider} web console`;
+                    }
+                }
+                catch (e) {
+                    return { value: null, error: `make bucket public: ${(0, util_1.getErrorMessage)(e)}` };
+                }
             }
             // if (options.versioning === true) {
             //   try {
@@ -206,40 +240,74 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
             //     return { value: null, error: `enable versioning: ${e.message}` };
             //   }
             // }
-            return { value: "ok", error: null };
+            return { value: okMsg, error: null };
         });
     }
     _clearBucket(bucketName) {
         return __awaiter(this, void 0, void 0, function* () {
-            let objects = [];
-            const { value, error } = yield this.getFiles(bucketName);
-            if (error !== null) {
-                return { value: null, error };
-            }
-            else if (value !== null && value.length > 0) {
-                objects = value.map((value) => ({ Key: value.Key }));
-            }
-            if (objects.length > 0) {
-                try {
-                    const input = {
-                        Bucket: bucketName,
-                        Delete: {
-                            Objects: objects,
-                            Quiet: false,
-                        },
-                    };
-                    const command = new client_s3_1.DeleteObjectsCommand(input);
-                    yield this._client.send(command);
-                    // return { value: `${objects.length} files removed from '${bucketName}'`, error: null };
-                    return { value: "ok", error: null };
+            if (this._provider === general_1.Provider.BACKBLAZE_S3) {
+                let versions = [];
+                const { value, error } = yield this.getFileVersions(bucketName);
+                if (error !== null) {
+                    return { value: null, error };
                 }
-                catch (e) {
-                    return { value: null, error: (0, util_1.getErrorMessage)(e) };
+                else if (Array.isArray(value)) {
+                    versions = value.map((value) => ({
+                        Key: value.Key,
+                        VersionId: value.VersionId,
+                    }));
+                }
+                // console.log(versions)
+                if (versions.length > 0) {
+                    try {
+                        for (const v of versions) {
+                            yield this._client.send(new client_s3_1.DeleteObjectCommand({
+                                Bucket: bucketName,
+                                Key: v.Key,
+                                VersionId: v.VersionId,
+                            }));
+                        }
+                        return { value: "ok", error: null };
+                    }
+                    catch (e) {
+                        return { value: null, error: (0, util_1.getErrorMessage)(e) };
+                    }
+                }
+                else {
+                    return { value: "ok", error: null };
                 }
             }
             else {
-                // return { value: `No files removed; ${bucketName} contained no files`, error: null };
-                return { value: "ok", error: null };
+                let objects = [];
+                const { value, error } = yield this.getFiles(bucketName);
+                if (error !== null) {
+                    return { value: null, error };
+                }
+                else if (value !== null && value.length > 0) {
+                    objects = value.map((value) => ({ Key: value.Key }));
+                }
+                if (objects.length > 0) {
+                    try {
+                        const input = {
+                            Bucket: bucketName,
+                            Delete: {
+                                Objects: objects,
+                                Quiet: false,
+                            },
+                        };
+                        const command = new client_s3_1.DeleteObjectsCommand(input);
+                        yield this._client.send(command);
+                        // return { value: `${objects.length} files removed from '${bucketName}'`, error: null };
+                        return { value: "ok", error: null };
+                    }
+                    catch (e) {
+                        return { value: null, error: (0, util_1.getErrorMessage)(e) };
+                    }
+                }
+                else {
+                    // return { value: `No files removed; ${bucketName} contained no files`, error: null };
+                    return { value: "ok", error: null };
+                }
             }
         });
     }
@@ -276,17 +344,63 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
     }
     _bucketIsPublic(bucketName) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e;
+            if (this._provider === general_1.Provider.CLOUDFLARE || this._provider === general_1.Provider.CUBBIT) {
+                return {
+                    value: null,
+                    error: `${this._provider} does not support checking if a bucket is public, please use the ${this._provider} web console`,
+                };
+            }
+            if (this._provider === general_1.Provider.BACKBLAZE_S3) {
+                try {
+                    const aclResult = yield this._client.send(new client_s3_1.GetBucketAclCommand({ Bucket: bucketName }));
+                    // If one of the grants is for AllUsers with 'READ', it's public
+                    const isPublic = (_a = aclResult.Grants) === null || _a === void 0 ? void 0 : _a.some((grant) => {
+                        var _a, _b;
+                        return ((_a = grant.Grantee) === null || _a === void 0 ? void 0 : _a.Type) === "Group" &&
+                            ((_b = grant.Grantee) === null || _b === void 0 ? void 0 : _b.URI) === "http://acs.amazonaws.com/groups/global/AllUsers" &&
+                            grant.Permission === "READ";
+                    });
+                    return { value: typeof isPublic === "undefined" ? false : isPublic, error: null };
+                }
+                catch (e) {
+                    return { value: null, error: (0, util_1.getErrorMessage)(e) };
+                }
+            }
+            if (this._provider === general_1.Provider.MINIO_S3) {
+                try {
+                    let isPublic = false;
+                    const policy = yield this._client.send(new client_s3_1.GetBucketPolicyCommand({ Bucket: bucketName }));
+                    if (typeof policy.Policy !== "undefined") {
+                        const p = JSON.parse(policy.Policy);
+                        // console.log('Bucket policy:', policy);
+                        for (let i = 0; i < p.Statement.length; i++) {
+                            const s = p.Statement[i];
+                            if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {
+                                isPublic = true;
+                                break;
+                            }
+                        }
+                    }
+                    return { value: isPublic, error: null };
+                }
+                catch (e) {
+                    if (e.Code === "NoSuchBucketPolicy") {
+                        return { value: false, error: null };
+                    }
+                    return { value: null, error: (0, util_1.getErrorMessage)(e) };
+                }
+            }
             try {
                 // 1. Check bucket policy status
                 const policyStatusResponse = yield this._client.send(new client_s3_1.GetBucketPolicyStatusCommand({ Bucket: bucketName }));
                 // console.log("policyStatusResponse", policyStatusResponse);
-                const isPolicyPublic = ((_a = policyStatusResponse.PolicyStatus) === null || _a === void 0 ? void 0 : _a.IsPublic) || false;
+                const isPolicyPublic = ((_b = policyStatusResponse.PolicyStatus) === null || _b === void 0 ? void 0 : _b.IsPublic) || false;
                 // 2. Check public access block settings
                 const pabResponse = yield this._client.send(new client_s3_1.GetPublicAccessBlockCommand({ Bucket: bucketName }));
                 // console.log("pabResponse", pabResponse);
                 const pabConfig = pabResponse.PublicAccessBlockConfiguration || {};
-                const blocksPublicPolicy = (_b = pabConfig.BlockPublicPolicy) !== null && _b !== void 0 ? _b : true; // default true if undefined
+                const blocksPublicPolicy = (_c = pabConfig.BlockPublicPolicy) !== null && _c !== void 0 ? _c : true; // default true if undefined
                 // 3. Check bucket ACL for public grants
                 const aclResponse = yield this._client.send(new client_s3_1.GetBucketAclCommand({ Bucket: bucketName }));
                 // console.log("aclResponse", aclResponse);
@@ -294,7 +408,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                     "http://acs.amazonaws.com/groups/global/AllUsers",
                     "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
                 ];
-                let hasPublicAcl = (_c = aclResponse.Grants) === null || _c === void 0 ? void 0 : _c.some((grant) => {
+                let hasPublicAcl = (_d = aclResponse.Grants) === null || _d === void 0 ? void 0 : _d.some((grant) => {
                     var _a;
                     return ((_a = grant.Grantee) === null || _a === void 0 ? void 0 : _a.URI) &&
                         publicGrantUris.includes(grant.Grantee.URI) &&
@@ -320,7 +434,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                         "http://acs.amazonaws.com/groups/global/AllUsers",
                         "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
                     ];
-                    const hasPublicAcl = (_d = aclResponse.Grants) === null || _d === void 0 ? void 0 : _d.some((grant) => {
+                    const hasPublicAcl = (_e = aclResponse.Grants) === null || _e === void 0 ? void 0 : _e.some((grant) => {
                         var _a;
                         return ((_a = grant.Grantee) === null || _a === void 0 ? void 0 : _a.URI) &&
                             publicGrantUris.includes(grant.Grantee.URI) &&
@@ -438,9 +552,41 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    _getPublicURL(bucketName, fileName, _options) {
+    _getPublicURL(bucketName, fileName, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
+            if (this._provider === general_1.Provider.CLOUDFLARE) {
+                return { value: null, error: "Please use the Cloudflare web console to get the public URL." };
+            }
+            if (this._provider === general_1.Provider.CUBBIT) {
+                if (options.noCheck === true) {
+                    return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
+                }
+                return {
+                    value: null,
+                    error: `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}`,
+                };
+            }
+            let url = "";
+            if (this._provider === general_1.Provider.AWS) {
+                url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
+            }
+            else if (this._provider === general_1.Provider.BACKBLAZE_S3) {
+                url = `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`;
+            }
+            else if (this._provider === general_1.Provider.MINIO_S3) {
+                // let tmp = this._config.endpoint
+                // url = `${tmp.substring(0, tmp.indexOf("://") + 3)}${bucketName}.${tmp.substring(tmp.indexOf("://") + 3)}/${fileName}`;
+                url = `${this._config.endpoint}/${bucketName}/${fileName}`;
+            }
+            if (options.noCheck !== true) {
+                const result = yield this._bucketIsPublic(bucketName);
+                if (result.error !== null) {
+                    return { value: null, error: result.error };
+                }
+                if (result.value === false) {
+                    return { value: null, error: `Bucket "${bucketName}" is not public!` };
+                }
+            }
             return { value: url, error: null };
         });
     }
@@ -546,13 +692,25 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
             }
             try {
                 let data;
-                data = yield (0, s3_presigned_post_1.createPresignedPost)(this._client, {
-                    Bucket: bucketName,
-                    Key: fileName,
-                    Expires: expiresIn,
-                    Conditions: conditions,
-                    Fields: fields,
-                });
+                console.log(this.provider);
+                if (this.provider === general_1.Provider.S3 || this.provider === general_1.Provider.AWS) {
+                    data = yield (0, s3_presigned_post_1.createPresignedPost)(this._client, {
+                        Bucket: bucketName,
+                        Key: fileName,
+                        Expires: expiresIn,
+                        Conditions: conditions,
+                        Fields: fields,
+                    });
+                }
+                else {
+                    const command = new client_s3_1.PutObjectCommand({
+                        Bucket: bucketName,
+                        Key: fileName,
+                        ACL: "public-read",
+                    });
+                    const url = yield (0, s3_request_presigner_1.getSignedUrl)(this._client, command, { expiresIn });
+                    data = { url };
+                }
                 return { value: data, error: null };
             }
             catch (e) {
@@ -600,5 +758,5 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
         return this._client;
     }
 }
-exports.AdapterAmazonS3 = AdapterAmazonS3;
-//# sourceMappingURL=AdapterAmazonS3.js.map
+exports.AdapterS3 = AdapterS3;
+//# sourceMappingURL=AdapterS3.js.map

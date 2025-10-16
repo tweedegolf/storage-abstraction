@@ -100,15 +100,6 @@ class AdapterGoogleCloud extends AbstractAdapter_1.AbstractAdapter {
     _getPublicURL(bucketName, fileName, options) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (options.noCheck !== true) {
-                    const { value, error } = yield this._bucketIsPublic(bucketName);
-                    if (error !== null) {
-                        return { value: null, error };
-                    }
-                    else if (value === false) {
-                        return { value: null, error: `Bucket "${bucketName}" is not public!` };
-                    }
-                }
                 const bucket = this._client.bucket(bucketName, options);
                 const file = bucket.file(fileName);
                 return { value: file.publicUrl(), error: null };

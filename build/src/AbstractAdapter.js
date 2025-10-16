@@ -358,6 +358,15 @@ class AbstractAdapter {
                 return { value: null, error: r2.error };
             }
             const options = opt === null ? {} : opt;
+            if (options.noCheck !== true && this.provider !== general_1.Provider.CUBBIT /*ugly!*/) {
+                const result = yield this._bucketIsPublic(bucketName);
+                if (result.error !== null) {
+                    return { value: null, error: result.error };
+                }
+                if (result.value === false) {
+                    return { value: null, error: `Bucket "${bucketName}" is not public!` };
+                }
+            }
             return this._getPublicURL(r.value, fileName, options);
         });
     }
