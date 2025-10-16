@@ -4,12 +4,12 @@
 
 ```typescript
 export enum Provider {
-  NONE = "none",    // initial value for the abstract adapter
+  NONE = "none",          // initial value for the abstract adapter
   LOCAL = "local",
-  GCS = "gcs",      // Google Cloud Storage
-  GS = "gs",        // Google Cloud Storage
-  S3 = "s3",        // Amazon S3 and S3 compatible Cubbit, Cloudflare, Minio and Backblaze
-  AWS = "aws",      // Amazon S3 (only Amazon or strict S3 compatible providers)
+  GCS = "gcs",            // Google Cloud Storage
+  GS = "gs",              // Google Cloud Storage
+  S3 = "s3",              // Amazon S3 and S3 compatible providers Cubbit, Cloudflare, Minio and Backblaze
+  AWS = "aws",            // Amazon S3 (only Amazon or providers that are fully S3 compatible)
   B2 = "b2",              // BackBlaze B2 using native API
   BACKBLAZE = "b2",       // BackBlaze B2 using native API
   AZURE = "azure",        // Azure Storage Blob
@@ -27,7 +27,11 @@ export enum Provider {
 >`Provider.S3` supports Amazon S3 and the loose compatible S3 cloud providers Backblaze, Cloudflare, Cubbit and Minio
 >`Provider.AWS` only supports Amazon S3 and strict compatible S3 cloud providers
 
-It is important to know that `S3` and `Amazon S3` are different adapters! `Amazon S3` only supports Amazon S3 and strict compatible whereas `S3` supports Amazon S3 and the partial compatible providers Cubbit, Cloudflare, MinIO S3 and Backblaze S3. The latter adapter exists for historical reasons; originally we tried to create a single adapter for all S3 compatible providers but unfortunately the implementation of S3 differs quite across 'compatible' providers which led to a lot of if-else forking in the code making it hard to read and maintain. 
+The adapter `AdapterAmazonS3` has been renamed to `AdapterS3` because it supports multiple implementations of the S3 API. The code of `AdapterS3` is merely the same as the original `AdapterAmazonS3`.
+
+In the code of `AdapterAmazonS3` all if-else forking that was necessary to support all different S3 implementations has been removed. Therefor this adapter now only supports Amazon S3 and providers that are fully compatible with S3.
+
+We decided to keep `AdapterS3` for historical reasons; originally we tried to create a single adapter for all S3 compatible providers but unfortunately the implementation of S3 differs quite across 'compatible' providers which led to a lot of if-else forking in the code making it hard to read and maintain. 
 
 Therefor we decided to write one adapter with a strict Amazon S3 implementation and then write a separate adapter for every S3 compatible provider, extending the Amazon S3 adapter and overriding methods that had to be implemented differently. So far this has lead to 4 new adapters that extend the strict Amazon S3 adapter:
 

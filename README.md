@@ -112,13 +112,13 @@ The value of the type is one of the enum members of `Provider`:
 
 ```typescript
 export enum Provider {
-  NONE = "none",    // initial value for the abstract adapter, don't use this one
-  LOCAL = "local",  // local testing adapter
-  GCS = "gcs",      // Google Cloud Storage
-  GS = "gs",        // Google Cloud Storage
-  S3 = "s3",        // Amazon S3
-  AWS = "aws",      // Amazon S3
-  AZURE = "azure",  // Azure Storage Blob
+  NONE = "none",          // initial value for the abstract adapter, don't use this one
+  LOCAL = "local",        // local testing adapter
+  GCS = "gcs",            // Google Cloud Storage
+  GS = "gs",              // Google Cloud Storage
+  S3 = "s3",              // Amazon S3 and S3 compatible providers Cubbit, Cloudflare, Minio and Backblaze
+  AWS = "aws",            // Amazon S3 (only Amazon or providers that are fully S3 compatible)
+  AZURE = "azure",        // Azure Storage Blob
   B2 = "b2",              // BackBlaze B2 using native API with AdapterBackblazeB2
   BACKBLAZE = "b2",       // BackBlaze B2 using native API with AdapterBackblazeB2
   B2_S3 = "b2-s3",        // Backblaze B2 using S3 API with AdapterAmazonS3
