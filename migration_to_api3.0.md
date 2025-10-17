@@ -4,28 +4,28 @@
 
 ```typescript
 export enum Provider {
-  NONE = "none",          // initial value for the abstract adapter
-  LOCAL = "local",
+  NONE = "none",          // initial value for the abstract adapter, don't use this one
+  LOCAL = "local",        // adapter for local storage (ideal for testing)
   GCS = "gcs",            // Google Cloud Storage
   GS = "gs",              // Google Cloud Storage
-  S3 = "s3",              // Amazon S3 and S3 compatible providers Cubbit, Cloudflare, Minio and Backblaze
-  AWS = "aws",            // Amazon S3 (only Amazon or providers that are fully S3 compatible)
-  B2 = "b2",              // BackBlaze B2 using native API
-  BACKBLAZE = "b2",       // BackBlaze B2 using native API
+  S3 = "s3",              // Amazon S3 and (partly) S3 compatible providers Cubbit, Cloudflare, Minio and Backblaze
+  AWS = "aws",            // Amazon S3 or providers that are fully S3 compatible)
   AZURE = "azure",        // Azure Storage Blob
-  MINIO = "minio",        // Minio using native API
-  MINIO_S3 = "minio-s3",  // Minio using S3 API
-  B2_S3 = "b2-s3",        // Backblaze using S3 API
-  BACKBLAZE_S3 = "b2-s3", // Backblaze using S3 API
-  CUBBIT = "cubbit",      // Cubbit uses S3 API
-  R2 = "r2",              // Cloudflare R2 uses S3 API
-  CLOUDFLARE = "r2",      // Cloudflare R2 uses S3 API  
+  B2 = "b2",              // BackBlaze B2 using native API with AdapterBackblazeB2
+  BACKBLAZE = "b2",       // BackBlaze B2 using native API with AdapterBackblazeB2
+  B2_S3 = "b2-s3",        // Backblaze B2 using S3 API with AdapterAmazonS3
+  BACKBLAZE_S3 = "b2-s3", // Backblaze B2 using S3 API with AdapterAmazonS3
+  MINIO = "minio",        // Minio using native API with AdapterMinio
+  MINIO_S3 = "minio-s3",  // Minio using S3 API with AdapterAmazonS3
+  CUBBIT = "cubbit",      // Cubbit uses S3 API with AdapterAmazonS3  
+  R2 = "r2",              // Cloudflare R2 uses S3 API with AdapterAmazonS3    
+  CLOUDFLARE = "r2",      // Cloudflare R2 uses S3 API with AdapterAmazonS3   
 }
 ```
 >[!NOTE]
 >`Provider.S3` and `Provider.AWS` are different adapters!
->`Provider.S3` supports Amazon S3 and the loose compatible S3 cloud providers Backblaze, Cloudflare, Cubbit and Minio
->`Provider.AWS` only supports Amazon S3 and strict compatible S3 cloud providers
+>`Provider.S3` supports Amazon S3 and (partly) compatible S3 cloud providers Backblaze, Cloudflare, Cubbit and Minio
+>`Provider.AWS` only supports Amazon S3 and fully compatible S3 cloud providers
 
 The adapter `AdapterAmazonS3` has been renamed to `AdapterS3` because it supports multiple implementations of the S3 API. The code of `AdapterS3` is merely the same as the original `AdapterAmazonS3`.
 

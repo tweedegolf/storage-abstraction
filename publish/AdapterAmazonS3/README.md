@@ -199,7 +199,7 @@ Not all S3 compatible cloud services support all Amazon S3 features. Therefor so
 | API method | Service  | Remarks |
 | ---| ---| ---|
 |  `createBucket` | Cloudflare R2| Use web console to make bucket public|
-|   | Backblaze|Use web console to make bucket public|
+|   | Backblaze S3|Use web console to make bucket public|
 |  `bucketIsPublic` | Cloudflare R2|N/A|
 |   | Cubbit|N/A|
 |  `getPublicURL` | Cloudflare R2|N/A|

@@ -1,6 +1,6 @@
-import { S3Client, _Object, PutBucketPolicyCommand, PutObjectCommand, } from "@aws-sdk/client-s3";
+import { S3Client, _Object, PutBucketPolicyCommand, PutObjectCommand, GetBucketPolicyCommand, } from "@aws-sdk/client-s3";
 import { Options, Provider } from "./types/general";
-import { ResultObject, ResultObjectObject, } from "./types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectObject, } from "./types/result";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
 import { getErrorMessage } from "./util";
 import { AdapterAmazonS3 } from "./AdapterAmazonS3";
@@ -50,6 +50,30 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
       return { value: "ok", error: null };
     } catch (e: unknown) {
       return { value: null, error: `makeBucketPublic: ${getErrorMessage(e)}` };
+    }
+  }
+
+  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+    try {
+      let isPublic = false;
+      const policy = await this._client.send(new GetBucketPolicyCommand({ Bucket: bucketName }));
+      // console.log('Bucket policy:', policy);
+      if (typeof policy.Policy !== "undefined") {
+        const p = JSON.parse(policy.Policy);
+        for (let i = 0; i < p.Statement.length; i++) {
+          const s = p.Statement[i];
+          if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {
+            isPublic = true;
+            break;
+          }
+        }
+      }
+      return { value: isPublic, error: null };
+    } catch (e: unknown) {
+      if ((e as any).Code === "NoSuchBucketPolicy") {
+        return { value: false, error: null };
+      }
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 

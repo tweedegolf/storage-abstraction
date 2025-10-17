@@ -2,46 +2,11 @@ import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types";
-import {
-  S3Client,
-  _Object,
-  ListObjectsCommand,
-  ObjectVersion,
-  ListObjectVersionsCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-  HeadBucketCommand,
-  CreateBucketCommandInput,
-  CreateBucketCommand,
-  DeleteObjectsCommand,
-  DeleteBucketCommand,
-  ListBucketsCommand,
-  PutObjectCommand,
-  HeadObjectCommand,
-  GetObjectAttributesCommand,
-  GetObjectAttributesRequest,
-  waitUntilBucketExists,
-  PutBucketPolicyCommand,
-  PutPublicAccessBlockCommand,
-  GetBucketPolicyStatusCommand,
-  GetPublicAccessBlockCommand,
-  GetBucketAclCommand,
-  PutBucketAclCommand,
-  ObjectCannedACL,
-  GetBucketPolicyCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, _Object, ListObjectsCommand, ObjectVersion, ListObjectVersionsCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand, CreateBucketCommandInput, CreateBucketCommand, DeleteObjectsCommand, DeleteBucketCommand, ListBucketsCommand, PutObjectCommand, HeadObjectCommand, GetObjectAttributesCommand, GetObjectAttributesRequest, waitUntilBucketExists, PutBucketPolicyCommand, PutPublicAccessBlockCommand, GetBucketPolicyStatusCommand, GetPublicAccessBlockCommand, GetBucketAclCommand, PutBucketAclCommand, ObjectCannedACL, GetBucketPolicyCommand, } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
-import {
-  ResultObject,
-  ResultObjectBoolean,
-  ResultObjectBuckets,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectObject,
-  ResultObjectStream,
-} from "./types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream, } from "./types/result";
 import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
 import { getErrorMessage, parseUrl } from "./util";
 
@@ -120,7 +85,7 @@ export class AdapterS3 extends AbstractAdapter {
           ...o,
         });
       } else {
-        console.log("HIER");
+        console.log("Do we ever get here?");
         const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
         delete o.accessKeyId;
         delete o.secretAccessKey;
@@ -216,7 +181,7 @@ export class AdapterS3 extends AbstractAdapter {
 
     if (options.public === true) {
       try {
-        if (this._provider === Provider.AWS) {
+        if (this._provider === Provider.S3 || this._provider === Provider.AWS) {
           await this._client.send(
             new PutPublicAccessBlockCommand({
               Bucket: bucketName,
@@ -635,7 +600,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
 
     let url = "";
-    if (this._provider === Provider.AWS) {
+    if (this._provider === Provider.S3 || this._provider === Provider.AWS) {
       url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
     } else if (this._provider === Provider.BACKBLAZE_S3) {
       url = `https://${bucketName}.s3.${this.config.region}.backblazeb2.com/${fileName}`;

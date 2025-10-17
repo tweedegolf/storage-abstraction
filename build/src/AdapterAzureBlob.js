@@ -209,7 +209,7 @@ class AdapterAzureBlob extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    _getPublicURL(bucketName, fileName, options) {
+    _getPublicURL(bucketName, fileName, _options) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const file = this._client.getContainerClient(bucketName).getBlobClient(fileName);

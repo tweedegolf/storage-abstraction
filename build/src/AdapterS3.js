@@ -75,7 +75,7 @@ class AdapterS3 extends AbstractAdapter_1.AbstractAdapter {
                     } }, o));
             }
             else {
-                console.log("HIER");
+                console.log("Do we ever get here?");
                 const o = Object.assign({}, this.config); // eslint-disable-line
                 delete o.accessKeyId;
                 delete o.secretAccessKey;
@@ -164,7 +164,7 @@ class AdapterS3 extends AbstractAdapter_1.AbstractAdapter {
             }
             if (options.public === true) {
                 try {
-                    if (this._provider === general_1.Provider.AWS) {
+                    if (this._provider === general_1.Provider.S3 || this._provider === general_1.Provider.AWS) {
                         yield this._client.send(new client_s3_1.PutPublicAccessBlockCommand({
                             Bucket: bucketName,
                             PublicAccessBlockConfiguration: {
@@ -567,7 +567,7 @@ class AdapterS3 extends AbstractAdapter_1.AbstractAdapter {
                 };
             }
             let url = "";
-            if (this._provider === general_1.Provider.AWS) {
+            if (this._provider === general_1.Provider.S3 || this._provider === general_1.Provider.AWS) {
                 url = `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${fileName}`;
             }
             else if (this._provider === general_1.Provider.BACKBLAZE_S3) {

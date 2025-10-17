@@ -320,7 +320,7 @@ class AdapterBackblazeB2 extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    _getPublicURL(bucketName, fileName, options) {
+    _getPublicURL(bucketName, fileName, _options) {
         return __awaiter(this, void 0, void 0, function* () {
             return {
                 value: `${this._client.downloadUrl}/file/${bucketName}/${fileName}`,

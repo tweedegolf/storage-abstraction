@@ -5,6 +5,7 @@ gcs.json
 gcs1.json
 minio
 node_modules
+# build/src
 publish/**/src
 publish/**/src
 publish/**/src

@@ -15,7 +15,7 @@ export declare class AdapterAzureBlob extends AbstractAdapter {
     protected _listBuckets(): Promise<ResultObjectBuckets>;
     protected _createBucket(name: string, options: Options): Promise<ResultObject>;
     protected _getFileAsStream(bucketName: string, fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
-    protected _getPublicURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+    protected _getPublicURL(bucketName: string, fileName: string, _options: Options): Promise<ResultObject>;
     protected _getSignedURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
     protected _clearBucket(name: string): Promise<ResultObject>;
     protected _deleteBucket(name: string): Promise<ResultObject>;
