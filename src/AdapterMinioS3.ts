@@ -1,28 +1,24 @@
 import { S3Client, _Object, PutBucketPolicyCommand, PutObjectCommand, GetBucketPolicyCommand, } from "@aws-sdk/client-s3";
 import { Options, Provider } from "./types/general";
 import { ResultObject, ResultObjectBoolean, ResultObjectObject, } from "./types/result";
-import { AdapterConfigAmazonS3 } from "./types/adapter_amazon_s3";
+import { AdapterConfigS3 } from "./types/adapter_amazon_s3";
 import { getErrorMessage } from "./util";
 import { AdapterAmazonS3 } from "./AdapterAmazonS3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export class AdapterMinioS3 extends AdapterAmazonS3 {
-  declare protected _config: AdapterConfigAmazonS3;
+  declare protected _config: AdapterConfigS3;
   declare protected _client: S3Client;
   protected _provider: Provider = Provider.MINIO_S3;
   protected _configError: null | string = null;
 
-  constructor(config: string | AdapterConfigAmazonS3) {
+  constructor(config: string | AdapterConfigS3) {
     super(config);
     this.parseConfig(config);
-
-    if (typeof this._config.region === "undefined") {
-      this._config.region = "us-east-1";
-    }
+    this.checkConfig();
     this._config.forcePathStyle = true;
     // this._config.s3ForcePathStyle = true;
     this._config.signatureVersion = "v4";
-
     this.createClient();
   }
 
@@ -109,5 +105,13 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
     } catch (e: unknown) {
       return { value: null, error: getErrorMessage(e) };
     }
+  }
+
+  get config(): AdapterConfigS3 {
+    return this._config as AdapterConfigS3;
+  }
+
+  getConfig(): AdapterConfigS3 {
+    return this._config as AdapterConfigS3;
   }
 }

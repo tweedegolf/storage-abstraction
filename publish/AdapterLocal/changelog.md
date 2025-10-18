@@ -1,4 +1,5 @@
-# 2.0.0
+# 3.0.0
+- version bump to match the version of Storage and the API
 - removed support for versioning (wasn't implemented consistently anyway)
 - removed `getFileAsURL`
 - removed option `{allVersions: boolean}` for `removeFile`

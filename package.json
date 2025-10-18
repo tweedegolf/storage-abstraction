@@ -46,7 +46,7 @@
     "test": "ts-node ./tests/test_runs.ts",
     "test2": "ts-node ./tests/test2.ts",
     "test-urls": "ts-node ./tests/test_urls.ts",
-    "ts": "ts-node",
+    "ts": "ts-node -P tsconfig.json",
     "tsc": "node_modules/.bin/tsc",
     "toc": "ts-node ./toc/replace.ts && cd ./toc && ./create_toc.sh && cd ../",
     "copy": "npm run tsc && ts-node copy.ts",
