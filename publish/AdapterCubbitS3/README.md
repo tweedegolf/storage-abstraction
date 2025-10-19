@@ -1,6 +1,6 @@
-# Cloudflare R2 S3 Adapter
+# Cubbit S3 Adapter
 
-This adapter provides an abstraction layer over the S3 API of Cloudflare R2 cloud storage. It extends `AdapterAmazonS3` and overrides some methods because the implementation of Cloudflare is not fully compatible.
+This adapter provides an abstraction layer over the S3 API of Cubbit cloud storage. It extends `AdapterAmazonS3` and overrides some methods because the implementation of Cubbit is not fully compatible.
 
 The adapter is one of the adapters that is meant to be used as a plugin of the [Storage Abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). However it can be used standalone as well, see [below](#standalone).
 
@@ -10,14 +10,14 @@ It is also possible to access all the specific functionality of the cloud servic
 
 If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
 
-Cloudflare also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
+Cubbit also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
 
 
 ```typescript
 import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
 
 const configuration = {
-  type: StorageType.BACKBLAZE_S3,
+  type: StorageType.CUBBIT,
 };
 
 const storage = new Storage(configuration);
@@ -75,36 +75,41 @@ Also note that `accessKeyId`, `secretAccessKey` and `endpoint` are mandatory!
 
 Example with configuration object:
 
+Examples with configuration object:
+
 ```typescript
+// Cubbit S3 compatible
 const s = new Storage({
   type: StorageType.S3,
-  region: 'auto'
-  endpoint: R2_ENDPOINT,
-  accessKeyId: R2_ACCESS_KEY,
-  secretAccessKey: R2_SECRET_KEY,
+  accessKeyId: 'your-key-id'
+  secretAccessKey: 'your-secret'
+  endpoint: "https://s3.cubbit.eu/",
+  region: "eu-west-1",
+});
+
+const s = new Storage({
+  type: StorageType.S3,
+  accessKeyId: 'your-key-id'
+  secretAccessKey: 'your-secret'
+  endpoint: "https://s3.cubbit.eu/",
+  region: "eu-west-1",
+  bucketName: "the-buck",
 });
 ```
+
 Example with configuration url:
 
 ```typescript
 const s = new Storage(
-  `r2://${R2_ACCESS_KEY}:${R2_ACCESS_KEY}?endpoint=${R2_ENDPOINT}` 
+  "s3://your-key-id:your-access-key?endpoint=https://s3.cubbit.eu/&region=eu-west-1"
 );
 
 const s = new Storage(
-  `r2://${R2_ACCESS_KEY}:${R2_ACCESS_KEY}@the-buck?endpoint=${R2_ENDPOINT}` 
+  "s3://your-key-id:your-access-key@the-buck?endpoint=https://s3.cubbit.eu/&region=eu-west-1"
 );
 ```
-The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`. Jurisdiction is optional, e.g. `eu`.
 
-It is mandatory to set a value for `region`, use one of these values:
-
-- `auto`
-- `wnam`
-- `enam`
-- `weur`
-- `eeur`
-- `apac`
+It is mandatory to set a value for `region`; you can set it to "eu-west-1" or "us-east-1". Other values may work as well but not that Cubbit is a decentralized storage so setting a region doesn't really make a difference.
 
 You can also set the region using the `AWS_REGION` environment variable.
 
@@ -128,33 +133,28 @@ For a complete description of the Adapter API see [this part](https://github.com
 
 ## Exceptions
 
-The S3 implementation of Cloudflare R2 does not support creating a public bucket. You can only make a bucket public using the Cloudflare web console.
-
-```typescript
-const s = new Storage(config);
-const {value, error} = s.createBucket("myBucket", {public: true});
-console.log(value)
-// prints: 
-// "Bucket 'myBucket' created successfully but you can only make this bucket public using the Cloudflare R2 web console"
-```
-
-Also there is no way to check if a bucket is public so `bucketIsPublic`. 
+The S3 implementation of Cubbit checking if a bucket is public so `bucketIsPublic`. 
 
 ```typescript
 const s = new Storage(config);
 const {value, error} = s.bucketIsPublic("myBucket");
 console.log(error)
 // prints: 
-// "Cloudflare does not support checking if a bucket is public, please use the Cloudflare R2 web console"
+// "Cubbit does not support checking if a bucket is public, please use the Cubbit web console"
 ```
 
 
-Also `getPublicURL` is not supported:
+Also `getPublicURL` is only supported with `{noCheck: true}`:
 
 ```typescript
 const s = new Storage(config);
 const {value, error} = s.getPublicURL("myBucket", "myFile");
 console.log(error)
 // prints: 
-// "Please use the Cloudflare web console to get the public URL."
+// "Cannot check if bucket 'myBucket' is public. Use the Cubbit web console to check this or pass {noCheck: true}"
+
+const s = new Storage(config);
+const {value, error} = s.getPublicURL("myBucket", "myFile", {noCheck: true});
+console.log(value)
+// prints the public url
 ```

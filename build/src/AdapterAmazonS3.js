@@ -57,6 +57,21 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
             this._bucketName = this.config.bucketName;
         }
     }
+    checkConfig() {
+        const keys = ["accessKeyId", "secretAccessKey", "endpoint"];
+        const missing = [];
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            if (typeof this.config[key] !== "string") {
+                missing.push(key);
+            }
+        }
+        if (missing.length > 0) {
+            this._configError =
+                `[configError] Missing mandatory values: ${missing.join(', ')}`;
+            return;
+        }
+    }
     createClient() {
         try {
             if (this.config.accessKeyId && this.config.secretAccessKey) {
@@ -78,7 +93,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
             }
         }
         catch (e) {
-            this._configError = `[configError] ${(0, util_1.getErrorMessage)(e)}`;
+            this._configError = `[configError] ${(0, util_1.getErrorMessage)(e)} `;
         }
     }
     getFiles(bucketName_1) {
@@ -136,7 +151,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                             // Principal: "*",
                             Principal: { AWS: ["*"] },
                             Action: ["s3:GetObject"],
-                            Resource: [`arn:aws:s3:::${bucketName}/*`],
+                            Resource: [`arn: aws: s3:::${bucketName}/*`],
                         },
                     ],
                 };

@@ -1,5 +1,5 @@
 {
-  "name": "@tweedegolf/sab-adapter-amazon-s3",
+  "name": "@tweedegolf/sab-adapter-minio-s3",
   "version": "3.0.0",
   "description": "Provides an abstraction layer for interacting with Amazon S3 and S3 compatible cloud services.",
   "main": "dist/index/AdapterAmazonS3.js",

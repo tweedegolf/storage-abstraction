@@ -11,6 +11,7 @@ export declare class AdapterAmazonS3 extends AbstractAdapter {
     protected _configError: null | string;
     constructor(config: string | AdapterConfigAmazonS3);
     protected parseConfig(config: string | AdapterConfigAmazonS3): void;
+    protected checkConfig(): void;
     protected createClient(): void;
     protected getFiles(bucketName: string, maxFiles?: number): Promise<{
         value: Array<_Object> | null;

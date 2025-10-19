@@ -46,7 +46,7 @@ function getConfig(provider = general_1.Provider.LOCAL) {
             accessKeyId: process.env.R2_ACCESS_KEY_ID,
             secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
         };
-        config = `r2://${process.env.R2_ACCESS_KEY_ID}:${process.env.R2_SECRET_ACCESS_KEY}@${process.env.BUCKET_NAME}?endpoint=${process.env.R2_ENDPOINT}&region=${process.env.R2_REGION}`;
+        // config = `r2://${process.env.R2_ACCESS_KEY_ID}:${process.env.R2_SECRET_ACCESS_KEY}@${process.env.BUCKET_NAME}?endpoint=${process.env.R2_ENDPOINT}&region=${process.env.R2_REGION}`;
     }
     else if (provider === general_1.Provider.B2_S3) {
         config = {
@@ -61,7 +61,7 @@ function getConfig(provider = general_1.Provider.LOCAL) {
     else if (provider === general_1.Provider.CUBBIT) {
         config = {
             provider,
-            // region: "eu",
+            region: "us-west-1",
             bucketName: process.env.BUCKET_NAME,
             endpoint: process.env.CUBBIT_ENDPOINT,
             accessKeyId: process.env.CUBBIT_ACCESS_KEY_ID,
@@ -75,6 +75,8 @@ function getConfig(provider = general_1.Provider.LOCAL) {
             // endpoint: process.env.MINIO_ENDPOINT_DOCKER,
             // accessKeyId: process.env.MINIO_ACCESS_KEY_DOCKER,
             // secretAccessKey: process.env.MINIO_SECRET_KEY_DOCKER,
+            // region: "us-east-1",
+            region: "af-south-1",
             endpoint: process.env.MINIO_ENDPOINT_S3,
             accessKeyId: process.env.MINIO_ACCESS_KEY,
             secretAccessKey: process.env.MINIO_SECRET_KEY,

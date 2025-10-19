@@ -19,12 +19,12 @@ export class AdapterBackblazeS3 extends AdapterAmazonS3 {
     this.createClient();
   }
 
-  protected async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
+  protected override async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
     const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Backblaze B2 web console`;
     return { value: msg, error: null }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const aclResult = await this._client.send(new GetBucketAclCommand({ Bucket: bucketName }));
       // If one of the grants is for AllUsers with 'READ', it's public
@@ -40,7 +40,7 @@ export class AdapterBackblazeS3 extends AdapterAmazonS3 {
     }
   }
 
-  protected async _clearBucket(bucketName: string): Promise<ResultObject> {
+  protected override async _clearBucket(bucketName: string): Promise<ResultObject> {
     let versions: Array<{ Key: undefined | string; VersionId: undefined | string }> = [];
     const { value, error } = await this.getFileVersions(bucketName);
     if (error !== null) {
@@ -72,7 +72,7 @@ export class AdapterBackblazeS3 extends AdapterAmazonS3 {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     _options: Options
@@ -81,7 +81,7 @@ export class AdapterBackblazeS3 extends AdapterAmazonS3 {
     return { value: url, error: null };
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -104,11 +104,12 @@ export class AdapterBackblazeS3 extends AdapterAmazonS3 {
     }
   }
 
-  get config(): AdapterConfigS3 {
+  override get config(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 
-  getConfig(): AdapterConfigS3 {
+  override getConfig(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 }
+

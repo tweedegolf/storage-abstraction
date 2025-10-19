@@ -17,6 +17,8 @@
     "sourceMap": true,
     "declaration": true,
     "preserveConstEnums": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"

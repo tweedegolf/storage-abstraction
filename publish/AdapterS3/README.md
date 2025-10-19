@@ -4,6 +4,8 @@ An adapter that provides an abstraction layer over the API of the Amazon S3 clou
 
 This adapter is one of the adapters that is meant to be used as a plugin of the [Storage Abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). However it can be used standalone as well, see [below](#standalone).
 
+This is adapter is based on the code of the former version of `AdapterAmazonS3`
+
 The [API](https://github.com/tweedegolf/storage-abstraction/tree/master?tab=readme-ov-file#adapter-api) of the adapter abstracts away the differences between the API's of cloud storage services. The API only supports the basic, most commonly used cloud service operations such as creating a bucket, storing files and so on.
 
 It is also possible to access all the specific functionality of the cloud service API through the service client of the adapter, see [here](https://github.com/tweedegolf/storage-abstraction/tree/master?tab=readme-ov-file#getserviceclient).
@@ -75,7 +77,7 @@ const s = new Storage({
   accessKeyId: 'your-key-id'
   secretAccessKey: 'your-secret'
   endpoint: "https://s3.cubbit.eu/",
-  region: "auto",
+  region: "eu-west-1",
 });
 
 const s = new Storage({
@@ -83,7 +85,7 @@ const s = new Storage({
   accessKeyId: 'your-key-id'
   secretAccessKey: 'your-secret'
   endpoint: "https://s3.cubbit.eu/",
-  region: "auto",
+  region: "eu-west-1",
   bucketName: "the-buck",
 });
 ```
@@ -154,9 +156,7 @@ const s = new Storage({
 });
 ```
 
-The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`.
-
-Jurisdiction is optional, e.g. `eu`.
+The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`. Jurisdiction is optional, e.g. `eu`.
 
 It is mandatory to set a value for `region`, either directly in the config or as environment variable `AWS_REGION`, use one of these values:
 

@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
-Provides an abstraction layer for interacting with a storage; the storage can be a local file system or a cloud storage service. Supported cloud storage services are:
+Provides an abstraction layer for interacting with a storage; the storage can be on a local file system or in the cloud. Supported cloud storage providers are:
 
 - Amazon S3
 - Google Cloud
@@ -12,7 +12,7 @@ Provides an abstraction layer for interacting with a storage; the storage can be
 - CloudFlare R2 (S3)
 - Cubbit (S3)
 
-The API only provides basic storage operations (see [below](#adapter-api)) and therefor the API is cloud agnostic. This means that you can develop your application using local disk storage and then use for instance Google Cloud or Amazon S3 in your production environment without the need to change any code.
+The storage abstraction API only supports basic storage operations (see [below](#adapter-api)) so the API can be cloud agnostic. This means that you can develop your application using local disk storage and then use for instance Google Cloud or Amazon S3 in your production environment without the need to change any code.
 
 ## Table of contents
 
@@ -45,15 +45,15 @@ Documentation|Adapter API|Introspective API|Storage API
 
 A `Storage` instance is a thin wrapper around one of the available adapters. These adapters are available as separate packages on npm. This way your code base stays as slim as possible because you only have to add the adapter(s) that you need to your project.
 
-Most adapters are wrappers around the cloud storage service specific service clients, e.g. the AWS SDK.
+The adapters itself are wrappers around the cloud storage provider specific client SDK's, e.g. the [AWS SDK](https://aws.amazon.com/sdk-for-javascript/).
 
 List of available adapters:
 
 - [Local file system](https://www.npmjs.com/package/@tweedegolf/sab-adapter-local) `npm i @tweedegolf/sab-adapter-local`
-- [S3 (Amazon S3 and strict compatible)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3) `npm i @tweedegolf/sab-adapter-amazon-s3`
-- [Amazon S3 (and S3 compatible Backblaze, Cloudflare, Cubbit and MinIO)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-s3) `npm i @tweedegolf/sab-adapter-s3`
+- [Amazon S3 (Amazon S3 and fully compatible)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3) `npm i @tweedegolf/sab-adapter-amazon-s3`
 - [Google cloud](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud) `npm i @tweedegolf/sab-adapter-google-cloud`
 - [Azure Blob](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob) `npm i @tweedegolf/sab-adapter-azure-blob`
+- [S3 (Amazon and Backblaze, Cloudflare, Cubbit and MinIO)](https://www.npmjs.com/package/@tweedegolf/sab-adapter-s3) `npm i @tweedegolf/sab-adapter-s3`
 - [Backblaze B2 using native API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) `npm i @tweedegolf/sab-adapter-backblaze-b2`
 - [Backblaze B2 using S3 API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-s3) `npm i @tweedegolf/sab-adapter-backblaze-s3`
 - [MinIO using native API](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio) `npm i @tweedegolf/sab-adapter-minio`
@@ -61,7 +61,7 @@ List of available adapters:
 - [Cubbit](https://www.npmjs.com/package/@tweedegolf/sab-adapter-cubbit-s3) `npm i @tweedegolf/sab-adapter-cubbit-s3`
 - [Cloudflare R2](https://www.npmjs.com/package/@tweedegolf/sab-adapter-cloudflare-s3) `npm i @tweedegolf/sab-adapter-cloudflare-s3`
 
-It is important to know that `S3` and `Amazon S3` are different adapters! `Amazon S3` only supports Amazon S3 and strict compatible whereas `S3` supports Amazon S3 and the partial compatible providers Cubbit, Cloudflare, MinIO S3 and Backblaze S3. The latter adapter exists for historical reasons; originally we tried to create a single adapter for all S3 compatible providers but unfortunately the implementation of S3 differs quite across 'compatible' providers which led to a lot of if-else forking in the code making it hard to read and maintain. 
+It is important to know that `S3` and `Amazon S3` are different adapters; `Amazon S3` only supports Amazon S3 and strict compatible providers whereas `S3` supports Amazon S3 and the partial compatible providers Cubbit, Cloudflare, MinIO S3 and Backblaze S3. The latter adapter exists for historical reasons; originally we tried to create a single adapter for all S3 compatible providers but unfortunately the implementation of S3 differs quite across 'compatible' providers which led to a lot of if-else forking in the code making it hard to read and maintain. 
 
 Therefor we decided to write one adapter with a strict Amazon S3 implementation and then write a separate adapters for every S3 compatible provider, extending the Amazon S3 adapter and overriding methods that had to be implemented differently. So far this has lead to 4 new adapters that extend the strict Amazon S3 adapter:
 
@@ -69,6 +69,12 @@ Therefor we decided to write one adapter with a strict Amazon S3 implementation 
 - AdapterCloudflareS3
 - AdapterCubbitS3
 - AdapterMinioS3
+
+>[!NOTE]
+>The adapter `AdapterS3` is based on the code of the former version of `AdapterAmazonS3`. This means that if you are using a 1.x.x version of `AdapterAmazonS3` and you want to upgrade, you need to switch to `AdapterS3` or use the S3 adapter that matches your provider.
+
+>[!NOTE]
+>You might wonder why all adapter names starts with `sab-adapter`; sab is short for StorageABstraction. Sometimes we may refer to this library as sab or sablib.
 
 When you create a `Storage` instance it creates an instance of an adapter based on the configuration object or url that you provide. Then all API calls to the `Storage` are forwarded to this adapter instance, below a code snippet of the `Storage` class that shows how `createBucket` is forwarded:
 
@@ -81,7 +87,7 @@ public async createBucket(name: string): Promise<ResultObject> {
 
 The class `Storage` implements the interface `IAdapter` and this interface declares the complete API. Because all adapters have to implement this interface as well, either by extending `AbstractAdapter` or otherwise, all API calls on `Storage` can be directly forwarded to the adapters.
 
-The adapter subsequently creates an instance of the cloud storage specific service client and this instance handles the actual communication with the cloud service. For instance:
+The adapter subsequently creates an instance of the cloud storage specific client and this instance handles the actual communication with the cloud service. For instance:
 
 ```typescript
 // Amazon S3 adapter
@@ -104,7 +110,7 @@ When you create a new `Storage` instance the `config` argument is used to instan
 1. using a configuration object (js: `typeof === "object"` ts: `AdapterConfig`)
 2. using a configuration URL (`typeof === "string"`)
 
-Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object also applies to configuration URLs.
+Internally the configuration URL will be converted to a configuration object so any rule that applies to a configuration object applies to configuration URLs as well.
 
 The configuration must at least specify a provider; the provider is used to determine which adapter should be created. Note that the adapters are not included in the Storage Abstraction package so you have to add them to you project's package.json before you can use them.
 
@@ -112,13 +118,13 @@ The value of the type is one of the enum members of `Provider`:
 
 ```typescript
 export enum Provider {
-  NONE = "none",    // initial value for the abstract adapter, don't use this one
-  LOCAL = "local",  // local testing adapter
-  GCS = "gcs",      // Google Cloud Storage
-  GS = "gs",        // Google Cloud Storage
-  S3 = "s3",        // Amazon S3
-  AWS = "aws",      // Amazon S3
-  AZURE = "azure",  // Azure Storage Blob
+  NONE = "none",          // initial value for the abstract adapter, don't use this one
+  LOCAL = "local",        // adapter for local storage (ideal for testing)
+  GCS = "gcs",            // Google Cloud Storage
+  GS = "gs",              // Google Cloud Storage
+  S3 = "s3",              // Amazon S3 and (partly) S3 compatible providers Cubbit, Cloudflare, Minio and Backblaze
+  AWS = "aws",            // Amazon S3 or providers that are fully S3 compatible)
+  AZURE = "azure",        // Azure Storage Blob
   B2 = "b2",              // BackBlaze B2 using native API with AdapterBackblazeB2
   BACKBLAZE = "b2",       // BackBlaze B2 using native API with AdapterBackblazeB2
   B2_S3 = "b2-s3",        // Backblaze B2 using S3 API with AdapterAmazonS3
@@ -134,10 +140,10 @@ export enum Provider {
 The Storage instance is only interested in the provider so it checks if the provider is valid and then passes the rest of the configuration on to the adapter constructor. It is the responsibility of the adapter to perform further checks on the configuration. I.e. if all mandatory values are available such as credentials or an endpoint.
 
 >[!NOTE]
-> Some adapters have two entries, for instance `Provider.BACKBLAZE` and `Provider.B2` both have value `b2` and use both `AdapterBackblazeB2`.
+> Some adapters have two entries, for instance the keys `Provider.BACKBLAZE` and `Provider.B2` both have value `b2` and use both `AdapterBackblazeB2`.
 
 >[!NOTE]
-> Although there are 15 members in the enum, there are only 9 adapters supporting 7 different cloud storage providers. The providers Minio and Backblaze B2 have both a native API and support for the S3 API.
+> Although there are 16 keys in the enum, there are only 11 adapters supporting 7 different cloud storage providers. The providers Minio and Backblaze B2 have both a native API and support for the S3 API.
 
 ### Configuration object
 
@@ -166,27 +172,27 @@ const u = "protocol://username:password@host:port/path/to/object?region=auto&opt
 
 For most storage services `username` and `password` are the credentials, such as key id and secret but this is not mandatory; you may use these values for other purposes.
 
-The protocol part of the url defines the storage provider and should be one of the members of the `Provider` type:
+The protocol part of the url defines the storage provider and must match the value of one of the keys in the `Provider` type:
 
 - `local://` &rarr; local storage
+- `aws://` &rarr; Amazon S3 (and fully S3 compatible providers)
+- `gcs://` &rarr; Google Cloud
+- `gs://` &rarr; Google Cloud
+- `azure://` &rarr; Azure Blob Storage
+- `s3://` &rarr; Amazon S3 (and partly S3 compatibles: Backblaze, Cloudflare, Cubbit and MinIO)
 - `minio://` &rarr; MinIO
 - `minio-s3://` &rarr; MinIO S3 API
 - `b2://` &rarr; Backblaze B2
 - `backblaze://` &rarr; Backblaze B2
 - `b2-s3://` &rarr; Backblaze B2 S3 API
 - `backblaze-s3://` &rarr; Backblaze B2 S3 API
-- `s3://` &rarr; Amazon S3
-- `aws://` &rarr; Amazon S3
-- `gcs://` &rarr; Google Cloud
-- `gs://` &rarr; Google Cloud
-- `azure://` &rarr; Azure Blob Storage
 - `r2://` &rarr; Cloudflare R2 Storage
 - `cloudflare://` &rarr; Cloudflare R2 Storage
 - `cubbit://` &rarr; Cubbit Storage
 
 Note that some providers can be addressed by multiple protocols, e.g. for Google Cloud Storage you can use both `gcs` and `gs`.
 
-Also note that `s3` and `aws` are different adapters! `aws` only support Amazon S3 and strict compatible whereas `s3` supports Amazon S3, Cubbit, Cloudflare, MinIO S3 and Backblaze S3.
+Also note that `s3` and `aws` are different adapters; `aws` only supports Amazon S3 and strict compatible S3 providers whereas `s3` supports Amazon S3, Cubbit, Cloudflare, MinIO S3 and Backblaze S3.
 
 <!--
 ```typescript
@@ -208,11 +214,11 @@ The url parser generates a generic object with generic keys that resembles the s
 
 ```typescript
 // port and bucket
-const u = "s3://key:secret@the-buck/path/to/object?region=auto&option2=value2";
+const u = "aws://key:secret@the-buck/path/to/object?region=auto&option2=value2";
 
 // output parser
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: "key",
   password: "secret",
   host: "the-buck",
@@ -226,7 +232,7 @@ const p = {
 
 // AdapterConfigAmazonS3
 const c = {
-  type: "s3",
+  type: "aws",
   accessKeyId: "key",
   secretAccessKey: "secret",
   bucketName: "the-buck",
@@ -239,9 +245,9 @@ The components of the url represent config parameters and because not all adapte
 
 ```typescript
 // port and bucket
-const u = "s3://part1:part2@bucket:9000/path/to/object?region=auto&option2=value2";
+const u = "aws://part1:part2@bucket:9000/path/to/object?region=auto&option2=value2";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: "part1",
   part2: "part2",
   host: "bucket",
@@ -251,9 +257,9 @@ const p = {
 };
 
 // no bucket but with @
-const u = "s3://part1:part2@:9000/path/to/object?region=auto&option2=value2";
+const u = "aws://part1:part2@:9000/path/to/object?region=auto&option2=value2";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: "part1",
   password: "part2",
   host: null,
@@ -263,9 +269,9 @@ const p = {
 };
 
 // no bucket
-const u = "s3://part1:part2:9000/path/to/object?region=auto&option2=value2";
+const u = "aws://part1:part2:9000/path/to/object?region=auto&option2=value2";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: "part1",
   password: "part2",
   host: null,
@@ -275,9 +281,9 @@ const p = {
 };
 
 // no credentials, note: @ is mandatory in order to be able to parse the bucket name
-const u = "s3://@bucket/path/to/object?region=auto&option2=value2";
+const u = "aws://@bucket/path/to/object?region=auto&option2=value2";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: null,
   password: null,
   host: "bucket",
@@ -287,9 +293,9 @@ const p = {
 };
 
 // no credentials, no bucket
-const u = "s3:///path/to/object?region=auto&option2=value2";
+const u = "aws:///path/to/object?region=auto&option2=value2";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: "/path/to/object",
   password: null,
   host: null,
@@ -299,9 +305,9 @@ const p = {
 };
 
 // no credentials, no bucket, no extra options (query string)
-const u = "s3:///path/to/object";
+const u = "aws:///path/to/object";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: "/path/to/object",
   password: null,
   host: null,
@@ -311,9 +317,9 @@ const p = {
 };
 
 // only protocol
-const u = "s3://";
+const u = "aws://";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: null,
   password: null,
   host: null,
@@ -323,9 +329,9 @@ const p = {
 };
 
 // absolutely bare
-const u = "s3";
+const u = "aws";
 const p = {
-  protocol: "s3",
+  protocol: "aws",
   username: null,
   password: null,
   host: null,
@@ -355,19 +361,22 @@ A description of the available adapters; what the configuration objects and URLs
 | ------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Local storage | `npm i @tweedegolf/sab-adapter-local`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-local?activeTab=readme)        |
 | Amazon S3     | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
-| Cubbit        | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
-| Cloudflare R2 | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
-| MinIO S3      | `npm i @tweedegolf/sab-adapter-amazon-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
-| Backblaze B2 S3 | `npm i @tweedegolf/sab-adapter-amazon-s3`  | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-amazon-s3?activeTab=readme)    |
-| Google Cloud  | `npm i @tweedegolf/sab-adapter-google-cloud` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud?activeTab=readme) |
 | Azure Blob    | `npm i @tweedegolf/sab-adapter-azure-blob`   | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-azure-blob?activeTab=readme)   |
-| MinIO         | `npm i @tweedegolf/sab-adapter-minio`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio?activeTab=readme)        |
 | Backblaze B2  | `npm i @tweedegolf/sab-adapter-backblaze-b2` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2?activeTab=readme) |
+| Google Cloud  | `npm i @tweedegolf/sab-adapter-google-cloud` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-google-cloud?activeTab=readme) |
+| MinIO         | `npm i @tweedegolf/sab-adapter-minio`        | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio?activeTab=readme)        |
+| S3            | `npm i @tweedegolf/sab-adapter-s3`           | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-s3?activeTab=readme)    |
+| Backblaze B2 S3 | `npm i @tweedegolf/sab-adapter-backblaze-s3`  | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-s3?activeTab=readme)    |
+| Cubbit        | `npm i @tweedegolf/sab-adapter-cubbit-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-cubbit-s3?activeTab=readme)    |
+| Cloudflare R2 | `npm i @tweedegolf/sab-adapter-cloudflare-s3` | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-cloudflare-s3?activeTab=readme)    |
+| MinIO S3      | `npm i @tweedegolf/sab-adapter-minio-s3`    | [**npm.com&#8599;**](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio-s3?activeTab=readme)    |
 
 You can also add more adapters yourself very easily, see [below](#adding-more-adapters).
 
 >[!NOTE] 
-> Note that the Amazon S3 adapter also supports Cubbit, Cloudflare R2 and the S3 API of Backblaze B2 and Minio.
+> Note that the S3 adapter supports Amazon, Cubbit, Cloudflare R2 and the S3 API of Backblaze B2 and Minio.
+> The Amazon S3 adapter only supports Amazon and fully compatible S3 providers
+> It is recommended to use the provider specific S3 adapter (e.g. MinIO S3 `sab-adapter-minio-s3`) instead of the generic S3 adapter. 
 
 ## Adapter Introspect API
 
@@ -486,11 +495,11 @@ For instance in the adapter for Amazon S3 an instance of the S3Client of the aws
 this._client = new S3Client();
 ```
 
-This method is particularly handy if you need to make API calls that are not implemented in this library. The example below shows how the `CopyObjectCommand` is used directly on the service client. The API of the Storage Abstraction does not (yet) offer a method to copy an object that is already stored in the cloud service so this can be a way to circumvent that.
+This method is particularly handy if you need to make API calls that are not implemented in this library. The example below shows how the `CopyObjectCommand` is used directly on the service client of the Amazon S3 adapter. The API of the Storage Abstraction does not (yet) offer a method to copy an object that is already stored in the cloud so this can be a way to circumvent that.
 
 ```typescript
 const storage = new Storage(config);
-const client = storage.getServiceClient();
+const client = storage.getServiceClient(); // returns an instance of AWS S3Client
 
 const input = {
   Bucket: "destinationbucket",
@@ -589,7 +598,7 @@ Check if the bucket is publicly accessible.
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
 >[!NOTE]
-> Both Cloudflare R2 and Cubbit do not provide a way to check if a bucket is public. You have to check this in the respective web consoles.
+> Both Cloudflare R2 and Cubbit do not provide a way to check if a bucket is public. You have to check this in the respective web consoles. Using this method return an error `{Cubbit | Cloudflare} does not support checking if a bucket is public, please use the {Cubbit | Cloudflare} web console";`
 
 >[!NOTE]
 > If you are connected to Azure using a SAS token this method will return an error: "This request is not authorized to perform this operation using this permission."
@@ -683,10 +692,13 @@ Fails if the bucket already exists. This is done because bucket names must be gl
 >```
 
 >[!NOTE]
-> You cannot create a public bucket if you use the AmazonS3 adapter with Backblaze or Cloudflare R2; please use the web console of these services to make your bucket public.
+> Cloudflare R2 and the S3 API of Backblaze don't support creating a public bucket; please use the web console of these services to make your bucket public. 
 
 >[!NOTE]
-> If you use the AmazonS3 adapter with Cubbit you can create a public bucket but if you want the files stored in the bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object of `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream` as well:
+>Cloudflare R2 only supports public buckets if you add a custom domain to your bucket, see [the documentation](https://developers.cloudflare.com/r2/buckets/public-buckets/#managed-public-buckets-through-r2dev) on the Cloudflare site. You can add a custom domain to your bucket in the Cloudflare Console.
+
+>[!NOTE]
+> Cubbit allows you to create a public bucket but if you want the files stored in the bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object of `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream` as well:
 >```typescript
 > addFileFromPath({
 >   bucketName: "test",
@@ -702,7 +714,7 @@ Fails if the bucket already exists. This is done because bucket names must be gl
 
 If the bucket was created successfully the `value` key will hold the string "ok". 
 
-If you wanted to create a public bucket and the bucket couldn't be made public for instance because you use the AmazonS3 adapter i.c.w. Backblaze or Cloudflare R2, `value` will hold `Bucket ${bucketName} created successfully but you can only make this bucket public using the web console`.
+If you wanted to create a public bucket and the bucket couldn't be made public because Backblaze with S3 API and Cloudflare R2 don't support it, `value` will hold `Bucket ${bucketName} created successfully but you can only make this bucket public using the ${provider} web console`.
 
 If the bucket exists or if creating the bucket fails for another reason the `error` key will hold the error message.
 
@@ -788,7 +800,7 @@ export type FilePathParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
+    ACL?: string; // for Cubbit S3
   };
 };
 ```
@@ -809,7 +821,7 @@ The key `bucketName` is optional; if you don't pass a value the selected bucket 
 If the call is successful `value` will hold the string "ok".
 
 >[!NOTE]
-> If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+> For Cubbit: if you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
 <hr>
 
@@ -828,7 +840,7 @@ export type FileBufferParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    ACL?: string; // for AdapterAmazonS3 i.c.w. Cubbit
+    ACL?: string; // for Cubbit S3
   };
 };
 ```
@@ -851,7 +863,7 @@ If the call is successful `value` will hold the string "ok".
 This method is particularly handy when you want to move uploaded files directly to the storage, for instance when you use Express.Multer with [MemoryStorage](https://github.com/expressjs/multer#memorystorage).
 
 >[!NOTE]
-> If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+> For Cubbit: if you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
 <hr>
 
@@ -870,7 +882,7 @@ export type FileStreamParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
-    ACL?: string // for AdapterAmazonS3 i.c.w. Cubbit
+    ACL?: string // for Cubbit S3
   };
 };
 ```
@@ -894,7 +906,7 @@ This method is particularly handy when you want to store files while they are be
 
 
 >[!NOTE]
-> If you use the Amazon S3 adapter with Cubbit and you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
+> For Cubbit: if you want the files stored in a public bucket to be public as well you need to add `{ACL: "public-read"}` or `{ACL: "public-read-write"}` to the options object.
 
 <hr>
 
@@ -930,7 +942,7 @@ The key `bucketName` is optional; if you don't pass a value the selected bucket 
 
 The way presigned upload URLs are implemented in the various cloud storage services differs a lot. Below code examples for the supported services:
 
-#### Amazon S3
+#### Amazon S3, Backblaze S3, Cloudflare R2, Cubbit and MinIO S3
 
 ```typescript
 const r = await storage.getPresignedUploadURL("the-bucket", "test.jpg", {
@@ -1100,25 +1112,16 @@ Returns the public url of the file. Returns an error if the bucket is not public
 
 The `bucketName` arg is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 
-With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is actually public. Using this the method will always return a url. The bypass was put in place because there is no way to check if a bucket is public when you use Cubbit or Backblaze with the Amazon S3 SDK; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url returned will be unreachable.
+With the `noCheck` key in the options object set to `true` you can bypass the check if the bucket is actually public. Using this the method will always return a url. The bypass was put in place because Cubbit and Backblaze S3 don't support checking if a bucket is public using their API; you can only check this using the web console of Cubbit and Backblaze respectively. You should only use this bypass if you are sure the bucket is public otherwise the url returned will be unreachable.
 
 The Amazon S3 SDK doesn't have a method to retrieve a public url, instead the url is composed of known data using a cloud service specific template:
 - Amazon: `https://${bucket_name}.s3.${region}.amazon.com/${file_name}`
-- Backblaze: `https://${bucket_name}.s3.${region}.backblazeb2.com/${file_name}`
+- Backblaze S3: `https://${bucket_name}.s3.${region}.backblazeb2.com/${file_name}`
 - Cloudflare: N/A, see below
 - Cubbit: `https://${bucket_name}.s3.cubbit.eu/${file_name}`
+- Minio S3: `https://${endpoint}/${bucketName}/${fileName}`
 
-Although Cloudflare R2 is S3 compatible, this method cannot return a public url when you use R2 cloud storage. R2 only supports public buckets if you add a custom domain to your bucket, see [the documentation](https://developers.cloudflare.com/r2/buckets/public-buckets/#managed-public-buckets-through-r2dev) on the Cloudflare site. You can add a custom domain to your bucket in the Cloudflare Console and after that you can simply construct the url of the bucket in your own code. You could enable and use the Public Development URL but that is not meant to be used for production. Alternately, you could use a pre-signed url instead of a public url.
-
-| API method | Service  | Remarks |
-| ---| ---| ---|
-|  `createBucket` | Cloudflare R2| Use web console to make bucket public|
-|   | Backblaze|Use web console to make bucket public|
-|  `bucketIsPublic` | Cloudflare R2|N/A|
-|   | Cubbit|N/A|
-|  `getPublicURL` | Cloudflare R2|N/A|
-|   | Cubbit|Only with options `{noCheck: true}`|
-
+Although Cloudflare R2 is a S3 compatible storage, this method cannot return a public url because Cloudflare R2 only supports public buckets if you add a custom domain to your bucket, see [the documentation](https://developers.cloudflare.com/r2/buckets/public-buckets/#managed-public-buckets-through-r2dev) on the Cloudflare site. You can add a custom domain to your bucket in the Cloudflare Console and after that you can simply construct the url of the bucket in your own code. You could enable and use the Public Development URL but that is not meant to be used for production. Alternately, you could use a pre-signed url instead of a public url.
 
 For the local adapter you can use the key `withoutDirectory` in the options object:
 

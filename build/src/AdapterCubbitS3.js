@@ -21,6 +21,7 @@ class AdapterCubbitS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
         this._provider = general_1.Provider.CUBBIT;
         this._configError = null;
         this.parseConfig(config);
+        this.checkConfig();
         this.createClient();
     }
     makeBucketPublic(bucketName_1) {
@@ -46,7 +47,7 @@ class AdapterCubbitS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
     _getPublicURL(bucketName, fileName, options) {
         return __awaiter(this, void 0, void 0, function* () {
             if (options.noCheck !== true) {
-                const error = `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}`;
+                const error = `Cannot check if bucket '${bucketName}' is public. Use the Cubbit web console to check this or pass {noCheck: true}`;
                 return { value: null, error };
             }
             return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
@@ -71,6 +72,12 @@ class AdapterCubbitS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
                 return { value: null, error: (0, util_1.getErrorMessage)(e) };
             }
         });
+    }
+    get config() {
+        return this._config;
+    }
+    getConfig() {
+        return this._config;
     }
 }
 exports.AdapterCubbitS3 = AdapterCubbitS3;

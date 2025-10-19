@@ -21,9 +21,7 @@ class AdapterMinioS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
         this._provider = general_1.Provider.MINIO_S3;
         this._configError = null;
         this.parseConfig(config);
-        if (typeof this._config.region === "undefined") {
-            this._config.region = "us-east-1";
-        }
+        this.checkConfig();
         this._config.forcePathStyle = true;
         // this._config.s3ForcePathStyle = true;
         this._config.signatureVersion = "v4";
@@ -56,6 +54,32 @@ class AdapterMinioS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
             }
         });
     }
+    _bucketIsPublic(bucketName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let isPublic = false;
+                const policy = yield this._client.send(new client_s3_1.GetBucketPolicyCommand({ Bucket: bucketName }));
+                // console.log('Bucket policy:', policy);
+                if (typeof policy.Policy !== "undefined") {
+                    const p = JSON.parse(policy.Policy);
+                    for (let i = 0; i < p.Statement.length; i++) {
+                        const s = p.Statement[i];
+                        if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {
+                            isPublic = true;
+                            break;
+                        }
+                    }
+                }
+                return { value: isPublic, error: null };
+            }
+            catch (e) {
+                if (e.Code === "NoSuchBucketPolicy") {
+                    return { value: false, error: null };
+                }
+                return { value: null, error: (0, util_1.getErrorMessage)(e) };
+            }
+        });
+    }
     _getPublicURL(bucketName, fileName, _options) {
         return __awaiter(this, void 0, void 0, function* () {
             // let tmp = this._config.endpoint
@@ -83,6 +107,12 @@ class AdapterMinioS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
                 return { value: null, error: (0, util_1.getErrorMessage)(e) };
             }
         });
+    }
+    get config() {
+        return this._config;
+    }
+    getConfig() {
+        return this._config;
     }
 }
 exports.AdapterMinioS3 = AdapterMinioS3;

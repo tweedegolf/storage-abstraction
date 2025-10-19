@@ -19,7 +19,7 @@ export class AdapterCubbitS3 extends AdapterAmazonS3 {
     this.createClient();
   }
 
-  protected async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
+  protected override async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
     try {
       await this._client.send(
         new PutBucketAclCommand({
@@ -33,24 +33,24 @@ export class AdapterCubbitS3 extends AdapterAmazonS3 {
     }
   }
 
-  protected async _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean> {
     const error = "Cubbit does not support checking if a bucket is public, please use the Cubbit web console";
     return { value: null, error };
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
     if (options.noCheck !== true) {
-      const error = `Cannot check if bucket ${bucketName} is public. Use the Cubbit web console to check this or pass {noCheck: true}`;
+      const error = `Cannot check if bucket '${bucketName}' is public. Use the Cubbit web console to check this or pass {noCheck: true}`;
       return { value: null, error };
     }
     return { value: `https://${bucketName}.s3.cubbit.eu/${fileName}`, error: null };
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -73,11 +73,11 @@ export class AdapterCubbitS3 extends AdapterAmazonS3 {
     }
   }
 
-  get config(): AdapterConfigS3 {
+  override get config(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 
-  getConfig(): AdapterConfigS3 {
+  override getConfig(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 }

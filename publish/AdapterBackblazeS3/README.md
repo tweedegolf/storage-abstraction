@@ -1,6 +1,6 @@
 # Backblaze S3 Adapter
 
-An adapter that provides an abstraction layer over the S3 API of Backblaze B2 cloud storage. It extends `AdapterAmazonS3` and overrides some methods because the implementation of Backblaze is not fully compatible.
+An adapter that provides an abstraction layer over the Backblaze B2 S3 API. It extends `AdapterAmazonS3` and overrides some methods because the implementation of Backblaze is not fully compatible.
 
 This adapter is one of the adapters that is meant to be used as a plugin of the [Storage Abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). However it can be used standalone as well, see [below](#standalone).
 
@@ -9,6 +9,8 @@ The [API](https://github.com/tweedegolf/storage-abstraction/tree/master?tab=read
 It is also possible to access all the specific functionality of the cloud service API through the service client of the adapter, see [here](https://github.com/tweedegolf/storage-abstraction/tree/master?tab=readme-ov-file#getserviceclient).
 
 If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
+
+Backblaze B2 also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
 
 ```typescript
 import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
@@ -53,16 +55,21 @@ The type of the configuration object for this adapter:
 
 ```typescript
 export interface AdapterConfigS3 extends AdapterConfig {
+  region?: string; //
   endpoint: string; // mandatory
-  region?: string;
   credentials?: {
-    accessKeyId?: string;
-    secretAccessKey?: string;
+    accessKeyId: string;
+    secretAccessKey: string;
   };
-  accessKeyId?: string;
-  secretAccessKey?: string;
+  accessKeyId: string;
+  secretAccessKey: string;
 }
 ```
+
+Note that region is mandatory for the AWS SDK S3Client but it will also be picked up as environment variable `AWS_REGION`; therefor it is not mandatory in the config object. 
+
+Also note that `accessKeyId`, `secretAccessKey` and `endpoint` are mandatory!
+
 
 ## Examples
 
@@ -100,23 +107,9 @@ const s = new Storage(
 );
 ```
 
-For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
-
-#### Backblaze S3
-
-```typescript
-const s = new Storage({
-  type: StorageType.S3,
-  region: "eu-central-003",
-  endpoint: B2_ENDPOINT,
-  accessKeyId: B2_APPLICATION_KEY_ID,
-  secretAccessKey: B2_APPLICATION_KEY,
-});
-```
-
 The endpoint is `https://s3.<REGION>.backblazeb2.com`. Although the region is part of the endpoint AWS SDK still expects you to set a value for `region` in the configuration or in the `AWS_REGION` environment variable. You can simply retrieve your region from the endpoint.
 
-Backblaze also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
+For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
 
 ## Standalone
 
@@ -130,7 +123,18 @@ const r = await a.listBuckets();
 console.log(r);
 ```
 
-
 ## API
 
 For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
+
+## Exceptions
+
+The S3 implementation of Backblaze B2 does not support creating a public bucket. You can only make a bucket public using the Backblaze web console.
+
+```typescript
+const s = new Storage(config);
+const {value, error} = s.createBucket("myBucket", {public: true});
+console.log(value)
+// prints: 
+// `Bucket 'myBucket' created successfully but you can only make this bucket public using the Backblaze B2 web console`
+```

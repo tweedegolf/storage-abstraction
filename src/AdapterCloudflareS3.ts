@@ -19,17 +19,17 @@ export class AdapterCloudflareS3 extends AdapterAmazonS3 {
     this.createClient();
   }
 
-  protected async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
+  protected override async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
     const msg = `Bucket '${bucketName}' created successfully but you can only make this bucket public using the Cloudflare R2 web console`;
     return { value: msg, error: null }
   }
 
-  protected async _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean> {
     const error = "Cloudflare does not support checking if a bucket is public, please use the Cloudflare R2 web console";
     return { value: null, error };
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     _bucketName: string,
     _fileName: string,
     _options: Options
@@ -37,7 +37,7 @@ export class AdapterCloudflareS3 extends AdapterAmazonS3 {
     return { value: null, error: "Please use the Cloudflare web console to get the public URL." };
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -60,11 +60,11 @@ export class AdapterCloudflareS3 extends AdapterAmazonS3 {
     }
   }
 
-  get config(): AdapterConfigS3 {
+  override get config(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 
-  getConfig(): AdapterConfigS3 {
+  override getConfig(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 }

@@ -1,6 +1,6 @@
-# Cloudflare R2 S3 Adapter
+# MinIO S3 Adapter
 
-This adapter provides an abstraction layer over the S3 API of Cloudflare R2 cloud storage. It extends `AdapterAmazonS3` and overrides some methods because the implementation of Cloudflare is not fully compatible.
+This adapter provides an abstraction layer over the S3 API of MinIO cloud storage. It extends `AdapterAmazonS3` and overrides some methods because the implementation of MinIO is not fully compatible.
 
 The adapter is one of the adapters that is meant to be used as a plugin of the [Storage Abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). However it can be used standalone as well, see [below](#standalone).
 
@@ -10,14 +10,14 @@ It is also possible to access all the specific functionality of the cloud servic
 
 If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
 
-Cloudflare also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-backblaze-b2) if you want to use the native API.
+MinIO also has a native API. You can use [this adapter](https://www.npmjs.com/package/@tweedegolf/sab-adapter-minio) if you want to use the native API.
 
 
 ```typescript
 import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
 
 const configuration = {
-  type: StorageType.BACKBLAZE_S3,
+  type: StorageType.MINIO_S3,
 };
 
 const storage = new Storage(configuration);
@@ -56,7 +56,7 @@ The type of the configuration object for this adapter:
 
 ```typescript
 export interface AdapterConfigS3 extends AdapterConfig {
-  region?: string; //
+  region?: string; 
   endpoint: string; // mandatory
   credentials?: {
     accessKeyId: string;
@@ -75,38 +75,41 @@ Also note that `accessKeyId`, `secretAccessKey` and `endpoint` are mandatory!
 
 Example with configuration object:
 
+Examples with configuration object:
+
 ```typescript
+// MinIO S3 compatible
 const s = new Storage({
-  type: StorageType.S3,
-  region: 'auto'
-  endpoint: R2_ENDPOINT,
-  accessKeyId: R2_ACCESS_KEY,
-  secretAccessKey: R2_SECRET_KEY,
+  type: StorageType.MINIO_S3,
+  accessKeyId: 'access-key'
+  secretAccessKey: 'secret-key'
+  endpoint: "https://play.min.io/",
+  region: "us-east-1",
+});
+
+const s = new Storage({
+  type: StorageType.MINIO_S3,
+  accessKeyId: 'access-key'
+  secretAccessKey: 'secret-key'
+  endpoint: "https://play.min.io/",
+  region: "eu-east-1",
+  bucketName: "the-buck",
 });
 ```
+
 Example with configuration url:
 
 ```typescript
 const s = new Storage(
-  `r2://${R2_ACCESS_KEY}:${R2_ACCESS_KEY}?endpoint=${R2_ENDPOINT}` 
+  "s3://access-key:secret-key?endpoint=https://play.min.io/&region=us-east-1"
 );
 
 const s = new Storage(
-  `r2://${R2_ACCESS_KEY}:${R2_ACCESS_KEY}@the-buck?endpoint=${R2_ENDPOINT}` 
+  "s3://access-key:secret-key@the-buck?endpoint=https://play.min.io/&region=us-east-1"
 );
 ```
-The endpoint is `https://<ACCOUNT_ID>.<JURISDICTION>.r2.cloudflarestorage.com`. Jurisdiction is optional, e.g. `eu`.
 
-It is mandatory to set a value for `region`, use one of these values:
-
-- `auto`
-- `wnam`
-- `enam`
-- `weur`
-- `eeur`
-- `apac`
-
-You can also set the region using the `AWS_REGION` environment variable.
+It is mandatory to set a value for `region` you can also set the region using the `AWS_REGION` environment variable. So far, the only valid value is "us-east-1"
 
 For more information about configuration urls please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#configuration-url).
 
@@ -126,35 +129,3 @@ console.log(r);
 
 For a complete description of the Adapter API see [this part](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api) documentation of the Storage Abstraction package readme.
 
-## Exceptions
-
-The S3 implementation of Cloudflare R2 does not support creating a public bucket. You can only make a bucket public using the Cloudflare web console.
-
-```typescript
-const s = new Storage(config);
-const {value, error} = s.createBucket("myBucket", {public: true});
-console.log(value)
-// prints: 
-// "Bucket 'myBucket' created successfully but you can only make this bucket public using the Cloudflare R2 web console"
-```
-
-Also there is no way to check if a bucket is public so `bucketIsPublic`. 
-
-```typescript
-const s = new Storage(config);
-const {value, error} = s.bucketIsPublic("myBucket");
-console.log(error)
-// prints: 
-// "Cloudflare does not support checking if a bucket is public, please use the Cloudflare R2 web console"
-```
-
-
-Also `getPublicURL` is not supported:
-
-```typescript
-const s = new Storage(config);
-const {value, error} = s.getPublicURL("myBucket", "myFile");
-console.log(error)
-// prints: 
-// "Please use the Cloudflare web console to get the public URL."
-```

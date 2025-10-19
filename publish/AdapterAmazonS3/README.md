@@ -1,6 +1,6 @@
 # Amazon S3 Storage Adapter
 
-An adapter that provides an abstraction layer over the API of the Amazon S3 cloud storage service and other fully S3 compatible services.
+An adapter that provides an abstraction layer over the API of the Amazon S3 cloud storage service and other *fully* S3 compatible services.
 
 This adapter is one of the adapters that is meant to be used as a plugin of the [Storage Abstraction package](https://www.npmjs.com/package/@tweedegolf/storage-abstraction). However it can be used standalone as well, see [below](#standalone).
 

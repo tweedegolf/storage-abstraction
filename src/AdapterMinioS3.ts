@@ -22,7 +22,7 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
     this.createClient();
   }
 
-  protected async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
+  protected override async makeBucketPublic(bucketName: string, _options: Options = {}): Promise<ResultObject> {
     try {
       const policy = {
         Version: "2012-10-17",
@@ -49,7 +49,7 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
     }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       let isPublic = false;
       const policy = await this._client.send(new GetBucketPolicyCommand({ Bucket: bucketName }));
@@ -73,7 +73,7 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     _options: Options
@@ -84,7 +84,7 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
     return { value: url, error: null };
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -107,11 +107,11 @@ export class AdapterMinioS3 extends AdapterAmazonS3 {
     }
   }
 
-  get config(): AdapterConfigS3 {
+  override get config(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 
-  getConfig(): AdapterConfigS3 {
+  override getConfig(): AdapterConfigS3 {
     return this._config as AdapterConfigS3;
   }
 }

@@ -340,9 +340,9 @@ class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const policy = yield this._client.getBucketPolicy(bucketName);
-                console.log('Bucket policy:', policy);
                 const p = JSON.parse(policy);
                 let isPublic = false;
+                // console.log('Bucket policy:', policy);
                 for (let i = 0; i < p.Statement.length; i++) {
                     const s = p.Statement[i];
                     if (s.Effect === "Allow" && s.Action.includes("s3:GetObject")) {

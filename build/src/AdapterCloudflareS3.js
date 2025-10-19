@@ -21,6 +21,7 @@ class AdapterCloudflareS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
         this._provider = general_1.Provider.CLOUDFLARE;
         this._configError = null;
         this.parseConfig(config);
+        this.checkConfig();
         this.createClient();
     }
     makeBucketPublic(bucketName_1) {
@@ -59,6 +60,12 @@ class AdapterCloudflareS3 extends AdapterAmazonS3_1.AdapterAmazonS3 {
                 return { value: null, error: (0, util_1.getErrorMessage)(e) };
             }
         });
+    }
+    get config() {
+        return this._config;
+    }
+    getConfig() {
+        return this._config;
     }
 }
 exports.AdapterCloudflareS3 = AdapterCloudflareS3;
