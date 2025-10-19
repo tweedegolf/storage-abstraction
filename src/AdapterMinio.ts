@@ -1,25 +1,17 @@
-import fs from "fs";
 import * as Minio from "minio";
 import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { Options, StreamOptions, StorageType } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
-import {
-  ResultObject,
-  ResultObjectBoolean,
-  ResultObjectBuckets,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectStream,
-} from "./types/result";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream, } from "./types/result";
 import { AdapterConfigMinio } from "./types/adapter_minio";
-import { parseUrl } from "./util";
+import { getErrorMessage, parseUrl } from "./util";
 
 export class AdapterMinio extends AbstractAdapter {
-  protected _type = StorageType.MINIO;
-  protected _client: Minio.Client;
+  protected _provider = Provider.MINIO;
+  declare protected _client: Minio.Client;
+  declare protected _config: AdapterConfigMinio;
   protected _configError: string | null = null;
-  protected _config: AdapterConfigMinio;
 
   constructor(config: string | AdapterConfigMinio) {
     super(config);
@@ -27,7 +19,7 @@ export class AdapterMinio extends AbstractAdapter {
       this._config = { ...config };
     } else {
       const { value, error } = parseUrl(config);
-      if (error !== null) {
+      if (value === null) {
         this._configError = `[configError] ${error}`;
       } else {
         const {
@@ -37,14 +29,19 @@ export class AdapterMinio extends AbstractAdapter {
           host: bucketName,
           searchParams,
         } = value;
-        let endPoint: string;
+
+        let endPoint: undefined | string;
         if (searchParams !== null) {
           ({ endPoint } = searchParams);
           delete searchParams.endPoint;
-          this._config = { type, accessKey, secretKey, endPoint, ...searchParams };
-        } else {
-          this._config = { type, accessKey, secretKey, endPoint };
         }
+        if (accessKey === null || secretKey === null || typeof endPoint === "undefined") {
+          this._configError = 'Please provide a value for "accessKey", "secretKey and "endPoint"';
+          return;
+        }
+
+        this._config = { type, accessKey, secretKey, endPoint };
+
         if (bucketName !== null) {
           this._config.bucketName = bucketName;
         }
@@ -71,7 +68,8 @@ export class AdapterMinio extends AbstractAdapter {
       }
       const region = this.config.region;
       if (typeof region !== "string") {
-        this.config.region = "auto";
+        // this.config.region = "auto";
+        this.config.region = "us-east-1";
       }
       // console.log(useSSL, port, region);
       const c = {
@@ -86,7 +84,7 @@ export class AdapterMinio extends AbstractAdapter {
       try {
         this._client = new Minio.Client(c);
       } catch (e) {
-        this._configError = `[configError] ${e.message}`;
+        this._configError = `[configError] ${getErrorMessage(e)}`;
       }
     }
 
@@ -102,7 +100,7 @@ export class AdapterMinio extends AbstractAdapter {
       const buckets = await this._client.listBuckets();
       return { value: buckets.map((b) => b.name), error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -113,7 +111,7 @@ export class AdapterMinio extends AbstractAdapter {
         return { value: null, error: "bucket exists" };
       }
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
 
     try {
@@ -127,16 +125,16 @@ export class AdapterMinio extends AbstractAdapter {
               Effect: "Allow",
               Principal: { AWS: ["*"] },
               Action: ["s3:GetObject"],
-              Resource: [`arn:aws:s3:::${name}/*`]
-            }
-          ]
+              Resource: [`arn:aws:s3:::${name}/*`],
+            },
+          ],
         };
         // Set the bucket policy to public read
         await this._client.setBucketPolicy(name, JSON.stringify(publicReadPolicy));
       }
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -147,7 +145,7 @@ export class AdapterMinio extends AbstractAdapter {
   ): Promise<ResultObjectStream> {
     const { start, end } = options;
     let offset: number;
-    let length: number;
+    let length: undefined | number;
     if (typeof start !== "undefined") {
       offset = start;
     } else {
@@ -166,29 +164,24 @@ export class AdapterMinio extends AbstractAdapter {
       }
       return { value: stream, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions: boolean
-  ): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       await this._client.removeObject(bucketName, fileName);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
   protected async _clearBucket(name: string): Promise<ResultObject> {
     const { value: files, error } = await this.listFiles(name);
-    if (error !== null) {
+    if (files === null) {
       return { value: null, error };
     }
-
     try {
       await this._client.removeObjects(
         name,
@@ -196,74 +189,37 @@ export class AdapterMinio extends AbstractAdapter {
       );
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
   protected async _deleteBucket(name: string): Promise<ResultObject> {
     try {
-      await this.clearBucket(name);
       await this._client.removeBucket(name);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
+  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
-      let fileData: Readable | Buffer;
-      let size: number;
-      if (typeof (params as FilePathParams).origPath !== "undefined") {
-        const f = (params as FilePathParams).origPath;
-        if (!fs.existsSync(f)) {
-          return { value: null, error: `File with given path: ${f}, was not found` };
-        }
-        try {
-          const stats = await fs.promises.stat(f);
-          size = stats.size;
-        } catch (e) {
-          return { value: null, error: `Cannot access file ${f} Error: ${e}` };
-        }
-        fileData = fs.createReadStream(f);
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      let fileData: string | Readable | Buffer = "empty";
+      let size: undefined | number;
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         fileData = (params as FileBufferParams).buffer;
         size = fileData.buffer.byteLength;
       } else if (typeof (params as FileStreamParams).stream !== "undefined") {
         fileData = (params as FileStreamParams).stream;
       }
-
-      const { bucketName, targetPath, options } = params;
-      await this._client.putObject(
-        bucketName,
-        targetPath,
-        fileData,
-        size,
-        options
-      );
-      if (options.signedURL === true || options.useSignedURL === true) {
-        return this._getSignedURL(bucketName, targetPath, options);
+      if (fileData instanceof Readable === false && fileData instanceof Buffer === false) {
+        return { value: null, error: "Could not find buffer or stream" };
       }
-      return this.getPublicURL(params.bucketName, params.targetPath, { ...options, noCheck: true });
+      const { bucketName, targetPath, options } = params;
+      await this._client.putObject(bucketName as string, targetPath, fileData, size, options);
+      return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
-    }
-  }
-
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options // e.g. { expiry: 3600 }
-  ): Promise<ResultObject> {
-    if (options.signedUrl === true || options.useSignedURL === true) {
-      return this._getSignedURL(bucketName, fileName, options);
-    } else {
-      return this._getPublicURL(bucketName, fileName, { ...options, noCheck: true });
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -272,14 +228,6 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    if (options.noCheck !== true) {
-      const { value, error } = await this._bucketIsPublic(bucketName);
-      if (error !== null) {
-        return { value: null, error };
-      } else if (value === false) {
-        return { value: null, error: `Bucket "${bucketName}" is not public!` };
-      }
-    }
     let url = `https://${this.config.endPoint}`;
     if (this.config.port) {
       url += `:${this.config.port}`;
@@ -293,12 +241,15 @@ export class AdapterMinio extends AbstractAdapter {
     fileName: string,
     options: Options
   ): Promise<ResultObject> {
-    const expires = options.expiresIn; // defaults to one week if 0, undefined or not a number
+    let expiresIn = 300; // 5 * 60
+    if (typeof options.expiresIn !== "undefined") {
+      expiresIn = Number.parseInt(options.expiresIn, 10);
+    }
     try {
-      const url = await this._client.presignedUrl("GET", bucketName, fileName, expires);
+      const url = await this._client.presignedUrl("GET", bucketName, fileName, expiresIn);
       return { value: url, error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -308,13 +259,15 @@ export class AdapterMinio extends AbstractAdapter {
       const files: Array<[string, number]> = [];
       const { error: streamError } = await new Promise<ResultObjectFiles>((resolve) => {
         stream.on("data", function (obj) {
-          files.push([obj.name, obj.size]);
+          if (typeof obj.name !== "undefined") {
+            files.push([obj.name, obj.size]);
+          }
         });
         stream.on("end", function () {
           resolve({ value: files, error: null });
         });
         stream.on("error", function (e) {
-          resolve({ value: null, error: e.message });
+          resolve({ value: null, error: getErrorMessage(e) });
         });
       });
       if (streamError !== null) {
@@ -322,7 +275,7 @@ export class AdapterMinio extends AbstractAdapter {
       }
       return { value: files, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -331,7 +284,7 @@ export class AdapterMinio extends AbstractAdapter {
       const stats = await this._client.statObject(bucketName, fileName);
       return { value: stats.size, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -340,13 +293,11 @@ export class AdapterMinio extends AbstractAdapter {
       const exists = await this._client.bucketExists(bucketName);
       return { value: exists, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _bucketIsPublic(
-    bucketName: string,
-  ): Promise<ResultObjectBoolean> {
+  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const policy = await this._client.getBucketPolicy(bucketName);
       const p = JSON.parse(policy);
@@ -361,10 +312,10 @@ export class AdapterMinio extends AbstractAdapter {
       }
       return { value: isPublic, error: null };
     } catch (e) {
-      if (e.code === 'NoSuchBucketPolicy') {
-        return { value: false, error: null }
+      if ((e as any).code === "NoSuchBucketPolicy") {
+        return { value: false, error: null };
       }
-      return { value: null, error: e }
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -374,6 +325,23 @@ export class AdapterMinio extends AbstractAdapter {
       return { value: stats !== null, error: null };
     } catch (e) {
       return { value: false, error: null };
+    }
+  }
+
+  protected async _getPresignedUploadURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObjectObject> {
+    try {
+      let expiresIn = 300; // 5 * 60
+      if (typeof options.expiresIn !== "undefined") {
+        expiresIn = Number.parseInt(options.expiresIn, 10);
+      }
+      const url = await this._client.presignedPutObject(bucketName, fileName, expiresIn);
+      return { value: { url }, error: null };
+    } catch (e) {
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 

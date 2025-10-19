@@ -1,120 +1,140 @@
 import "jasmine";
 import path from "path";
 import dotenv from "dotenv";
-import { S3Type, StorageAdapterConfig, StorageType } from "../src/types/general";
+import { StorageAdapterConfig, Provider } from "../src/types/general";
 
-export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapterConfig {
+export function getConfig(provider: string = Provider.LOCAL): string | StorageAdapterConfig {
   dotenv.config();
 
   let config: StorageAdapterConfig | string = "";
-  if (t === StorageType.LOCAL) {
+  if (provider === Provider.LOCAL) {
     config = {
-      type: StorageType.LOCAL,
+      provider,
       bucketName: process.env.BUCKET_NAME,
       directory: process.env.LOCAL_DIRECTORY,
     };
-  } else if (t === StorageType.GCS) {
+  } else if (provider === Provider.GCS || provider === Provider.GS) {
     config = {
-      type: StorageType.GCS,
+      provider,
       bucketName: process.env.BUCKET_NAME,
       keyFilename: process.env.GOOGLE_CLOUD_KEY_FILENAME,
     };
-  } else if (t === StorageType.S3) {
+  } else if (provider === Provider.S3 || provider === Provider.AWS) {
     config = {
-      type: StorageType.S3,
+      provider,
       bucketName: process.env.BUCKET_NAME,
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION,
       options: {
-        foo: "bar"
-      }
+        foo: "bar",
+      },
     };
-  } else if (t === S3Type.CLOUDFLARE) {
+  } else if (provider === Provider.CLOUDFLARE) {
     config = {
-      type: StorageType.S3,
+      provider,
       region: process.env.R2_REGION,
       bucketName: process.env.BUCKET_NAME,
       endpoint: process.env.R2_ENDPOINT,
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     };
-  } else if (t === S3Type.BACKBLAZE) {
+    // config = `r2://${process.env.R2_ACCESS_KEY_ID}:${process.env.R2_SECRET_ACCESS_KEY}@${process.env.BUCKET_NAME}?endpoint=${process.env.R2_ENDPOINT}&region=${process.env.R2_REGION}`;
+  } else if (provider === Provider.B2_S3) {
     config = {
-      type: StorageType.S3,
+      provider,
       bucketName: process.env.BUCKET_NAME,
       region: process.env.B2_S3_REGION,
       endpoint: process.env.B2_S3_ENDPOINT,
       accessKeyId: process.env.B2_S3_ACCESS_KEY_ID,
       secretAccessKey: process.env.B2_S3_SECRET_ACCESS_KEY,
     };
-  } else if (t === S3Type.CUBBIT) {
+  } else if (provider === Provider.CUBBIT) {
     config = {
-      type: StorageType.S3,
+      provider,
+      region: "us-west-1",
       bucketName: process.env.BUCKET_NAME,
       endpoint: process.env.CUBBIT_ENDPOINT,
       accessKeyId: process.env.CUBBIT_ACCESS_KEY_ID,
       secretAccessKey: process.env.CUBBIT_SECRET_ACCESS_KEY,
     };
-  } else if (t === StorageType.B2) {
+  } else if (provider === Provider.MINIO_S3) {
     config = {
-      type: StorageType.B2,
+      provider,
+      bucketName: process.env.BUCKET_NAME,
+
+      // endpoint: process.env.MINIO_ENDPOINT_DOCKER,
+      // accessKeyId: process.env.MINIO_ACCESS_KEY_DOCKER,
+      // secretAccessKey: process.env.MINIO_SECRET_KEY_DOCKER,
+
+      // region: "us-east-1",
+      region: "af-south-1",
+      endpoint: process.env.MINIO_ENDPOINT_S3,
+      accessKeyId: process.env.MINIO_ACCESS_KEY,
+      secretAccessKey: process.env.MINIO_SECRET_KEY,
+
+      // region: process.env.MINIO_SECRET_KEY_DOCKER,
+      // forcePathStyle: true,
+    };
+  } else if (provider === Provider.B2) {
+    config = {
+      provider,
       bucketName: process.env.BUCKET_NAME,
       applicationKeyId: process.env.B2_APPLICATION_KEY_ID,
       applicationKey: process.env.B2_APPLICATION_KEY,
     };
-  } else if (t === StorageType.AZURE) {
-    const test: number = 6;
+  } else if (provider === Provider.AZURE) {
+    const test: number = 3;
     if (test === 1) {
       // azurite local
       config = {
-        type: StorageType.AZURE,
+        provider,
         bucketName: process.env.BUCKET_NAME,
         accountName: process.env.AZURITE_ACCOUNT_NAME,
         accountKey: process.env.AZURITE_ACCOUNT_KEY,
-        blobDomain: process.env.AZURITE_BLOB_ENDPOINT
+        blobDomain: process.env.AZURITE_BLOB_ENDPOINT,
       };
     } else if (test === 2) {
+      // connection string azurite
+      config = {
+        provider,
+        bucketName: process.env.BUCKET_NAME,
+        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`,
+      };
+    } else if (test === 3) {
       // account name and key
       config = {
-        type: StorageType.AZURE,
+        provider,
         bucketName: process.env.BUCKET_NAME,
         accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
         accountKey: process.env.AZURE_STORAGE_ACCOUNT_KEY,
       };
-    } else if (test === 3) {
+    } else if (test === 4) {
+      // connection string azure
+      config = {
+        provider,
+        bucketName: process.env.BUCKET_NAME,
+        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
+      };
+    } else if (test === 5) {
       // sas token
       config = {
-        type: StorageType.AZURE,
+        provider,
         bucketName: process.env.BUCKET_NAME,
         accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
         sasToken: process.env.AZURE_STORAGE_SAS_TOKEN,
       };
-    } else if (test === 4) {
+    } else if (test === 6) {
       // passwordless
       config = {
-        type: StorageType.AZURE,
+        provider,
         bucketName: process.env.BUCKET_NAME,
         accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
       };
-    } else if (test === 5) {
-      // connection string azurite
-      config = {
-        type: StorageType.AZURE,
-        bucketName: process.env.BUCKET_NAME,
-        connectionString: `DefaultEndpointsProtocol=http;AccountName=${process.env.AZURITE_ACCOUNT_NAME};AccountKey=${process.env.AZURITE_ACCOUNT_KEY};BlobEndpoint=http://127.0.0.1:10000/${process.env.AZURITE_ACCOUNT_NAME};`
-      };
-    } else if (test === 6) {
-      // connection string azure
-      config = {
-        type: StorageType.AZURE,
-        bucketName: process.env.BUCKET_NAME,
-        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING
-      };
     }
-  } else if (t === StorageType.MINIO) {
+  } else if (provider === Provider.MINIO) {
     config = {
-      type: StorageType.MINIO,
+      provider,
       endPoint: process.env.MINIO_ENDPOINT,
       port: process.env.MINIO_PORT,
       useSSL: process.env.MINIO_USE_SSL,
@@ -122,10 +142,12 @@ export function getConfig(t: string = StorageType.LOCAL): string | StorageAdapte
       accessKey: process.env.MINIO_ACCESS_KEY,
       secretKey: process.env.MINIO_SECRET_KEY,
     };
+    config = `minio://${process.env.MINIO_ACCESS_KEY}:${process.env.MINIO_SECRET_KEY}@${process.env.BUCKET_NAME}?endPoint=${process.env.MINIO_ENDPOINT}&port=${process.env.MINIO_PORT}&useSSL=${process.env.MINIO_USE_SSL}&region=${process.env.MINIO_REGION}`;
+    // config = `minio://minioadmin:minioadmin@${process.env.BUCKET_NAME}?endPoint=localhost&port=9000&useSSL=false&region=${process.env.MINIO_REGION}`;
   } else {
     // const p = path.join(process.cwd(), "tests", "test_directory");
     const p = path.join("tests", "test_directory");
-    config = process.env.CONFIG_URL || `local://directory=${p}`;
+    config = process.env.CONFIG_URL || `local://${p}`;
   }
 
   return config;

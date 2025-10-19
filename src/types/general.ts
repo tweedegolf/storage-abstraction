@@ -4,35 +4,37 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./result";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./add_file_params";
 
 // add your custom type here
-export enum StorageType {
-  LOCAL = "local",
+export enum Provider {
+  NONE = "none", // initial value for the abstract adapter, don't use this one
+  LOCAL = "local", // local testing adapter
   GCS = "gcs", // Google Cloud Storage
   GS = "gs", // Google Cloud Storage
   S3 = "s3", // Amazon S3
-  B2 = "b2", // BackBlaze B2
+  AWS = "aws", // Amazon S3
   AZURE = "azure", // Azure Storage Blob
-  MINIO = "minio",
+  B2 = "b2", // BackBlaze B2 using native API with AdapterBackblazeB2
+  BACKBLAZE = "b2", // BackBlaze B2 using native API with AdapterBackblazeB2
+  B2_S3 = "b2-s3", // Backblaze B2 using S3 API with AdapterAmazonS3
+  BACKBLAZE_S3 = "b2-s3", // Backblaze B2 using S3 API with AdapterAmazonS3
+  MINIO = "minio", // Minio using native API with AdapterMinio
+  MINIO_S3 = "minio-s3", // Minio using S3 API with AdapterAmazonS3
+  CUBBIT = "cubbit", // Cubbit uses S3 API with AdapterAmazonS3
+  R2 = "r2", // Cloudflare R2 uses S3 API with AdapterAmazonS3
+  CLOUDFLARE = "r2", // Cloudflare R2 uses S3 API with AdapterAmazonS3
 }
-
-export enum S3Type {
-  AWS = "Amazon",
-  BACKBLAZE = "Backblaze S3",
-  CUBBIT = "Cubbit",
-  CLOUDFLARE = "Cloudflare R2",
-}
-
 export interface AdapterConfig {
   bucketName?: string;
   [id: string]: any; // eslint-disable-line
 }
 
 export interface StorageAdapterConfig extends AdapterConfig {
-  type: string;
+  provider: string;
 }
 export interface Options {
   [id: string]: any; // eslint-disable-line
@@ -40,7 +42,7 @@ export interface Options {
 
 /**
  * @param start the byte of the file where the stream starts(default: 0)
- * @param end the byte in the file where the stream ends(default: last byte of file) 
+ * @param end the byte in the file where the stream ends(default: last byte of file)
  */
 export interface StreamOptions extends Options {
   start?: number;
@@ -60,15 +62,15 @@ export interface IAdapter {
   get serviceClient(): any; // eslint-disable-line
 
   /**
-   * @returns the storage type, e.g. 'gcs', 'b2', 'local' etc.
+   * @returns the storage provide, e.g. 'gcs', 'b2', 'local' etc.
    */
-  getType(): string;
+  getProvider(): Provider;
 
   /**
    * `getType` implemented as getter
    * The adapter type, e.g. 'gcs', 'b2', 'local' etc.
    */
-  get type(): string;
+  get provider(): Provider;
 
   /**
    * Returns configuration settings that you've provided when instantiating as an object.
@@ -91,51 +93,51 @@ export interface IAdapter {
   get config(): AdapterConfig;
 
   /**
-   * @returns the error message from the configuration parser or `null`. 
+   * @returns the error message from the configuration parser or `null`.
    */
-  getConfigError(): string | null;
+  getConfigError(): null | string;
 
   /**
    * `getConfigError` implemented as getter
-   * The error message from the configuration parser or `null`. 
+   * The error message from the configuration parser or `null`.
    */
-  get configError(): string | null;
+  get configError(): null | string;
 
   /**
    * @returns The name of the selected bucket or `null` if no bucket is selected.
    */
-  getSelectedBucket(): string | null;
+  getSelectedBucket(): null | string;
 
   /**
    * `getSelectedBucket` implemented as getter
    * The name of the selected bucket or `null` if no bucket is selected.
    */
-  get selectedBucket(): string | null;
+  get selectedBucket(): null | string;
 
   /**
    * Stores the name of a bucket. The name of the bucket will be accessible using `getSelectedBucket` or the getter `selectedBucket`. By setting a selected bucket you can omit the `bucketName` parameter in all methods that otherwise require this parameter
    * @param bucketName the name of the bucket, if you pass `null` the currently selected bucket will be deselected
    */
-  setSelectedBucket(bucketName: string | null): void;
+  setSelectedBucket(bucketName: null | string): void;
 
   /**
    * Stores the name of a bucket. The name of the bucket will be accessible using `getSelectedBucket` or the getter `selectedBucket`. By setting a selected bucket you can omit the `bucketName` parameter in all methods that otherwise require this parameter
    * @param bucketName the name of the bucket, if you pass `null` the currently selected bucket will be deselected
-  */
-  set selectedBucket(bucketName: string | null);
+   */
+  set selectedBucket(bucketName: null | string);
 
   /**
    * short version of `getSelectedBucket`
    * The name of the selected bucket or `null` if no bucket is selected.
    */
-  get bucketName(): string | null;
+  get bucketName(): null | string;
 
   /**
    * @description short version of `setSelectedBucket`
    * @description Stores the name of a bucket. The name of the bucket will be accessible using `getSelectedBucket` or the getter `selectedBucket`. By setting a selected bucket you can omit the `bucketName` parameter in all methods that otherwise require this parameter
    * @param name the name of the bucket, if you pass `null` the currently selected bucket will be deselected
    */
-  set bucketName(name: null | string)
+  set bucketName(name: null | string);
 
   /**
    * @promise CreateBucketPromise
@@ -148,9 +150,8 @@ export interface IAdapter {
    * @param options additional options for creating a bucket such as access rights
    * @resolves `{value: "ok"}` or `{error: "the generated error message"}`
    */
-  createBucket(...args:
-    [bucketName?: string, options?: Options] |
-    [options?: Options]
+  createBucket(
+    ...args: [bucketName?: string, options?: Options] | [options?: Options]
   ): Promise<ResultObject>;
 
   /**
@@ -193,8 +194,8 @@ export interface IAdapter {
    * @returns {ResultObject} a promise that always resolves in a ResultObject:
    * ```typescript
    * {
-   *  value: string | null
-   *  error: string | null
+   *  value: null | string
+   *  error: null | string
    * }
    * ```
    */
@@ -222,8 +223,8 @@ export interface IAdapter {
    * @returns {ResultObject} a promise that always resolves in a ResultObject
    * ```typescript
    * {
-   *  value: string | null // if success value is the public url to the file
-   *  error: string | null // if fails error is the error message
+   *  value: null | string // if success value is the public url to the file
+   *  error: null | string // if fails error is the error message
    * }
    * ```
    */
@@ -233,9 +234,10 @@ export interface IAdapter {
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file to be returned as a readable stream
    */
-  getFileAsStream(...args:
-    [bucketName: string, fileName: string, options?: StreamOptions] |
-    [fileName: string, options?: StreamOptions]
+  getFileAsStream(
+    ...args:
+      | [bucketName: string, fileName: string, options?: StreamOptions]
+      | [fileName: string, options?: StreamOptions]
   ): Promise<ResultObjectStream>;
 
   /**
@@ -243,19 +245,10 @@ export interface IAdapter {
    * @param fileName name of the file
    * @param options
    */
-  getFileAsURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
-  ): Promise<ResultObject>;
-
-  /**
-   * @param bucketName name of the bucket where the file is stored
-   * @param fileName name of the file
-   * @param options
-   */
-  getPublicURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
+  getPublicURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
   ): Promise<ResultObject>;
 
   /**
@@ -263,32 +256,27 @@ export interface IAdapter {
    * @param fileName name of the file
    * @param options e.g. { expiresIn: 3600 }
    */
-  getSignedURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]
+  getSignedURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
   ): Promise<ResultObject>;
 
   /**
    * @param bucketName name of the bucket where the file is stored
    * @param fileName name of the file to be removed
-   * @param allVersions in case there are more versions of this file you can choose to remove
-   * all of them in one go or delete only the latest version (only if applicable such as with Backblaze B2 and S3
-   * when you've enabled versioning)
    */
-  removeFile(...args:
-    [bucketName: string, fileName: string, allVersions?: boolean] |
-    [fileName: string, allVersions?: boolean]
+  removeFile(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObject>;
 
   /**
    * @param bucketName
-   * @param numFiles 
+   * @param numFiles
    * @returns an array of tuples containing the file path and the file size of all files in the bucket.
    */
-  listFiles(...args:
-    [bucketName: string, numFiles?: number] |
-    [bucketName?: string] |
-    [numFiles?: number]
+  listFiles(
+    ...args: [bucketName: string, numFiles?: number] | [bucketName?: string] | [numFiles?: number]
   ): Promise<ResultObjectFiles>;
 
   /**
@@ -296,9 +284,8 @@ export interface IAdapter {
    * @param fileName name of the file
    * @returns the size of the file in bytes
    */
-  sizeOf(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  sizeOf(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectNumber>;
 
   /**
@@ -318,8 +305,19 @@ export interface IAdapter {
    * @param fileName name of the file
    * @returns boolean
    */
-  fileExists(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  fileExists(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectBoolean>;
+
+  /**
+   * @param bucketName name of the bucket where the file is stored
+   * @param fileName name of the file
+   * @param options constraint validity of URL
+   * @returns string presigned upload URL
+   */
+  getPresignedUploadURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
+  ): Promise<ResultObjectObject>;
 }

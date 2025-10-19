@@ -5,6 +5,7 @@ import {
   Options,
   StreamOptions,
   StorageAdapterConfig,
+  Provider,
 } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
@@ -13,17 +14,19 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { adapterClasses, adapterFunctions, getAvailableAdapters } from "./adapters";
 
 const availableAdapters: string = getAvailableAdapters();
+// console.log(availableAdapters)
 
 /**
  * @implements {IAdapter}
  */
 export class Storage implements IAdapter {
-  private _adapter: IAdapter;
+  declare private _adapter: IAdapter;
   // public ready: Promise<void>;
 
   constructor(config: string | StorageAdapterConfig) {
@@ -35,26 +38,26 @@ export class Storage implements IAdapter {
   public switchAdapter(config: string | StorageAdapterConfig): void {
     // console.log(config);
     // at this point we are only interested in the type of the config
-    let type: string;
+    let provider: string;
     if (typeof config === "string") {
       if (config.indexOf("://") !== -1) {
-        type = config.substring(0, config.indexOf("://"));
+        provider = config.substring(0, config.indexOf("://"));
       } else {
         // you can also pass a string that only contains the type, e.g. "gcs"
-        type = config;
+        provider = config;
       }
     } else {
-      type = config.type;
+      provider = config.provider;
     }
-    // console.log("type", type);
+    // console.log("provider", provider);
     // console.log("adapterClasses", adapterClasses);
-    // console.log("class", adapterClasses[type], "function", adapterFunctions[type]);
-    if (!adapterClasses[type] && !adapterFunctions[type]) {
+    // console.log("class", adapterClasses[provider], "function", adapterFunctions[type]);
+    if (!adapterClasses[provider] && !adapterFunctions[provider]) {
       throw new Error(`unsupported storage type, must be one of ${availableAdapters}`);
     }
-    if (adapterClasses[type]) {
-      const adapterName = adapterClasses[type][0];
-      const adapterPath = adapterClasses[type][1];
+    if (adapterClasses[provider]) {
+      const adapterName = adapterClasses[provider][0];
+      const adapterPath = adapterClasses[provider][1];
       // const AdapterClass = require(path.join(__dirname, name));
       let AdapterClass: any; // eslint-disable-line
       try {
@@ -66,15 +69,19 @@ export class Storage implements IAdapter {
         try {
           AdapterClass = require(path.join(__dirname, adapterName))[adapterName];
         } catch (e) {
-          throw new Error(e.message);
+          if (e instanceof Error) {
+            throw e.message;
+          } else {
+            throw e;
+          }
         }
       }
       this._adapter = new AdapterClass(config);
       // const AdapterClass = await import(`./${name}`);
       // this.adapter = new AdapterClass[name](args);
-    } else if (adapterFunctions[type]) {
-      const adapterName = adapterClasses[type][0];
-      const adapterPath = adapterClasses[type][1];
+    } else if (adapterFunctions[provider]) {
+      const adapterName = adapterClasses[provider][0];
+      const adapterPath = adapterClasses[provider][1];
       // const module = require(path.join(__dirname, name));
       let module: any; // eslint-disable-line
       try {
@@ -120,12 +127,12 @@ export class Storage implements IAdapter {
     return this.adapter;
   }
 
-  get type(): string {
-    return this.adapter.type;
+  get provider(): Provider {
+    return this.adapter.provider;
   }
 
-  public getType(): string {
-    return this.adapter.type;
+  public getProvider(): Provider {
+    return this.adapter.provider;
   }
 
   get config(): AdapterConfig {
@@ -136,11 +143,11 @@ export class Storage implements IAdapter {
     return this.adapter.config;
   }
 
-  get configError(): string {
+  get configError(): string | null {
     return this.adapter.configError;
   }
 
-  public getConfigError(): string {
+  public getConfigError(): string | null {
     return this.adapter.configError;
   }
   //eslint-disable-next-line
@@ -154,7 +161,9 @@ export class Storage implements IAdapter {
 
   // public adapter API
 
-  public async addFile(paramObject: FilePathParams | FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  public async addFile(
+    paramObject: FilePathParams | FileBufferParams | FileStreamParams
+  ): Promise<ResultObject> {
     return this.adapter.addFile(paramObject);
   }
 
@@ -170,9 +179,8 @@ export class Storage implements IAdapter {
     return this.adapter.addFileFromStream(params);
   }
 
-  async createBucket(...args:
-    [bucketName?: string, options?: Options] |
-    [options?: Options]
+  async createBucket(
+    ...args: [bucketName?: string, options?: Options] | [options?: Options]
   ): Promise<ResultObject> {
     return this.adapter.createBucket(...args);
   }
@@ -189,49 +197,43 @@ export class Storage implements IAdapter {
     return this.adapter.listBuckets();
   }
 
-  async getFileAsStream(...args:
-    [bucketName: string, fileName: string, options?: StreamOptions] |
-    [fileName: string, options?: StreamOptions]
+  async getFileAsStream(
+    ...args:
+      | [bucketName: string, fileName: string, options?: StreamOptions]
+      | [fileName: string, options?: StreamOptions]
   ): Promise<ResultObjectStream> {
     return this.adapter.getFileAsStream(...args);
   }
 
-  async getFileAsURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]): Promise<ResultObject> {
-    return this.adapter.getFileAsURL(...args);
-  }
-
-  async getPublicURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]): Promise<ResultObject> {
+  async getPublicURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
+  ): Promise<ResultObject> {
     return this.adapter.getPublicURL(...args);
   }
-
-  async getSignedURL(...args:
-    [bucketName: string, fileName: string, options?: Options] |
-    [fileName: string, options?: Options]): Promise<ResultObject> {
+  async getSignedURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
+  ): Promise<ResultObject> {
     return this.adapter.getSignedURL(...args);
   }
 
-  async removeFile(...args:
-    [bucketName: string, fileName: string, allVersions?: boolean] |
-    [fileName: string, allVersions?: boolean]
+  async removeFile(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObject> {
     return this.adapter.removeFile(...args);
   }
 
-  async listFiles(...args:
-    [bucketName: string, numFiles?: number] |
-    [numFiles?: number] |
-    [bucketName?: string]
+  async listFiles(
+    ...args: [bucketName: string, numFiles?: number] | [numFiles?: number] | [bucketName?: string]
   ): Promise<ResultObjectFiles> {
     return this.adapter.listFiles(...args);
   }
 
-  async sizeOf(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  async sizeOf(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectNumber> {
     return this.adapter.sizeOf(...args);
   }
@@ -244,10 +246,17 @@ export class Storage implements IAdapter {
     return this.adapter.bucketIsPublic(bucketName);
   }
 
-  async fileExists(...args:
-    [bucketName: string, fileName: string] |
-    [fileName: string]
+  async fileExists(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectBoolean> {
     return this.adapter.fileExists(...args);
+  }
+
+  async getPresignedUploadURL(
+    ...args:
+      | [bucketName: string, fileName: string, options?: Options]
+      | [fileName: string, options?: Options]
+  ): Promise<ResultObjectObject> {
+    return this.adapter.getPresignedUploadURL(...args);
   }
 }

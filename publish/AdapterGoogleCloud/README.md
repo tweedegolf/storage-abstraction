@@ -11,10 +11,10 @@ It is also possible to access all the specific functionality of the cloud servic
 If you are new to the Storage Abstraction library you may want to read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#how-it-works) first.
 
 ```typescript
-import { Storage, StorageType } from "@tweedegolf/storage-abstraction";
+import { Storage, Provider } from "@tweedegolf/storage-abstraction";
 
 const configuration = {
-  type: StorageType.GCS,
+  type: Provider.GCS,
   keyFilename: "path/to/keyFile.json",
 };
 
@@ -27,13 +27,13 @@ console.log(result);
 
 The Storage class is cloud service agnostic and doesn't know anything about the adapter it uses and adapters are completely interchangeable. It only expects the adapter to have implemented all methods of the `IAdapter` interface, see the [API](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#adapter-api).
 
-When you create a Storage instance it checks the mandatory `type` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
+When you create a Storage instance it checks the mandatory `provider` key in the configuration object and then loads the appropriate adapter module automatically from your node_modules folder using `require()`. For more information please read [this](https://github.com/tweedegolf/storage-abstraction/blob/master/README.md#register-your-adapter).
 
 ## Configuration
 
 The configuration object that you pass to the Storage constructor is forwarded to the constructor of the adapter.
 
-The Storage constructor is only interested in the `type` key of the configuration object, all other keys are necessary for configuring the adapter.
+The Storage constructor is only interested in the `provider` key of the configuration object, all other keys are necessary for configuring the adapter.
 
 The Storage constructor expects the configuration to be of type `StorageAdapterConfig`.
 
@@ -64,12 +64,12 @@ Examples with configuration object:
 
 ```typescript
 const s = new Storage({
-  type: StorageType.GCS,
+  type: Provider.GCS,
   keyFilename: "path/to/keyFile.json",
 });
 
 const s = new Storage({
-  type: StorageType.GCS,
+  type: Provider.GCS,
   keyFilename: "path/to/keyFile.json",
   bucketName: "the-buck",
 });
@@ -90,7 +90,7 @@ For more information about configuration urls please read [this](https://github.
 Google cloud service can read default credentials from an environment variable.
 
 ```typescript
-const s = new Storage({ type: StorageType.GCS });
+const s = new Storage({ type: Provider.GCS });
 // using a config url:
 const s = new Storage("gcs://");
 // and even:

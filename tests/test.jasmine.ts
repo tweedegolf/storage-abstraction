@@ -1,32 +1,27 @@
+// require("jasmine");
+// const fs = require("fs");
+// const path = require("path");
+// const { Readable } = require("stream");
+// const { Provider, StorageAdapterConfig } = require("../src/types/general");
+// const { saveFile } = require("./util");
+// const { getConfig } = require("./config");
+// const { CloudStorage } = require("../src/Storage");
+
 import "jasmine";
 import fs from "fs";
 import path from "path";
-import { Storage } from "../src/Storage";
-import { AdapterConfig, S3Type, StorageType } from "../src/types/general";
-import { saveFile } from "./util";
 import { Readable } from "stream";
+import { Provider, StorageAdapterConfig } from "../src/types/general";
+import { saveFile } from "./util";
 import { getConfig } from "./config";
+import { Storage } from "../src/Storage";
 
-const types = [
-  StorageType.LOCAL, // 0
-  StorageType.S3, // 1
-  StorageType.GCS, // 2
-  StorageType.B2, // 3
-  StorageType.AZURE, // 4
-  StorageType.MINIO, // 5
-  S3Type.CUBBIT, // 6
-  S3Type.CLOUDFLARE, // 7
-  S3Type.BACKBLAZE, // 8
-];
-
-let index = 0;
-// console.log(process.argv);
+let provider = Provider.LOCAL;
 if (process.argv[5]) {
-  index = parseInt(process.argv[5], 10);
+  provider = process.argv[5] as Provider;
 }
-const config = getConfig(types[index]);
-// const type = (config as AdapterConfig).type || StorageType.LOCAL;
-const type = types[index];
+// console.log(provider);
+const config: StorageAdapterConfig | string = getConfig(provider);
 
 const newBucketName1 = "bucket-test-sab-1";
 const newBucketName2 = "bucket-test-sab-2";
@@ -51,10 +46,10 @@ function streamToString(stream: Readable) {
   });
 }
 
-describe(`[testing ${type} storage]`, () => {
+describe(`[testing ${provider}]`, () => {
   beforeAll(async () => {
     // create a temporary working directory
-    if (type !== StorageType.LOCAL) {
+    if (provider !== Provider.LOCAL) {
       await fs.promises
         .stat(path.join(process.cwd(), "tests", "test_directory"))
         .catch(async (e) => {
@@ -127,7 +122,7 @@ describe(`[testing ${type} storage]`, () => {
   it("(5) add file success", async () => {
     let value: null | string;
     let error: null | string;
-    if (storage.getType() === StorageType.S3) {
+    if (storage.getProvider() === Provider.S3) {
       ({ value, error } = await storage.addFileFromPath({
         bucketName,
         origPath: "./tests/data/image1.jpg",
@@ -188,15 +183,8 @@ describe(`[testing ${type} storage]`, () => {
   it("(10) remove file again", async () => {
     const { value, error } = await storage.removeFile(bucketName, "subdir/renamed.jpg");
     // console.log(type, value, error);
-    if (type === S3Type.BACKBLAZE) {
-      // remove file fails if the file doesn't exist in Backblaze
-      expect(value).toBeNull();
-      expect(error).not.toBeNull();
-    } else {
-      // remove file does not fails if the file doesn't exist
-      expect(value).not.toBeNull();
-      expect(error).toBeNull();
-    }
+    expect(value).not.toBeNull();
+    expect(error).toBeNull();
   });
 
   it("(11) list files 2", async () => {
@@ -227,7 +215,7 @@ describe(`[testing ${type} storage]`, () => {
       process.cwd(),
       "tests",
       "test_directory",
-      `test-${storage.getType()}.jpg`
+      `test-${storage.getProvider()}.jpg`
     );
     const writeStream = fs.createWriteStream(filePath);
 
@@ -248,7 +236,7 @@ describe(`[testing ${type} storage]`, () => {
       process.cwd(),
       "tests",
       "test_directory",
-      `test-${storage.getType()}-part.jpg`
+      `test-${storage.getProvider()}-part.jpg`
     );
     const { value, error } = await storage.getFileAsStream(bucketName, "image1.jpg", { end: 2999 });
 
@@ -421,7 +409,7 @@ describe(`[testing ${type} storage]`, () => {
 
   it("(31) delete non-empty bucket", async () => {
     // S3 doesn't allow you to delete a non-empty bucket
-    // if (storage.getType() !== StorageType.S3) {
+    // if (storage.getProvider() !== Provider.S3) {
     // }
     // const { value: v, error: e } = await storage.clearBucket(newBucketName1);
     // console.log(v, e)

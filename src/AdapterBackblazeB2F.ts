@@ -1,7 +1,7 @@
 import fs from "fs";
-import B2 from "@nichoth/backblaze-b2";
+import B2 from "backblaze-b2";
 
-import { Options, StreamOptions, StorageType, IAdapter } from "./types/general";
+import { Options, StreamOptions, Provider, IAdapter } from "./types/general";
 import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
@@ -9,28 +9,29 @@ import {
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
 } from "./types/result";
 import { AdapterConfigBackblazeB2 } from "./types/adapter_backblaze_b2";
 
-import { parseQueryString, parseUrl, validateName } from "./util";
+import { parseQueryString, validateName } from "./util";
 
 const getConfig = (): AdapterConfigBackblazeB2 => {
   return {
-    type: StorageType.B2,
+    provider: Provider.B2,
     applicationKeyId: "",
     applicationKey: "",
   };
 };
 
-const getType = (): string => "string";
+const getProvider = (): Provider => Provider.B2;
 
 const getConfigError = (): string => "string";
 
 const getServiceClient = (): any => { }; // eslint-disable-line
 
 const createBucket = async (name: string, options: Options = {}): Promise<ResultObject> => {
-  const error = validateName(name);
+  const error = validateName(name, Provider.B2);
   if (error !== null) {
     return { value: null, error };
   }
@@ -62,7 +63,7 @@ const addFileFromStream = async (params: FileStreamParams): Promise<ResultObject
 };
 
 const addFile = async (
-  params: FilePathParams | FileBufferParams | FileStreamParams
+  params: FileBufferParams | FileStreamParams
 ): Promise<ResultObject> => {
   return { value: "public url", error: null };
 };
@@ -71,16 +72,6 @@ const getFileAsStream = async (...args:
   [bucketName: string, fileName: string, options?: StreamOptions] |
   [fileName: string, options?: StreamOptions]): Promise<ResultObjectStream> => {
   return { value: fs.createReadStream(""), error: null };
-};
-
-/**
- * @deprecated: use getPublicURL or getSignedURL
- */
-const getFileAsURL = async (...args:
-  [bucketName: string, fileName: string, options?: Options] |
-  [fileName: string, options?: Options]
-): Promise<ResultObject> => {
-  return { value: "url", error: null };
 };
 
 const getPublicURL = async (...args:
@@ -97,9 +88,17 @@ const getSignedURL = async (...args:
   return Promise.resolve({ value: "url", error: null });
 }
 
+const getPresignedUploadURL = async (...args:
+  [bucketName: string, fileName: string, options?: Options] |
+  [fileName: string, options?: Options]
+): Promise<ResultObjectObject> => {
+  return { value: {}, error: null }
+}
+
+
 const removeFile = async (...args:
-  [bucketName: string, fileName: string, allVersions?: boolean] |
-  [fileName: string, allVersions?: boolean]
+  [bucketName: string, fileName: string] |
+  [fileName: string]
 ): Promise<ResultObject> => {
   return { value: "ok", error: null };
 };
@@ -132,8 +131,8 @@ const bucketIsPublic = async (bucketName?: string): Promise<ResultObjectBoolean>
 };
 
 const adapter: IAdapter = {
-  get type() {
-    return getType();
+  get provider() {
+    return getProvider();
   },
   get config() {
     return getConfig();
@@ -156,7 +155,7 @@ const adapter: IAdapter = {
   getSelectedBucket(): string {
     return "bucketName";
   },
-  getType,
+  getProvider,
   getConfigError,
   getConfig,
   getServiceClient,
@@ -169,9 +168,9 @@ const adapter: IAdapter = {
   addFileFromBuffer,
   addFileFromStream,
   getFileAsStream,
-  getFileAsURL,
   getPublicURL,
   getSignedURL,
+  getPresignedUploadURL,
   removeFile,
   listFiles,
   sizeOf,

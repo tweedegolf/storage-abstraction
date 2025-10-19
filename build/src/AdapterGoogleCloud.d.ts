@@ -1,0 +1,32 @@
+import { Storage as GoogleCloudStorage } from "@google-cloud/storage";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "./types/result";
+import { AdapterConfigGoogleCloud } from "./types/adapter_google_cloud";
+export declare class AdapterGoogleCloud extends AbstractAdapter {
+    protected _provider: Provider;
+    protected _config: AdapterConfigGoogleCloud;
+    protected _client: GoogleCloudStorage;
+    protected _configError: string | null;
+    constructor(config: string | AdapterConfigGoogleCloud);
+    protected _listBuckets(): Promise<ResultObjectBuckets>;
+    protected _createBucket(name: string, options: Options): Promise<ResultObject>;
+    protected _getPublicURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+    protected _getSignedURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+    protected _getFileAsStream(bucketName: string, fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
+    protected _removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
+    protected _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean>;
+    protected _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject>;
+    protected _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles>;
+    protected _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+    protected _bucketExists(name: string): Promise<ResultObjectBoolean>;
+    protected _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+    protected _deleteBucket(name: string): Promise<ResultObject>;
+    protected _clearBucket(name: string): Promise<ResultObject>;
+    protected _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject>;
+    get config(): AdapterConfigGoogleCloud;
+    getConfig(): AdapterConfigGoogleCloud;
+    get serviceClient(): GoogleCloudStorage;
+    getServiceClient(): GoogleCloudStorage;
+}

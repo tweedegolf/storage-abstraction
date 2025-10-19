@@ -3,7 +3,7 @@ import { Readable } from "stream";
 import { AbstractAdapter } from "./AbstractAdapter";
 // Use ConfigTemplate as starting point for your own configuration object
 import { parseUrl, validateName } from "./util";
-import { AdapterConfig, Options, StreamOptions } from "./types/general";
+import { AdapterConfig, Options, Provider, StreamOptions } from "./types/general";
 import {
   ResultObject,
   ResultObjectBoolean,
@@ -16,11 +16,11 @@ import { FilePathParams, FileBufferParams, FileStreamParams } from "./types/add_
 
 // stub of a 3rd-party service client library to silence ts-lint
 // see the last line of the constructor below
-export const WrapperLibrary = function (config: string | AdapterConfig) {};
+export const WrapperLibrary: any = function (config: string | AdapterConfig) { };
 
 export class AdapterTemplate extends AbstractAdapter {
-  // Your storage type, add this type to the enum StorageType in ./types.ts
-  protected _type: string;
+  // Your storage type, add this type to the enum Provider in ./types.ts
+  protected _provider: Provider = Provider.NONE;
 
   // The instance of the service client if you use another library as a wrapper
   // around the API of your storage service, e.g. aws-sdk for Amazon S3.
@@ -107,7 +107,7 @@ export class AdapterTemplate extends AbstractAdapter {
     // Usually your cloud service will check if a valid bucket name has been provided.
     // However, in general `null`, `undefined` and empty strings are not allowed (nor desirable)
     // so you may want to perform this check locally using the validateName function in ./src/util.ts
-    const error = validateName(bucketName);
+    const error = validateName(bucketName, this.provider);
     if (error !== null) {
       return { value: null, error };
     }

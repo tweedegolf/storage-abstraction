@@ -1,0 +1,34 @@
+import { BlobServiceClient } from "@azure/storage-blob";
+import { AbstractAdapter } from "./AbstractAdapter";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream } from "./types/result";
+import { AdapterConfigAzureBlob } from "./types/adapter_azure_blob";
+export declare class AdapterAzureBlob extends AbstractAdapter {
+    protected _provider: Provider;
+    protected _config: AdapterConfigAzureBlob;
+    protected _client: BlobServiceClient;
+    private sharedKeyCredential;
+    protected _configError: string | null;
+    constructor(config: string | AdapterConfigAzureBlob);
+    private getBlobEndpoint;
+    protected _listBuckets(): Promise<ResultObjectBuckets>;
+    protected _createBucket(name: string, options: Options): Promise<ResultObject>;
+    protected _getFileAsStream(bucketName: string, fileName: string, options: StreamOptions): Promise<ResultObjectStream>;
+    protected _getPublicURL(bucketName: string, fileName: string, _options: Options): Promise<ResultObject>;
+    protected _getSignedURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+    protected _clearBucket(name: string): Promise<ResultObject>;
+    protected _deleteBucket(name: string): Promise<ResultObject>;
+    protected _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles>;
+    protected _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject>;
+    protected _removeFile(bucketName: string, fileName: string): Promise<ResultObject>;
+    protected _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
+    protected _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean>;
+    protected _bucketExists(name: string): Promise<ResultObjectBoolean>;
+    protected _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean>;
+    protected _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject>;
+    get config(): AdapterConfigAzureBlob;
+    getConfig(): AdapterConfigAzureBlob;
+    get serviceClient(): BlobServiceClient;
+    getServiceClient(): BlobServiceClient;
+}

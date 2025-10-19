@@ -1,35 +1,56 @@
 {
   "compilerOptions": {
-    "target": "es2021",
+    "target": "es6",
     "lib": [
-      "es2021"
+      "ES6"
     ],
-    // "types": ["reflect-metadata"],
-    "outDir": "publish/dist",
+    "outDir": "build",
+    "rootDir": ".",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true,
     "preserveSymlinks": true,
+    "strict": true,
     "sourceMap": true,
     "declaration": true,
-    "allowSyntheticDefaultImports": true
+    "preserveConstEnums": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
-  "include": [
-    "src/*.ts",
-    "src/types/*.ts",
-    "src/indexes/*.ts"
+  "files": [
+    "tests/test.jasmine.ts",
   ],
-  // "include": ["src/index.ts"],
+  "include": [
+    "src/**/*",
+  ],
   "exclude": [
+    "**/*.d.ts",
     "node_modules",
     "publish",
-    "spec",
     "src/template_class.ts",
     "src/template_functional.ts",
-    "tests",
     "tests_local"
   ],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": true,
+    "excludeDirectories": [
+      "node_modules",
+      "publish",
+      "build",
+      "toc"
+    ],
+    "excludeFiles": [
+      "copy.ts"
+    ]
+  }
 }

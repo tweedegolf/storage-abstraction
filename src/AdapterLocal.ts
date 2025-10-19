@@ -3,24 +3,25 @@ import path from "path";
 import { glob } from "glob";
 import { rimraf } from "rimraf";
 import { Readable } from "stream";
-import { Options, StreamOptions, StorageType } from "./types/general";
-import { FileBufferParams, FilePathParams, FileStreamParams } from "./types/add_file_params";
+import { Options, StreamOptions, Provider } from "./types/general";
+import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
 import {
   ResultObject,
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
   ResultObjectNumber,
+  ResultObjectObject,
   ResultObjectStream,
   ResultObjectStringArray,
 } from "./types/result";
 import { AdapterConfigLocal } from "./types/adapter_local";
 import { AbstractAdapter } from "./AbstractAdapter";
-import { parseMode, parseUrl, validateName } from "./util";
+import { getErrorMessage, parseMode, parseUrl } from "./util";
 
 export class AdapterLocal extends AbstractAdapter {
-  protected _type = StorageType.LOCAL;
-  protected _config: AdapterConfigLocal;
+  protected _provider = Provider.LOCAL;
+  declare protected _config: AdapterConfigLocal;
   protected _configError: string | null = null;
 
   constructor(config: AdapterConfigLocal) {
@@ -29,10 +30,14 @@ export class AdapterLocal extends AbstractAdapter {
       this._config = { ...config };
     } else {
       const { value, error } = parseUrl(config);
-      if (error !== null) {
+      if (value === null) {
         this._configError = `[configError] ${error}`;
       } else {
         const { protocol: type, username: directory, host: bucketName, searchParams } = value;
+        if (directory === null) {
+          this._configError = `[configError] please specify a directory`;
+          return;
+        }
         if (searchParams !== null) {
           this._config = { type, directory, ...searchParams };
         } else {
@@ -46,14 +51,13 @@ export class AdapterLocal extends AbstractAdapter {
     }
 
     if (typeof this.config.mode !== "undefined") {
+      this._config.mode = 0o777;
       const { value, error } = parseMode(this.config.mode);
       if (error !== null) {
         this._configError = `[configError] ${error}`;
-      } else {
+      } else if (value !== null) {
         this._config.mode = value;
       }
-    } else {
-      this._config.mode = 0o777;
     }
     if (typeof this.config.directory !== "string") {
       this._configError =
@@ -83,7 +87,7 @@ export class AdapterLocal extends AbstractAdapter {
         // console.log(m, this.options.mode);
         return { value: true, error: null };
       } catch (e) {
-        return { value: null, error: e.message };
+        return { value: null, error: getErrorMessage(e) };
       }
     }
   }
@@ -96,7 +100,7 @@ export class AdapterLocal extends AbstractAdapter {
       const files = await glob(`${folder}/${pattern}`, {});
       return { value: files, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -112,11 +116,11 @@ export class AdapterLocal extends AbstractAdapter {
       // );
       return { value: files, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+  protected async _createBucket(name: string, _options: Options): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, name);
       const created = await this.createDirectory(p);
@@ -126,14 +130,12 @@ export class AdapterLocal extends AbstractAdapter {
         return { value: null, error: `Could not create bucket ${p}` };
       }
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
-  protected async _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
-  ): Promise<ResultObject> {
-    const dest = path.join(this._config.directory, params.bucketName, params.targetPath);
+  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+    const dest = path.join(this._config.directory, params.bucketName as string, params.targetPath);
 
     const { error } = await this.createDirectory(path.dirname(dest));
     if (error !== null) {
@@ -142,10 +144,7 @@ export class AdapterLocal extends AbstractAdapter {
 
     try {
       let readStream: Readable;
-      if (typeof (params as FilePathParams).origPath === "string") {
-        await fs.promises.copyFile((params as FilePathParams).origPath, dest);
-        return { value: dest, error: null };
-      } else if (typeof (params as FileBufferParams).buffer !== "undefined") {
+      if (typeof (params as FileBufferParams).buffer !== "undefined") {
         readStream = new Readable();
         readStream._read = (): void => { }; // _read is required but you can noop it
         readStream.push((params as FileBufferParams).buffer);
@@ -162,7 +161,7 @@ export class AdapterLocal extends AbstractAdapter {
             resolve({ value: null, error: `[readStream error] ${e.message}` });
           })
           .on("finish", () => {
-            resolve({ value: dest, error: null });
+            resolve({ value: "ok", error: null });
           });
         writeStream.on("error", (e) => {
           resolve({ value: null, error: `[writeStream error] ${e.message}` });
@@ -170,7 +169,7 @@ export class AdapterLocal extends AbstractAdapter {
       });
       // console.timeEnd();
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -181,7 +180,7 @@ export class AdapterLocal extends AbstractAdapter {
       await rimraf(p, { preserveRoot: false });
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -191,7 +190,7 @@ export class AdapterLocal extends AbstractAdapter {
       await rimraf(p);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -199,7 +198,7 @@ export class AdapterLocal extends AbstractAdapter {
     try {
       const storagePath = path.join(this._config.directory, bucketName);
       const { value: files, error } = await this.globFiles(storagePath);
-      if (error !== null) {
+      if (files === null) {
         return { value: null, error };
       }
       const result: [string, number][] = [];
@@ -211,7 +210,7 @@ export class AdapterLocal extends AbstractAdapter {
       }
       return { value: result, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -226,19 +225,8 @@ export class AdapterLocal extends AbstractAdapter {
       const stream = fs.createReadStream(p, options);
       return { value: stream, error: null };
     } catch (e) {
-      return { value: null, error: e };
+      return { value: null, error: getErrorMessage(e) };
     }
-  }
-
-  /**
-   * @deprecated: use getPublicURL or getSignedURL
-   */
-  protected async _getFileAsURL(
-    bucketName: string,
-    fileName: string,
-    options: Options
-  ): Promise<ResultObject> {
-    return this._getPublicURL(bucketName, fileName, options);
   }
 
   protected async _getPublicURL(
@@ -251,7 +239,7 @@ export class AdapterLocal extends AbstractAdapter {
       try {
         await fs.promises.access(p);
       } catch (e) {
-        return { value: null, error: e };
+        return { value: null, error: getErrorMessage(e) };
       }
       if (options.withoutDirectory) {
         return { value: path.join(bucketName, fileName), error: null };
@@ -259,7 +247,7 @@ export class AdapterLocal extends AbstractAdapter {
       // public url is actually just a local path
       return { value: p, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -272,20 +260,13 @@ export class AdapterLocal extends AbstractAdapter {
     return this._getPublicURL(bucketName, fileName, options);
   }
 
-  protected async _removeFile(
-    bucketName: string,
-    fileName: string,
-    allVersions: boolean
-  ): Promise<ResultObject> {
+  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
-      if (!fs.existsSync(p)) {
-        return { value: "ok", error: null };
-      }
       await fs.promises.unlink(p);
       return { value: "ok", error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -295,7 +276,7 @@ export class AdapterLocal extends AbstractAdapter {
       const { size } = await fs.promises.stat(p);
       return { value: size, error: null };
     } catch (e) {
-      return { value: null, error: e.message };
+      return { value: null, error: getErrorMessage(e) };
     }
   }
 
@@ -312,9 +293,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(
-    bucketName: string,
-  ): Promise<ResultObjectBoolean> {
+  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     // always true
     return { value: true, error: null };
   }
@@ -326,6 +305,14 @@ export class AdapterLocal extends AbstractAdapter {
     } catch (e) {
       return { value: false, error: null };
     }
+  }
+
+  protected async _getPresignedUploadURL(
+    bucketName: string,
+    fileName: string,
+    options: Options
+  ): Promise<ResultObjectObject> {
+    return { value: { url: "" }, error: null };
   }
 
   // public

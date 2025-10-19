@@ -1,0 +1,18 @@
+import { S3Client } from "@aws-sdk/client-s3";
+import { Options, Provider } from "./types/general";
+import { ResultObject, ResultObjectBoolean, ResultObjectObject } from "./types/result";
+import { AdapterConfigS3 } from "./types/adapter_amazon_s3";
+import { AdapterAmazonS3 } from "./AdapterAmazonS3";
+export declare class AdapterCubbitS3 extends AdapterAmazonS3 {
+    protected _config: AdapterConfigS3;
+    protected _client: S3Client;
+    protected _provider: Provider;
+    protected _configError: null | string;
+    constructor(config: string | AdapterConfigS3);
+    protected makeBucketPublic(bucketName: string, _options?: Options): Promise<ResultObject>;
+    protected _bucketIsPublic(_bucketName: string): Promise<ResultObjectBoolean>;
+    protected _getPublicURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+    protected _getPresignedUploadURL(bucketName: string, fileName: string, options: Options): Promise<ResultObjectObject>;
+    get config(): AdapterConfigS3;
+    getConfig(): AdapterConfigS3;
+}

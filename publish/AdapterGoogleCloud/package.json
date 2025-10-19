@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-google-cloud",
-  "version": "1.0.10",
+  "version": "3.0.0",
   "description": "Provides an abstraction layer for interacting with Google Cloud storage service.",
   "main": "dist/index/AdapterGoogleCloud.js",
   "types": "dist/index/AdapterGoogleCloud.d.ts",
@@ -10,7 +10,7 @@
     "url": "git+https://github.com/tweedegolf/storage-abstraction.git"
   },
   "dependencies": {
-    "@google-cloud/storage": "^7.17.1"
+    "@google-cloud/storage": "^7.17.2"
   },
   "scripts": {},
   "keywords": [
