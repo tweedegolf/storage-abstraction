@@ -1,4 +1,5 @@
 # 3.0.0
+- new API version 3.0
 - removed support for versioning (wasn't implemented consistently anyway)
 - removed `getFileAsURL`
 - removed option `{allVersions: boolean}` for `removeFile`
