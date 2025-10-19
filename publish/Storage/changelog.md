@@ -7,7 +7,10 @@
 - `deleteBucket` does not fail if the bucket doesn't exist
 - see also the [migration guide](https://github.com/tweedegolf/storage-abstraction/blob/master/migration_to_api3.0.md)
 
-# 2.1.7
+# 2.2.1
+- include @deprecated functions
+
+# 2.2.0
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 - fixed several unnoticed bugs
 

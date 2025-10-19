@@ -109,7 +109,7 @@ const s = new Storage(
 );
 ```
 
-It is mandatory to set a value for `region`; you can set it to "eu-west-1" or "us-east-1". Other values may work as well but not that Cubbit is a decentralized storage so setting a region doesn't really make a difference.
+It is mandatory to set a value for `region`; setting it to "us-east-1" will always work. Other values may work as well but note that Cubbit is a decentralized storage so setting a region doesn't really make a difference.
 
 You can also set the region using the `AWS_REGION` environment variable.
 

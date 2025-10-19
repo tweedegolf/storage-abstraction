@@ -52,7 +52,8 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
   } else if (provider === Provider.CUBBIT) {
     config = {
       provider,
-      region: "us-west-1",
+      // region: "us-west-1",
+      region: "us-east-1",
       bucketName: process.env.BUCKET_NAME,
       endpoint: process.env.CUBBIT_ENDPOINT,
       accessKeyId: process.env.CUBBIT_ACCESS_KEY_ID,
@@ -67,8 +68,8 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
       // accessKeyId: process.env.MINIO_ACCESS_KEY_DOCKER,
       // secretAccessKey: process.env.MINIO_SECRET_KEY_DOCKER,
 
-      // region: "us-east-1",
-      region: "af-south-1",
+      region: "us-east-1",
+      // region: "af-south-1",
       endpoint: process.env.MINIO_ENDPOINT_S3,
       accessKeyId: process.env.MINIO_ACCESS_KEY,
       secretAccessKey: process.env.MINIO_SECRET_KEY,

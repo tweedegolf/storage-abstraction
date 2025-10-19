@@ -1,6 +1,6 @@
 # <a name='storage-abstraction'></a>Storage Abstraction
 
-[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg?branch=master?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
+[![ci](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/tweedegolf/storage-abstraction/actions/workflows/ci.yaml)
 
 Provides an abstraction layer for interacting with a storage; the storage can be on a local file system or in the cloud. Supported cloud storage providers are:
 
@@ -1522,25 +1522,6 @@ npm test local
 npm test s3
 npm test b2-s3
 ```
-npm run test-all
-```
-
-You can find some additional non-Jasmine tests in the file `tests/test_runs.ts`. Every test is a functions that makes a series of API calls to test certain functionality in isolation. A the bottom of this file you'll find the `run` function where you can comment out the  you don't want to run.
-
-You can find the API calls in the file `tests/api_calls.ts`. Every API call is declared in a function with the same name as the API method it is calling, some additional functionality like logging and checking the result is added to the function.
-
-You can select the type of storage by passing a commandline parameter:
-| command | storage
-| --- | --- |
-| `npm test 0` | Local|
-| `npm test 1` | Amazon S3|
-| `npm test 2` | Backblaze B2|
-| `npm test 3` | Google Cloud Storage|
-| `npm test 4` | Azure Blob Storage|
-| `npm test 5` | Minio|
-| `npm test 6` | Cubbit (S3 compatible)|
-| `npm test 7` | Cloudflare R2 (S3 compatible)|
-| `npm test 8` | Backblaze B2 (S3 compatible)|
 
 Note that the test `testPublicBucket` tries to create a public bucket. However creating a public bucket on Cloudflare R2 and on Backblaze B2 when using the S3 adapter is not possible; even if you add `{public: true}` the created bucket  `sab-test-public` will be private.
 

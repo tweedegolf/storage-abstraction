@@ -23,7 +23,7 @@ export async function testPresignedUploadURL(type: string) {
         });
     }
 
-    if (type === Provider.S3) {
+    if (type === Provider.S3 || type === Provider.AWS) {
         await getPresignedUploadURL("test.jpg", {
             conditions: [
                 ["starts-with", "$key", "something-else"],
