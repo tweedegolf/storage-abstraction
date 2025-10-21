@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-amazon-s3",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Provides an abstraction layer for interacting with Amazon S3 and S3 compatible cloud services.",
   "main": "dist/index/AdapterAmazonS3.js",
   "types": "dist/index/AdapterAmazonS3.d.ts",
@@ -8,6 +8,7 @@
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.913.0",
+    "@aws-sdk/s3-presigned-post": "^3.913.0",
     "@aws-sdk/s3-request-presigner": "^3.913.0"
   },
   "scripts": {},
