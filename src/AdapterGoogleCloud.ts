@@ -58,7 +58,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
-  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+  protected override async _listBuckets(): Promise<ResultObjectBuckets> {
     try {
       const [buckets] = await this._client.getBuckets();
       return { value: buckets.map((b) => b.name), error: null };
@@ -67,7 +67,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+  protected override async _createBucket(name: string, options: Options): Promise<ResultObject> {
     try {
       const bucket = this._client.bucket(name, options);
       const [exists] = await bucket.exists();
@@ -96,7 +96,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -110,7 +110,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _getSignedURL(
+  protected override async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -136,7 +136,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _getFileAsStream(
+  protected override async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions
@@ -152,7 +152,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected override async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       await this._client.bucket(bucketName).file(fileName).delete();
@@ -162,7 +162,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const bucket = this._client.bucket(bucketName);
       const [policy] = await bucket.iam.getPolicy({ requestedPolicyVersion: 3 });
@@ -183,7 +183,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  protected override async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
       let readStream: Readable;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
@@ -217,7 +217,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       const data = await this._client.bucket(bucketName).getFiles();
       let files: Array<[string, number]> = data[0].map((f) => [
@@ -236,7 +236,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  protected override async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const file = this._client.bucket(bucketName).file(fileName);
       const [metadata] = await file.getMetadata();
@@ -246,7 +246,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _bucketExists(name: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketExists(name: string): Promise<ResultObjectBoolean> {
     try {
       const data = await this._client.bucket(name).exists();
       return { value: data[0], error: null };
@@ -255,7 +255,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  protected override async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       const data = await this._client.bucket(bucketName).file(fileName).exists();
       // console.log(data);
@@ -265,7 +265,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _deleteBucket(name: string): Promise<ResultObject> {
+  protected override async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this._client.bucket(name).delete();
       return { value: "ok", error: null };
@@ -274,7 +274,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name: string): Promise<ResultObject> {
+  protected override async _clearBucket(name: string): Promise<ResultObject> {
     try {
       await this._client.bucket(name).deleteFiles({ force: true });
       return { value: "ok", error: null };
@@ -283,7 +283,7 @@ export class AdapterGoogleCloud extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -344,19 +344,19 @@ export class AdapterGoogleCloud extends AbstractAdapter {
 
   //public
 
-  get config(): AdapterConfigGoogleCloud {
+  override get config(): AdapterConfigGoogleCloud {
     return this._config as AdapterConfigGoogleCloud;
   }
 
-  getConfig(): AdapterConfigGoogleCloud {
+  override getConfig(): AdapterConfigGoogleCloud {
     return this._config as AdapterConfigGoogleCloud;
   }
 
-  get serviceClient(): GoogleCloudStorage {
+  override get serviceClient(): GoogleCloudStorage {
     return this._client as GoogleCloudStorage;
   }
 
-  getServiceClient(): GoogleCloudStorage {
+  override getServiceClient(): GoogleCloudStorage {
     return this._client as GoogleCloudStorage;
   }
 }

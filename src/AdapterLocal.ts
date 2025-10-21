@@ -5,16 +5,7 @@ import { rimraf } from "rimraf";
 import { Readable } from "stream";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
-import {
-  ResultObject,
-  ResultObjectBoolean,
-  ResultObjectBuckets,
-  ResultObjectFiles,
-  ResultObjectNumber,
-  ResultObjectObject,
-  ResultObjectStream,
-  ResultObjectStringArray,
-} from "./types/result";
+import { ResultObject, ResultObjectBoolean, ResultObjectBuckets, ResultObjectFiles, ResultObjectNumber, ResultObjectObject, ResultObjectStream, ResultObjectStringArray, } from "./types/result";
 import { AdapterConfigLocal } from "./types/adapter_local";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { getErrorMessage, parseMode, parseUrl } from "./util";
@@ -105,7 +96,7 @@ export class AdapterLocal extends AbstractAdapter {
   }
 
   // protected, called by methods of public API via AbstractAdapter
-  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+  protected override async _listBuckets(): Promise<ResultObjectBuckets> {
     try {
       const dirents = await fs.promises.readdir(this._config.directory, { withFileTypes: true });
       const files = dirents
@@ -120,7 +111,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(name: string, _options: Options): Promise<ResultObject> {
+  protected override async _createBucket(name: string, _options: Options): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, name);
       const created = await this.createDirectory(p);
@@ -134,7 +125,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  protected override async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     const dest = path.join(this._config.directory, params.bucketName as string, params.targetPath);
 
     const { error } = await this.createDirectory(path.dirname(dest));
@@ -173,7 +164,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name: string): Promise<ResultObject> {
+  protected override async _clearBucket(name: string): Promise<ResultObject> {
     try {
       // remove all files and folders inside bucket directory, but not the directory itself
       const p = path.join(this._config.directory, name);
@@ -184,7 +175,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _deleteBucket(name: string): Promise<ResultObject> {
+  protected override async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, name);
       await rimraf(p);
@@ -194,7 +185,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _listFiles(bucketName: string): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string): Promise<ResultObjectFiles> {
     try {
       const storagePath = path.join(this._config.directory, bucketName);
       const { value: files, error } = await this.globFiles(storagePath);
@@ -214,7 +205,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _getFileAsStream(
+  protected override async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions
@@ -229,7 +220,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -251,7 +242,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _getSignedURL(
+  protected override async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -260,7 +251,7 @@ export class AdapterLocal extends AbstractAdapter {
     return this._getPublicURL(bucketName, fileName, options);
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected override async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       await fs.promises.unlink(p);
@@ -270,7 +261,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  protected override async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const p = path.join(this._config.directory, bucketName, fileName);
       const { size } = await fs.promises.stat(p);
@@ -280,7 +271,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const p = path.join(this._config.directory, bucketName);
       // const r = fs.existsSync(p);
@@ -293,12 +284,12 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     // always true
     return { value: true, error: null };
   }
 
-  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  protected override async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       await fs.promises.access(path.join(this._config.directory, bucketName, fileName));
       return { value: true, error: null };
@@ -307,7 +298,7 @@ export class AdapterLocal extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -317,11 +308,11 @@ export class AdapterLocal extends AbstractAdapter {
 
   // public
 
-  get config(): AdapterConfigLocal {
+  override get config(): AdapterConfigLocal {
     return this._config;
   }
 
-  getConfig(): AdapterConfigLocal {
+  override getConfig(): AdapterConfigLocal {
     return this.config;
   }
 }

@@ -261,7 +261,7 @@ class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    _getPublicURL(bucketName, fileName, options) {
+    _getPublicURL(bucketName, fileName, _options) {
         return __awaiter(this, void 0, void 0, function* () {
             let url = `https://${this.config.endPoint}`;
             if (this.config.port) {
@@ -286,7 +286,7 @@ class AdapterMinio extends AbstractAdapter_1.AbstractAdapter {
             }
         });
     }
-    _listFiles(bucketName, numFiles) {
+    _listFiles(bucketName, _numFiles) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const stream = this._client.listObjectsV2(bucketName, "", true);

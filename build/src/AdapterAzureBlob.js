@@ -508,7 +508,4 @@ class AdapterAzureBlob extends AbstractAdapter_1.AbstractAdapter {
     }
 }
 exports.AdapterAzureBlob = AdapterAzureBlob;
-function generateContainerSASQueryParameters(arg0, credential) {
-    throw new Error("Function not implemented.");
-}
 //# sourceMappingURL=AdapterAzureBlob.js.map

@@ -138,7 +138,7 @@ export class AdapterS3 extends AbstractAdapter {
 
   // protected methods, called by public methods of the API via AbstractAdapter
 
-  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+  protected override async _listBuckets(): Promise<ResultObjectBuckets> {
     try {
       const input = {};
       const command = new ListBucketsCommand(input);
@@ -154,7 +154,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(bucketName: string, options: Options = {}): Promise<ResultObject> {
+  protected override async _createBucket(bucketName: string, options: Options = {}): Promise<ResultObject> {
     let okMsg = "ok";
     try {
       const input: CreateBucketCommandInput = {
@@ -269,7 +269,7 @@ export class AdapterS3 extends AbstractAdapter {
     return { value: okMsg, error: null };
   }
 
-  protected async _clearBucket(bucketName: string): Promise<ResultObject> {
+  protected override async _clearBucket(bucketName: string): Promise<ResultObject> {
     if (this._provider === Provider.BACKBLAZE_S3) {
       let versions: Array<{ Key: undefined | string; VersionId: undefined | string }> = [];
       const { value, error } = await this.getFileVersions(bucketName);
@@ -332,7 +332,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _deleteBucket(bucketName: string): Promise<ResultObject> {
+  protected override async _deleteBucket(bucketName: string): Promise<ResultObject> {
     try {
       const input = {
         Bucket: bucketName,
@@ -346,7 +346,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const input = {
         Bucket: bucketName,
@@ -359,7 +359,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     if (this._provider === Provider.CLOUDFLARE || this._provider === Provider.CUBBIT) {
       return {
         value: null,
@@ -470,7 +470,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  protected override async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
       let fileData: undefined | Readable | Buffer = undefined;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
@@ -497,7 +497,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _getFileAsStream(
+  protected override async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions
@@ -526,7 +526,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected override async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       await this._client.send(
         new DeleteObjectCommand({
@@ -580,7 +580,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -622,7 +622,7 @@ export class AdapterS3 extends AbstractAdapter {
     return { value: url, error: null };
   }
 
-  protected async _getSignedURL(
+  protected override async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -646,7 +646,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       const { value, error } = await this.getFiles(bucketName, numFiles);
       if (error !== null) {
@@ -667,7 +667,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  protected override async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const input = {
         Bucket: bucketName,
@@ -684,7 +684,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  protected override async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       const input = {
         Bucket: bucketName,
@@ -698,7 +698,7 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -780,19 +780,19 @@ export class AdapterS3 extends AbstractAdapter {
     }
   }
 
-  get config(): AdapterConfigAmazonS3 {
+  override get config(): AdapterConfigAmazonS3 {
     return this._config as AdapterConfigAmazonS3;
   }
 
-  getConfig(): AdapterConfigAmazonS3 {
+  override getConfig(): AdapterConfigAmazonS3 {
     return this._config as AdapterConfigAmazonS3;
   }
 
-  get serviceClient(): S3Client {
+  override get serviceClient(): S3Client {
     return this._client as S3Client;
   }
 
-  getServiceClient(): S3Client {
+  override getServiceClient(): S3Client {
     return this._client as S3Client;
   }
 }

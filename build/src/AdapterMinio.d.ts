@@ -17,9 +17,9 @@ export declare class AdapterMinio extends AbstractAdapter {
     protected _clearBucket(name: string): Promise<ResultObject>;
     protected _deleteBucket(name: string): Promise<ResultObject>;
     protected _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject>;
-    protected _getPublicURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
+    protected _getPublicURL(bucketName: string, fileName: string, _options: Options): Promise<ResultObject>;
     protected _getSignedURL(bucketName: string, fileName: string, options: Options): Promise<ResultObject>;
-    protected _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles>;
+    protected _listFiles(bucketName: string, _numFiles: number): Promise<ResultObjectFiles>;
     protected _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
     protected _bucketExists(bucketName: string): Promise<ResultObjectBoolean>;
     protected _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean>;

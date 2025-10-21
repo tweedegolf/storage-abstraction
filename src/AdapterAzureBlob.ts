@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { AnonymousCredential, BlobGenerateSasUrlOptions, BlobSASPermissions, BlobServiceClient, ContainerSASPermissions, StorageSharedKeyCredential, } from "@azure/storage-blob";
+import { AnonymousCredential, BlobGenerateSasUrlOptions, BlobSASPermissions, BlobServiceClient, StorageSharedKeyCredential, } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
@@ -132,7 +132,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
-  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+  protected override async _listBuckets(): Promise<ResultObjectBuckets> {
     // let i = 0;
     try {
       const bucketNames = [];
@@ -147,7 +147,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+  protected override async _createBucket(name: string, options: Options): Promise<ResultObject> {
     try {
       if (options.public === true && typeof options.access === "undefined") {
         options.access = "blob";
@@ -161,7 +161,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _getFileAsStream(
+  protected override async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions
@@ -194,7 +194,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     _options: Options
@@ -207,7 +207,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _getSignedURL(
+  protected override async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -232,7 +232,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name: string): Promise<ResultObject> {
+  protected override async _clearBucket(name: string): Promise<ResultObject> {
     try {
       // const containerClient = this._client.getContainerClient(name);
       // const blobs = containerClient.listBlobsFlat();
@@ -255,7 +255,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _deleteBucket(name: string): Promise<ResultObject> {
+  protected override async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       const del = await this._client.deleteContainer(name);
       //console.log('deleting container: ', del);
@@ -265,7 +265,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     try {
       let name = bucketName;
       let prefix = "";
@@ -290,7 +290,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  protected override async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
       let readStream: undefined | Readable;
       if (typeof (params as FileBufferParams).buffer !== "undefined") {
@@ -319,7 +319,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected override async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       const container = this._client.getContainerClient(bucketName);
       const file = await container.getBlobClient(fileName).deleteIfExists();
@@ -329,7 +329,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  protected override async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const blob = this._client.getContainerClient(bucketName).getBlobClient(fileName);
       const length = (await blob.getProperties()).contentLength;
@@ -342,7 +342,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const containerClient = this._client.getContainerClient(bucketName);
       const response = await containerClient.getAccessPolicy();
@@ -354,7 +354,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _bucketExists(name: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketExists(name: string): Promise<ResultObjectBoolean> {
     try {
       const cont = this._client.getContainerClient(name);
       const exists = await cont.exists();
@@ -364,7 +364,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  protected override async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       const exists = await this._client
         .getContainerClient(bucketName)
@@ -376,7 +376,7 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -442,31 +442,19 @@ export class AdapterAzureBlob extends AbstractAdapter {
 
   // public
 
-  get config(): AdapterConfigAzureBlob {
+  override get config(): AdapterConfigAzureBlob {
     return this._config as AdapterConfigAzureBlob;
   }
 
-  getConfig(): AdapterConfigAzureBlob {
+  override getConfig(): AdapterConfigAzureBlob {
     return this._config as AdapterConfigAzureBlob;
   }
 
-  get serviceClient(): BlobServiceClient {
+  override get serviceClient(): BlobServiceClient {
     return this._client as BlobServiceClient;
   }
 
-  getServiceClient(): BlobServiceClient {
+  override getServiceClient(): BlobServiceClient {
     return this._client as BlobServiceClient;
   }
-}
-function generateContainerSASQueryParameters(
-  arg0: {
-    containerName: any;
-    permissions: ContainerSASPermissions;
-    startsOn: Date;
-    expiresOn: Date;
-    protocol: any;
-  },
-  credential: any
-) {
-  throw new Error("Function not implemented.");
 }

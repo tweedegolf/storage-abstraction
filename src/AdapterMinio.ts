@@ -95,7 +95,7 @@ export class AdapterMinio extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
-  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+  protected override async _listBuckets(): Promise<ResultObjectBuckets> {
     try {
       const buckets = await this._client.listBuckets();
       return { value: buckets.map((b) => b.name), error: null };
@@ -104,7 +104,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+  protected override async _createBucket(name: string, options: Options): Promise<ResultObject> {
     try {
       const e = await this._client.bucketExists(name);
       if (e) {
@@ -138,7 +138,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _getFileAsStream(
+  protected override async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions
@@ -168,7 +168,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected override async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     try {
       await this._client.removeObject(bucketName, fileName);
       return { value: "ok", error: null };
@@ -177,7 +177,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name: string): Promise<ResultObject> {
+  protected override async _clearBucket(name: string): Promise<ResultObject> {
     const { value: files, error } = await this.listFiles(name);
     if (files === null) {
       return { value: null, error };
@@ -193,7 +193,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _deleteBucket(name: string): Promise<ResultObject> {
+  protected override async _deleteBucket(name: string): Promise<ResultObject> {
     try {
       await this._client.removeBucket(name);
       return { value: "ok", error: null };
@@ -202,7 +202,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  protected override async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     try {
       let fileData: string | Readable | Buffer = "empty";
       let size: undefined | number;
@@ -223,10 +223,10 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
-    options: Options
+    _options: Options
   ): Promise<ResultObject> {
     let url = `https://${this.config.endPoint}`;
     if (this.config.port) {
@@ -236,7 +236,7 @@ export class AdapterMinio extends AbstractAdapter {
     return { value: url, error: null };
   }
 
-  protected async _getSignedURL(
+  protected override async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -253,7 +253,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string, _numFiles: number): Promise<ResultObjectFiles> {
     try {
       const stream = this._client.listObjectsV2(bucketName, "", true);
       const files: Array<[string, number]> = [];
@@ -279,7 +279,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  protected override async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     try {
       const stats = await this._client.statObject(bucketName, fileName);
       return { value: stats.size, error: null };
@@ -288,7 +288,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const exists = await this._client.bucketExists(bucketName);
       return { value: exists, error: null };
@@ -297,7 +297,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName: string): Promise<ResultObjectBoolean> {
     try {
       const policy = await this._client.getBucketPolicy(bucketName);
       const p = JSON.parse(policy);
@@ -319,7 +319,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  protected override async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     try {
       const stats = await this._client.statObject(bucketName, fileName);
       return { value: stats !== null, error: null };
@@ -328,7 +328,7 @@ export class AdapterMinio extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -347,19 +347,19 @@ export class AdapterMinio extends AbstractAdapter {
 
   // public
 
-  get config(): AdapterConfigMinio {
+  override get config(): AdapterConfigMinio {
     return this._config as AdapterConfigMinio;
   }
 
-  public getConfig(): AdapterConfigMinio {
+  override  getConfig(): AdapterConfigMinio {
     return this._config as AdapterConfigMinio;
   }
 
-  get serviceClient(): Minio.Client {
+  override get serviceClient(): Minio.Client {
     return this._client as Minio.Client;
   }
 
-  public getServiceClient(): Minio.Client {
+  override  getServiceClient(): Minio.Client {
     return this._client as Minio.Client;
   }
 }

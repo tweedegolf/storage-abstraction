@@ -168,7 +168,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // protected, called by methods of public API via AbstractAdapter
 
-  protected async _listBuckets(): Promise<ResultObjectBuckets> {
+  protected override async _listBuckets(): Promise<ResultObjectBuckets> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -184,7 +184,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _createBucket(name: string, options: Options): Promise<ResultObject> {
+  protected override async _createBucket(name: string, options: Options): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -221,7 +221,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
+  protected override async _addFile(params: FileBufferParams | FileStreamParams): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -278,7 +278,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _getFileAsStream(
+  protected override async _getFileAsStream(
     bucketName: string,
     fileName: string,
     options: StreamOptions = { start: 0 }
@@ -329,7 +329,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _getPublicURL(
+  protected override async _getPublicURL(
     bucketName: string,
     fileName: string,
     _options: Options
@@ -340,7 +340,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     };
   }
 
-  protected async _getSignedURL(
+  protected override async _getSignedURL(
     bucketName: string,
     fileName: string,
     options: Options
@@ -376,7 +376,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
+  protected override async _removeFile(bucketName: string, fileName: string): Promise<ResultObject> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -426,7 +426,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _clearBucket(name: string): Promise<ResultObject> {
+  protected override async _clearBucket(name: string): Promise<ResultObject> {
     const { value, error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -454,7 +454,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _deleteBucket(name: string): Promise<ResultObject> {
+  protected override async _deleteBucket(name: string): Promise<ResultObject> {
     const { error, value: bucket } = await this.getBucket(name);
     if (bucket === null) {
       return { value: null, error: error };
@@ -468,7 +468,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -488,7 +488,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
+  protected override async _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -503,7 +503,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketExists(bucketName: string): Promise<ResultObjectBoolean> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -519,7 +519,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _bucketIsPublic(bucketName?: string): Promise<ResultObjectBoolean> {
+  protected override async _bucketIsPublic(bucketName?: string): Promise<ResultObjectBoolean> {
     const { error } = await this.authorize();
     if (error !== null) {
       return { value: null, error };
@@ -540,7 +540,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
+  protected override async _fileExists(bucketName: string, fileName: string): Promise<ResultObjectBoolean> {
     const { error, value } = await this._sizeOf(bucketName, fileName);
     if (error === null) {
       return { value: true, error: null };
@@ -549,7 +549,7 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
     }
   }
 
-  protected async _getPresignedUploadURL(
+  protected override async _getPresignedUploadURL(
     bucketName: string,
     _fileName: string,
     _options: Options
@@ -572,19 +572,19 @@ export class AdapterBackblazeB2 extends AbstractAdapter {
 
   // public
 
-  get config(): AdapterConfigBackblazeB2 {
+  override get config(): AdapterConfigBackblazeB2 {
     return this._config as AdapterConfigBackblazeB2;
   }
 
-  getConfig(): AdapterConfigBackblazeB2 {
+  override getConfig(): AdapterConfigBackblazeB2 {
     return this._config as AdapterConfigBackblazeB2;
   }
 
-  get serviceClient(): B2 {
+  override get serviceClient(): B2 {
     return this._client as B2;
   }
 
-  getServiceClient(): B2 {
+  override getServiceClient(): B2 {
     return this._client as B2;
   }
 }
