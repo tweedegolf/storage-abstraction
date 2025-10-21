@@ -98,7 +98,7 @@ async function copy(): Promise<string> {
       //   );
       // }
 
-      if (["AdapterS3", "AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
+      if (["AdapterMinioS3", "AdapterCubbitS3", "AdapterBackblazeS3", "AdapterCloudflareS3"].indexOf(val) !== -1) {
         acc.push(
           fs.promises.copyFile(
             path.join(...buildPath, `AdapterAmazonS3.${ext}`),

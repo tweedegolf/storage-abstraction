@@ -16,7 +16,7 @@ async function run() {
 
   // select the tests you want to run by (un)commenting out
   // await testPublicBucket(provider);
-  // await testPrivateBucket(provider);
+  await testPrivateBucket(provider);
   // await testDeleteBucket(provider);
   // await testAddFilesToBucket(provider);
   // await testVersioning(provider);
@@ -24,7 +24,7 @@ async function run() {
   // await testNonExistingDown(provider);
   // await testDownloadFilesFromBucket(provider);
   // await testFilesInBucket(provider);
-  await testPresignedUploadURL(provider);
+  // await testPresignedUploadURL(provider);
   // await testClearBucket(provider);
 
 
