@@ -1,3 +1,9 @@
+# 3.0.2
+- fix links in README toc
+
+# 3.0.1
+- fix layout issue in README toc
+
 # 3.0.0
 - new API version 3.0
 - removed support for versioning (wasn't implemented consistently anyway)
