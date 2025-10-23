@@ -37,7 +37,7 @@ Documentation|Adapter API|Introspective API|Storage API
 [6. Example application](README.md#example-application)|[getSignedURL](README.md#getsignedurl) ||
 [7. Questions and requests](README.md#questions-and-requests)|[getFileAsStream](README.md#getfileasstream)||
 &nbsp;|[removeFile](README.md#removefile)||
-|[sizeOf](README.md#sizeof)||
+&nbsp;|[sizeOf](README.md#sizeof)||
 
 <!--end_toc-->
 
