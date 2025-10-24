@@ -202,7 +202,8 @@ export abstract class AbstractAdapter implements IAdapter {
   protected abstract _sizeOf(bucketName: string, fileName: string): Promise<ResultObjectNumber>;
 
   protected abstract _addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FilePathParams | FileBufferParams | FileStreamParams,
+    checkIfExists: boolean = true
   ): Promise<ResultObject>;
 
   protected abstract _fileExists(
@@ -355,20 +356,30 @@ export abstract class AbstractAdapter implements IAdapter {
     return this._listFiles(r.value as string, numFiles);
   }
 
-  public async addFileFromPath(params: FilePathParams): Promise<ResultObject> {
-    return await this.addFile(params);
+  public async addFileFromPath(
+    params: FilePathParams,
+    checkIfExists: boolean = true
+  ): Promise<ResultObject> {
+    return await this.addFile(params, checkIfExists);
   }
 
-  public async addFileFromBuffer(params: FileBufferParams): Promise<ResultObject> {
-    return await this.addFile(params);
+  public async addFileFromBuffer(
+    params: FileBufferParams,
+    checkIfExists: boolean = true
+  ): Promise<ResultObject> {
+    return await this.addFile(params, checkIfExists);
   }
 
-  public async addFileFromStream(params: FileStreamParams): Promise<ResultObject> {
-    return await this.addFile(params);
+  public async addFileFromStream(
+    params: FileStreamParams,
+    checkIfExists: boolean = true
+  ): Promise<ResultObject> {
+    return await this.addFile(params, checkIfExists);
   }
 
   public async addFile(
-    params: FilePathParams | FileBufferParams | FileStreamParams
+    params: FilePathParams | FileBufferParams | FileStreamParams,
+    checkIfExists: boolean = true
   ): Promise<ResultObject> {
     const {
       bucketName,
@@ -382,7 +393,7 @@ export abstract class AbstractAdapter implements IAdapter {
 
     // console.log(bucketName, _fn, options, error);
 
-    const r = await this.checkBucket(bucketName);
+    const r = await this.checkBucket(bucketName, checkIfExists);
     if (r.error !== null) {
       return { value: null, error: r.error };
     } else {
