@@ -381,8 +381,9 @@ export abstract class AbstractAdapter implements IAdapter {
     }
 
     // console.log(bucketName, _fn, options, error);
-    const checkIfExists = params.options?.checkIfExists ?? true;
-    const r = await this.checkBucket(bucketName, checkIfExists);
+    
+    const checkIfBucketExists = params.options?.checkIfBucketExists ?? true;
+    const r = await this.checkBucket(bucketName, checkIfBucketExists);
     if (r.error !== null) {
       return { value: null, error: r.error };
     } else {
