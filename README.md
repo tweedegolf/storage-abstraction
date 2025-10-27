@@ -705,7 +705,7 @@ Fails if the bucket already exists. This is done because bucket names must be gl
 >   origPath: "path/to/your/file.ext",
 >   targetPath: "new-name.ext",
 >   options: {
->     ACL: "public-read"
+>     ACL: "public-read",
 >   }
 >});
 >```
@@ -800,6 +800,7 @@ export type FilePathParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
+    checkIfBucketExists: boolean;
     ACL?: string; // for Cubbit S3
   };
 };
@@ -815,6 +816,8 @@ export interface ResultObject {
 ```
 
 Copies a file from a local path `origPath` to the provided path `targetPath` in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+By setting `checkIfBucketExists` to `false` you can skip the bucket check. This is useful when you have limited the access rights to the bucket.
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
@@ -840,6 +843,7 @@ export type FileBufferParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
+    checkIfBucketExists: boolean;
     ACL?: string; // for Cubbit S3
   };
 };
@@ -855,6 +859,8 @@ export interface ResultObject {
 ```
 
 Copies a buffer to a file in the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+By setting `checkIfBucketExists` to `false` you can skip the bucket check. This is useful when you have limited the access rights to the bucket.
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will hold `"no bucket selected"`.
 
@@ -882,6 +888,7 @@ export type FileStreamParams = {
   targetPath: string;
   options?: {
     [id: string]: any;
+    checkIfBucketExists: boolean;
     ACL?: string // for Cubbit S3
   };
 };
@@ -897,6 +904,8 @@ export interface ResultObject {
 ```
 
 Allows you to stream a file directly to the storage. The value for `targetPath` needs to include at least a file name. You can provide extra storage-specific settings such as access rights using the `options` object.
+
+By setting `checkIfBucketExists` to `false` you can skip the bucket check. This is useful when you have limited the access rights to the bucket.
 
 The key `bucketName` is optional; if you don't pass a value the selected bucket will be used. The selected bucket is the bucket that you've passed with the config upon instantiation or that you've set afterwards using `setSelectedBucket`. If no bucket is selected the value of the `error` key in the result object will set to `"no bucket selected"`.
 

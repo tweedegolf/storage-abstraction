@@ -220,6 +220,7 @@ export async function addFileFromPath(
   //   targetPath,
   //   options,
   // )
+
   const r = await storage.addFileFromPath({
     bucketName,
     origPath,
@@ -228,7 +229,7 @@ export async function addFileFromPath(
     // options: {GrantRead: "true"}
     // options: { useSignedUrl: "false" }
   });
-  (logResult("addFileFromPath", r), options);
+  logResult("addFileFromPath", r, undefined, options);
 }
 
 export async function addFileFromBuffer(
@@ -247,7 +248,7 @@ export async function addFileFromBuffer(
     //   ACL: "public-read"
     // }
   });
-  (logResult("addFileFromBuffer", r), options);
+  logResult("addFileFromBuffer", r, undefined, options);
 }
 
 export async function addFileFromStream(
@@ -264,7 +265,7 @@ export async function addFileFromStream(
     options,
   });
   stream.close();
-  (logResult("addFileFromStream", r), options);
+  logResult("addFileFromStream", r, undefined, options);
 }
 
 export async function getFileAsStream(
@@ -406,7 +407,7 @@ export async function getPresignedUploadURL(
     typeof bucketName === "undefined"
       ? await storage.getPresignedUploadURL(fileName, options)
       : await storage.getPresignedUploadURL(bucketName, fileName, options);
-  (logResult("getPresignedUploadURL", r, r.value?.url), options);
+  logResult("getPresignedUploadURL", r, r.value?.url, options);
 
   if (r.value !== null) {
     const url = (r.value as any).url;

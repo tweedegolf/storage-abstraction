@@ -1,3 +1,6 @@
+# 3.0.3
+- added option `checkIfBucketExists` to the `addFile`, `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream`
+
 # 3.0.2
 - fix links in README toc
 

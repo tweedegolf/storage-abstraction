@@ -622,7 +622,7 @@ export class AdapterAmazonS3 extends AbstractAdapter {
       };
       const command = new GetObjectAttributesCommand(input);
       const response = await this._client.send(command);
-      console.log(response);
+      // console.log(response);
       return { value: "ok", error: null };
     } catch (e: unknown) {
       return { value: null, error: getErrorMessage(e) };

@@ -292,8 +292,12 @@ class AbstractAdapter {
             if (error !== null) {
                 return { value: null, error: error };
             }
+            let checkIfBucketExists = true;
             // console.log(bucketName, _fn, options, error);
-            const r = yield this.checkBucket(bucketName);
+            if (typeof options.checkIfBucketExists === "boolean") {
+                checkIfBucketExists = options.checkIfBucketExists;
+            }
+            const r = yield this.checkBucket(bucketName, checkIfBucketExists);
             if (r.error !== null) {
                 return { value: null, error: r.error };
             }

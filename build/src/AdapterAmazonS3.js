@@ -594,7 +594,7 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                 };
                 const command = new client_s3_1.GetObjectAttributesCommand(input);
                 const response = yield this._client.send(command);
-                console.log(response);
+                // console.log(response);
                 return { value: "ok", error: null };
             }
             catch (e) {

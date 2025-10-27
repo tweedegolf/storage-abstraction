@@ -1,15 +1,15 @@
 {
   "name": "@tweedegolf/sab-adapter-cloudflare-s3",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Provides an abstraction layer for interacting with Amazon S3 and S3 compatible cloud services.",
   "main": "dist/index/AdapterCloudflareS3.js",
   "types": "dist/index/AdapterCloudflareS3.d.ts",
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.913.0",
-    "@aws-sdk/s3-presigned-post": "^3.913.0",
-    "@aws-sdk/s3-request-presigner": "^3.913.0"
+    "@aws-sdk/client-s3": "^3.917.0",
+    "@aws-sdk/s3-presigned-post": "^3.917.0",
+    "@aws-sdk/s3-request-presigner": "^3.917.0"
   },
   "scripts": {},
   "keywords": [

@@ -380,9 +380,13 @@ export abstract class AbstractAdapter implements IAdapter {
       return { value: null, error: error as string };
     }
 
+    let checkIfBucketExists = true;
     // console.log(bucketName, _fn, options, error);
+    if (typeof (options as Options).checkIfBucketExists === "boolean") {
+      checkIfBucketExists = (options as Options).checkIfBucketExists
+    }
 
-    const r = await this.checkBucket(bucketName);
+    const r = await this.checkBucket(bucketName, checkIfBucketExists);
     if (r.error !== null) {
       return { value: null, error: r.error };
     } else {

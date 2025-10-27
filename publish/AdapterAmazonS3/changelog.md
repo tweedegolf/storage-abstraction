@@ -1,3 +1,7 @@
+# 3.0.2
+- added option `checkIfBucketExists` to the `addFile`, `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream`
+- update @aws-sdk to 3.917.0
+
 # 3.0.0
 - version bump to match the version of Storage and the API
 - removed support for versioning (wasn't implemented consistently anyway)
