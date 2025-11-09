@@ -16,6 +16,11 @@ export type ParseUrlResult = {
 /**
  * Generic return type
  */
+export interface ResultObjectGeneric {
+  value: string | number | boolean | Array<string> | Array<[string, number]> | Readable | { [key: string]: any } | null;
+  // value: string | null;
+  error: string | null;
+}
 export interface ResultObject {
   // value: string | number | boolean | Array<string> | Array<[string, number]> | Readable | { [key: string]: any } | null;
   value: string | null;

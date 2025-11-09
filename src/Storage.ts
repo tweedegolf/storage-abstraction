@@ -252,6 +252,12 @@ export class Storage implements IAdapter {
     return this.adapter.fileExists(...args);
   }
 
+  async fileExistsFork(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
+  ): Promise<ResultObjectBoolean | boolean> {
+    return this.adapter.fileExistsFork(...args);
+  }
+
   async getPresignedUploadURL(
     ...args:
       | [bucketName: string, fileName: string, options?: Options]

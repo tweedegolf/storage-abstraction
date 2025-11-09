@@ -1,6 +1,7 @@
 import { Provider } from "../src/types/general";
 import { init, cleanup, getStorage, waitABit } from "./api_calls";
 import { testAddFilesToBucket, testClearBucket, testDeleteBucket, testDownloadFilesFromBucket, testFilesInBucket, testNonExistingDown, testNonExistingUp, testPresignedUploadURL, testPrivateBucket, testPublicBucket, testVersioning } from "./api_tests/index";
+import { testErrorFork } from "./api_tests/testErrorFork";
 import { testSkipBucketCheck } from "./api_tests/testSkipBucketCheck";
 
 let provider = Provider.LOCAL;
@@ -28,8 +29,9 @@ async function run() {
     // await testDownloadFilesFromBucket(provider);
     // await testFilesInBucket(provider);
     // await testPresignedUploadURL(provider);
-    await testSkipBucketCheck(provider);
+    // await testSkipBucketCheck(provider);
     // await testClearBucket(provider);
+    await testErrorFork(provider);
 
 
     // clean up

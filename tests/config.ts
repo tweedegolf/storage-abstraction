@@ -3,6 +3,8 @@ import path from "path";
 import dotenv from "dotenv";
 import { StorageAdapterConfig, Provider } from "../src/types/general";
 
+const throwErrors = true;
+
 export function getConfig(provider: string = Provider.LOCAL): string | StorageAdapterConfig {
   dotenv.config();
 
@@ -22,6 +24,7 @@ export function getConfig(provider: string = Provider.LOCAL): string | StorageAd
   } else if (provider === Provider.S3 || provider === Provider.AWS) {
     config = {
       provider,
+      throwErrors,
       bucketName: process.env.BUCKET_NAME,
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,

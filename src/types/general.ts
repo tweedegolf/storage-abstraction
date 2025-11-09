@@ -30,6 +30,7 @@ export enum Provider {
 }
 export interface AdapterConfig {
   bucketName?: string;
+  throwErrors?: boolean;
   [id: string]: any; // eslint-disable-line
 }
 
@@ -308,6 +309,10 @@ export interface IAdapter {
   fileExists(
     ...args: [bucketName: string, fileName: string] | [fileName: string]
   ): Promise<ResultObjectBoolean>;
+
+  fileExistsFork(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
+  ): Promise<ResultObjectBoolean | boolean>;
 
   /**
    * @param bucketName name of the bucket where the file is stored

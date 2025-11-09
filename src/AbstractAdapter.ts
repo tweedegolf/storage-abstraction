@@ -6,6 +6,7 @@ import {
   ResultObjectBoolean,
   ResultObjectBuckets,
   ResultObjectFiles,
+  ResultObjectGeneric,
   ResultObjectNumber,
   ResultObjectObject,
   ResultObjectStream,
@@ -529,7 +530,38 @@ export abstract class AbstractAdapter implements IAdapter {
     if (r.error !== null) {
       return { value: null, error: r.error };
     }
+
     return this._fileExists(r.value as string, fileName as string);
+  }
+
+  public async fileExistsFork(
+    ...args: [bucketName: string, fileName: string] | [fileName: string]
+  ): Promise<ResultObjectBoolean | boolean> {
+    const { bucketName, fileName, options: _o, error } = this.getFileAndBucketAndOptions(...args);
+    if (error !== null) {
+      return this.forkResult<string, ResultObject>({ value: null, error: error as string }) as ResultObjectBoolean;
+    }
+
+    const r = await this.checkBucket(bucketName);
+    if (r.error !== null) {
+      return this.forkResult<string, ResultObject>(r) as ResultObjectBoolean;
+    }
+
+    const r2 = await this._fileExists(r.value as string, fileName as string);
+    return this.forkResult<boolean, ResultObjectBoolean>(r2)
+  }
+
+  protected forkResult<T1, T2 extends ResultObjectGeneric>(result: T2): T1 | T2 {
+    if (this.config.throwErrors === true) {
+      const { value, error } = result;
+      if (error !== null) {
+        throw new Error(error);
+      } else {
+        return value as T1;
+      }
+    } else {
+      return result;
+    }
   }
 
   public async removeFile(
