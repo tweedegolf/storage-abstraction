@@ -1,7 +1,13 @@
+# 3.0.2
+
+- update dependencies
+
 # 3.0.1
+
 - added option `checkIfBucketExists` to the `addFile`, `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream`
 
 # 3.0.0
+
 - version bump to match the version of Storage and the API
 - removed support for versioning (wasn't implemented consistently anyway)
 - removed `getFileAsURL`
@@ -11,24 +17,30 @@
 - see also the [migration guide](https://github.com/tweedegolf/storage-abstraction/blob/master/migration_to_api3.0.md)
 
 # 1.0.9
+
 - include @deprecated functions
 
 # 1.0.8
+
 - update glob to 11.0.3
 - update rimraf to 6.0.1
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 
 # 1.0.7
+
 - add support for urls (paths) without containing directory (credits: https://github.com/tesirm99)
 
 # 1.0.6
+
 - small cosmetic code changes (no change in functionality)
 - updated glob to 10.3.12
 
 # 1.0.5
+
 - fix bug in selected bucket
 
 # 1.0.3
+
 - revert to v1 format of config URLs
 - re-implement storing the selected bucket in local state
   - `selectBucket` and `geSelectedBucket`

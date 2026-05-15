@@ -7,9 +7,9 @@
   "homepage": "https://github.com/tweedegolf/storage-abstraction/",
   "repository": "https://github.com/tweedegolf/storage-abstraction/",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.917.0",
-    "@aws-sdk/s3-presigned-post": "^3.917.0",
-    "@aws-sdk/s3-request-presigner": "^3.917.0"
+    "@aws-sdk/client-s3": "^3.1047.0",
+    "@aws-sdk/s3-presigned-post": "^3.1047.0",
+    "@aws-sdk/s3-request-presigner": "^3.1047.0"
   },
   "scripts": {},
   "keywords": [

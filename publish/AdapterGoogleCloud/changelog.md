@@ -1,7 +1,13 @@
+# 3.0.2
+
+- update dependencies
+
 # 3.0.1
+
 - added option `checkIfBucketExists` to the `addFile`, `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream`
 
 # 3.0.0
+
 - version bump to match the version of Storage and the API
 - removed support for versioning (wasn't implemented consistently anyway)
 - removed `getFileAsURL`
@@ -12,26 +18,33 @@
 - update @google-cloud-storage to 7.17.2
 
 # 1.0.10
+
 - include @deprecated functions
 
 # 1.0.9
+
 - update @google-cloud dependency to 7.17.1
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 
 # 1.0.8
+
 - fixed gcs signed url generation
 
 # 1.0.7
+
 - updated @google-cloud/storage to 7.11.1
 - add support for optional key `useSignedUrl` in options object `getFileAsUrl`
 
 # 1.0.6
+
 - updated @google-cloud/storage to 7.9.0
 
 # 1.0.5
+
 - fix bug in selected bucket
 
 # 1.0.3
+
 - revert to v1 format of config URLs
 - re-implement storing the selected bucket in local state
   - `selectBucket` and `geSelectedBucket`

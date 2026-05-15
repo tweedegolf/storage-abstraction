@@ -1,7 +1,13 @@
+# 3.0.2
+
+- update dependencies
+
 # 3.0.1
+
 - added option `checkIfBucketExists` to the `addFile`, `addFileFromPath`, `addFileFromBuffer` and `addFileFromStream`
 
 # 3.0.0
+
 - version bump to match the version of Storage and the API
 - removed support for versioning (wasn't implemented consistently anyway)
 - removed `getFileAsURL`
@@ -11,20 +17,25 @@
 - see also the [migration guide](https://github.com/tweedegolf/storage-abstraction/blob/master/migration_to_api3.0.md)
 
 # 1.0.12
+
 - include @deprecated functions
 
 # 1.0.11
+
 - update minio npm package to 8.0.6
 - implemented new API methods `bucketIsPublic`, `getPublicURL` and `getSignedURL`
 
 # 1.0.10
+
 - update minio npm package to 8.0.0
 - add support for optional key `useSignedUrl` in options object `getFileAsUrl`
 
 # 1.0.9
+
 - fix bug in selected bucket
 
 # 1.0.7
+
 - revert to v1 format of config URLs
 - re-implement storing the selected bucket in local state
   - `selectBucket` and `geSelectedBucket`
