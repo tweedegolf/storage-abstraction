@@ -265,32 +265,31 @@ export class AdapterAzureBlob extends AbstractAdapter {
     }
   }
 
-  protected override async _listFiles(bucketName: string, numFiles: number): Promise<ResultObjectFiles> {
+  protected override async _listFiles(bucketName: string, numFiles: number, token?: string): Promise<ResultObjectFiles> {
     try {
       let name = bucketName;
       let prefix = "";
       if (bucketName.indexOf("/") !== -1) {
         [name, prefix] = bucketName.split("/");
       }
+      let resultsPerPage = 5000;
+      if (numFiles < resultsPerPage) {
+        resultsPerPage = numFiles;
+      }
       const listOptions = {
         includeMetadata: false,
         includeSnapshots: false,
         prefix, // Filter results by blob name prefix
       };
-      let maxPageSize = 5000;
-      if (numFiles < maxPageSize) {
-        maxPageSize = numFiles;
-      }
+
       const files: [string, number][] = [];
-      for await (const blob of this._client
-        .getContainerClient(name)
-        .listBlobsFlat(listOptions)
-        .byPage({ maxPageSize })) {
-        if (typeof blob.properties.contentLength !== "undefined") {
-          files.push([blob.name, blob.properties.contentLength]);
-        }
-        if (files.length >= numFiles) {
-          break;
+      const iterator = this._client.getContainerClient(name).listBlobsFlat(listOptions).byPage({ continuationToken: token, maxPageSize: resultsPerPage });
+      const response = (await iterator.next()).value;
+      if (response.segment.blobItems) {
+        for (const blob of response.segment.blobItems) {
+          if (typeof blob.properties.contentLength !== "undefined") {
+            files.push([blob.name, blob.properties.contentLength]);
+          }
         }
       }
       return { value: files, error: null };

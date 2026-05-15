@@ -37,6 +37,11 @@ export type ResultObjectFiles = {
   value: Array<[string, number]> | null; // file name, file size
 };
 
+export type ResultObjectList = {
+  error: string | null;
+  value: { files: Array<[string, number]>, token?: string } | null; // file name, file size, token to retrieve next page
+};
+
 export type ResultObjectBuckets = {
   error: string | null;
   value: Array<string> | null;
