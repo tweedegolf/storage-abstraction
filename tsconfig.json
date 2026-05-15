@@ -7,7 +7,7 @@
     "outDir": "build",
     "rootDir": ".",
     "module": "commonjs",
-    "moduleResolution": "node",
+    // "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
@@ -31,7 +31,6 @@
     "src/**/*",
   ],
   "exclude": [
-    "**/*.d.ts",
     "node_modules",
     "publish",
     "src/template_class.ts",
