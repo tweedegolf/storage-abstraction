@@ -1,6 +1,6 @@
 {
   "name": "@tweedegolf/sab-adapter-cubbit-s3",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Provides an abstraction layer for interacting with Amazon S3 and S3 compatible cloud services.",
   "main": "dist/index/AdapterCubbitS3.js",
   "types": "dist/index/AdapterCubbitS3.d.ts",

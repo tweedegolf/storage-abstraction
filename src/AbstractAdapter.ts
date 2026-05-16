@@ -457,7 +457,11 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { value: null, error: error as string };
     }
-    const r = await this.checkBucket(bucketName);
+    let checkIfBucketExists = true;
+    if (typeof (opt as Options).checkIfBucketExists === "boolean") {
+      checkIfBucketExists = (opt as Options).checkIfBucketExists
+    }
+    const r = await this.checkBucket(bucketName, checkIfBucketExists);
     if (r.error !== null) {
       return { value: null, error: r.error };
     }
@@ -489,7 +493,11 @@ export abstract class AbstractAdapter implements IAdapter {
     if (error !== null) {
       return { value: null, error: error as string };
     }
-    const r = await this.checkBucket(bucketName);
+    let checkIfBucketExists = true;
+    if (typeof (options as Options).checkIfBucketExists === "boolean") {
+      checkIfBucketExists = (options as Options).checkIfBucketExists
+    }
+    const r = await this.checkBucket(bucketName, checkIfBucketExists);
     if (r.error !== null) {
       return { value: null, error: r.error };
     }
