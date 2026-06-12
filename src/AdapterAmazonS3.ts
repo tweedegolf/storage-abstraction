@@ -2,7 +2,7 @@ import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types";
-import { S3Client, _Object, ListObjectsCommand, ObjectVersion, ListObjectVersionsCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand, CreateBucketCommandInput, CreateBucketCommand, DeleteObjectsCommand, DeleteBucketCommand, ListBucketsCommand, PutObjectCommand, HeadObjectCommand, GetObjectAttributesCommand, GetObjectAttributesRequest, waitUntilBucketExists, PutBucketPolicyCommand, PutPublicAccessBlockCommand, GetBucketPolicyStatusCommand, GetPublicAccessBlockCommand, GetBucketAclCommand, ObjectCannedACL } from "@aws-sdk/client-s3";
+import { S3Client, _Object, paginateListObjectsV2, ObjectVersion, ListObjectVersionsCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand, CreateBucketCommandInput, CreateBucketCommand, DeleteObjectsCommand, DeleteBucketCommand, ListBucketsCommand, PutObjectCommand, HeadObjectCommand, GetObjectAttributesCommand, GetObjectAttributesRequest, waitUntilBucketExists, PutBucketPolicyCommand, PutPublicAccessBlockCommand, GetBucketPolicyStatusCommand, GetPublicAccessBlockCommand, GetBucketAclCommand, ObjectCannedACL } from "@aws-sdk/client-s3";
 import { AbstractAdapter } from "./AbstractAdapter";
 import { Options, StreamOptions, Provider } from "./types/general";
 import { FileBufferParams, FileStreamParams } from "./types/add_file_params";
@@ -92,7 +92,6 @@ export class AdapterAmazonS3 extends AbstractAdapter {
           ...o,
         });
       } else {
-        console.log("Do we ever get here?");
         const o: { [id: string]: any } = { ...this.config }; // eslint-disable-line
         delete o.accessKeyId;
         delete o.secretAccessKey;
@@ -107,15 +106,24 @@ export class AdapterAmazonS3 extends AbstractAdapter {
     bucketName: string,
     maxFiles: number = 10000
   ): Promise<{ value: Array<_Object> | null; error: string | null }> {
+    const pageSize = Math.min(maxFiles, 1000); // S3 api returns up to 1000 keys per page
+    const files: _Object[] = [];
+
     try {
-      const input = {
-        Bucket: bucketName,
-        MaxKeys: maxFiles,
-      };
-      const command = new ListObjectsCommand(input);
-      const { Contents } = await this._client.send(command);
-      // console.log("Contents", Contents);
-      return { value: typeof Contents === "undefined" ? [] : Contents, error: null };
+      const paginator = paginateListObjectsV2(
+        { client: this._client, pageSize },
+        { Bucket: bucketName }
+      );
+
+      for await (const page of paginator) {
+        const contents = page.Contents ?? [];
+        files.push(...contents.slice(0, maxFiles - files.length));
+
+        // Stop paginating once we have found `maxFiles` objects
+        if (files.length >= maxFiles) break;
+      }
+
+      return { value: files, error: null };
     } catch (e: unknown) {
       return { value: null, error: getErrorMessage(e) };
     }
