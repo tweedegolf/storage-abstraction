@@ -1,3 +1,7 @@
+# 3.0.4
+
+- update @aws-sdk to 3.1047.0
+
 # 3.0.3
 
 - update @aws-sdk to 3.1047.0
