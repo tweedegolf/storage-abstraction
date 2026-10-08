@@ -277,11 +277,20 @@ export class AdapterAzureBlob extends AbstractAdapter {
         includeSnapshots: false,
         prefix, // Filter results by blob name prefix
       };
+      let maxPageSize = 5000;
+      if (numFiles < maxPageSize) {
+        maxPageSize = numFiles;
+      }
       const files: [string, number][] = [];
-      const data = this._client.getContainerClient(name).listBlobsFlat(listOptions);
-      for await (const blob of data) {
+      for await (const blob of this._client
+        .getContainerClient(name)
+        .listBlobsFlat(listOptions)
+        .byPage({ maxPageSize })) {
         if (typeof blob.properties.contentLength !== "undefined") {
           files.push([blob.name, blob.properties.contentLength]);
+        }
+        if (files.length >= numFiles) {
+          break;
         }
       }
       return { value: files, error: null };
