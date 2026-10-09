@@ -1,0 +1,43 @@
+name: publish
+
+# Publishes every package in the publish folder whose version is not yet on npm.
+# Authentication uses npm trusted publishing (OIDC), so no npm token is needed; every
+# package must have this repository and workflow file configured as trusted publisher
+# on npmjs.com.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish changed packages
+    permissions:
+      contents: read
+      id-token: write # needed for trusted publishing and provenance
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-node@v5.0.0
+        with:
+          node-version: "24.x" # trusted publishing needs npm >= 11.5.1
+          registry-url: "https://registry.npmjs.org"
+      # also runs the prepare script, which builds the dist folders in ./publish
+      - run: npm ci
+      - run: npm run test-local
+      - name: Publish packages with a new version
+        run: |
+          for dir in publish/*/; do
+            name=$(node -p "require('./${dir}package.json').name")
+            version=$(node -p "require('./${dir}package.json').version")
+            if [ "$(npm view "$name@$version" version 2>/dev/null)" = "$version" ]; then
+              echo "$name@$version is already published"
+            else
+              echo "::group::publishing $name@$version"
+              (cd "$dir" && npm publish)
+              echo "::endgroup::"
+            fi
+          done
