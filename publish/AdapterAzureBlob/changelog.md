@@ -1,5 +1,7 @@
-# 3.0.2
+# 3.0.3
+- update dependencies
 
+# 3.0.2
 - update dependencies
 
 # 3.0.1

@@ -8,6 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdapterAmazonS3 = void 0;
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
@@ -85,7 +92,6 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
                     } }, o));
             }
             else {
-                console.log("Do we ever get here?");
                 const o = Object.assign({}, this.config); // eslint-disable-line
                 delete o.accessKeyId;
                 delete o.secretAccessKey;
@@ -98,15 +104,32 @@ class AdapterAmazonS3 extends AbstractAdapter_1.AbstractAdapter {
     }
     getFiles(bucketName_1) {
         return __awaiter(this, arguments, void 0, function* (bucketName, maxFiles = 10000) {
+            var _a, e_1, _b, _c;
+            var _d;
+            const pageSize = Math.min(maxFiles, 1000); // S3 api returns up to 1000 keys per page
+            const files = [];
             try {
-                const input = {
-                    Bucket: bucketName,
-                    MaxKeys: maxFiles,
-                };
-                const command = new client_s3_1.ListObjectsCommand(input);
-                const { Contents } = yield this._client.send(command);
-                // console.log("Contents", Contents);
-                return { value: typeof Contents === "undefined" ? [] : Contents, error: null };
+                const paginator = (0, client_s3_1.paginateListObjectsV2)({ client: this._client, pageSize }, { Bucket: bucketName });
+                try {
+                    for (var _e = true, paginator_1 = __asyncValues(paginator), paginator_1_1; paginator_1_1 = yield paginator_1.next(), _a = paginator_1_1.done, !_a; _e = true) {
+                        _c = paginator_1_1.value;
+                        _e = false;
+                        const page = _c;
+                        const contents = (_d = page.Contents) !== null && _d !== void 0 ? _d : [];
+                        files.push(...contents.slice(0, maxFiles - files.length));
+                        // Stop paginating once we have found `maxFiles` objects
+                        if (files.length >= maxFiles)
+                            break;
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (!_e && !_a && (_b = paginator_1.return)) yield _b.call(paginator_1);
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
+                return { value: files, error: null };
             }
             catch (e) {
                 return { value: null, error: (0, util_1.getErrorMessage)(e) };

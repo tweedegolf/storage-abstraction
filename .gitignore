@@ -19,3 +19,4 @@ __azurite**
 Azurite*
 __blobstorage__
 __queuestorage__
+publish/*/package-lock.json

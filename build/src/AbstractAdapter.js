@@ -357,7 +357,11 @@ class AbstractAdapter {
             if (error !== null) {
                 return { value: null, error: error };
             }
-            const r = yield this.checkBucket(bucketName);
+            let checkIfBucketExists = true;
+            if (typeof opt.checkIfBucketExists === "boolean") {
+                checkIfBucketExists = opt.checkIfBucketExists;
+            }
+            const r = yield this.checkBucket(bucketName, checkIfBucketExists);
             if (r.error !== null) {
                 return { value: null, error: r.error };
             }
@@ -384,7 +388,11 @@ class AbstractAdapter {
             if (error !== null) {
                 return { value: null, error: error };
             }
-            const r = yield this.checkBucket(bucketName);
+            let checkIfBucketExists = true;
+            if (typeof options.checkIfBucketExists === "boolean") {
+                checkIfBucketExists = options.checkIfBucketExists;
+            }
+            const r = yield this.checkBucket(bucketName, checkIfBucketExists);
             if (r.error !== null) {
                 return { value: null, error: r.error };
             }
