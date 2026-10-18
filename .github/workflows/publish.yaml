@@ -23,8 +23,8 @@ jobs:
       contents: read
       id-token: write # needed for trusted publishing and provenance
     steps:
-      - uses: actions/checkout@v5.0.0
-      - uses: actions/setup-node@v5.0.0
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: "24.x" # trusted publishing needs npm >= 11.5.1
           registry-url: "https://registry.npmjs.org"
