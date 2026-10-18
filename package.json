@@ -16,7 +16,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1148.0",
     "@azure/identity": "^4.13.3",
     "@azure/storage-blob": "^12.34.0",
-    "@google-cloud/storage": "^7.22.0",
+    "@google-cloud/storage": "^8.4.0",
     "backblaze-b2": "^1.7.1",
     "glob": "^13.0.6",
     "minio": "^8.0.7",
