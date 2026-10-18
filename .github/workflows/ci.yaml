@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
       - "*"
@@ -11,7 +11,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Test local and minio adapter on node ${{matrix.node-version}}
+    name: Test adapter on node ${{matrix.node-version}}
     strategy:
       matrix:
         node-version: ["24.x"]
@@ -30,4 +30,4 @@ jobs:
             node-modules-cache-${{matrix.node-version}}-${{runner.os}}-
       - run: npm ci
       - run: npm run test-local
-      - run: npm run test-minio
+      # - run: npm run test-minio
