@@ -1,3 +1,6 @@
+# 3.0.4
+- update dependencies
+
 # 3.0.3
 - update dependencies
 

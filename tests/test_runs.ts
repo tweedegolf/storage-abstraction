@@ -27,8 +27,8 @@ async function run() {
     // await testNonExistingDown(provider);
     // await testDownloadFilesFromBucket(provider);
     // await testFilesInBucket(provider);
-    // await testPresignedUploadURL(provider);
-    await testSkipBucketCheck(provider);
+    await testPresignedUploadURL(provider);
+    // await testSkipBucketCheck(provider);
     // await testClearBucket(provider);
 
 

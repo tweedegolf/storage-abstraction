@@ -1,11 +1,14 @@
+# 3.0.6
+- update dependencies
+
 # 3.0.5
 - update dependencies
 
+# 3.0.4
 - update @aws-sdk to 3.1068.0
 - add support for pagination
 
 # 3.0.3
-
 - update @aws-sdk to 3.1047.0
 
 # 3.0.2

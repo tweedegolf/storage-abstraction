@@ -1,3 +1,6 @@
+# 3.0.4
+- update to gcs 8.4.0
+
 # 3.0.3
 - update dependencies
 
